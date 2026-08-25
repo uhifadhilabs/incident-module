@@ -1,0 +1,73 @@
+{
+    "name": "uhifadhilabs/incident-module",
+    "description": "Incidents: what happened in an area — poaching, human–wildlife conflict (with fines and compensation), unauthorized construction and roadkill, as one record type served to every department that needs it.",
+    "type": "symfony-bundle",
+    "keywords": [
+        "incidents",
+        "poaching",
+        "human-wildlife-conflict",
+        "conservation",
+        "symfony",
+        "uhifadhi"
+    ],
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Ezekiel Mjema",
+            "homepage": "https://github.com/eemjema"
+        }
+    ],
+    "require": {
+        "doctrine/doctrine-bundle": "^3.0",
+        "doctrine/orm": "^3.5",
+        "php": ">=8.4",
+        "symfony/config": "^7.3 || ^8.0",
+        "symfony/dependency-injection": "^7.3 || ^8.0",
+        "symfony/framework-bundle": "^7.3 || ^8.0",
+        "symfony/http-kernel": "^7.3 || ^8.0",
+        "uhifadhilabs/module-contracts": "dev-main"
+    },
+    "autoload": {
+        "psr-4": {
+            "UhifadhiLabs\\Incident\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "UhifadhiLabs\\Incident\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/phpstan": "^2.2",
+        "phpunit/phpunit": "^13.2"
+    },
+    "scripts": {
+        "cs:fix": "php-cs-fixer fix",
+        "cs:check": "php-cs-fixer fix --dry-run --diff",
+        "phpstan": "phpstan analyse --no-progress --memory-limit=1G",
+        "test": "phpunit",
+        "check": [
+            "@cs:check",
+            "@phpstan",
+            "@test"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "name": "module-contracts",
+            "type": "vcs",
+            "url": "https://github.com/uhifadhilabs/module-contracts"
+        }
+    ]
+}
