@@ -16,10 +16,11 @@ import { Controller } from '@hotwired/stimulus';
  * trip.
  */
 export default class extends Controller {
-    static targets = ['sheet', 'category', 'fieldset'];
+    static targets = ['sheet', 'category', 'fieldset', 'gate', 'hint', 'file'];
 
     connect() {
         this.lastTrigger = null;
+        this.gate();
         this.onKey = (event) => {
             if ('Escape' === event.key) {
                 this.close();
@@ -85,5 +86,67 @@ export default class extends Controller {
         if (chosen) {
             chosen.value = slug;
         }
+
+        this.gate();
+    }
+
+    /**
+     * THE GATE. Steps 1 and 2 are required and step 3 is not: filing stays shut
+     * until a kind is chosen, one line says what happened and the place is
+     * marked, and a quiet line names whatever is still missing rather than
+     * making anybody press a disabled button to find out.
+     *
+     * These are exactly the three the SERVER refuses a filing without — the
+     * button ships disabled in the markup and only this can open it, so a
+     * refusal never arrives as a surprise after the fact.
+     */
+    gate() {
+        const missing = [];
+        if ('' === this.answer('[data-incident-report-subcategory]')) {
+            missing.push('choose a category');
+        }
+        if ('' === this.answer('[name="title"]')) {
+            missing.push('describe what happened');
+        }
+        if (!this.hasPosition()) {
+            missing.push('mark where it happened');
+        }
+
+        if (this.hasFileTarget) {
+            this.fileTarget.disabled = 0 !== missing.length;
+        }
+        // The gate REPLACES the reassuring line rather than crowding in beside
+        // it: both are the same quiet note in the same place, and only one of
+        // them is worth reading at a time.
+        if (this.hasGateTarget) {
+            this.gateTarget.textContent = missing.join(' · ');
+            this.gateTarget.hidden = 0 === missing.length;
+        }
+        if (this.hasHintTarget) {
+            this.hintTarget.hidden = 0 !== missing.length;
+        }
+    }
+
+    /**
+     * What is currently ANSWERED for a field. The field sets that are not the
+     * chosen kind's are disabled, so only the live one is asked — the same rule
+     * the posted form obeys.
+     */
+    answer(selector) {
+        for (const field of this.element.querySelectorAll(selector)) {
+            if (!field.disabled) {
+                return field.value.trim();
+            }
+        }
+
+        return '';
+    }
+
+    /** A place is two readable numbers, which is what the server stores as a point. */
+    hasPosition() {
+        const lat = this.answer('[name="lat"]');
+        const lng = this.answer('[name="lng"]');
+
+        return '' !== lat && '' !== lng && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
     }
 }

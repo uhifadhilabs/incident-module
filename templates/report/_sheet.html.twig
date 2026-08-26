@@ -21,7 +21,10 @@
    ========================================================================== #}
 <div class="i-sheetbd{{ standalone ? ' open' }}" data-incident-report-target="sheet"
      data-action="click->incident-report#closeOnBackdrop">
-    <form class="i-sheet" method="post" action="{{ path('incident_create', {uuid: area.uuid}) }}">
+    {# input and change both bubble, so ONE action on the form re-reads the gate
+       whatever the filer typed into. #}
+    <form class="i-sheet" method="post" action="{{ path('incident_create', {uuid: area.uuid}) }}"
+          data-action="input->incident-report#gate change->incident-report#gate">
         <input type="hidden" name="_token" value="{{ csrfToken }}">
         {# The provenance travels with the form, so whatever the filer changes on
            the way through, the record it came from is the record it came from. #}
@@ -35,19 +38,50 @@
         <div class="i-sheethd">
             <div>
                 <h2>Report an incident</h2>
-                <p>Three steps. What kind, what happened, who was involved — and the money fields only if the category
-                    you pick carries them.</p>
+                <p>Three steps. What kind and what happened are needed to file; who was involved can follow afterwards —
+                    and the money fields appear only if the category you pick carries them.</p>
             </div>
             {% if not standalone %}
                 <button class="x" type="button" data-action="incident-report#close" aria-label="Close">&times;</button>
             {% endif %}
         </div>
 
+e        {# THE SOURCE CARD. "How is the filing user going to remember the context
+           of what happened?" By looking at it: the record this filing came from
+           is pinned above the steps with its own words, its position in the same
+           notation the observation page prints, its time and its photographs.
+           Nothing on it is editable — provenance is written once, at filing. #}
         {% if prefill.hasProvenance %}
-            <a class="i-prov i-provlead" href="{{ prefill.backUrl ?? '#' }}">{{ ux_icon('lucide:git-branch') }}
-                <span class="bd"><b>Filed from {{ prefill.label }}</b> — its category guess, its coordinates and its note
-                    travel with it, and that record keeps the link forever.<em>provenance is written once and never edited</em></span>
-                <span class="go">View →</span></a>
+            <section class="i-src" data-incident-source-card>
+                <div class="hd">{{ ux_icon('lucide:git-branch') }}<b>Filed from {{ prefill.label }}</b>
+                    {% if prefill.backUrl %}<a class="go" href="{{ prefill.backUrl }}">Open the source →</a>{% endif %}</div>
+                {% if prefill.note %}<p class="note">“{{ prefill.note }}”</p>{% endif %}
+                <div class="facts">
+                    {% if prefill.occurredAt %}<span><em>when</em><b>{{ prefill.occurredAt|date('D j M Y · H:i')|lower }}</b></span>{% endif %}
+                    {% if prefill.positionLabel %}<span><em>where</em><b>{{ prefill.positionLabel }}</b></span>{% endif %}
+                    <span><em>source</em><b>{{ prefill.sourceLabel }}</b></span>
+                </div>
+                {# NO THUMBNAILS YET, and the reason is a missing seam, not an
+                   oversight. The design draws the source record's photographs on
+                   this card (.i-src .shots, in incidents.css, ported and waiting).
+                   What arrives here is a record UUID and a source token, and
+                   storage-module addresses files by KEY or by owner label only:
+                   FileSourceInterface has files(), claimsKey(), guard() — no
+                   filesForRecord(), and FileEntry carries no record uuid. The
+                   only way to bridge that today is to walk FileRegistry::all()
+                   and string-match the observation UUID inside another module's
+                   ownerUrl, which is both a whole-deployment scan and a guess at
+                   the patrols module's routing. Neither belongs in a bundle that
+                   may be installed without patrols at all.
+                   The seam this needs, in storage-module:
+                     FileSourceInterface::filesForRecord(string $source, string $recordUuid): iterable<FileEntry>
+                     FileRegistry::forRecord(string $source, string $recordUuid): list<FileEntry>
+                   matched on moduleSlug(), with the source token the query string
+                   already carries. Then this block is a loop over that list and
+                   an <img src="{{ path('storage_evidence_show', {key: file.thumbKey}) }}">. #}
+                <p class="seam">its category guess, coordinates, time and note are already in the form below · the link is
+                    kept forever</p>
+            </section>
         {% endif %}
 
         {% if errors is not empty %}
@@ -147,12 +181,37 @@
             </div>
         </noscript>
 
+        {# THE GATE. Steps 1 and 2 are required and step 3 is not, so the File
+           control is dead — visually and functionally — until a category is
+           chosen, one line says what happened and the place is marked. The quiet
+           line names whatever is still missing instead of making anybody press a
+           disabled button to find out.
+
+           The SERVER refuses the same filing for the same three reasons
+           ({@see IncidentReportController::create}); this only says so sooner,
+           and the button ships disabled so a filer without JavaScript is never
+           shown a control that would be refused. The noscript block below hands
+           it back, because without the controller nothing can enable it. #}
         <div class="i-sheetfoot">
-            <span class="hint">Nothing is written until you file. A filed incident starts at <b class="acc">reported</b>
-                and cannot skip verification.</span>
+            {# The gate REPLACES the reassuring line rather than crowding in
+               beside it: both are the same quiet mono note in the same place,
+               and only one of them is worth reading at a time. The hint ships
+               hidden and the gate ships showing, because on a fresh form there
+               is always something missing. #}
+            <span class="hint" data-incident-report-target="hint" hidden>Nothing is written until you file. A filed
+                incident starts at <b class="acc">reported</b> and cannot skip verification.</span>
+            <span class="i-gate" data-incident-report-target="gate">choose a category · describe what happened</span>
             <span class="sp"></span>
             {% if not standalone %}<button class="tgl" type="button" data-action="incident-report#close">Cancel</button>{% endif %}
-            <button class="cta" type="submit">File incident →</button>
+            <button class="cta" type="submit" data-incident-report-target="file" disabled>File incident →</button>
         </div>
+        <noscript>
+            <div class="i-sheetfoot">
+                <span class="hint">Choose a kind above, say what happened and give the place — the report is refused
+                    without all three.</span>
+                <span class="sp"></span>
+                <button class="cta" type="submit">File incident →</button>
+            </div>
+        </noscript>
     </form>
 </div>

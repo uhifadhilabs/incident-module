@@ -24,6 +24,7 @@
   --tx:rgb(var(--c-tx)); --fog:rgb(var(--c-fog)); --dim:rgb(var(--c-dim));
   --acc:rgb(var(--c-acc)); --accT:rgb(var(--c-accT));
   --ln:var(--c-ln); --ln2:var(--c-ln2); --raised:rgb(var(--c-raised));
+  --warn:rgb(var(--c-warn));
   --shadow:0 18px 40px rgba(0,0,0,.28);
 }
 
@@ -519,10 +520,15 @@ html.light{
    idiom, but the sheet itself is one component — filing an incident must not
    feel like five different products.
    → POST /areas/{uuid}/modules/incidents (CSRF `incident_report`)             */
+/* CENTRED, like every other overlay in the app (the files hub's .f-ov is the
+   precedent): the sheet sits in the middle of the viewport, never pinned under
+   the menubar, and when it is taller than the screen it — not the page behind
+   it — scrolls. */
 .i-sheetbd{position:fixed;inset:0;z-index:60;background:rgba(4,8,6,.62);backdrop-filter:blur(3px);
-  display:none;align-items:flex-start;justify-content:center;padding:44px 20px;overflow-y:auto}
-.i-sheetbd.open{display:flex}
-.i-sheet{width:100%;max-width:760px;border-radius:16px;border:1px solid var(--ln2);
+  display:none;place-items:center;padding:3vh 20px}
+.i-sheetbd.open{display:grid}
+.i-sheet{width:100%;max-width:760px;max-height:94vh;overflow-y:auto;overscroll-behavior:contain;
+  border-radius:16px;border:1px solid var(--ln2);
   background:linear-gradient(180deg,var(--p1),var(--p2));box-shadow:0 22px 60px rgba(0,0,0,.45);
   padding:22px 24px 20px}
 .i-sheethd{display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid var(--ln);
@@ -553,6 +559,48 @@ html.light{
   margin-top:18px}
 .i-sheetfoot .sp{flex:1}
 .i-sheetfoot .hint{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim)}
+
+/* THE GATE. Steps 1 and 2 are required and step 3 is not, so the File control
+   is dead — visually and functionally — until the two that matter are answered,
+   and a quiet line says which one is still missing rather than making anybody
+   press a button to find out. The server refuses the same filing for the same
+   reasons; this only says so earlier. */
+.i-gate{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;letter-spacing:.04em;
+  color:var(--warn)}
+.i-gate[hidden]{display:none}
+.i-sheetfoot .cta:disabled{opacity:.42;cursor:not-allowed;box-shadow:none;filter:grayscale(.4)}
+
+/* ── THE SOURCE CARD ──────────────────────────────────────────────────────
+   How is the filing user going to remember the context of what happened? By
+   looking at it. When the flow opens from an observation, that observation is
+   pinned above the steps: its label (linking back), its own words verbatim, the
+   position and the time, and its photographs — the same facts the observation
+   page shows, in the same notation, so the two records read as one thing.
+   Provenance is written once; nothing on this card is editable.              */
+.i-src{border:1px solid var(--ln2);border-radius:12px;padding:13px 14px 12px;margin-bottom:16px;
+  background:color-mix(in srgb,var(--acc) 5%,transparent)}
+.i-src .hd{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.i-src .hd>svg{width:16px;height:16px;color:var(--acc);flex:none}
+.i-src .hd b{font-size:12.5px;font-weight:600;min-width:0}
+.i-src .hd .go{margin-left:auto;flex:none;color:var(--acc);text-decoration:none;white-space:nowrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;letter-spacing:.08em;
+  text-transform:uppercase}
+.i-src .hd .go:hover{text-decoration:underline}
+.i-src .note{margin:0 0 11px;font-size:12.5px;line-height:1.6;color:var(--tx);padding-left:10px;
+  border-left:2px solid color-mix(in srgb,var(--acc) 45%,transparent)}
+.i-src .facts{display:flex;flex-wrap:wrap;gap:7px 20px}
+.i-src .facts span{display:flex;flex-direction:column;gap:2px}
+.i-src .facts em{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-style:normal;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.i-src .facts b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:600;
+  color:var(--tx)}
+.i-src .shots{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.i-src .shots a{display:block;width:76px;height:57px;border-radius:8px;overflow:hidden;
+  border:1px solid var(--ln2);background:color-mix(in srgb,var(--fog) 12%,transparent)}
+.i-src .shots a:hover{border-color:var(--acc)}
+.i-src .shots img{width:100%;height:100%;object-fit:cover;display:block}
+.i-src .seam{margin:11px 0 0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;
+  letter-spacing:.06em;color:var(--dim)}
 
 
 /* IN·15 — the state-machine rail as a DASHBOARD widget. The rail and the

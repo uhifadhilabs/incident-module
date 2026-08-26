@@ -18,7 +18,7 @@
 {# The report sheet wraps the page so its trigger in the header and the sheet at
    the foot are inside one controller — the same component the dedicated page
    renders, mounted over whichever surface you were on. #}
-<div {{ reportCsrfToken ? stimulus_controller('@uhifadhilabs/incident-module/incident_report') : '' }}>
+<div {{ reportCsrfToken ? stimulus_controller('@uhifadhilabs/incident-module/incident-report') : '' }}>
     <div class="crumb"><a href="{{ path('dashboard_index') }}">uhifadhi</a> / <a href="{{ path('dashboard_area_show', {uuid: area.uuid}) }}">{{ area.name|lower }}</a> / <a href="{{ path('dashboard_area_modules_grid', {uuid: area.uuid}) }}">modules</a> / incidents</div>
 
     <div class="pghead">

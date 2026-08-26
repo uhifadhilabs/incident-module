@@ -15,6 +15,7 @@ namespace UhifadhiLabs\Incident\Model;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Uuid;
+use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
 
 /**
  * A REPORT ARRIVING FROM SOMEWHERE ELSE — the seam behind the patrols module's
@@ -87,6 +88,43 @@ final readonly class IncidentPrefill
         return \sprintf('{"type":"Point","coordinates":[%.6F,%.6F]}', $this->longitude, $this->latitude);
     }
 
+    /**
+     * THE POSITION AS A PERSON READS IT — "3°12'05"S 35°27'44"E", the same
+     * degrees-minutes-seconds the observation page prints.
+     *
+     * The source card exists so the filer can recognise the thing they are
+     * filing, and a place written one way on one page and another way on the
+     * next is not recognisable. Null where no usable coordinates arrived: no
+     * position row is better than half of one.
+     */
+    public function positionLabel(): ?string
+    {
+        if (null === $this->latitude || null === $this->longitude) {
+            return null;
+        }
+
+        return self::dms($this->latitude, 'N', 'S').' '.self::dms($this->longitude, 'E', 'W');
+    }
+
+    /**
+     * WHERE THIS CAME FROM, IN WORDS. The seam is a query string and the module
+     * on the other side chooses the token, so one this module knows is named
+     * properly and one it does not is printed as it arrived — the card must say
+     * where a report came from even when the source is a kind nobody here has
+     * heard of yet.
+     */
+    public function sourceLabel(): string
+    {
+        if (null === $this->source) {
+            return 'linked record';
+        }
+
+        // The BADGE, not the label: the card prints a fact in a row of facts, and
+        // the register already prints provenance with these same short words.
+        return IncidentSourceEnum::tryFrom($this->source)?->badge()
+            ?? str_replace(['_', '-'], ' ', $this->source);
+    }
+
     public static function fromRequest(Request $request): self
     {
         return new self(
@@ -101,6 +139,25 @@ final readonly class IncidentPrefill
             self::coordinate($request->query->getString('lng'), 180.0),
             self::text($request->query->getString('category'), 60),
             self::text($request->query->getString('note'), 2000),
+        );
+    }
+
+    /**
+     * One coordinate, in degrees, minutes and whole seconds with its hemisphere.
+     * The seconds are ROUNDED and the carry is honoured, so a coordinate a
+     * whisker under the next minute prints as that minute rather than as an
+     * impossible 60".
+     */
+    private static function dms(float $value, string $positive, string $negative): string
+    {
+        $seconds = (int) round(abs($value) * 3600);
+
+        return \sprintf(
+            '%d°%02d\'%02d"%s',
+            intdiv($seconds, 3600),
+            intdiv($seconds % 3600, 60),
+            $seconds % 60,
+            $value < 0 ? $negative : $positive,
         );
     }
 

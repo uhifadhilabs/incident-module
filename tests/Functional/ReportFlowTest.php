@@ -158,6 +158,95 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
+     * THE GATE. Steps 1 and 2 are required and step 3 is not, so the File control
+     * ships DEAD — the markup itself carries `disabled`, and only the controller
+     * opens it once the required answers are there. A quiet line names what is
+     * still missing rather than making anybody press a button to find out.
+     */
+    public function testTheFileControlShipsDisabledAndSaysWhatIsMissing(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+
+        $file = $crawler->filter('.i-sheetfoot button.cta[type="submit"]')->first();
+        self::assertNotNull($file->attr('disabled'));
+        self::assertStringContainsString('choose a category', $crawler->filter('.i-gate')->text());
+        self::assertStringContainsString('describe what happened', $crawler->filter('.i-gate')->text());
+    }
+
+    /**
+     * AND THE SERVER AGREES. The gate is not a decoration in front of a
+     * permissive endpoint: a filing missing one of the required steps is refused
+     * with the same reason the quiet line gave.
+     */
+    public function testAReportWithAPlaceButNothingSaidIsRefused(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $html = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)))->html();
+        $crawler = $this->client->request('POST', $this->createUrl($this->uuidOf($area)), [
+            '_token' => $this->tokenFrom($html),
+            'subcategory' => 'livestock-depredation',
+            'title' => '   ',
+            'lat' => '-3.21',
+            'lng' => '35.25',
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertStringContainsString('One line saying what happened', $crawler->filter('.i-errors')->text());
+        self::assertSame(0, $this->em->getRepository(Incident::class)->count([]));
+    }
+
+    /**
+     * THE SOURCE CARD. "How is the filing user going to remember the context of
+     * what happened?" By looking at it: the observation is pinned above the steps
+     * with its own words, its position in the same degrees-minutes-seconds the
+     * observation page prints, its time, and a way back to it.
+     */
+    public function testTheSourceCardShowsTheObservationThisFilingCameFrom(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $query = http_build_query([
+            'source' => 'patrol_observation',
+            'record' => Uuid::v7()->toRfc4122(),
+            'label' => 'OBS-02 · lion tracks',
+            'back' => '/areas/x/modules/patrols/observation/2',
+            'at' => '2026-08-22T08:15:00+00:00',
+            'lat' => '-3.2014',
+            'lng' => '35.4622',
+            'note' => 'Fresh lion tracks 400 m from the bomas.',
+        ]);
+
+        $card = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)).'?'.$query)->filter('.i-src');
+
+        self::assertCount(1, $card);
+        self::assertStringContainsString('OBS-02 · lion tracks', $card->text());
+        // The note, verbatim.
+        self::assertStringContainsString('Fresh lion tracks 400 m from the bomas.', $card->filter('.note')->text());
+        // The position, in the observation page's own notation.
+        self::assertStringContainsString('3°12\'05"S 35°27\'44"E', $card->filter('.facts')->text());
+        self::assertStringContainsString('patrol observation', $card->filter('.facts')->text());
+        // …and the way back to the record it came from.
+        self::assertSame('/areas/x/modules/patrols/observation/2', $card->filter('.hd a.go')->attr('href'));
+    }
+
+    /** Nothing came from anywhere, so there is no card claiming otherwise. */
+    public function testThereIsNoSourceCardOnAFilingThatCameFromNowhere(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+
+        self::assertSelectorNotExists('.i-src');
+    }
+
+    /**
      * ARRIVING FROM A PATROL OBSERVATION. The seam is a query string, because the
      * two modules are separate bundles and neither may name the other's classes.
      * Everything it carries is a guess the filer may overrule — except the link,
@@ -185,7 +274,7 @@ final class ReportFlowTest extends FunctionalTestCase
 
         self::assertResponseIsSuccessful();
         // The page says where it came from, and the note travelled with it.
-        self::assertStringContainsString('observation 2 of patrol P-0142', $crawler->filter('.i-provlead')->text());
+        self::assertStringContainsString('observation 2 of patrol P-0142', $crawler->filter('.i-src')->text());
         self::assertStringContainsString('Fresh lion tracks', $crawler->html());
 
         $this->client->request('POST', $this->createUrl($this->uuidOf($area)).'?'.$query, [
@@ -214,7 +303,7 @@ final class ReportFlowTest extends FunctionalTestCase
         $this->client->request('GET', $this->reportUrl($this->uuidOf($area)).'?record=not-a-uuid&lat=999&at=nonsense');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorNotExists('.i-provlead');
+        self::assertSelectorNotExists('.i-src');
     }
 
     /** Filing needs "incidents.record". Signed in is not the same as permitted. */
