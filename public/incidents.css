@@ -15,6 +15,19 @@
    duplication is deliberate and marked, not accidental.
    ========================================================================== */
 
+/* TOKEN BRIDGE — byte-faithful port of the design's incidents.css, which
+   speaks the design tokens (--p1, --cv, --ln…); the host speaks rgb triplets
+   (--c-*). Defined once here so modals/cards stop rendering transparent and
+   the module flips themes with the app. Same pattern as storage-module. */
+:root{
+  --cv:rgb(var(--c-cv)); --p1:rgb(var(--c-p1)); --p2:rgb(var(--c-p2));
+  --tx:rgb(var(--c-tx)); --fog:rgb(var(--c-fog)); --dim:rgb(var(--c-dim));
+  --acc:rgb(var(--c-acc)); --accT:rgb(var(--c-accT));
+  --ln:var(--c-ln); --ln2:var(--c-ln2); --raised:rgb(var(--c-raised));
+  --shadow:0 18px 40px rgba(0,0,0,.28);
+}
+
+
 /* ── THE TAXONOMY PALETTE ─────────────────────────────────────────────────
    Four top-level categories. Each owns one hue everywhere it appears: the
    category chip, the map marker, the matrix column, the kanban card rule.
