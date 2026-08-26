@@ -61,7 +61,11 @@
         "symfony/security-core": "^7.3 || ^8.0",
         "symfony/security-csrf": "^7.3 || ^8.0",
         "symfony/security-http": "^7.3 || ^8.0",
-        "symfony/stimulus-bundle": "^2.20 || ^2.30 || ^2.0"
+        "symfony/stimulus-bundle": "^2.20 || ^2.30 || ^2.0",
+        "uhifadhilabs/storage-module": "dev-main"
+    },
+    "suggest": {
+        "uhifadhilabs/storage-module": "To put an incident’s evidence on the platform’s Files hub (/files). Register the bundle and IncidentFileSource registers itself; without it, incidents simply do not appear there."
     },
     "scripts": {
         "cs:fix": "php-cs-fixer fix",
@@ -89,6 +93,13 @@
             "name": "module-contracts",
             "type": "vcs",
             "url": "https://github.com/uhifadhilabs/module-contracts"
+        },
+        {
+            "type": "path",
+            "url": "../storage-module",
+            "options": {
+                "symlink": true
+            }
         }
     ]
 }

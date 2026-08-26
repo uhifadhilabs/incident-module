@@ -29,9 +29,12 @@ use UhifadhiLabs\Incident\DependencyInjection\IncidentConfiguration;
 use UhifadhiLabs\Incident\Module\IncidentDepartmentKpiProvider;
 use UhifadhiLabs\Incident\Module\IncidentModuleProvider;
 use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
+use UhifadhiLabs\Incident\Repository\IncidentEvidenceRepository;
 use UhifadhiLabs\Incident\Repository\IncidentRepository;
 use UhifadhiLabs\Incident\Repository\IncidentSubcategoryRepository;
 use UhifadhiLabs\Incident\Service\IncidentTransitionToken;
+use UhifadhiLabs\Incident\Storage\IncidentFileSource;
+use UhifadhiLabs\Storage\Registry\FileSourceInterface;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -157,6 +160,38 @@ final class UhifadhiLabsIncidentBundle extends AbstractBundle
         // nowhere.
         $builder->setParameter('incident.record_screens', $hasSecurity);
         $builder->setParameter('incident.widget_screens', $hasSecurity);
+
+        /*
+         * INCIDENTS ON THE PLATFORM'S FILES HUB — registered only where the host
+         * actually runs uhifadhilabs/storage-module.
+         *
+         * OPTIONAL, unlike patrol's hard requirement, and the difference is real
+         * rather than stylistic: patrol's photographs ARE stored through that
+         * bundle and its upload endpoint cannot work without it, while incidents
+         * only DESCRIBES rows it already holds. A host that never installed
+         * storage still runs every incident screen; it simply has no /files for
+         * this module to appear on. So the package is a suggestion in
+         * composer.json, and this is the guard that makes the suggestion true.
+         *
+         * The check reads kernel.bundles for the same reason the security guard
+         * above does: interface_exists() would only prove the class autoloads,
+         * and storage-module is one of this bundle's DEV dependencies — it
+         * autoloads in our own test runs whether or not the bundle is registered,
+         * and the service would then reference storage.* ids that do not exist.
+         *
+         * Tagged by hand with the interface's own constant. A reusable bundle is
+         * not autoconfigured, and a module that forgot this tag would simply not
+         * appear on /files — the hub grows by MODULES, so a missing source looks
+         * exactly like a module nobody installed.
+         */
+        $hasStorage = \is_array($bundles) && isset($bundles['UhifadhiLabsStorageBundle']);
+        $builder->setParameter('incident.files_hub', $hasStorage);
+
+        if ($hasStorage) {
+            $services->set('incident.file_source', IncidentFileSource::class)
+                ->args([service(IncidentEvidenceRepository::class), service('router')])
+                ->tag(FileSourceInterface::TAG);
+        }
 
         if ($hasSecurity) {
             // The one token both the case file and the status board post with.

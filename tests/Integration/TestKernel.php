@@ -15,6 +15,7 @@ namespace UhifadhiLabs\Incident\Tests\Integration;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use FundiStadi\PostGISBundle\FundiStadiPostGISBundle;
+use League\FlysystemBundle\FlysystemBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
@@ -34,6 +35,7 @@ use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedModules;
 use UhifadhiLabs\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 use UhifadhiLabs\Incident\Tests\Integration\Fixtures\HeaderUserAuthenticator;
 use UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle;
+use UhifadhiLabs\Storage\UhifadhiLabsStorageBundle;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -71,6 +73,12 @@ final class TestKernel extends Kernel
         yield new DoctrineBundle();
         yield new FundiStadiPostGISBundle();
         yield new SecurityBundle();
+        // The platform's Files hub. OPTIONAL for this module — the source is
+        // registered only where this bundle is in the kernel — and registered
+        // here in the order a host registers it: flysystem first, because the
+        // storage bundle PREPENDS a flysystem storage.
+        yield new FlysystemBundle();
+        yield new UhifadhiLabsStorageBundle();
         yield new UhifadhiLabsIncidentBundle();
     }
 
@@ -188,9 +196,23 @@ final class TestKernel extends Kernel
             'incident.dashboard',
             'incident.transitions',
             'incident.zone_locator',
+            // The storage seam: the source itself, and the registry the hub
+            // reads it through.
+            'incident.file_source',
+            'storage.file_registry',
         ] as $id) {
             $services->alias('test_public.'.$id, $id)->public();
         }
+
+        // A throwaway evidence store. Incidents writes no bytes through it yet
+        // (see IncidentFileSource); it exists so the bundle boots as it does in
+        // a host, and so the hub's registry has a real storage behind it.
+        $container->extension('storage', [
+            'evidence' => [
+                'adapter' => 'local',
+                'directory' => sys_get_temp_dir().'/incident-module-tests/evidence',
+            ],
+        ]);
 
         $container->extension('incident', [
             'dev_tools' => true, // this IS the test env — the recipe enables it via when@test
