@@ -20,9 +20,26 @@ jobs:
       matrix:
         php: ['8.4', '8.5']
 
-    # No database service yet: the module has no entities until the incidents
-    # design rules on the domain model, so the integration suite only boots the
-    # kernel. A PostGIS service lands here with the first entity.
+    # Real PostGIS for the integration and functional suites (unit tests don't
+    # touch it). The module stores points and asks PostGIS which zone one falls
+    # in, so a suite that only ever saw a mock would prove nothing about that.
+    services:
+      postgres:
+        image: ghcr.io/fundistadi/postgis:17
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: incidents_bundle_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      INCIDENTS_TEST_DATABASE_URL: "postgresql://app:app@127.0.0.1:5432/incidents_bundle_test?serverVersion=17&charset=utf8"
 
     steps:
       - uses: actions/checkout@v4

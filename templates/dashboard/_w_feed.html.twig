@@ -1,0 +1,25 @@
+{# IN·07 — newest first, grouped by day, with each day's own count. Reads like a
+   radio log, which is what a duty officer on shift actually wants. #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+<div class="c" data-w="feed">
+    <span class="tab"><span class="idx">IN·07</span>Incident feed<span class="src">· newest first · grouped by day</span></span>
+    {{ include('@UhifadhiLabsIncident/dashboard/_filters.html.twig') }}
+    {% for day in dashboard.recentByDay %}
+        {% set stillOpen = day.incidents|filter(i => i.status.isOpen)|length %}
+        <div class="i-day"><b>{{ day.day|date('j M')|lower }}</b><span class="cnt">{{ day.incidents|length }} filed · {{ stillOpen }} still open</span></div>
+        {% for incident in day.incidents %}
+            <a class="i-feed" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
+                <span class="gut"><span class="hm">{{ incident.reportedAt|date('H:i') }}</span><span class="ago">{{ incident.ageInHours(dashboard.now) }} h ago</span></span>
+                <span class="mark"><i class="i-hue-{{ incident.category.colourKey }}"></i></span>
+                <span class="bd">
+                    <span class="hl">{{ ui.id(incident.reference) }}{{ ui.cat(incident.category, incident.subcategory.label) }}{{ ui.status(incident.status) }}</span>
+                    <span class="tt">{{ incident.title }}</span>
+                    <span class="mt">{{ ui.zone(incident) }}<span>{{ incident.source.badge }}</span>{% if incident.sourceRecordLabel %}<span>{{ incident.sourceRecordLabel }}</span>{% endif %}</span>
+                </span>
+                <span class="rt"><span class="open-btn">Open →</span></span>
+            </a>
+        {% endfor %}
+    {% else %}
+        <div class="use">Nothing came in during this window.</div>
+    {% endfor %}
+</div>

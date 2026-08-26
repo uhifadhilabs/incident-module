@@ -1,0 +1,236 @@
+{# ============================================================================
+   ONE CASE FILE — the whole record on one page.
+
+   TWO CONTRACTS THE DESIGN INSISTS ON, and both are structural here:
+
+   1. THE RAIL, NOT A DROPDOWN. A status is never a select box. The rail shows
+      where the incident is, what it passed and what is left, and only the LEGAL
+      transitions are offered — with the refusal printed beside the ones it
+      cannot make. It is the same partial the dashboard's "where things stand"
+      widget renders: identical component, identical markup.
+
+   2. GATED PANELS. A step owns a panel, and the panel DOES NOT EXIST until the
+      step is reached. Not rendered-and-disabled — absent. There is no empty
+      "resolution" form on a freshly reported incident inviting somebody to fill
+      it in early, and `rail.hasReached()` is the whole of the mechanism.
+
+   The money card and the category's own field set are the third contract: a
+   category that carries no money has NO money card, and the fields a roadkill
+   asks for are not the fields a depredation asks for.
+   ========================================================================== #}
+{% extends '@UhifadhiLabsIncident/base.html.twig' %}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+
+{% block title %}{{ incident.reference }} — {{ incident.title }}{% endblock %}
+
+{% block incident_page %}
+    {% set money = incident.money %}
+    <div class="crumb"><a href="{{ path('dashboard_index') }}">uhifadhi</a> / <a href="{{ path('dashboard_area_show', {uuid: area.uuid}) }}">{{ area.name|lower }}</a> / <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / {{ incident.reference|lower }}</div>
+
+    <div class="pghead">
+        <div>
+            <h1 class="pg">{{ incident.reference }} — {{ incident.title }}</h1>
+            <p class="pgsub">{{ incident.category.label }} · {{ incident.subcategory.label }} · <b>{{ incident.status.label }}</b>
+                · {{ incident.zoneLabel }} · filed {{ incident.reportedAt|date('D j M H:i')|lower }}{% if incident.events|first and incident.events|first.actorName %} by {{ incident.events|first.actorName }}{% endif %}
+                {%- if money and money.isAssessed %} · {{ incident.money.currency }} {{ money.payable|number_format(0, '.', ',') }} {{ money.direction.assessedWord }}, {{ money.settled|number_format(0, '.', ',') }} {{ money.direction.settledWord }}{% endif %}
+                · {{ incident.evidence|length }} pieces of evidence · {{ incident.parties|length }} parties.</p>
+        </div>
+    </div>
+
+    <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}" class="backbtn">{{ ux_icon('lucide:chevron-left') }}All incidents</a>
+
+    <div class="i-headchips">
+        <span class="i-path">{{ ui.cat(incident.category) }}<span class="sep">›</span><span class="i-sub">{{ incident.subcategory.label }}</span></span>
+        {{ ui.status(incident.status) }}
+        {{ ui.severity(incident.severity) }}
+        {{ ui.zone(incident) }}
+    </div>
+
+    {{ include('@UhifadhiLabsIncident/dashboard/_rail.html.twig', {
+        area: area,
+        rail: rail,
+        canManage: canManage,
+        csrfToken: csrfToken,
+    }, with_context: false) }}
+
+    <div class="i-cols">
+        <div class="c plate-fill wide">
+            <span class="tab"><span class="idx">IN·01</span>Where<span class="src">· {{ incident.zoneLabel }}</span></span>
+            <div class="viewer"
+                 {{ stimulus_controller('@uhifadhilabs/incident-module/incident_map', {
+                     incidents: mapPayload,
+                     boundary: area.geom,
+                 }) }}></div>
+            {# The SAME legend the dashboard maps draw — one macro, three places. #}
+            {{ ui.mapLegend([incident.category]) }}
+        </div>
+
+        <div class="side">
+            <div class="c">
+                <span class="tab"><span class="idx">IN·02</span>Incident meta</span>
+                <div class="i-meta"><span>id</span><b>{{ incident.reference }}</b></div>
+                <div class="i-meta"><span>category</span><b>{{ incident.subcategory.path }}</b></div>
+                <div class="i-meta"><span>status</span><b>{{ incident.status.label }}</b></div>
+                <div class="i-meta"><span>severity</span><b>{{ incident.severity.label }}</b></div>
+                <div class="i-meta"><span>zone</span><b>{{ incident.zoneLabel }}</b></div>
+                {% if incident.occurredAt %}<div class="i-meta"><span>occurred</span><b>{{ incident.occurredAt|date('D j M · H:i')|lower }}</b></div>{% endif %}
+                <div class="i-meta"><span>filed</span><b>{{ incident.reportedAt|date('D j M · H:i')|lower }}</b></div>
+                <div class="i-meta"><span>verified in</span><b>{% if incident.hoursToVerify is null %}— · term {{ incident.subcategory.termLabel }}{% else %}{{ incident.hoursToVerify }} h · term {{ incident.subcategory.termLabel }}{% endif %}</b></div>
+                {% if incident.assignedTo %}<div class="i-meta"><span>responder</span><b>{{ incident.assignedTo.firstName|slice(0,1) }}. {{ incident.assignedTo.lastName }}</b></div>{% endif %}
+                <div class="i-meta"><span>source</span><b>{{ incident.source.label }}</b></div>
+            </div>
+
+            {# THE MONEY CARD EXISTS ONLY WHERE THE CATEGORY CARRIES MONEY. On a
+               natural mortality there is no card at all — absent, not empty. #}
+            {% if money %}
+                <div class="c">
+                    <span class="tab"><span class="idx">IN·03</span>Money<span class="src">· this category carries {{ money.direction.value }}</span></span>
+                    <div class="i-moneyblock">
+                        <div class="hd">{{ ux_icon('lucide:circle-dollar-sign') }}<b>{{ money.direction.heading }}</b></div>
+                        {% if money.claimed is not null %}<div class="i-mrow"><span>claimed</span>{{ ui.amount(money.currency, money.claimed) }}</div>{% endif %}
+                        {% if money.assessed is not null %}<div class="i-mrow"><span>assessed</span>{{ ui.amount(money.currency, money.assessed) }}</div>{% endif %}
+                        {% if money.approved is not null %}<div class="i-mrow"><span>approved</span>{{ ui.amount(money.currency, money.approved) }}</div>{% endif %}
+                        <div class="i-mrow"><span>{{ money.direction.settledWord }}</span>{{ ui.amount(money.currency, money.settled, money.settled > 0 ? 'paid' : 'nil') }}</div>
+                        <div class="i-mrow"><span>outstanding</span>{{ ui.amount(money.currency, money.outstanding, 'due') }}</div>
+                        <div class="i-moneybar"><i style="width:{{ money.settledPercent }}%"></i></div>
+                        <div class="i-kpi-note i-moneypct">{{ money.settledPercent }}% {{ money.direction.settledWord }}{% if money.isWaived %} · waived: {{ money.waivedReason }}{% endif %}</div>
+                        <div class="use i-moneywhy">Four amounts, not one, because they are four different facts — what was asked,
+                            what was judged, what was signed off and what actually moved. A single “amount” field would lose the
+                            argument this incident is about.</div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="i-cols">
+        <div class="c wide">
+            <span class="tab"><span class="idx">IN·04</span>Timeline<span class="src">· {{ incident.events|length }} events · append-only</span></span>
+            <div class="i-tl">
+                {% for event in incident.events %}
+                    <div class="i-tl-item {{ event.kind.cssClass }}">
+                        <span class="i-tl-t">{{ event.occurredAt|date('D j M · H:i')|lower }} · {{ event.toStatus ? event.toStatus.label : event.kind.value }}</span>
+                        <span class="i-tl-b">{% if event.actorName %}<span class="who">{{ event.actorName }}</span> {% endif %}{{ event.body }}{% if event.detail %}<em>{{ event.detail }}</em>{% endif %}</span>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="use">Nothing on this timeline is ever edited or removed. A correction is a new event that says what
+                was corrected — which is what makes the record worth anything in a hearing.</div>
+        </div>
+
+        <div class="side">
+            <div class="c">
+                <span class="tab"><span class="idx">IN·05</span>Involved parties<span class="src">· {{ incident.parties|length }}</span></span>
+                {% for party in incident.parties %}
+                    <div class="i-party">
+                        <span class="av">{{ party.initials }}</span>
+                        <span class="nm">{{ party.name }}{% if party.describedAs %}<em>{{ party.describedAs }}</em>{% endif %}</span>
+                        <span class="i-role {{ party.role.cssClass }}">{{ party.role.label }}</span>
+                    </div>
+                {% else %}
+                    <div class="use">Nobody has been named on this record yet.</div>
+                {% endfor %}
+                <div class="use i-partynote">A suspect, a claimant, a witness and the ranger who filed it are the same shape of
+                    record wearing different roles — the design refuses to build four tables. The animal is a party too, so a
+                    repeat offender can be recognised across incidents.</div>
+            </div>
+
+            <div class="c">
+                <span class="tab"><span class="idx">IN·06</span>Provenance &amp; links</span>
+                {% if incident.hasProvenance %}
+                    <a class="i-prov" href="{{ incident.sourceRecordUrl ?? '#' }}">{{ ux_icon('lucide:git-branch') }}
+                        <span class="bd"><b>{{ incident.sourceRecordLabel }}</b> — this incident was filed from that record and stays
+                            linked to it.<em>source: {{ incident.source.badge }}</em></span>
+                        <span class="go">{{ incident.sourceRecordUrl ? 'Open →' : ' ' }}</span></a>
+                {% else %}
+                    <span class="i-prov">{{ ux_icon('lucide:file-pen') }}
+                        <span class="bd"><b>{{ incident.source.label|capitalize }}</b> — entered directly, with no earlier record
+                            behind it.<em>source: {{ incident.source.badge }}</em></span><span class="go"> </span></span>
+                {% endif %}
+                {% for link in incident.links %}
+                    <a class="i-prov" href="{{ path('incident_show', {uuid: area.uuid, reference: link.related.reference}) }}">{{ ux_icon('lucide:link') }}
+                        <span class="bd"><b>Related — {{ link.related.reference }}</b>{% if link.note %} {{ link.note }}{% endif %}
+                            <em>{% if link.linkedByName %}linked by {{ link.linkedByName }} · {% endif %}a link is a claim, and it carries who made it</em></span>
+                        <span class="go">Open →</span></a>
+                {% endfor %}
+                <div class="use i-partynote">Provenance is never overwritten. An incident filed from a patrol observation keeps
+                    that parentage forever — that is the seam the patrols module's <b>File as incident</b> button writes.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="i-cols">
+        <div class="c wide">
+            <span class="tab"><span class="idx">IN·07</span>Evidence<span class="src">· {{ incident.evidence|length }} attached</span></span>
+            <div class="i-evgrid">
+                {% for item in incident.evidence %}
+                    <span class="i-ph {{ item.kind.cssClass }}">{{ ux_icon(item.kind.value == 'document' ? 'lucide:file-text' : 'lucide:image') }}
+                        <i>{{ item.filename }}{% if item.capturedAt %} · {{ item.capturedAt|date('H:i') }}{% endif %}</i></span>
+                {% else %}
+                    <div class="use">Nothing attached yet.</div>
+                {% endfor %}
+            </div>
+            <div class="use">Each photograph keeps the position and the time the handset recorded, not the time it was
+                uploaded — so the map above places them where they were taken.</div>
+        </div>
+
+        <div class="c side">
+            <span class="tab"><span class="idx">IN·08</span>Narrative<span class="src">· as taken · verbatim</span></span>
+            {% if incident.narrative %}
+                <div class="i-quote">“{{ incident.narrative }}”</div>
+            {% else %}
+                <div class="use">Nothing was taken down in the reporter's own words.</div>
+            {% endif %}
+            {% if incident.assessment %}
+                <div class="i-assessment">{{ incident.assessment }}</div>
+            {% endif %}
+            <div class="use">The report as it was given, kept apart from the officer's assessment. Two voices, two fields —
+                one of them is evidence and the other is judgement.</div>
+        </div>
+    </div>
+
+    <h2 class="zone">The steps</h2>
+    <p class="pgsub">Each step owns a panel, and a panel only exists once its step has been reached — nobody fills in a
+        resolution on a report nobody has verified.</p>
+
+    {# GATED PANELS. A panel for an unreached place is NOT RENDERED, ever. #}
+    <div class="grid g2 i-steps-grid">
+        {# A panel for an unreached step is not rendered at all; "closed" is
+           never a person's panel, because the clock reaches it. #}
+        {% for step in rail.steps|filter(s => s.state != 'todo' and s.place.value != 'closed') %}
+            <div class="c{{ step.state == 'now' ? ' i-step-now' }}">
+                <span class="tab"><span class="idx">IN·S{{ step.place.step }}</span>Step {{ step.place.step }} — {{ step.place.label }}<span class="src">· {{ step.state == 'now' ? 'current step' : 'done' }}</span></span>
+                {# The event that PUT it in this place — the filing itself for
+                   step one, and the transition for every step after. #}
+                {% set stepEvents = step.place.value == 'reported'
+                    ? incident.events|slice(0, 1)
+                    : incident.events|filter(e => e.toStatus and e.toStatus.value == step.place.value) %}
+                {% for event in stepEvents %}
+                    <div class="rln"><span>{{ event.actorName ? 'By' : 'Recorded' }}</span><span>{{ event.actorName ?? 'the clock' }}</span></div>
+                    <div class="rln"><span>When</span><span>{{ event.occurredAt|date('D j M · H:i')|lower }}</span></div>
+                    {% if event.detail %}<div class="rln"><span>How</span><span>{{ event.detail }}</span></div>{% endif %}
+                {% endfor %}
+                {% if step.state == 'now' %}
+                    {% for reason in rail.blocked %}<div class="rln"><span>Blocking</span><span class="w">{{ reason }}</span></div>{% endfor %}
+                    <div class="rln"><span>Elapsed</span><span>{{ incident.ageInHours(now) }} h of a {{ incident.subcategory.termLabel }} term</span></div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <h2 class="zone">What this category asks for</h2>
+    <p class="pgsub">Every category brings its own fields. On a category that carries no money the money rows are
+        <b>absent</b>, not greyed out, and its own fields stand in their place.</p>
+
+    <div class="i-fieldset">
+        <div class="hd">{{ incident.subcategory.path }}</div>
+        {% for field in incident.subcategory.fieldSet %}
+            <div class="i-fld"><label>{{ field.label }}</label><span>{{ incident.details[field.key] ?? '—' }}</span></div>
+        {% endfor %}
+        {% if money %}
+            {% if money.claimed is not null %}<div class="i-fld only"><label>Claimed</label><span>{{ ui.amount(money.currency, money.claimed) }}</span></div>{% endif %}
+            <div class="i-fld only"><label>{{ money.direction.assessedWord|capitalize }}</label><span>{{ ui.amount(money.currency, money.payable) }}</span></div>
+            <div class="i-fld only"><label>{{ money.direction.settledWord|capitalize }}</label><span>{{ ui.amount(money.currency, money.settled, money.settled > 0 ? 'paid' : 'nil') }}</span></div>
+        {% endif %}
+    </div>
+{% endblock %}

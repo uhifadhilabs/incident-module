@@ -10,10 +10,13 @@
     <php>
         <env name="KERNEL_CLASS" value="UhifadhiLabs\Incident\Tests\Integration\TestKernel"/>
         <!--
-            No database yet: the module has no entities until the incidents design
-            rules on the domain model, so the integration suite only boots the
-            kernel. This URL is never connected to — it exists because DoctrineBundle
-            requires a DBAL url to compile, and it is the shape the real one will take.
+            A REAL PostGIS database. The integration and functional suites rebuild
+            the schema per test and assert on what was actually stored — the module
+            keeps points and asks PostGIS which zone one falls in, and a suite that
+            only ever saw a mock would prove nothing about either.
+
+            Locally this is the shared fundi-postgis-test container; CI runs its own
+            service and overrides this with the same URL on port 5432.
         -->
         <env name="INCIDENTS_TEST_DATABASE_URL"
              value="postgresql://app:app@127.0.0.1:55432/incidents_bundle_test?serverVersion=17&amp;charset=utf8"/>

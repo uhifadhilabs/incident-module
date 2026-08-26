@@ -1,0 +1,17 @@
+{# IN·13 — open work against the term ITS OWN category promised, worst first.
+
+   A human injury is 72 hours and a construction notice is 14 days; one global
+   SLA would be a lie about both, which is why the term is read off the row. #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+<div class="c" data-w="sla">
+    <span class="tab"><span class="idx">IN·13</span>Ageing &amp; breaches<span class="src">· {{ dashboard.pastTermCount }} past term</span></span>
+    {% for incident in dashboard.ageing %}
+        <div class="rln">
+            <span><a class="mono acc i-slaid" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">{{ incident.reference }}</a> <span class="i-sub">{{ incident.subcategory.label }}</span></span>
+            {{ ui.ageing(incident, dashboard.now) }}
+        </div>
+    {% else %}
+        <div class="use">Nothing open. There is no clock to run.</div>
+    {% endfor %}
+    <div class="use">Each category promises its own term — a human injury is 72 hours, a construction notice is 14 days. One global SLA would be a lie about both.</div>
+</div>

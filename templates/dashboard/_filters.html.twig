@@ -1,0 +1,24 @@
+{# ============================================================================
+   ONE FILTER DRIVES EVERYTHING on the page — the map, the register and the
+   charts read the same query, exactly as the patrols module does. This row is
+   that query made visible, and every chip is a link that changes it.
+
+   It is included by the register, the map, the map+results plate and the feed:
+   the same element in four places, because they are four readings of one answer.
+
+   → GET /areas/{uuid}/modules/incidents?category=&status=&zone=&q=&lens=
+   ========================================================================== #}
+<div class="i-filters">
+    <a class="mchip{{ filter.categorySlugs is empty ? ' on' : ' ghost' }}"
+       href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.withoutCategories.toQuery)) }}">all · {{ dashboard.filedCount }}</a>
+    {% for category in dashboard.categories %}
+        <a class="i-cat {{ category.colourKey }}{{ category.slug in filter.categorySlugs ? '' : ' ghost' }}"
+           href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.onlyCategory(category.slug).toQuery)) }}"><i></i>{{ category.label|lower }} · {{ dashboard.categoryCount(category) }}</a>
+    {% endfor %}
+    <span class="sep"></span>
+    {% for place in dashboard.places %}
+        <a class="mchip{{ place in filter.statuses ? ' on' : ' ghost' }}"
+           href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.onlyStatus(place).toQuery)) }}">{{ place.label }} · {{ dashboard.statusCount(place) }}</a>
+    {% endfor %}
+    <span class="mchip ghost">{{ filter.from ? filter.from|date('F Y')|lower : 'all time' }}</span>
+</div>

@@ -1,0 +1,19 @@
+{# IN·02 — MY queue. Everything waiting on YOU: an incident you reported that
+   nobody has verified, or one you are the responder on. The clock against each
+   one is its own category's term, never a global SLA. #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+<div class="c" data-w="queue">
+    <span class="tab"><span class="idx">IN·02</span>My queue<span class="src">· oldest first</span></span>
+    <div class="use i-queuenote">Everything waiting on <b>you</b>. The clock is the category's own term, not one global SLA.</div>
+    {% for incident in dashboard.queue %}
+        <div class="i-party i-queuerow">
+            <span class="av">{{ incident.reference|slice(-3) }}</span>
+            <span class="nm">{{ incident.title }}<em>{{ incident.reference }} · {{ incident.subcategory.label }}</em></span>
+            {{ ui.status(incident.status) }}
+            {{ ui.ageing(incident, dashboard.now) }}
+            <a class="open-btn" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">Open →</a>
+        </div>
+    {% else %}
+        <div class="use">Nothing is waiting on you. That is the whole of the answer — this widget is never a summary of somebody else's work.</div>
+    {% endfor %}
+</div>

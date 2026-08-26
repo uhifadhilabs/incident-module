@@ -1,0 +1,52 @@
+{# ============================================================================
+   THE STATE MACHINE, VISIBLE — and the SAME COMPONENT in both places it appears:
+   under the heading on a case file, and as the "where things stand" widget on a
+   dashboard. Identical markup, identical guards; a rail that rendered differently
+   in the two places would be two claims about one incident.
+
+   A STATUS IS NEVER A DROPDOWN. The rail shows where this incident is, what it
+   already passed and what is left, and only the LEGAL transitions are offered
+   below it — with the refusal PRINTED beside them for the ones it cannot make.
+   An incident can never skip verification, and "closed" is reached by time, not
+   by a person, so it appears here only ever as the blocked chip.
+
+   → the transitions come from IncidentTransitionService::available()/blocked();
+     POST /areas/{uuid}/modules/incidents/{reference}/transition/{name}
+
+   Parameters: area, rail, canManage, csrfToken
+   ========================================================================== #}
+<div class="i-wf">
+    {% for step in rail.steps %}
+        <div class="i-wfstep {{ step.state }}">
+            <div class="n"><i>{{ step.state == 'done' ? '✓' : step.place.step }}</i><b>{{ step.place.label }}</b></div>
+            <div class="mt">
+                {%- if step.at %}{{ step.at|date('D j M H:i') }}
+                {%- elseif step.place.value == 'closed' %}auto-closes {{ constant('UhifadhiLabs\\Incident\\Workflow\\IncidentWorkflow::CLOSE_AFTER_DAYS') }} days after resolution
+                {%- else %}not reached{% endif -%}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{# The token is on the ROW, not only inside a form: the status board drives the
+   same endpoint from JavaScript and has to be able to read one. #}
+<div class="i-trans" data-incident-csrf="{{ csrfToken }}">
+    <span class="lbl">Available now</span>
+    {% if canManage %}
+        {% for transition in rail.available %}
+            {# One form per move: the transition IS the whole instruction, which is
+               why it is named in the URL and the body carries only the token. #}
+            <form method="post" class="i-transform" action="{{ path('incident_transition', {uuid: area.uuid, reference: rail.incident.reference, transition: transition.value}) }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <button type="submit" class="{{ loop.first ? 'cta' : 'tgl' }}">{{ transition.label }}{{ loop.first ? ' →' }}</button>
+            </form>
+        {% endfor %}
+    {% endif %}
+    {# Only the refusals worth printing — see IncidentRail::notableBlocked(). #}
+    {% for reason in rail.notableBlocked %}
+        <span class="i-blocked">{{ ux_icon('lucide:lock') }} {{ reason }}</span>
+    {% endfor %}
+    {% if canManage and rail.available is empty %}
+        <span class="i-blocked">{{ ux_icon('lucide:check') }} Nothing to do here — this incident has run its course.</span>
+    {% endif %}
+</div>

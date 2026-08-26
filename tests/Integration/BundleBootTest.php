@@ -51,8 +51,9 @@ final class BundleBootTest extends KernelTestCase
 
     /**
      * Zero-config persistence: the bundle maps its own entity directory, so a
-     * host never writes a doctrine mappings block for incident tables. The
-     * mapping is registered now and stays empty until the domain lands.
+     * host never writes a doctrine mappings block for incident_* tables — and
+     * the table names are part of the host contract, because a host's migration
+     * diff is what installs them.
      */
     public function testItMapsItsOwnEntityDirectory(): void
     {
@@ -71,9 +72,26 @@ final class BundleBootTest extends KernelTestCase
 
         self::assertInstanceOf(MappingDriverChain::class, $driver);
         self::assertArrayHasKey('UhifadhiLabs\Incident\Entity', $driver->getDrivers());
-        // Nothing mapped yet, and that is the point: the seam is wired, the
-        // domain arrives with the design ruling.
-        self::assertSame([], $em->getMetadataFactory()->getAllMetadata());
+
+        // The eight tables the module owns, mapped without a line of host config.
+        $mapped = [];
+        foreach ($em->getMetadataFactory()->getAllMetadata() as $metadata) {
+            if (str_starts_with($metadata->getName(), 'UhifadhiLabs\\Incident\\Entity\\')) {
+                $mapped[] = $metadata->getTableName();
+            }
+        }
+        sort($mapped);
+
+        self::assertSame([
+            'incident',
+            'incident_category',
+            'incident_event',
+            'incident_evidence',
+            'incident_link',
+            'incident_money',
+            'incident_party',
+            'incident_subcategory',
+        ], $mapped);
     }
 
     protected function tearDown(): void

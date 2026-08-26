@@ -1,0 +1,35 @@
+{# IN·04 — the map at full height with the matching incidents docked beside it, so
+   "where" is answered before "what".
+
+   The list follows the SAME filter the map draws — the two are one query read
+   twice, never two queries that might disagree. #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+<div class="c" data-w="maplist">
+    <span class="tab"><span class="idx">IN·04</span>Map + results<span class="src">· the list follows the filter</span></span>
+    {{ include('@UhifadhiLabsIncident/dashboard/_filters.html.twig') }}
+    <div class="i-split">
+        <div class="i-mapcol">
+            <div class="viewer"
+                 {{ stimulus_controller('@uhifadhilabs/incident-module/incident_map', {
+                     incidents: dashboard.mapPayload,
+                     boundary: area.geom,
+                 }) }}></div>
+            {{ ui.mapLegend(dashboard.categories) }}
+        </div>
+        <div class="i-listcol">
+            {% for incident in dashboard.recent|slice(0, 14) %}
+                <a class="i-feed" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
+                    <span class="mark"><i class="i-hue-{{ incident.category.colourKey }}"></i></span>
+                    <span class="bd">
+                        <span class="hl">{{ ui.id(incident.reference) }}{{ ui.status(incident.status) }}</span>
+                        <span class="tt">{{ incident.title }}</span>
+                        <span class="mt">{{ ui.zone(incident) }}<span>{{ incident.subcategory.label }}</span></span>
+                    </span>
+                    <span class="rt"><span class="open-btn">Open →</span></span>
+                </a>
+            {% else %}
+                <div class="use">Nothing matches this filter.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

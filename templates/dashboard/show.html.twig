@@ -1,0 +1,92 @@
+{# ============================================================================
+   THE INCIDENTS DASHBOARD for one area.
+
+   THIS PERSON'S OWN COMPOSITION, in their own order; a widget they switched off
+   is simply ABSENT — not hidden, not an empty cell. The five design directions
+   are PRESETS on this surface, not five screens: the library is where one is
+   adopted, copied, and mixed with a widget from another.
+
+   Everything below the header is the host's widget framework
+   (Uhifadhi\Service\WidgetService), which is why arranging this dashboard works
+   exactly as it does on departments, team and zones.
+   ========================================================================== #}
+{% extends '@UhifadhiLabsIncident/base.html.twig' %}
+
+{% block title %}{{ area.name }} — Incidents{% endblock %}
+
+{% block incident_page %}
+{# The report sheet wraps the page so its trigger in the header and the sheet at
+   the foot are inside one controller — the same component the dedicated page
+   renders, mounted over whichever surface you were on. #}
+<div {{ reportCsrfToken ? stimulus_controller('@uhifadhilabs/incident-module/incident_report') : '' }}>
+    <div class="crumb"><a href="{{ path('dashboard_index') }}">uhifadhi</a> / <a href="{{ path('dashboard_area_show', {uuid: area.uuid}) }}">{{ area.name|lower }}</a> / <a href="{{ path('dashboard_area_modules_grid', {uuid: area.uuid}) }}">modules</a> / incidents</div>
+
+    <div class="pghead">
+        <div>
+            <h1 class="pg">{{ area.name }} — Incidents</h1>
+            <p class="pgsub">Poaching, human–wildlife conflict, compliance and wildlife mortality — every report filed in
+                this area, what state it is in, what it cost and who is on it. One filter drives the map, the register
+                and the charts together.</p>
+        </div>
+        <div class="pgact w-pgact">
+            {% if widgetScreens %}
+                <a class="tgl w-act" href="{{ path('incident_widgets', {uuid: area.uuid}) }}">{{ ux_icon('lucide:layout-grid') }} Widget library</a>
+            {% endif %}
+            {% if recordScreens %}
+                {# Opens the report sheet over this dashboard. The dedicated page
+                   at incident_new is the SAME component, for a deep link or a
+                   fresh tab — and it is where this falls back to without
+                   JavaScript, so the button is a real link either way. #}
+                <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}"
+                   data-action="incident-report#open">{{ ux_icon('lucide:plus') }} Report incident</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {{ include('@UhifadhiLabsIncident/dashboard/_lensbar.html.twig') }}
+
+    {% set widgetContext = {
+        area: area,
+        now: now,
+        dashboard: dashboard,
+        filter: filter,
+        recordScreens: recordScreens,
+        widgetScreens: widgetScreens,
+        transitionCsrfToken: transitionCsrfToken,
+    } %}
+
+    {# The surface's transition token lives on the grid, so every widget on it —
+       the status board today, whatever moves an incident tomorrow — can read one
+       token rather than each minting its own. Absent for somebody who may not
+       move an incident, and then the board renders read-only. #}
+    <div class="w-grid"{% if transitionCsrfToken %} data-incident-csrf="{{ transitionCsrfToken }}"{% endif %}>
+        {# A switched-off widget is simply absent — not hidden, not an empty cell. #}
+        {% for widget in widgets|filter(w => w.on) %}
+            {# w-span-N, never w-N: a bare `w-12` is Tailwind's width utility and
+               would render this cell 48px wide (see the host's widget framework). #}
+            <div class="w-cell w-span-{{ widget.cols }}" data-widget-id="{{ widget.id }}" data-widget-cols="{{ widget.cols }}">
+                <div class="w-inner">
+                    {{ include('@UhifadhiLabsIncident/dashboard/_w_' ~ widget.id ~ '.html.twig', widgetContext, with_context: false) }}
+                </div>
+            </div>
+        {% endfor %}
+        {% if widgetScreens %}
+            <a class="w-cell w-span-12 w-addtile" href="{{ path('incident_widgets', {uuid: area.uuid}) }}">
+                {{ ux_icon('lucide:plus') }}<span>Add widgets — open the library</span>
+            </a>
+        {% endif %}
+    </div>
+
+    {% if recordScreens and reportCsrfToken %}
+        {{ include('@UhifadhiLabsIncident/report/_sheet.html.twig', {
+            area: area,
+            categories: dashboard.categories,
+            prefill: prefill,
+            chosen: null,
+            csrfToken: reportCsrfToken,
+            errors: [],
+            standalone: false,
+        }, with_context: false) }}
+    {% endif %}
+</div>
+{% endblock %}

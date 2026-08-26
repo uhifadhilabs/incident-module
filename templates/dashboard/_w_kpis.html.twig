@@ -1,0 +1,30 @@
+{# IN·K1–K4 — the four figures the design's KPI strip leads with. Every one is a
+   reading of the SAME loaded month, so this strip can never disagree with the
+   register beside it. #}
+<div class="grid w-flush dp-kstrip" data-w="kpis">
+    <div class="c kpi">
+        <span class="tab"><span class="idx">IN·K1</span>Open incidents</span>
+        <b class="disp">{{ dashboard.openCount }}</b>
+        <span class="sub">{% for place in dashboard.places|filter(p => p.isOpen) %}{{ dashboard.statusCount(place) }} {{ place.label }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
+    </div>
+    <div class="c kpi hot">
+        <span class="tab"><span class="idx">IN·K2</span>Filed<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F')|lower : 'all time' }}</span></span>
+        <b class="disp">{{ dashboard.filedCount }}</b>
+        <span class="sub">{% for category in dashboard.categories %}{{ dashboard.categoryCount(category) }} {{ category.label|lower|split(' ')|first }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
+    </div>
+    <div class="c kpi">
+        <span class="tab"><span class="idx">IN·K3</span>Money outstanding</span>
+        {# The two directions are NEVER added together — the design refuses it, so
+           the headline is the pair and the line beneath names each. #}
+        {% set fines = dashboard.money.fine.outstanding %}
+        {% set claims = dashboard.money.compensation.outstanding %}
+        <b class="disp">{{ ((fines + claims) / 1000000)|number_format(1) }}<em>M {{ dashboard.currency }}</em></b>
+        <span class="sub">{{ (fines / 1000000)|number_format(2) }}M fines due · {{ (claims / 1000000)|number_format(1) }}M compensation unpaid</span>
+    </div>
+    <div class="c kpi">
+        <span class="tab"><span class="idx">IN·K4</span>Time to verify</span>
+        {# An em dash, never a zero: nothing verified yet is not "verified instantly". #}
+        <b class="disp">{% if dashboard.medianHoursToVerify is null %}—{% else %}{{ (dashboard.medianHoursToVerify / 24)|number_format(1) }} d{% endif %}</b>
+        <span class="sub">median{% if dashboard.pastTermCount > 0 %} · <span class="r">{{ dashboard.pastTermCount }} past their category’s term</span>{% endif %}</span>
+    </div>
+</div>

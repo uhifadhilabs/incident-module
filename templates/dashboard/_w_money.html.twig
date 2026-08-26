@@ -1,0 +1,27 @@
+{# IN·11 — money owed TO the authority and money owed BY it.
+
+   THE DESIGN REFUSES TO ADD THEM TOGETHER, and so does this: two blocks, two
+   totals, no sum anywhere on the widget. A fine and a compensation claim are
+   opposite facts that happen to share a unit. #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+<div data-w="money">
+    <div class="c">
+        <span class="tab"><span class="idx">IN·11</span>Fines &amp; compensation<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }} · {{ dashboard.currency }}</span></span>
+        <div class="use i-moneynote">Two directions of money and the design refuses to add them together: a <b>fine</b> is owed to the authority by somebody, a <b>compensation claim</b> is owed by the authority to somebody. Only categories that carry money show these fields at all.</div>
+        <div class="grid g2 i-moneygrid">
+            {% for direction, totals in dashboard.money %}
+                {% set isFine = direction == 'fine' %}
+                <div class="i-moneyblock">
+                    <div class="hd">{{ ux_icon('lucide:circle-dollar-sign') }}<b>{{ isFine ? 'Fines — owed TO the authority' : 'Compensation — owed BY the authority' }}</b></div>
+                    {% if not isFine %}<div class="i-mrow"><span>claimed</span>{{ ui.amount(dashboard.currency, totals.claimed) }}</div>{% endif %}
+                    <div class="i-mrow"><span>{{ isFine ? 'assessed' : 'approved' }}</span>{{ ui.amount(dashboard.currency, totals.approved) }}</div>
+                    <div class="i-mrow"><span>{{ isFine ? 'collected' : 'paid' }}</span>{{ ui.amount(dashboard.currency, totals.settled, 'paid') }}</div>
+                    <div class="i-mrow"><span>outstanding</span>{{ ui.amount(dashboard.currency, totals.outstanding, 'due') }}</div>
+                    {% set moved = totals.approved > 0 ? (totals.settled / totals.approved * 100)|round : 0 %}
+                    <div class="i-moneybar"><i style="width:{{ moved }}%"></i></div>
+                    <div class="i-kpi-note i-moneypct">{{ moved }}% {{ isFine ? 'collected' : 'of approved value paid' }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

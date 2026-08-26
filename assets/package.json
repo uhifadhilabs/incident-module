@@ -1,0 +1,25 @@
+{
+    "name": "@uhifadhilabs/incident-module",
+    "description": "Front-end assets of the Incidents module — mapped into hosts via AssetMapper.",
+    "license": "proprietary",
+    "symfony": {
+        "controllers": {
+            "incident-map": {
+                "main": "controllers/incident_map_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "incident-board": {
+                "main": "controllers/incident_board_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "incident-report": {
+                "main": "controllers/incident_report_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            }
+        },
+        "importmap": {}
+    }
+}

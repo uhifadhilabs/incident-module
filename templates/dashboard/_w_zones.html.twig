@@ -1,0 +1,25 @@
+{# IN·05 — incidents by the zone they fall in.
+
+   Zones are presence-driven and do not overlap, so an incident falls in exactly
+   one and the counts add up to the window. A point in NO zone is a row of its own
+   ("unzoned") rather than a dropped record: an organisation that has drawn no
+   zones at all is the normal state. #}
+{% set rows = dashboard.zoneCounts %}
+{% set most = rows is empty ? 1 : max(rows) %}
+<div class="c" data-w="zones">
+    <span class="tab"><span class="idx">IN·05</span>Incidents by zone<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }}</span></span>
+    {% if rows is empty %}
+        <div class="use">Nothing to place. No incident was filed in this window.</div>
+    {% else %}
+        <svg class="ch" viewBox="0 0 470 {{ 12 + rows|length * 24 }}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Incidents by zone">
+            <line class="grid" x1="118" y1="4" x2="118" y2="{{ 8 + rows|length * 24 }}"/>
+            {% for zone, count in rows %}
+                {% set y = 12 + loop.index0 * 24 %}
+                <text x="112" y="{{ y + 12 }}" text-anchor="end">{{ zone is empty ? 'unzoned' : zone }}</text>
+                <rect x="118" y="{{ y }}" width="{{ (count / most * 322)|round }}" height="15" rx="3" fill="var(--acc)" opacity="0.85"><title>{{ count }} in {{ zone is empty ? 'no zone' : zone }}</title></rect>
+                <text class="anno" x="{{ 124 + (count / most * 322)|round }}" y="{{ y + 12 }}">{{ count }}</text>
+            {% endfor %}
+        </svg>
+    {% endif %}
+    <div class="use">Zones are presence-driven and do not overlap, so an incident falls in exactly one — the counts add up to the window.</div>
+</div>

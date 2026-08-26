@@ -1,0 +1,123 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the UhifadhiLabs Incidents Module.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace UhifadhiLabs\Incident\Tests\Functional;
+
+/**
+ * THE DASHBOARD, rendered. Every widget the module ships is drawn against real
+ * rows here — a template that referenced a variable the model does not carry
+ * fails on this test rather than in front of a warden.
+ */
+final class DashboardPageTest extends FunctionalTestCase
+{
+    public function testTheShippedCompositionRenders(): void
+    {
+        $area = $this->anArea();
+        $this->aZone($area, 'Endulen');
+        $this->anIncident($area);
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        // The composition the module ships with: the counts, then where, then
+        // what, then the money.
+        self::assertCount(1, $crawler->filter('[data-w="kpis"]'));
+        self::assertCount(1, $crawler->filter('[data-w="register"]'));
+        self::assertCount(1, $crawler->filter('[data-w="map"]'));
+        self::assertCount(1, $crawler->filter('[data-w="money"]'));
+        // …and nothing else, because a widget that is off is ABSENT.
+        self::assertCount(0, $crawler->filter('[data-w="board"]'));
+        self::assertSelectorTextContains('h1.pg', 'Incidents');
+    }
+
+    /**
+     * EVERY WIDGET THE MODULE SHIPS renders on real data. The dashboard only
+     * draws four of them by default, so this walks the whole catalogue through
+     * the widget library, which renders every one at full size.
+     */
+    public function testEveryWidgetInTheCatalogueRenders(): void
+    {
+        $area = $this->anArea();
+        $this->aZone($area, 'Endulen');
+        $reporter = $this->aReporter();
+        $this->anIncident($area, reportedBy: $reporter);
+        $this->anIncident($area, 'roadkill', 'Zebra roadkill on the C-road, km 12', $reporter);
+        $this->client->loginUser($reporter);
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/widgets', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        foreach ([
+            'kpis', 'register', 'queue', 'maplist', 'map', 'zones', 'spark', 'feed',
+            'evidence', 'categories', 'matrix', 'money', 'board', 'sla', 'funnel', 'rail',
+        ] as $widget) {
+            self::assertGreaterThan(
+                0,
+                $crawler->filter(\sprintf('[data-w="%s"]', $widget))->count(),
+                \sprintf('The "%s" widget did not render in the library.', $widget),
+            );
+        }
+    }
+
+    /** An area with nothing filed still gets a whole dashboard, not an error. */
+    public function testAnEmptyAreaRendersAWholeDashboard(): void
+    {
+        $area = $this->anArea('Quiet Area');
+        $this->client->loginUser($this->aReporter());
+
+        $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('[data-w="kpis"]', '0');
+    }
+
+    /**
+     * ONE FILTER DRIVES EVERYTHING. Narrowing to a category narrows the register
+     * AND the counts, because they are one query read twice.
+     */
+    public function testACategoryChipNarrowsTheWholePage(): void
+    {
+        $area = $this->anArea();
+        $reporter = $this->aReporter();
+        $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Osinoni', $reporter);
+        $this->anIncident($area, 'snaring', 'Snare line lifted at the Lerai forest edge', $reporter);
+        $this->client->loginUser($reporter);
+
+        $all = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+        self::assertCount(2, $all->filter('[data-w="register"] table tr')->reduce(
+            static fn ($node) => str_contains((string) $node->attr('class'), '') && $node->filter('.i-id')->count() > 0,
+        ));
+
+        $narrowed = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?category=poaching', $this->uuidOf($area)));
+        self::assertCount(1, $narrowed->filter('[data-w="register"] .i-id'));
+        self::assertStringContainsString('Snare line', $narrowed->filter('[data-w="register"]')->text());
+    }
+
+    /**
+     * THE LENS IS A LENS, NOT A FENCE. Whatever it selects, "Every category" is
+     * always one click away and shows the whole register to anybody.
+     */
+    public function testTheLensBarAlwaysOffersTheWholeRegister(): void
+    {
+        $area = $this->anArea();
+        $this->anIncident($area);
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?lens=ecology', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        self::assertGreaterThan(0, $crawler->filter('.i-lensbar a[data-lens="all"]')->count());
+        self::assertStringContainsString('A lens, not a fence', $crawler->filter('.i-lensnote')->text());
+    }
+}

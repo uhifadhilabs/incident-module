@@ -1,0 +1,22 @@
+{# IN·10 — how many of each kind, and how far each has got. Every number is a
+   link into the list behind it, so a count is never a dead end. #}
+<div class="c" data-w="matrix">
+    <span class="tab"><span class="idx">IN·10</span>Counts by category and status<span class="src">· every number is a link</span></span>
+    <table class="i-mx">
+        <tr>
+            <th class="rowhd">category × status</th>
+            {% for place in dashboard.places %}<th>{{ place.label }}</th>{% endfor %}
+            <th>all</th>
+        </tr>
+        {% for category in dashboard.categories %}
+            <tr>
+                <td class="rowhd"><span class="i-cat {{ category.colourKey }}"><i></i>{{ category.label }}</span></td>
+                {% for place in dashboard.places %}
+                    {% set count = dashboard.matrixCount(category, place) %}
+                    <td>{% if count > 0 %}<a href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyCategory(category.slug).onlyStatus(place).toQuery)) }}">{{ count }}</a>{% else %}<span class="nil">—</span>{% endif %}</td>
+                {% endfor %}
+                <td class="all"><a href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyCategory(category.slug).toQuery)) }}">{{ dashboard.categoryCount(category) }}</a></td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>

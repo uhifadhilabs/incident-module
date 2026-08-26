@@ -15,6 +15,7 @@ namespace UhifadhiLabs\Incident\Tests\Unit\Module;
 
 use PHPUnit\Framework\TestCase;
 use UhifadhiLabs\Incident\Module\IncidentModuleProvider;
+use UhifadhiLabs\ModuleContracts\ModulePermission;
 use UhifadhiLabs\ModuleContracts\ModuleProviderInterface;
 
 final class IncidentModuleProviderTest extends TestCase
@@ -37,23 +38,32 @@ final class IncidentModuleProviderTest extends TestCase
     }
 
     /**
-     * The module has no screens yet — the incidents design has not been ruled
-     * on, so there is nothing to link to and the host renders the module
-     * through its generic module page. This assertion is the reminder: it
-     * changes the day the first incidents route lands.
+     * The module owns its screens, so the host's tile links straight to the
+     * incidents dashboard rather than to the generic module page.
      */
-    public function testRendersThroughTheHostsGenericModulePageUntilItsScreensLand(): void
+    public function testTheHostLinksStraightToTheIncidentsDashboard(): void
     {
-        self::assertNull(new IncidentModuleProvider('pressure')->entryRoute());
+        self::assertSame('incident_dashboard', new IncidentModuleProvider('pressure')->entryRoute());
     }
 
     /**
-     * Permissions are declared alongside the routes that check them. There are
-     * no routes yet, so declaring a permission here would hand admins something
-     * that guards nothing.
+     * TWO TIERS, and each value is the exact attribute a route checks: filing an
+     * incident, and moving one through its workflow.
+     *
+     * There is deliberately NO "view" permission — reading incidents is reading
+     * the module, and a view permission is exactly the tool somebody would
+     * eventually use to hide one department's rows from another, which this
+     * module's charter forbids.
      */
-    public function testDeclaresNoPermissionsYet(): void
+    public function testDeclaresTheRecordAndManageTiersAndNothingElse(): void
     {
-        self::assertSame([], new IncidentModuleProvider('pressure')->permissions());
+        $permissions = new IncidentModuleProvider('pressure')->permissions();
+
+        self::assertSame(
+            ['incidents.record', 'incidents.manage'],
+            array_map(static fn (ModulePermission $p) => $p->value, $permissions),
+        );
+        self::assertSame(['Incidents', 'Incidents'], array_map(static fn (ModulePermission $p) => $p->umbrella, $permissions));
+        self::assertSame(['Record', 'Manage'], array_map(static fn (ModulePermission $p) => $p->action, $permissions));
     }
 }

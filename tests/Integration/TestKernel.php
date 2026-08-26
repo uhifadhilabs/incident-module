@@ -14,21 +14,47 @@ declare(strict_types=1);
 namespace UhifadhiLabs\Incident\Tests\Integration;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use FundiStadi\PostGISBundle\FundiStadiPostGISBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Bundle\SecurityBundle\SecurityBundle;
+use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Symfony\UX\Icons\UXIconsBundle;
+use Symfony\UX\StimulusBundle\StimulusBundle;
+use Uhifadhi\Entity\User;
+use Uhifadhi\Repository\WidgetCustomPresetRepository;
+use Uhifadhi\Repository\WidgetPreferenceRepository;
+use Uhifadhi\Service\WidgetEndpoint;
+use Uhifadhi\Service\WidgetService;
+use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedModules;
+use UhifadhiLabs\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
+use UhifadhiLabs\Incident\Tests\Integration\Fixtures\HeaderUserAuthenticator;
 use UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle;
 
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 /**
- * Smallest possible host app for integration tests: framework + doctrine + the
- * incidents bundle. No database connection is opened — the module has no
- * entities until the design rules on the domain model, so these tests prove
- * only that the bundle compiles into a real container and plugs into the host's
- * module seam.
+ * THE SMALLEST HOST THAT IS STILL A REAL ONE: framework + twig + doctrine + the
+ * PostGIS bundle + security + incidents, talking to a REAL PostGIS database
+ * (INCIDENTS_TEST_DATABASE_URL, see phpunit.dist.xml).
+ *
+ * It also plays the parts of uhifadhi that this bundle BINDS TO, because a module
+ * that is only tested against mocks of its host is a module nobody has proved
+ * installs:
+ *
+ *  - the host ENTITIES (AreaOfInterest, Zone, User, Position, Department) are
+ *    mapped from tests/Fixtures/Uhifadhi/Entity;
+ *  - the host's WIDGET FRAMEWORK (WidgetService, WidgetEndpoint and their two
+ *    entities) is registered here exactly as the host registers it, so the
+ *    incidents dashboard and library are exercised on the REAL framework rather
+ *    than on a copy of its algebra;
+ *  - the host's TEMPLATES (layout.html.twig and widgets/_library.html.twig and
+ *    friends) are on the Twig path from tests/Integration/Fixtures/templates.
  */
 final class TestKernel extends Kernel
 {
@@ -37,7 +63,14 @@ final class TestKernel extends Kernel
     public function registerBundles(): iterable
     {
         yield new FrameworkBundle();
+        yield new TwigBundle();
+        yield new StimulusBundle();
+        // The host renders every icon through symfony/ux-icons (lucide:*), so the
+        // module's templates do too — and the test host has to provide it.
+        yield new UXIconsBundle();
         yield new DoctrineBundle();
+        yield new FundiStadiPostGISBundle();
+        yield new SecurityBundle();
         yield new UhifadhiLabsIncidentBundle();
     }
 
@@ -50,20 +83,132 @@ final class TestKernel extends Kernel
             'http_method_override' => false,
             'handle_all_throwables' => true,
             'php_errors' => ['log' => true],
+            // loginUser() needs a stateful firewall and flashes need a session;
+            // the mock file storage is the documented test-env choice.
+            'session' => ['storage_factory_id' => 'session.storage.factory.mock_file'],
+            // Every widget write and every incident transition carries a CSRF
+            // token, so the token manager must exist here as it does in a real
+            // host (FrameworkBundle only defines it when csrf_protection is on).
+            'csrf_protection' => ['enabled' => true],
         ]);
+
+        // A minimal but REAL security setup: loginUser() needs a stateful
+        // firewall, and permission checks must go through the real
+        // AuthorizationChecker rather than a stub that always says yes.
+        $container->extension('security', [
+            'providers' => [
+                'app_users' => ['entity' => ['class' => User::class, 'property' => 'email']],
+            ],
+            'firewalls' => [
+                'main' => [
+                    'lazy' => true,
+                    'provider' => 'app_users',
+                    'custom_authenticators' => [HeaderUserAuthenticator::class],
+                ],
+            ],
+        ]);
+
+        $container->services()->set(HeaderUserAuthenticator::class)
+            ->args([service('doctrine.orm.entity_manager')]);
+
+        // The HOST's permission voter, played by a fixture: this bundle declares
+        // "incidents.record" and "incidents.manage" and grants them to nobody, so
+        // something has to decide who holds them. Tagged by hand — a
+        // reusable-bundle test kernel does not autoconfigure.
+        $container->services()->set(FixedPermissionVoter::class)->tag('security.voter');
 
         $container->extension('doctrine', [
             'dbal' => ['url' => '%env(INCIDENTS_TEST_DATABASE_URL)%'],
+            'orm' => [
+                // The host's own choice (config/packages/doctrine.yaml), mirrored
+                // here so the bundle's metadata-driven SQL is exercised against
+                // the column names it will actually meet.
+                'naming_strategy' => 'doctrine.orm.naming_strategy.underscore',
+                'mappings' => [
+                    // The dev-only Uhifadhi\Entity stubs, so the Incident relations
+                    // resolve standalone (the real ones live inside uhifadhi).
+                    'UhifadhiHostStubs' => [
+                        'type' => 'attribute',
+                        'dir' => \dirname(__DIR__).'/Fixtures/Uhifadhi/Entity',
+                        'prefix' => 'Uhifadhi\\Entity',
+                        'is_bundle' => false,
+                    ],
+                ],
+            ],
         ]);
 
-        // Stands in for the HOST's module catalogue: the host collects every
-        // service tagged "uhifadhi.module" and seeds its catalogue from them.
-        // Tagged services are private, so this collector is what makes the
-        // bundle's contribution observable from a test.
-        $container->services()
-            ->set(CollectedModules::class)
-            ->args([tagged_iterator('uhifadhi.module')])
-            ->public();
+        $container->extension('twig', [
+            'paths' => [__DIR__.'/Fixtures/templates'],
+        ]);
+
+        // A real host vendors its icon set (bin/console ux:icons:import). These
+        // tests are about the module's markup, not about which glyph an icon
+        // resolves to, so a missing one renders as nothing rather than failing
+        // the page — and the assertions never depend on an icon being there.
+        $container->extension('ux_icons', [
+            'icon_dir' => __DIR__.'/Fixtures/icons',
+            'ignore_not_found' => true,
+        ]);
+
+        /*
+         * THE HOST'S WIDGET FRAMEWORK, registered the way the host registers it.
+         * The incidents surface rides this rather than shipping a copy, so the
+         * tests have to exercise the real thing — a library that only worked
+         * against a stand-in would be a library nobody has proved works.
+         */
+        $services = $container->services();
+        $services->set(WidgetPreferenceRepository::class)
+            ->args([service('doctrine')])->tag('doctrine.repository_service');
+        $services->set(WidgetCustomPresetRepository::class)
+            ->args([service('doctrine')])->tag('doctrine.repository_service');
+        $services->set(WidgetService::class)->args([
+            service(WidgetPreferenceRepository::class),
+            service(WidgetCustomPresetRepository::class),
+            service('doctrine.orm.entity_manager'),
+        ]);
+        $services->set(WidgetEndpoint::class)->args([
+            service(WidgetService::class),
+            service('security.token_storage'),
+            service('security.csrf.token_manager'),
+        ]);
+
+        // Stands in for the HOST's module catalogue and its department-KPI
+        // service: both collect tagged services, and tagged services are private,
+        // so these collectors are what make the bundle's contributions observable.
+        $services->set(CollectedModules::class)
+            ->args([tagged_iterator('uhifadhi.module')])->public();
+        $services->set(CollectedKpiProviders::class)
+            ->args([tagged_iterator('uhifadhi.department_kpi')])->public();
+
+        // Public aliases so tests can reach the bundle's private services, keyed
+        // by service id for readability (see IntegrationTestCase::service()).
+        foreach ([
+            'incident.taxonomy_installer',
+            'incident.report',
+            'incident.dashboard',
+            'incident.transitions',
+            'incident.zone_locator',
+        ] as $id) {
+            $services->alias('test_public.'.$id, $id)->public();
+        }
+
+        $container->extension('incident', [
+            'dev_tools' => true, // this IS the test env — the recipe enables it via when@test
+        ]);
+    }
+
+    protected function configureRoutes(RoutingConfigurator $routes): void
+    {
+        $controllers = \dirname(__DIR__, 2).'/src/Controller/';
+        if (is_dir($controllers)) {
+            $routes->import($controllers, 'attribute');
+        }
+
+        // The host routes the bundle's crumbs and back-links generate URLs for —
+        // stubbed here (URL generation needs only the definition).
+        $routes->add('dashboard_index', '/_host/dashboard');
+        $routes->add('dashboard_area_show', '/_host/areas/{uuid}');
+        $routes->add('dashboard_area_modules_grid', '/_host/areas/{uuid}/modules');
     }
 
     public function getCacheDir(): string

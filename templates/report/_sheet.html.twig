@@ -1,0 +1,158 @@
+{# ============================================================================
+   THE REPORT FLOW — ONE component, mounted over whichever surface you were on.
+
+   Filing an incident must not feel like five different products just because five
+   dashboards can lead to it, so the dashboard's sheet and the dedicated page at
+   /areas/{uuid}/modules/incidents/new are THIS FILE, twice.
+
+   STEP 2 IS THE CATEGORY'S OWN. Every sub-category's field set is rendered and
+   all but the chosen one are hidden AND disabled, so the posted form carries only
+   the fields the chosen kind of incident actually asks for. The MONEY row exists
+   only inside the field sets of categories that carry money — choose a natural
+   mortality and there is no money row in the document at all. Not disabled.
+   Absent.
+
+   IT WORKS WITHOUT JAVASCRIPT: the sheet is `open` on its own page, the category
+   is a radio, and the form posts normally. The Stimulus controller adds opening
+   it over a dashboard and swapping the field set without a round trip.
+
+   Parameters: area, categories, prefill, chosen, csrfToken, errors, standalone
+   → POST /areas/{uuid}/modules/incidents
+   ========================================================================== #}
+<div class="i-sheetbd{{ standalone ? ' open' }}" data-incident-report-target="sheet"
+     data-action="click->incident-report#closeOnBackdrop">
+    <form class="i-sheet" method="post" action="{{ path('incident_create', {uuid: area.uuid}) }}">
+        <input type="hidden" name="_token" value="{{ csrfToken }}">
+        {# The provenance travels with the form, so whatever the filer changes on
+           the way through, the record it came from is the record it came from. #}
+        {% if prefill.record %}
+            <input type="hidden" name="record" value="{{ prefill.record }}">
+            <input type="hidden" name="label" value="{{ prefill.label }}">
+            <input type="hidden" name="back" value="{{ prefill.backUrl }}">
+            <input type="hidden" name="source" value="{{ prefill.source ?? 'patrol_observation' }}">
+        {% endif %}
+
+        <div class="i-sheethd">
+            <div>
+                <h2>Report an incident</h2>
+                <p>Three steps. What kind, what happened, who was involved — and the money fields only if the category
+                    you pick carries them.</p>
+            </div>
+            {% if not standalone %}
+                <button class="x" type="button" data-action="incident-report#close" aria-label="Close">&times;</button>
+            {% endif %}
+        </div>
+
+        {% if prefill.hasProvenance %}
+            <a class="i-prov i-provlead" href="{{ prefill.backUrl ?? '#' }}">{{ ux_icon('lucide:git-branch') }}
+                <span class="bd"><b>Filed from {{ prefill.label }}</b> — its category guess, its coordinates and its note
+                    travel with it, and that record keeps the link forever.<em>provenance is written once and never edited</em></span>
+                <span class="go">View →</span></a>
+        {% endif %}
+
+        {% if errors is not empty %}
+            <div class="i-errors">{% for error in errors %}<p>{{ error }}</p>{% endfor %}</div>
+        {% endif %}
+
+        <div class="i-steps"><span class="on">1 · category</span><span class="arr">→</span><span>2 · what happened</span><span class="arr">→</span><span>3 · people &amp; evidence</span></div>
+
+        {# STEP 1 — what kind. Choosing one selects its first sub-category; step 2
+           then offers the siblings, exactly as the design draws it. #}
+        <div class="i-catpick">
+            {% for category in categories %}
+                {% set slugs = [] %}
+                {% for sub in category.subcategories %}{% set slugs = slugs|merge([sub.slug]) %}{% endfor %}
+                <label class="i-catopt{{ chosen and chosen.category.slug == category.slug ? ' on' }}"
+                       data-incident-report-target="category"
+                       data-subcategory="{{ slugs|first }}"
+                       data-subcategories="{{ slugs|join(',') }}"
+                       data-action="click->incident-report#choose">
+                    <span class="r"><i class="i-hue-{{ category.colourKey }}"></i><b>{{ category.label }}</b></span>
+                    <span class="d">{% for sub in category.subcategories %}{{ sub.label }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
+                </label>
+            {% endfor %}
+        </div>
+
+        {# STEP 2 — THE CATEGORY'S OWN FIELDS, one set per sub-category. #}
+        {% for category in categories %}
+            {% for subcategory in category.subcategories %}
+                {% set isChosen = chosen and chosen.slug == subcategory.slug %}
+                <div class="i-fieldset i-step2" data-incident-report-target="fieldset"
+                     data-subcategory="{{ subcategory.slug }}"{{ isChosen ? '' : ' hidden' }}>
+                    <div class="hd">Step 2 — the fields {{ subcategory.label }} asks for</div>
+
+                    {# The siblings under this kind. Choosing one swaps the whole
+                       field set, because the sub-category is what decides the
+                       questions — and whether there is a money row at all. #}
+                    <div class="i-fld"><label>Sub-category</label>
+                        <span><span class="i-taxsub">
+                            {%- for sibling in category.subcategories -%}
+                                <a href="#" class="{{ sibling.slug == subcategory.slug ? 'on' }}"
+                                   data-incident-report-target="category"
+                                   data-subcategory="{{ sibling.slug }}"
+                                   data-subcategories="{{ sibling.slug }}"
+                                   data-action="click->incident-report#choose">{{ sibling.label }}</a>
+                            {%- endfor -%}
+                        </span></span></div>
+
+                    <div class="i-fld"><label for="title-{{ subcategory.slug }}">What happened</label>
+                        <span><input type="text" id="title-{{ subcategory.slug }}" name="title" maxlength="200"
+                                     placeholder="One line — the register prints it"{{ isChosen ? '' : ' disabled' }}></span></div>
+                    <div class="i-fld"><label for="when-{{ subcategory.slug }}">When</label>
+                        <span><input type="datetime-local" id="when-{{ subcategory.slug }}" name="occurred_at"
+                                     value="{{ prefill.occurredAt ? prefill.occurredAt|date('Y-m-d\\TH:i') }}"{{ isChosen ? '' : ' disabled' }}></span></div>
+                    <div class="i-fld"><label>Where</label>
+                        <span><input type="text" name="lat" inputmode="decimal" placeholder="latitude"
+                                     value="{{ prefill.latitude }}"{{ isChosen ? '' : ' disabled' }}>
+                              <input type="text" name="lng" inputmode="decimal" placeholder="longitude"
+                                     value="{{ prefill.longitude }}"{{ isChosen ? '' : ' disabled' }}></span></div>
+                    <div class="i-fld"><label for="sev-{{ subcategory.slug }}">Severity</label>
+                        <span><select id="sev-{{ subcategory.slug }}" name="severity"{{ isChosen ? '' : ' disabled' }}>
+                            <option value="low">low</option>
+                            <option value="medium" selected>medium</option>
+                            <option value="high">high</option>
+                        </select></span></div>
+                    <div class="i-fld"><label for="narr-{{ subcategory.slug }}">In their own words</label>
+                        <span><textarea id="narr-{{ subcategory.slug }}" name="narrative" rows="3"
+                                        placeholder="Verbatim — kept apart from the officer's assessment"{{ isChosen ? '' : ' disabled' }}>{{ prefill.note }}</textarea></span></div>
+
+                    {% for field in subcategory.fieldSet %}
+                        <div class="i-fld"><label for="d-{{ subcategory.slug }}-{{ field.key }}">{{ field.label }}</label>
+                            <span><input type="text" id="d-{{ subcategory.slug }}-{{ field.key }}"
+                                         name="details_{{ field.key }}"{{ isChosen ? '' : ' disabled' }}></span></div>
+                    {% endfor %}
+
+                    {# ONLY where this kind of incident carries money. #}
+                    {% if subcategory.carriesMoney %}
+                        <div class="i-fld only"><label>{{ subcategory.moneyDirection.value == 'fine' ? 'Fine to assess' : 'Loss claimed' }}</label>
+                            <span class="i-kpi-note">Recorded on the case file once somebody has assessed it — filing is
+                                cheap, and a figure guessed at the roadside is worse than none.</span></div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        {# The chosen sub-category, as one value. The picker writes into it; without
+           JavaScript the radios below carry it. #}
+        <input type="hidden" name="subcategory" value="{{ chosen ? chosen.slug }}" data-incident-report-subcategory>
+        <noscript>
+            <div class="i-fieldset">
+                <div class="hd">Step 1 — what kind of incident</div>
+                {% for category in categories %}
+                    {% for subcategory in category.subcategories %}
+                        <div class="i-fld"><label><input type="radio" name="subcategory" value="{{ subcategory.slug }}"
+                            {{ chosen and chosen.slug == subcategory.slug ? 'checked' }}> {{ subcategory.path }}</label><span></span></div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </noscript>
+
+        <div class="i-sheetfoot">
+            <span class="hint">Nothing is written until you file. A filed incident starts at <b class="acc">reported</b>
+                and cannot skip verification.</span>
+            <span class="sp"></span>
+            {% if not standalone %}<button class="tgl" type="button" data-action="incident-report#close">Cancel</button>{% endif %}
+            <button class="cta" type="submit">File incident →</button>
+        </div>
+    </form>
+</div>

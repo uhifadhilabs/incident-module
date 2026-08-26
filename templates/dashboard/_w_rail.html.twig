@@ -1,0 +1,34 @@
+{# IN·15 — WHERE THINGS STAND: the state machine for the ONE incident you last
+   touched.
+
+   PERSON-SCOPED, and it says so. Two people looking at the same dashboard see two
+   different incidents here, which is why the header always NAMES the incident and
+   why this is never a summary. Touched nothing today? It falls back to the top of
+   your queue and renames its own header rather than rendering an empty card.
+
+   The rail itself is the SAME component the case file draws — identical markup,
+   identical guards. #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+<div class="c" data-w="rail">
+    <span class="tab"><span class="idx">IN·15</span>Where things stand<span class="src">· {{ dashboard.rail ? dashboard.rail.reason : 'nothing is on your desk' }}</span></span>
+    {% if dashboard.rail %}
+        {% set incident = dashboard.rail.incident %}
+        <div class="i-railhd">
+            <a class="i-railid" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">{{ incident.reference }}</a>
+            <span class="i-railttl">{{ incident.title }}</span>
+            {{ ui.cat(incident.category, incident.subcategory.label) }}
+            {{ ui.status(incident.status) }}
+            <span class="i-spacer"></span>
+            <a class="open-btn" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">Open the case →</a>
+        </div>
+        {{ include('@UhifadhiLabsIncident/dashboard/_rail.html.twig', {
+            area: area,
+            rail: dashboard.rail,
+            canManage: false,
+            csrfToken: null,
+        }, with_context: false) }}
+        <div class="use">The moves are made on the case file, where the whole record is in front of you — this rail says where the thing is, not what to do about it in passing.</div>
+    {% else %}
+        <div class="use">You have not touched an incident here, and nothing is waiting on you. The widget says so rather than drawing an empty rail.</div>
+    {% endif %}
+</div>

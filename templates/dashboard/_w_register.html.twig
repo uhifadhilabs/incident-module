@@ -1,0 +1,31 @@
+{# IN·01 — the register. Every incident as a row: id, category, what happened,
+   zone, status, severity, money, when. The only widget that never hides a field.
+
+   The filter row above it drives the map and the charts too — one query, three
+   readings. #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+<div class="c" data-w="register">
+    <span class="tab"><span class="idx">IN·01</span>Incident register<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }} · latest {{ min(dashboard.recent|length, 14) }} of {{ dashboard.recentTotal }}</span></span>
+    {{ include('@UhifadhiLabsIncident/dashboard/_filters.html.twig') }}
+    <table class="tbl">
+        <tr><th>id</th><th>category</th><th>what happened</th><th>zone</th><th>status</th><th>severity</th><th class="num">money</th><th>reported</th><th></th></tr>
+        {% for incident in dashboard.recent|slice(0, 14) %}
+            <tr>
+                <td><a href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">{{ ui.id(incident.reference) }}</a></td>
+                <td>{{ ui.cat(incident.category, incident.subcategory.label) }}</td>
+                <td class="i-what">{{ incident.title }}
+                    {# Provenance, in the row: where this record came from, written
+                       once at filing and never edited. #}
+                    <em>{{ incident.sourceRecordLabel ?? incident.source.badge }}</em></td>
+                <td>{{ ui.zone(incident) }}</td>
+                <td>{{ ui.status(incident.status) }}</td>
+                <td>{{ ui.severity(incident.severity) }}</td>
+                <td class="num">{{ ui.moneyTag(incident) }}</td>
+                <td>{{ ui.when(incident.reportedAt, dashboard.now) }}</td>
+                <td class="num"><a class="open-btn" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">Open →</a></td>
+            </tr>
+        {% else %}
+            <tr><td colspan="9" class="use">Nothing filed in this window. That is a fact about the register, not about the area.</td></tr>
+        {% endfor %}
+    </table>
+</div>

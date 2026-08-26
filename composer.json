@@ -18,13 +18,21 @@
         }
     ],
     "require": {
+        "doctrine/dbal": "^4.0",
         "doctrine/doctrine-bundle": "^3.0",
         "doctrine/orm": "^3.5",
+        "fundistadi/postgis-bundle": "^0.5",
         "php": ">=8.4",
+        "symfony/asset": "^7.3 || ^8.0",
         "symfony/config": "^7.3 || ^8.0",
+        "symfony/console": "^7.3 || ^8.0",
         "symfony/dependency-injection": "^7.3 || ^8.0",
         "symfony/framework-bundle": "^7.3 || ^8.0",
+        "symfony/http-foundation": "^7.3 || ^8.0",
         "symfony/http-kernel": "^7.3 || ^8.0",
+        "symfony/twig-bundle": "^7.3 || ^8.0",
+        "symfony/uid": "^7.3 || ^8.0",
+        "symfony/ux-icons": "^3.4",
         "uhifadhilabs/module-contracts": "dev-main"
     },
     "autoload": {
@@ -34,13 +42,26 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "UhifadhiLabs\\Incident\\Tests\\": "tests/"
+            "UhifadhiLabs\\Incident\\Tests\\": "tests/",
+            "Uhifadhi\\Entity\\": "tests/Fixtures/Uhifadhi/Entity/",
+            "Uhifadhi\\Exception\\": "tests/Fixtures/Uhifadhi/Exception/",
+            "Uhifadhi\\Model\\": "tests/Fixtures/Uhifadhi/Model/",
+            "Uhifadhi\\Module\\": "tests/Fixtures/Uhifadhi/Module/",
+            "Uhifadhi\\Repository\\": "tests/Fixtures/Uhifadhi/Repository/",
+            "Uhifadhi\\Service\\": "tests/Fixtures/Uhifadhi/Service/"
         }
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.95",
         "phpstan/phpstan": "^2.2",
-        "phpunit/phpunit": "^13.2"
+        "phpunit/phpunit": "^13.2",
+        "symfony/browser-kit": "^7.3 || ^8.0",
+        "symfony/css-selector": "^7.3 || ^8.0",
+        "symfony/security-bundle": "^7.3 || ^8.0",
+        "symfony/security-core": "^7.3 || ^8.0",
+        "symfony/security-csrf": "^7.3 || ^8.0",
+        "symfony/security-http": "^7.3 || ^8.0",
+        "symfony/stimulus-bundle": "^2.20 || ^2.30 || ^2.0"
     },
     "scripts": {
         "cs:fix": "php-cs-fixer fix",

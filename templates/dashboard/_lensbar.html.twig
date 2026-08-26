@@ -1,0 +1,28 @@
+{# ============================================================================
+   THE DEPARTMENT THESIS, AS A CONTROL.
+
+   A lens RE-ORDERS AND PRE-SELECTS; it never fences. Switching it changes ONE
+   query parameter and no permission, and the "Every category" chip is always
+   present, so nothing is ever out of reach. The note beside it says so in words,
+   because a control whose limits are only in the code is a control people will
+   eventually assume the worst about.
+
+   → GET /areas/{uuid}/modules/incidents?lens=protection|ecology|all
+   ========================================================================== #}
+{% set lenses = {} %}
+{% for category in dashboard.categories %}
+    {% for lead in category.leads %}
+        {% set lenses = lenses|merge({(lead|lower|split(' ')|first): lead}) %}
+    {% endfor %}
+{% endfor %}
+
+<div class="i-lensbar">
+    <span class="lbl">Lens</span>
+    {% for key, label in lenses %}
+        <a class="i-lens{{ filter.lens == key ? ' on' }}" href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.toQuery|merge({lens: key}))) }}" data-lens="{{ key }}">{{ label }}</a>
+    {% endfor %}
+    <a class="i-lens{{ filter.lens == 'all' ? ' on' }}" href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.toQuery|merge({lens: 'all'}))) }}" data-lens="all">Every category</a>
+</div>
+<div class="i-lensnote">{{ ux_icon('lucide:info') }}<div><b>A lens, not a fence.</b> A department attaching this module changes what its team
+    sees <b>first</b> — never what data exists or who may read it. One click on <b>Every category</b> shows the whole
+    register to anybody, and no department can hide a row from another.</div></div>

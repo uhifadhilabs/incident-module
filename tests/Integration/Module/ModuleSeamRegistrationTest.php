@@ -15,7 +15,9 @@ namespace UhifadhiLabs\Incident\Tests\Integration\Module;
 
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use UhifadhiLabs\Incident\Module\IncidentModuleProvider;
+use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedModules;
+use UhifadhiLabs\ModuleContracts\ModulePermission;
 
 /**
  * The host contract: installing this bundle puts "incidents" in the catalogue.
@@ -36,6 +38,44 @@ final class ModuleSeamRegistrationTest extends KernelTestCase
         self::assertInstanceOf(IncidentModuleProvider::class, $modules['incidents']);
         self::assertSame('Incidents', $modules['incidents']->name());
         self::assertSame('triangle-alert', $modules['incidents']->icon());
+        // It owns its screens, so the host's tile links straight to them.
+        self::assertSame('incident_dashboard', $modules['incidents']->entryRoute());
+    }
+
+    /**
+     * The permissions an admin can assign. Declared by the module, granted by
+     * nobody here — and they vanish with the module on uninstall.
+     */
+    public function testItHandsTheHostItsTwoPermissionTiers(): void
+    {
+        self::bootKernel();
+
+        /** @var CollectedModules $catalogue */
+        $catalogue = self::getContainer()->get(CollectedModules::class);
+
+        self::assertSame(
+            ['incidents.record', 'incidents.manage'],
+            array_map(
+                static fn (ModulePermission $permission) => $permission->value,
+                $catalogue->bySlug()['incidents']->permissions(),
+            ),
+        );
+    }
+
+    /**
+     * THE DEPARTMENT KPI SEAM. The tag is applied BY HAND in the extension (a
+     * reusable bundle is not autoconfigured), and a provider that failed to
+     * register would show up only as every incidents plate quietly vanishing from
+     * every performance page. This test is what makes that loud.
+     */
+    public function testItReachesTheHostsDepartmentPerformanceSeam(): void
+    {
+        self::bootKernel();
+
+        /** @var CollectedKpiProviders $providers */
+        $providers = self::getContainer()->get(CollectedKpiProviders::class);
+
+        self::assertArrayHasKey('incidents', $providers->bySlug());
     }
 
     /**

@@ -1,0 +1,624 @@
+/* ============================================================================
+   INCIDENTS MODULE — the module's own vocabulary.
+   ----------------------------------------------------------------------------
+   PORTED VERBATIM from the design app's incidents.css, which is the spec. It is
+   served by AssetMapper from this bundle's public/ directory as
+   `bundles/uhifadhilabsincident/incidents.css` (content-versioned, no
+   assets:install) and loaded by @UhifadhiLabsIncident/base.html.twig — so these
+   rules exist only where the module renders, and the host's own stylesheet never
+   mentions incidents.
+
+   Everything below is MODULE vocabulary except the map plate at the very bottom
+   (.viewer / .ol / .zoomui / .laymenu), which is flagged there: it is HOST
+   vocabulary that patrols.css also declares, and it belongs in the host's own
+   stylesheet. Until that is ruled on, both modules carry their own copy — the
+   duplication is deliberate and marked, not accidental.
+   ========================================================================== */
+
+/* ── THE TAXONOMY PALETTE ─────────────────────────────────────────────────
+   Four top-level categories. Each owns one hue everywhere it appears: the
+   category chip, the map marker, the matrix column, the kanban card rule.
+   → UhifadhiLabs\Incident\Enum\IncidentCategory::colour()                    */
+:root{
+  --i-poach:#E05B41;   /* poaching & wildlife crime      — Protection        */
+  --i-hwc:#DBA33F;     /* human–wildlife conflict        — Protection + Ecology */
+  --i-comp:#8E7BE0;    /* compliance & encroachment      — Protection        */
+  --i-mort:#5FA8E0;    /* wildlife mortality & roadkill  — Ecology           */
+  --i-money:#3ED9A8;   /* anything denominated in money                      */
+}
+html.light{
+  --i-poach:#BA4227; --i-hwc:#9A6B14; --i-comp:#5A44B8; --i-mort:#2C6FA8; --i-money:#0F8A68;
+}
+
+/* ── CATEGORY CHIP ────────────────────────────────────────────────────────
+   A dot + the category name. The dot is the same square-ish 2px-radius mark
+   the sidebar uses for a module, so "this row is of that kind" reads the same
+   way in the tree and in the table.                                          */
+.i-cat{display:inline-flex;align-items:center;gap:6px;font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10px;font-weight:700;letter-spacing:.02em;white-space:nowrap;line-height:1;
+  border:1px solid var(--ln2);border-radius:6px;padding:4px 9px 3px;color:var(--tx);
+  background:color-mix(in srgb,var(--fog) 6%,transparent);text-decoration:none}
+.i-cat i{width:7px;height:7px;border-radius:2px;flex:none;font-style:normal}
+.i-cat.poach{border-color:color-mix(in srgb,var(--i-poach) 45%,transparent)}
+.i-cat.poach i{background:var(--i-poach)}
+.i-cat.hwc{border-color:color-mix(in srgb,var(--i-hwc) 45%,transparent)}
+.i-cat.hwc i{background:var(--i-hwc)}
+.i-cat.comp{border-color:color-mix(in srgb,var(--i-comp) 45%,transparent)}
+.i-cat.comp i{background:var(--i-comp)}
+.i-cat.mort{border-color:color-mix(in srgb,var(--i-mort) 45%,transparent)}
+.i-cat.mort i{background:var(--i-mort)}
+.i-cat.ghost{border-style:dashed;color:var(--dim);background:none;cursor:pointer}
+.i-cat.ghost i{background:var(--dim)}
+/* The sub-category, when a page shows the full path. Never bolder than its parent. */
+.i-sub{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:var(--fog);
+  letter-spacing:.02em;white-space:nowrap}
+.i-path{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap}
+.i-path .sep{color:var(--dim);font-size:10px}
+
+/* ── STATUS CHIP ──────────────────────────────────────────────────────────
+   The workflow made visible. Five states, one shape, read left to right in
+   the order the machine walks them.
+   → the Symfony Workflow places on UhifadhiLabs\Incident\Entity\Incident      */
+.i-st{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;border-radius:6px;padding:3.5px 9px 2.5px;
+  border:1px solid;white-space:nowrap;line-height:1;display:inline-block}
+.i-st.rep{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 42%,transparent);
+  background:color-mix(in srgb,var(--warn) 9%,transparent)}
+.i-st.ver{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 45%,transparent);
+  background:color-mix(in srgb,var(--acc) 9%,transparent)}
+/* NOTE the class is `wip`, not `prog`: uhifadhi.css already owns a bare `.prog`
+   (the 7px progress bar), and `.i-st.prog` inherited its height and overflow,
+   which clipped the label to a sliver. A module must not reuse a bare host
+   class name even in a compound selector. */
+.i-st.wip{color:var(--i-mort);border-color:color-mix(in srgb,var(--i-mort) 45%,transparent);
+  background:color-mix(in srgb,var(--i-mort) 9%,transparent)}
+.i-st.res{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 42%,transparent);
+  background:color-mix(in srgb,var(--ok) 9%,transparent)}
+.i-st.cls{color:var(--dim);border:1px dashed color-mix(in srgb,var(--fog) 45%,transparent);font-weight:600}
+/* Severity — a separate axis from status, and deliberately quieter than it. */
+.i-sev{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--fog);white-space:nowrap}
+.i-sev.hi{color:var(--fail)}
+.i-sev.md{color:var(--warn)}
+.i-sev.lo{color:var(--dim)}
+
+/* ── THE LENS BAR ─────────────────────────────────────────────────────────
+   The department thesis, as a control. Switching the lens re-orders and
+   pre-filters — it NEVER removes a row from reach: the "all categories" chip
+   is always present and always one click away. That is the whole ruling,
+   drawn.
+   → GET …/modules/incidents?lens=protection|ecology|all (a query parameter,
+     never a permission)                                                      */
+.i-lensbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.i-lensbar .lbl{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-right:2px}
+.i-lens{display:inline-flex;align-items:center;gap:7px;font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fog);
+  border:1px solid var(--ln2);border-radius:99px;padding:6px 13px 5px;text-decoration:none;
+  cursor:pointer;background:none;font-family:"JetBrains Mono",ui-monospace,monospace;line-height:1}
+.i-lens:hover{color:var(--tx);border-color:var(--fog);text-decoration:none}
+.i-lens.on{color:var(--accT);background:var(--acc);border-color:var(--acc)}
+.i-lens svg{width:13px;height:13px;flex:none}
+.i-lensnote{display:flex;gap:12px;align-items:flex-start;
+  border:1px dashed color-mix(in srgb,var(--acc) 42%,transparent);border-radius:12px;
+  padding:13px 16px;background:color-mix(in srgb,var(--acc) 5%,transparent);
+  font-size:12.5px;color:var(--fog);line-height:1.6;margin:0 0 20px}
+/* NO max-width HERE. The 96ch measure is for a BARE paragraph sitting on the
+   page ground (.pgsub, .footer), where nothing else bounds the line. This text
+   is already inside a card with its own border and padding — the card is the
+   measure, and capping the text as well leaves a ragged empty gutter inside a
+   full-width box. Same rule for every other bordered block in this file. */
+.i-lensnote svg{flex:none;color:var(--acc);margin-top:2px}
+.i-lensnote b{color:var(--tx)}
+
+/* ── FILTER BAR ───────────────────────────────────────────────────────────
+   One filter drives everything on the page — the map, the list, the charts —
+   exactly as the patrols module's does.                                      */
+.i-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:2px 0 14px}
+.i-filters .sep{width:1px;height:18px;background:var(--ln2);margin:0 3px}
+.i-search{display:inline-flex;align-items:center;gap:7px;background:color-mix(in srgb,var(--fog) 7%,transparent);
+  border:1px solid var(--ln2);border-radius:99px;padding:5px 13px}
+.i-search svg{width:13px;height:13px;color:var(--fog);flex:none}
+.i-search input{border:0;background:none;font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10.5px;color:var(--tx);width:150px;outline:none}
+.i-search input::placeholder{color:var(--dim)}
+
+/* ── MONEY ────────────────────────────────────────────────────────────────
+   Fines and compensation. The rule the design makes: an amount is never a
+   plain number — it always carries its currency, its direction (owed to the
+   authority vs owed by it) and its settlement state, because an unpaid fine
+   and a paid one are different facts.
+   → UhifadhiLabs\Incident\ValueObject\Money (integer minor units + currency)  */
+.i-moneyblock{border:1px solid color-mix(in srgb,var(--i-money) 30%,transparent);border-radius:12px;
+  padding:14px 16px 12px;background:color-mix(in srgb,var(--i-money) 5%,transparent)}
+.i-moneyblock .hd{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.i-moneyblock .hd svg{width:14px;height:14px;color:var(--i-money);flex:none}
+.i-moneyblock .hd b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--i-money)}
+.i-mrow{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:7px 0;
+  border-bottom:1px dashed color-mix(in srgb,var(--fog) 18%,transparent)}
+.i-mrow:last-child{border-bottom:0}
+.i-mrow>span{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim);
+  text-transform:uppercase;letter-spacing:.08em;flex:none}
+.i-amt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12.5px;font-weight:700;
+  color:var(--tx);font-variant-numeric:tabular-nums;white-space:nowrap}
+.i-amt em{font-style:normal;font-size:9.5px;color:var(--dim);font-weight:600;margin-right:5px}
+.i-amt.paid{color:var(--ok)}
+.i-amt.due{color:var(--warn)}
+.i-amt.nil{color:var(--dim);font-weight:600}
+.i-moneybar{height:6px;border-radius:4px;background:var(--raised);overflow:hidden;margin-top:9px}
+.i-moneybar i{display:block;height:100%;border-radius:4px;background:var(--i-money)}
+/* The one-line money summary a register row shows. */
+.i-mtag{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
+  color:var(--i-money);white-space:nowrap;font-variant-numeric:tabular-nums}
+.i-mtag.due{color:var(--warn)}
+.i-mtag.nil{color:var(--dim);font-weight:500}
+
+/* ── THE EVENT TIMELINE ───────────────────────────────────────────────────
+   An incident's spine. One rail, one dot per event, the dot coloured by what
+   kind of event it was: a transition (accent), a note (fog), evidence (warn),
+   money (money hue). Append-only — nothing here is ever edited.
+   → UhifadhiLabs\Incident\Entity\IncidentEvent, ordered by occurredAt         */
+.i-tl{position:relative;padding-left:26px;margin-top:6px}
+.i-tl::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:1px;background:var(--ln2)}
+.i-tl-item{position:relative;padding:0 0 18px}
+.i-tl-item:last-child{padding-bottom:2px}
+.i-tl-item::before{content:"";position:absolute;left:-23px;top:5px;width:9px;height:9px;border-radius:50%;
+  background:var(--cv);border:2px solid var(--fog)}
+.i-tl-item.tr::before{border-color:var(--acc)}
+.i-tl-item.ev::before{border-color:var(--warn)}
+.i-tl-item.mo::before{border-color:var(--i-money)}
+.i-tl-item.now::before{border-color:var(--acc);background:var(--acc);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 18%,transparent)}
+.i-tl-t{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:3px}
+.i-tl-b{font-size:12.5px;line-height:1.6;color:var(--tx)}
+.i-tl-b em{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;
+  font-style:normal;color:var(--dim);margin-top:3px}
+.i-tl-b .who{color:var(--fog);font-weight:600}
+
+/* ── EVIDENCE ─────────────────────────────────────────────────────────────
+   Photo tiles. Theme-independent on purpose, like the map plate: a photograph
+   does not get lighter when the interface does.                              */
+.i-evgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;margin-top:8px}
+.i-ph{aspect-ratio:4/3;border-radius:9px;border:1px solid var(--ln2);position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;color:#8CA093;cursor:pointer;
+  background:radial-gradient(90px 60px at 40% 35%,#2A3327 0%,transparent 70%),#20241F}
+.i-ph:hover{border-color:color-mix(in srgb,var(--acc) 55%,transparent)}
+.i-ph i{position:absolute;left:6px;bottom:6px;right:6px;font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:8.5px;font-weight:600;font-style:normal;color:#EAF2EC;background:rgba(10,14,11,.72);
+  padding:3px 6px;border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.i-ph.add{border-style:dashed;background:none;color:var(--fog)}
+.i-ph.add:hover{border-color:var(--acc);color:var(--acc)}
+.i-ph.doc{background:color-mix(in srgb,var(--fog) 8%,transparent);color:var(--fog)}
+
+/* ── INVOLVED PARTIES ─────────────────────────────────────────────────────
+   People and organisations attached to an incident with a ROLE. A suspect, a
+   claimant, a witness and the ranger who reported it are the same shape of
+   record wearing different roles — the design refuses to build four tables.
+   → UhifadhiLabs\Incident\Entity\IncidentParty (role enum + free identity)    */
+.i-party{display:flex;align-items:center;gap:11px;padding:9px 0;
+  border-bottom:1px dashed color-mix(in srgb,var(--fog) 18%,transparent)}
+.i-party:last-child{border-bottom:0}
+.i-party .av{width:28px;height:28px;border-radius:8px;background:var(--raised);flex:none;
+  display:grid;place-items:center;font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:9.5px;font-weight:700;color:var(--fog)}
+.i-party .nm{font-size:12.5px;font-weight:600;color:var(--tx);min-width:0}
+.i-party .nm em{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;
+  font-style:normal;color:var(--dim);margin-top:2px;font-weight:500}
+.i-role{margin-left:auto;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--fog);border:1px solid var(--ln2);
+  border-radius:99px;padding:4px 9px 3px;white-space:nowrap;line-height:1;flex:none}
+.i-role.suspect{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 40%,transparent)}
+.i-role.claimant{color:var(--i-money);border-color:color-mix(in srgb,var(--i-money) 40%,transparent)}
+.i-role.reporter{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
+
+/* ── PROVENANCE ───────────────────────────────────────────────────────────
+   Where the incident came from. A patrol observation filed as an incident
+   keeps its parentage forever, and the link goes BOTH ways — the observation
+   page shows "filed as INC-…", this shows "from observation 2 of P-0142".
+   → the incident's source polymorph: patrol observation | direct report |
+     community report | ingestion                                             */
+.i-prov{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--ln2);border-radius:11px;
+  padding:12px 14px;background:color-mix(in srgb,var(--fog) 4%,transparent);text-decoration:none;
+  color:var(--tx)}
+.i-prov:hover{border-color:color-mix(in srgb,var(--acc) 50%,transparent);text-decoration:none}
+.i-prov>svg{width:16px;height:16px;color:var(--acc);flex:none;margin-top:2px}
+.i-prov .bd{min-width:0;font-size:12.5px;line-height:1.55}
+.i-prov .bd b{font-weight:600}
+.i-prov .bd em{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;
+  font-style:normal;color:var(--dim);margin-top:3px}
+.i-prov .go{margin-left:auto;flex:none;align-self:center;color:var(--acc);font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:10px;font-weight:700}
+
+/* ── DIRECTION A · THE CASE FILE ──────────────────────────────────────────
+   A document, not a dashboard. Numbered sections, a rule under each heading,
+   a fixed fact block at the top. Deliberately narrow measure — a file is read,
+   not scanned.                                                               */
+.i-doc{max-width:96ch}
+.i-dochd{border:1px solid var(--ln2);border-radius:14px;padding:18px 20px 16px;
+  background:linear-gradient(180deg,var(--p1),var(--p2));box-shadow:var(--shadow)}
+.i-dochd .no{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--acc);margin-bottom:8px}
+.i-dochd h2{font-family:"Archivo",system-ui,sans-serif;font-size:20px;font-weight:700;letter-spacing:-.02em;
+  margin:0 0 12px;color:var(--tx)}
+.i-docfacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:2px 22px;
+  border-top:1px solid var(--ln);padding-top:12px}
+.i-docfacts>div{padding:6px 0}
+.i-docfacts .k{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:4px}
+.i-docfacts .v{font-size:12.5px;font-weight:600;color:var(--tx)}
+.i-sec{margin-top:30px}
+.i-sechd{display:flex;align-items:baseline;gap:11px;border-bottom:1px solid var(--ln2);padding-bottom:8px;
+  margin-bottom:14px}
+.i-sechd .n{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
+  letter-spacing:.12em;color:var(--acc);flex:none}
+.i-sechd h3{font-family:"Archivo",system-ui,sans-serif;font-size:14.5px;font-weight:700;margin:0;color:var(--tx)}
+.i-sechd .note{margin-left:auto;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;
+  color:var(--dim);flex:none}
+.i-narr{font-size:13.5px;line-height:1.75;color:var(--tx);max-width:80ch}
+.i-narr p{margin:0 0 12px}
+.i-narr p:last-child{margin-bottom:0}
+.i-quote{border-left:2px solid var(--ln2);padding:2px 0 2px 16px;color:var(--fog);font-size:13px;
+  line-height:1.7;font-style:italic}
+
+/* ── DIRECTION B · MAP-LED ────────────────────────────────────────────────
+   The map is the page. The list docks beside it and scrolls independently, so
+   panning never loses your place in the results.                             */
+.i-split{display:grid;grid-template-columns:minmax(0,1fr) 388px;gap:18px;align-items:stretch}
+@media(max-width:1100px){.i-split{grid-template-columns:1fr}}
+.i-split>.i-mapcol{min-width:0;display:flex;flex-direction:column}
+.i-split>.i-mapcol .viewer{flex:1;min-height:460px;display:grid}
+.i-split>.i-mapcol .viewer>svg{width:100%;height:100%}
+.i-listcol{display:flex;flex-direction:column;min-height:0;border:1px solid var(--ln);border-radius:14px;
+  background:linear-gradient(180deg,var(--p1),var(--p2));box-shadow:var(--shadow);overflow:hidden}
+.i-listhd{padding:12px 15px;border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:9px;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--fog)}
+.i-listhd .n{margin-left:auto;color:var(--acc);letter-spacing:.04em}
+.i-listbody{overflow-y:auto;max-height:min(64vh,620px);padding:4px 8px 8px}
+.i-hit{display:block;padding:11px 8px;border-bottom:1px dashed color-mix(in srgb,var(--fog) 16%,transparent);
+  text-decoration:none;color:var(--tx);border-left:2px solid transparent;cursor:pointer}
+.i-hit:last-child{border-bottom:0}
+.i-hit:hover{background:color-mix(in srgb,var(--acc) 5%,transparent);text-decoration:none}
+.i-hit.on{background:color-mix(in srgb,var(--acc) 9%,transparent);border-left-color:var(--acc)}
+.i-hit .r1{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.i-hit .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--acc)}
+.i-hit .r2{font-size:12.5px;line-height:1.5;color:var(--tx)}
+.i-hit .r3{display:flex;align-items:center;gap:9px;margin-top:6px;flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
+/* The map's own floating pieces — a marker key and a hovered-pin card. */
+.i-pincard{position:absolute;z-index:4;left:12px;bottom:12px;width:262px;padding:12px 13px;border-radius:11px;
+  background:rgba(10,14,11,.9);border:1px solid rgba(234,242,236,.2);color:#EAF2EC}
+.i-pincard .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
+  color:#3ED9A8;margin-bottom:5px;display:block}
+.i-pincard .tt{font-size:12px;line-height:1.5;margin-bottom:7px}
+.i-pincard .mt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:rgba(234,242,236,.62)}
+
+/* ── DIRECTION C · FEED ───────────────────────────────────────────────────
+   Reverse-chronological, grouped by day. A day is a sticky header with the
+   day's own counts, so scrolling never loses the date.                       */
+.i-day{position:sticky;top:56px;z-index:4;display:flex;align-items:center;gap:12px;
+  padding:9px 2px;margin:22px 0 4px;
+  background:color-mix(in srgb,var(--cv) 92%,transparent);backdrop-filter:blur(8px)}
+.i-day b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--tx)}
+.i-day .cnt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
+.i-day::after{content:"";flex:1;height:1px;background:var(--ln2)}
+.i-feed{display:flex;gap:14px;padding:14px 2px;border-bottom:1px dashed color-mix(in srgb,var(--fog) 18%,transparent);
+  align-items:flex-start;text-decoration:none;color:var(--tx)}
+.i-feed:hover{background:color-mix(in srgb,var(--acc) 4%,transparent);text-decoration:none}
+.i-feed .gut{width:56px;flex:none;text-align:right;padding-top:2px}
+.i-feed .gut .hm{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:700;color:var(--tx);display:block}
+.i-feed .gut .ago{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;color:var(--dim);display:block;margin-top:3px}
+.i-feed .mark{width:11px;flex:none;position:relative;align-self:stretch}
+.i-feed .mark i{position:absolute;left:1px;top:5px;width:9px;height:9px;border-radius:2px;font-style:normal}
+.i-feed .bd{flex:1;min-width:0}
+.i-feed .bd .hl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.i-feed .bd .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--acc)}
+.i-feed .bd .tt{font-size:13px;line-height:1.55}
+.i-feed .bd .mt{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:7px;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
+.i-feed .rt{flex:none;align-self:center}
+/* the load sparkline above the feed */
+.i-spark{display:flex;align-items:flex-end;gap:3px;height:38px}
+.i-spark i{flex:1;background:color-mix(in srgb,var(--acc) 45%,transparent);border-radius:2px 2px 0 0;min-height:2px}
+.i-spark i.hot{background:var(--acc)}
+
+/* ── DIRECTION D · TAXONOMY MATRIX ────────────────────────────────────────
+   The taxonomy IS the navigation. Rows are categories, columns are statuses
+   (or zones); a cell is a count and a link. The heat is one hue at varying
+   strength — never a rainbow, because the quantity is one quantity.          */
+.i-mx{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+.i-mx th{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--fog);padding:9px 8px;text-align:center;
+  border-bottom:1px solid var(--ln2);white-space:nowrap}
+.i-mx th.rowhd{text-align:left;min-width:210px}
+.i-mx td{padding:0;border-bottom:1px solid var(--ln)}
+.i-mx tr:last-child td{border-bottom:0}
+.i-mx td.rowhd{padding:11px 8px;white-space:nowrap}
+/* The row header is a category and a way in — nothing else. The caret is the
+   drill-in; it names the sub-categories on hover instead of printing sixteen
+   labels the reference card already prints. */
+.i-mxrow{display:flex;align-items:center;gap:8px}
+.i-mxexp{background:none;border:1px solid var(--ln2);border-radius:6px;width:20px;height:20px;
+  display:grid;place-items:center;color:var(--dim);cursor:pointer;flex:none;padding:0;font-family:inherit}
+.i-mxexp:hover{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 55%,transparent)}
+.i-mx .cell{display:block;margin:3px;padding:12px 6px;border-radius:9px;text-align:center;
+  text-decoration:none;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:14px;font-weight:700;
+  color:var(--tx);font-variant-numeric:tabular-nums;border:1px solid transparent;cursor:pointer}
+.i-mx .cell:hover{border-color:var(--acc);text-decoration:none}
+.i-mx .cell.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.i-mx .cell em{display:block;font-style:normal;font-size:8px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);margin-top:4px}
+.i-mx .cell.z{color:var(--dim);font-weight:500}
+.i-mx .cell.h1{background:color-mix(in srgb,var(--acc) 8%,transparent)}
+.i-mx .cell.h2{background:color-mix(in srgb,var(--acc) 16%,transparent)}
+.i-mx .cell.h3{background:color-mix(in srgb,var(--acc) 26%,transparent)}
+.i-mx .cell.h4{background:color-mix(in srgb,var(--acc) 38%,transparent);color:var(--tx)}
+.i-mx td.tot .cell,.i-mx tr.tot .cell{background:none;border-left:1px solid var(--ln2);border-radius:0;color:var(--fog)}
+/* the taxonomy rail — the tree the matrix is a projection of */
+.i-tax{display:flex;flex-direction:column;gap:2px}
+/* A GROUP IS A <div>, NOT AN <a>. Its sub-category chips are links, and an
+   anchor may not contain an anchor — the parser un-nests them and the chip row
+   falls out of the group, which renders as a stack of bare blue links. The
+   group's own link is the title row inside it. */
+.i-taxg{padding:9px 10px;border-radius:9px;display:block;color:var(--tx)}
+.i-taxg:hover{background:var(--raised)}
+.i-taxg.on{background:color-mix(in srgb,var(--acc) 11%,transparent)}
+.i-taxg .r{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--tx);cursor:pointer}
+.i-taxg .r:hover{text-decoration:none}
+.i-taxg .r:hover b{color:var(--acc)}
+.i-taxg .r i{width:8px;height:8px;border-radius:2px;flex:none;font-style:normal}
+.i-taxg .r b{font-size:12.5px;font-weight:600}
+.i-taxg .r .n{margin-left:auto;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;
+  font-weight:700;color:var(--fog);font-variant-numeric:tabular-nums}
+.i-taxg .lens{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);margin:5px 0 0 17px;display:block}
+/* THE TREE'S sub-categories are a READING LIST, not a set of controls: four
+   names under a heading, wanted at a glance and wanted compact. So they are one
+   wrapping run in the quiet colour, separated by interpuncts the CSS draws —
+   no borders, no chips, no vertical stack. The card stays as short as the one
+   beside it, which is the whole point of a rail.
+   `.i-taxsub` below keeps the bordered-chip form, because THERE the items are
+   filters with a selected state, and a state needs a shape to sit in. */
+.i-taxrun{display:block;margin:6px 0 1px 17px;font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:9.5px;line-height:1.75;color:var(--fog)}
+.i-taxrun a{color:var(--fog);text-decoration:none}
+.i-taxrun a:hover{color:var(--acc);text-decoration:none}
+.i-taxrun a+a::before{content:"\00b7";color:var(--dim);margin:0 6px;display:inline-block}
+
+.i-taxsub{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 2px 17px}
+.i-taxsub a{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--fog);
+  border:1px solid var(--ln);border-radius:6px;padding:3.5px 8px 2.5px;text-decoration:none;line-height:1}
+.i-taxsub a:hover{color:var(--tx);border-color:var(--fog);text-decoration:none}
+.i-taxsub a.on{color:var(--accT);background:var(--acc);border-color:var(--acc)}
+/* the category's own field set — direction D's payoff */
+.i-fieldset{border:1px dashed var(--ln2);border-radius:12px;padding:14px 16px;margin-top:6px}
+.i-fieldset .hd{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+.i-fld{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:baseline;padding:7px 0;
+  border-bottom:1px dashed color-mix(in srgb,var(--fog) 14%,transparent)}
+.i-fld:last-child{border-bottom:0}
+.i-fld>label{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--fog)}
+.i-fld>span{font-size:12.5px;color:var(--tx)}
+.i-fld.only{border-left:2px solid color-mix(in srgb,var(--i-money) 55%,transparent);padding-left:12px;
+  margin-left:-14px}
+
+/* ── DIRECTION E · WORKFLOW BOARD ─────────────────────────────────────────
+   Columns are states. A card lives in exactly one column, and moving it IS
+   the transition — there is no separate "change status" form anywhere.       */
+.i-board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;align-items:start}
+@media(max-width:1180px){.i-board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.i-board{grid-template-columns:1fr}}
+.i-col{border:1px solid var(--ln);border-radius:13px;background:color-mix(in srgb,var(--fog) 3%,transparent);
+  padding:10px;min-height:180px;display:flex;flex-direction:column;gap:9px}
+.i-col.drop{border-color:var(--acc);border-style:dashed;background:color-mix(in srgb,var(--acc) 6%,transparent)}
+.i-colhd{display:flex;align-items:center;gap:8px;padding:2px 3px 9px;border-bottom:1px solid var(--ln)}
+.i-colhd .n{margin-left:auto;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;
+  font-weight:700;color:var(--fog);font-variant-numeric:tabular-nums}
+.i-colhd .wip{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;color:var(--dim)}
+.i-card{border:1px solid var(--ln2);border-radius:11px;padding:11px 12px;background:var(--p1);
+  display:block;text-decoration:none;color:var(--tx);cursor:grab;border-left:3px solid var(--fog)}
+.i-card:hover{border-color:color-mix(in srgb,var(--acc) 50%,transparent);text-decoration:none;
+  box-shadow:var(--shadow)}
+.i-card.poach{border-left-color:var(--i-poach)}
+.i-card.hwc{border-left-color:var(--i-hwc)}
+.i-card.comp{border-left-color:var(--i-comp)}
+.i-card.mort{border-left-color:var(--i-mort)}
+.i-card .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
+  color:var(--acc);display:flex;align-items:center;gap:8px}
+.i-card .id .age{margin-left:auto;color:var(--dim);font-weight:600}
+.i-card .id .age.old{color:var(--fail)}
+.i-card .tt{font-size:12.5px;line-height:1.5;margin:7px 0 8px}
+.i-card .ft{display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim)}
+.i-card .ft .av{width:19px;height:19px;border-radius:6px;background:var(--raised);display:grid;
+  place-items:center;font-size:8px;font-weight:700;color:var(--fog);flex:none}
+.i-card.ghost{opacity:.5;border-style:dashed;cursor:default}
+/* the state-machine rail on E's detail page */
+.i-wf{display:flex;align-items:stretch;gap:0;border:1px solid var(--ln2);border-radius:13px;overflow:hidden;
+  background:linear-gradient(180deg,var(--p1),var(--p2))}
+.i-wfstep{flex:1;min-width:0;padding:14px 16px;border-right:1px solid var(--ln);position:relative}
+.i-wfstep:last-child{border-right:0}
+.i-wfstep .n{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.i-wfstep .n i{width:19px;height:19px;border-radius:50%;flex:none;font-style:normal;display:grid;
+  place-items:center;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:700;
+  border:1.5px solid var(--ln2);color:var(--dim)}
+.i-wfstep .n b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.i-wfstep .mt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim);line-height:1.5}
+.i-wfstep.done .n i{border-color:var(--ok);color:var(--ok)}
+.i-wfstep.done .n b{color:var(--fog)}
+.i-wfstep.done .mt{color:var(--fog)}
+.i-wfstep.now{background:color-mix(in srgb,var(--acc) 9%,transparent)}
+.i-wfstep.now .n i{border-color:var(--acc);background:var(--acc);color:var(--accT)}
+.i-wfstep.now .n b{color:var(--acc)}
+.i-wfstep.now .mt{color:var(--tx)}
+.i-wfstep.now::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--acc)}
+/* the transition buttons — only the legal ones are offered, ever */
+.i-trans{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.i-trans .lbl{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.i-blocked{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim);
+  display:inline-flex;align-items:center;gap:7px}
+.i-blocked svg{width:12px;height:12px;flex:none}
+
+/* ── KEY / VALUE ROW ──────────────────────────────────────────────────────
+   The meta card's row: a mono label on the left, the fact on the right. The
+   patrols module has its own copy of this shape under a different name; both
+   are module vocabulary today, and if a third module needs it the host should
+   own it. Declared here so an incidents page never depends on patrols.css
+   being loaded — a cross-module CSS dependency is a bug that only shows up as
+   a squashed layout on one page. */
+.i-meta{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:7px 0;
+  border-bottom:1px dashed color-mix(in srgb,var(--fog) 18%,transparent)}
+.i-meta:last-child{border-bottom:0}
+.i-meta>span{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:500;
+  color:var(--dim);text-transform:uppercase;letter-spacing:.08em;flex:none;padding-top:2px}
+.i-meta>b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:600;
+  color:var(--tx);text-align:right}
+
+/* ── SHARED SMALL PARTS ───────────────────────────────────────────────────  */
+.i-kpi-note{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim);
+  letter-spacing:.06em}
+.i-id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:700;
+  color:var(--acc);white-space:nowrap}
+.i-when{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:var(--fog);
+  white-space:nowrap}
+.i-zone{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:var(--fog);
+  display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.i-zone::before{content:"";width:6px;height:6px;border-radius:50%;background:#5FA8E0;flex:none}
+.i-sla{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:700;color:var(--fog)}
+.i-sla.late{color:var(--fail)}
+.i-sla.due{color:var(--warn)}
+.i-optnav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 20px}
+.i-optnav a{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--fog);border:1px solid var(--ln2);
+  border-radius:99px;padding:6px 13px 5px;text-decoration:none;line-height:1}
+.i-optnav a:hover{color:var(--tx);border-color:var(--fog);text-decoration:none}
+.i-optnav a.on{color:var(--accT);background:var(--acc);border-color:var(--acc)}
+.i-optnav .sep{color:var(--dim);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px}
+
+/* ── THE REPORT / CREATE FLOW ─────────────────────────────────────────────
+   Mounted as a sheet over the register. Each direction opens it from its own
+   idiom, but the sheet itself is one component — filing an incident must not
+   feel like five different products.
+   → POST /areas/{uuid}/modules/incidents (CSRF `incident_report`)             */
+.i-sheetbd{position:fixed;inset:0;z-index:60;background:rgba(4,8,6,.62);backdrop-filter:blur(3px);
+  display:none;align-items:flex-start;justify-content:center;padding:44px 20px;overflow-y:auto}
+.i-sheetbd.open{display:flex}
+.i-sheet{width:100%;max-width:760px;border-radius:16px;border:1px solid var(--ln2);
+  background:linear-gradient(180deg,var(--p1),var(--p2));box-shadow:0 22px 60px rgba(0,0,0,.45);
+  padding:22px 24px 20px}
+.i-sheethd{display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid var(--ln);
+  padding-bottom:14px;margin-bottom:16px}
+.i-sheethd h2{font-family:"Archivo",system-ui,sans-serif;font-size:18px;font-weight:700;margin:0 0 5px;
+  letter-spacing:-.02em}
+.i-sheethd p{margin:0;font-size:12.5px;color:var(--fog);line-height:1.55;max-width:70ch}
+.i-sheethd .x{margin-left:auto;flex:none;background:none;border:1px solid var(--ln2);border-radius:8px;
+  width:28px;height:28px;color:var(--fog);cursor:pointer;display:grid;place-items:center;font-size:15px;
+  line-height:1;font-family:inherit}
+.i-sheethd .x:hover{color:var(--tx);border-color:var(--fog)}
+.i-steps{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.i-steps span{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border:1px solid var(--ln);
+  border-radius:99px;padding:4px 10px 3px;line-height:1}
+.i-steps span.on{color:var(--accT);background:var(--acc);border-color:var(--acc)}
+.i-steps .arr{border:0;padding:0;color:var(--dim)}
+.i-catpick{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:9px;margin-bottom:4px}
+.i-catopt{border:1px solid var(--ln2);border-radius:11px;padding:12px 13px;cursor:pointer;
+  background:color-mix(in srgb,var(--fog) 4%,transparent);display:block;text-decoration:none;color:var(--tx)}
+.i-catopt:hover{border-color:color-mix(in srgb,var(--acc) 50%,transparent);text-decoration:none}
+.i-catopt.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 8%,transparent)}
+.i-catopt .r{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.i-catopt .r i{width:8px;height:8px;border-radius:2px;flex:none;font-style:normal}
+.i-catopt .r b{font-size:12.5px;font-weight:600}
+.i-catopt .d{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim);line-height:1.5}
+.i-sheetfoot{display:flex;align-items:center;gap:12px;border-top:1px solid var(--ln);padding-top:15px;
+  margin-top:18px}
+.i-sheetfoot .sp{flex:1}
+.i-sheetfoot .hint{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim)}
+
+
+/* IN·15 — the state-machine rail as a DASHBOARD widget. The rail and the
+   transitions row below it are unchanged; all this adds is the header that
+   names WHICH incident is on the rail, because on a dashboard — unlike on the
+   detail page — that is not already obvious from the page you are on. */
+.i-railhd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 2px 14px}
+.i-railid{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;font-weight:700;
+  color:var(--acc);text-decoration:none}
+.i-railid:hover{text-decoration:underline;text-underline-offset:2px}
+.i-railttl{font-size:13px;font-weight:600;color:var(--tx)}
+
+
+/* ── PORT ADDITIONS ───────────────────────────────────────────────────────
+   The design app carried these three as inline `style=` attributes on the
+   elements themselves. Inline styles are not allowed in the app, so the rules
+   they stood for are named here — the rendering is identical and the markup is
+   clean. Nothing else about the port differs from the design's stylesheet.   */
+
+/* The map legend row, under every map plate and on the case file. */
+.i-legend{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+
+/* A saved-something notice, rendered the way the host's own pages render one. */
+.i-flash{display:flex;align-items:center;gap:9px;margin-bottom:16px}
+.i-flash .acc{color:var(--acc);font-weight:700}
+
+/* The two-column plates the case file and the money widget sit in. */
+.i-cols{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px}
+.i-cols .wide{flex:2;min-width:420px}
+.i-cols .side{flex:1.1;min-width:300px;display:flex;flex-direction:column;gap:16px}
+
+/* Each transition is its own form (the move is named in the URL, not the body),
+   so the row of buttons needs the forms to sit inline like the buttons did. */
+.i-transform{display:contents}
+
+/* The category hue as a class, for the marks the design set with an inline
+   `style="background:var(--i-poach)"`. Same four hues, named once. */
+.i-hue-poach{background:var(--i-poach)}
+.i-hue-hwc{background:var(--i-hwc)}
+.i-hue-comp{background:var(--i-comp)}
+.i-hue-mort{background:var(--i-mort)}
+
+/* The docked results column beside a map plate. */
+.i-listcol{flex:1;min-width:280px;max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+
+/* Small typographic slots the design set inline. */
+.i-queuenote{margin:0 2px 8px}
+.i-queuerow{cursor:pointer}
+.i-taxnote,.i-moneynote{font-size:11.5px}
+.i-moneynote{margin:0 2px 12px}
+.i-moneygrid{margin-bottom:0}
+.i-moneypct{margin-top:7px}
+.i-spacer{flex:1}
+.i-slaid{font-weight:700}
+.i-sparkfoot{display:flex;justify-content:space-between;margin-top:7px;
+  font:500 9px "JetBrains Mono",ui-monospace,monospace;color:var(--dim)}
+.i-what{max-width:380px}
+.i-what em{display:block;font:500 9.5px "JetBrains Mono",ui-monospace,monospace;color:var(--dim);
+  font-style:normal;margin-top:3px}
+.i-mx td .nil{color:var(--dim)}
+
+/* The case file's header chips and the small slots the design set inline. */
+.i-headchips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 18px}
+.i-step-now{border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
+.i-steps-grid{margin-bottom:0}
+.i-moneywhy{font-size:11.5px;margin-bottom:0}
+.i-partynote{font-size:11.5px}
+.i-assessment{font-size:12.5px;color:var(--tx);margin-top:10px;line-height:1.6}
+.i-rules{margin-top:22px}
+.i-provlead{margin-bottom:16px}
+
+/* The report sheet's own form controls. The design drew the fields as static
+   text; these are the same rows with real inputs in them. */
+.i-fld input[type=text],.i-fld input[type=datetime-local],.i-fld select,.i-fld textarea{
+  width:100%;background:color-mix(in srgb,var(--fog) 5%,transparent);color:var(--tx);
+  border:1px solid var(--ln2);border-radius:8px;padding:7px 9px;font:inherit;font-size:12px}
+.i-fld input:focus,.i-fld select:focus,.i-fld textarea:focus{outline:none;border-color:var(--acc)}
+.i-fld span{display:flex;gap:8px;flex-wrap:wrap}
+.i-errors{border:1px solid color-mix(in srgb,var(--bad,#E05B41) 45%,transparent);border-radius:10px;
+  padding:10px 12px;margin-bottom:14px;font-size:12px}
+.i-errors p{margin:0 0 4px}
+.i-errors p:last-child{margin:0}

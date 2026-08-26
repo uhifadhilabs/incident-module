@@ -1,0 +1,20 @@
+{# IN·08 — the most recent photographs and documents on any incident.
+
+   EVIDENCE BELONGS TO THE INCIDENT, never to a person's upload: a photograph
+   filed with a patrol observation travels with it when the observation becomes an
+   incident, and keeps its ORIGINAL timestamp and position. So each tile names the
+   case it belongs to, and prints the moment the handset recorded. #}
+<div class="c" data-w="evidence">
+    <span class="tab"><span class="idx">IN·08</span>Latest evidence<span class="src">· photographs and documents · newest first</span></span>
+    <div class="i-evgrid">
+        {% for item in dashboard.evidence %}
+            <a class="i-ph {{ item.kind.cssClass }}" href="{{ path('incident_show', {uuid: area.uuid, reference: item.incident.reference}) }}">
+                {{ ux_icon(item.kind.value == 'document' ? 'lucide:file-text' : 'lucide:image') }}
+                <i>{{ item.incident.reference }} · {{ item.filename }}</i>
+            </a>
+        {% else %}
+            <div class="use">No evidence attached in this window.</div>
+        {% endfor %}
+    </div>
+    <div class="use">Evidence belongs to the incident, never to a person's upload — a photo filed with a patrol observation travels with it when the observation becomes an incident, and keeps its original timestamp and position.</div>
+</div>

@@ -1,0 +1,84 @@
+{# ============================================================================
+   THE MODULE'S VOCABULARY, as macros — every chip the design draws, written
+   ONCE.
+
+   incidents.css declares the classes; these macros are the only place the
+   markup for one is spelled out. A category chip on the register, on a board
+   card, in the map legend and on the case file is therefore the same element,
+   which is the whole point: "the same layer renders identically everywhere".
+
+   Imported by every widget partial and by the detail page:
+     {% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+   ========================================================================== #}
+
+{# The kind of incident: a dot in the category's own hue, and a name. `sub` prints
+   the sub-category instead of the kind, which is what the register's rows show. #}
+{% macro cat(category, label, ghost) %}
+    <span class="i-cat {{ category.colourKey }}{{ ghost ? ' ghost' }}"><i></i>{{ label ?? category.label }}</span>
+{% endmacro %}
+
+{# Where an incident is. Never a dropdown — see IncidentTransitionService. #}
+{% macro status(status) %}
+    <span class="i-st {{ status.cssClass }}">{{ status.label }}</span>
+{% endmacro %}
+
+{% macro severity(severity) %}
+    <span class="i-sev {{ severity.cssClass }}">{{ severity.label }}</span>
+{% endmacro %}
+
+{# The zone the point fell in — or the design's word for a point in none of them,
+   because an org that has drawn no zones at all is the normal state. #}
+{% macro zone(incident) %}
+    <span class="i-zone">{{ incident.zoneLabel }}</span>
+{% endmacro %}
+
+{# The case number, as it is said out loud. #}
+{% macro id(reference) %}
+    <span class="i-id">{{ reference }}</span>
+{% endmacro %}
+
+{# The money against a row: an em dash where this kind of incident carries none,
+   which is a different fact from "nothing is owed" and is drawn differently. #}
+{% macro moneyTag(incident) %}
+    {% set money = incident.money %}
+    {% if money is null or not money.isAssessed %}
+        <span class="i-mtag nil">—</span>
+    {% else %}
+        <span class="i-mtag {{ money.outstanding > 0 ? 'due' : 'paid' }}">{{ money.currency }}&nbsp;{{ money.payable|number_format(0, '.', ',') }}
+            <em style="font-style:normal;font-size:8.5px">{{ money.outstanding > 0
+                ? (money.direction.value == 'fine' ? 'fine due' : 'claim open')
+                : money.direction.settledWord }}</em></span>
+    {% endif %}
+{% endmacro %}
+
+{# An amount, in the design's own two-part form: the currency small, the figure big. #}
+{% macro amount(currency, value, tone) %}
+    <span class="i-amt{{ tone ? ' ' ~ tone }}"><em>{{ currency }}</em>{{ value|number_format(0, '.', ',') }}</span>
+{% endmacro %}
+
+{# When something happened, relative to the page's own "now" — the design writes
+   today and yesterday in words and everything older by date. #}
+{% macro when(moment, now) %}
+    {% set days = now|date('Y-m-d') == moment|date('Y-m-d') ? 0 : (now|date('U') - moment|date('U')) // 86400 %}
+    <span class="i-when">{% if days <= 0 %}today {{ moment|date('H:i') }}{% elseif days < 1.5 %}yesterday {{ moment|date('H:i') }}{% else %}{{ moment|date('D H:i') }}{% endif %} · {{ moment|date('j M') }}</span>
+{% endmacro %}
+
+{# How long an incident has been open against ITS OWN category's term. One global
+   SLA would be a lie about every category at once. #}
+{% macro ageing(incident, now) %}
+    {% set hours = incident.ageInHours(now) %}
+    {% set term = incident.subcategory.termHours %}
+    <span class="i-sla {{ hours > term ? 'late' : 'due' }}">{{ hours < 48 ? hours ~ ' h' : (hours // 24) ~ ' d' }} open · term {{ incident.subcategory.termLabel }}</span>
+{% endmacro %}
+
+{# EVERY LAYER SHIPS A LEGEND, and this one says what the marks MEAN, not just
+   what colour they are: hue = category, filled = still open, hollow = resolved or
+   closed, dashed ring = high severity. The same legend renders under every map
+   plate and on the detail page. #}
+{% macro mapLegend(categories) %}
+    <div class="i-legend">
+        {% for category in categories %}<span class="i-cat {{ category.colourKey }}"><i></i>{{ category.label|lower }}</span>{% endfor %}
+        <span class="chip idle">● open &nbsp;○ closed</span>
+        <span class="chip idle">◎ high severity</span>
+    </div>
+{% endmacro %}
