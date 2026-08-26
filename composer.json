@@ -95,11 +95,8 @@
             "url": "https://github.com/uhifadhilabs/module-contracts"
         },
         {
-            "type": "path",
-            "url": "../storage-module",
-            "options": {
-                "symlink": true
-            }
+            "type": "vcs",
+            "url": "https://github.com/uhifadhilabs/storage-module"
         }
     ]
 }

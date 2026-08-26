@@ -523,7 +523,17 @@ html.light{
 /* CENTRED, like every other overlay in the app (the files hub's .f-ov is the
    precedent): the sheet sits in the middle of the viewport, never pinned under
    the menubar, and when it is taller than the screen it — not the page behind
-   it — scrolls. */
+   it — scrolls.
+
+   AND IT ESCAPES THE PAGE. `.page` is `position:relative;z-index:1`, so every
+   page block is its own stacking context and a z-index inside one is only ever
+   compared against its siblings — which is why the footer, sitting in a LATER
+   .page, painted straight over this sheet however high its z-index went. While
+   an overlay is open the page blocks stop stacking, so z-index 60 is measured
+   against the shell itself (sidebar 30, topbar 25) and the modal wins over all
+   of it. CSS, not script: the dedicated /new page renders the sheet open with
+   no JavaScript at all, and it must not be broken there either. */
+body:has(.i-sheetbd.open) .page{z-index:auto}
 .i-sheetbd{position:fixed;inset:0;z-index:60;background:rgba(4,8,6,.62);backdrop-filter:blur(3px);
   display:none;place-items:center;padding:3vh 20px}
 .i-sheetbd.open{display:grid}
