@@ -19,12 +19,17 @@
    Parameters: area, categories, prefill, chosen, csrfToken, errors, standalone
    → POST /areas/{uuid}/modules/incidents
    ========================================================================== #}
-<div class="i-sheetbd{{ standalone ? ' open' }}" data-incident-report-target="sheet"
-     data-action="click->incident-report#closeOnBackdrop">
+{# THE CONTROLLER, NAMED ONCE. A controller shipped by a bundle is registered
+   under its PACKAGE-QUALIFIED identifier, so every target and action has to be
+   written through the stimulus_* helpers with that same name — a hand-written
+   `incident-report#choose` is silently inert in a host app. #}
+{% set controller = '@uhifadhilabs/incident-module/incident-report' %}
+<div class="i-sheetbd{{ standalone ? ' open' }}"
+     {{ stimulus_target(controller, 'sheet')|stimulus_action(controller, 'closeOnBackdrop', 'click') }}>
     {# input and change both bubble, so ONE action on the form re-reads the gate
        whatever the filer typed into. #}
     <form class="i-sheet" method="post" action="{{ path('incident_create', {uuid: area.uuid}) }}"
-          data-action="input->incident-report#gate change->incident-report#gate">
+          {{ stimulus_action(controller, 'gate', 'input')|stimulus_action(controller, 'gate', 'change') }}>
         <input type="hidden" name="_token" value="{{ csrfToken }}">
         {# The provenance travels with the form, so whatever the filer changes on
            the way through, the record it came from is the record it came from. #}
@@ -42,7 +47,7 @@
                     and the money fields appear only if the category you pick carries them.</p>
             </div>
             {% if not standalone %}
-                <button class="x" type="button" data-action="incident-report#close" aria-label="Close">&times;</button>
+                <button class="x" type="button" {{ stimulus_action(controller, 'close') }} aria-label="Close">&times;</button>
             {% endif %}
         </div>
 
@@ -57,7 +62,10 @@
                     {% if prefill.backUrl %}<a class="go" href="{{ prefill.backUrl }}">Open the source →</a>{% endif %}</div>
                 {% if prefill.note %}<p class="note">“{{ prefill.note }}”</p>{% endif %}
                 <div class="facts">
-                    {% if prefill.occurredAt %}<span><em>when</em><b>{{ prefill.occurredAt|date('D j M Y · H:i')|lower }}</b></span>{% endif %}
+                    {# `false` KEEPS THE MOMENT'S OWN ZONE. The observation was made
+                       at 08:15 where the observer was standing, and a card meant to
+                       be recognised must not restate it in UTC. #}
+                    {% if prefill.occurredAt %}<span><em>when</em><b>{{ prefill.occurredAt|date('D j M Y · H:i', false)|lower }}</b></span>{% endif %}
                     {% if prefill.positionLabel %}<span><em>where</em><b>{{ prefill.positionLabel }}</b></span>{% endif %}
                     <span><em>source</em><b>{{ prefill.sourceLabel }}</b></span>
                 </div>
@@ -97,10 +105,9 @@
                 {% set slugs = [] %}
                 {% for sub in category.subcategories %}{% set slugs = slugs|merge([sub.slug]) %}{% endfor %}
                 <label class="i-catopt{{ chosen and chosen.category.slug == category.slug ? ' on' }}"
-                       data-incident-report-target="category"
+                       {{ stimulus_target(controller, 'category')|stimulus_action(controller, 'choose', 'click') }}
                        data-subcategory="{{ slugs|first }}"
-                       data-subcategories="{{ slugs|join(',') }}"
-                       data-action="click->incident-report#choose">
+                       data-subcategories="{{ slugs|join(',') }}">
                     <span class="r"><i class="i-hue-{{ category.colourKey }}"></i><b>{{ category.label }}</b></span>
                     <span class="d">{% for sub in category.subcategories %}{{ sub.label }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
                 </label>
@@ -111,7 +118,7 @@
         {% for category in categories %}
             {% for subcategory in category.subcategories %}
                 {% set isChosen = chosen and chosen.slug == subcategory.slug %}
-                <div class="i-fieldset i-step2" data-incident-report-target="fieldset"
+                <div class="i-fieldset i-step2" {{ stimulus_target(controller, 'fieldset') }}
                      data-subcategory="{{ subcategory.slug }}"{{ isChosen ? '' : ' hidden' }}>
                     <div class="hd">Step 2 — the fields {{ subcategory.label }} asks for</div>
 
@@ -122,10 +129,9 @@
                         <span><span class="i-taxsub">
                             {%- for sibling in category.subcategories -%}
                                 <a href="#" class="{{ sibling.slug == subcategory.slug ? 'on' }}"
-                                   data-incident-report-target="category"
+                                   {{ stimulus_target(controller, 'category')|stimulus_action(controller, 'choose', 'click') }}
                                    data-subcategory="{{ sibling.slug }}"
-                                   data-subcategories="{{ sibling.slug }}"
-                                   data-action="click->incident-report#choose">{{ sibling.label }}</a>
+                                   data-subcategories="{{ sibling.slug }}">{{ sibling.label }}</a>
                             {%- endfor -%}
                         </span></span></div>
 
@@ -134,7 +140,7 @@
                                      placeholder="One line — the register prints it"{{ isChosen ? '' : ' disabled' }}></span></div>
                     <div class="i-fld"><label for="when-{{ subcategory.slug }}">When</label>
                         <span><input type="datetime-local" id="when-{{ subcategory.slug }}" name="occurred_at"
-                                     value="{{ prefill.occurredAt ? prefill.occurredAt|date('Y-m-d\\TH:i') }}"{{ isChosen ? '' : ' disabled' }}></span></div>
+                                     value="{{ prefill.occurredAt ? prefill.occurredAt|date('Y-m-d\\TH:i', false) }}"{{ isChosen ? '' : ' disabled' }}></span></div>
                     <div class="i-fld"><label>Where</label>
                         <span><input type="text" name="lat" inputmode="decimal" placeholder="latitude"
                                      value="{{ prefill.latitude }}"{{ isChosen ? '' : ' disabled' }}>
@@ -198,12 +204,12 @@
                and only one of them is worth reading at a time. The hint ships
                hidden and the gate ships showing, because on a fresh form there
                is always something missing. #}
-            <span class="hint" data-incident-report-target="hint" hidden>Nothing is written until you file. A filed
+            <span class="hint" {{ stimulus_target(controller, 'hint') }} hidden>Nothing is written until you file. A filed
                 incident starts at <b class="acc">reported</b> and cannot skip verification.</span>
-            <span class="i-gate" data-incident-report-target="gate">choose a category · describe what happened</span>
+            <span class="i-gate" {{ stimulus_target(controller, 'gate') }}>choose a category · describe what happened</span>
             <span class="sp"></span>
-            {% if not standalone %}<button class="tgl" type="button" data-action="incident-report#close">Cancel</button>{% endif %}
-            <button class="cta" type="submit" data-incident-report-target="file" disabled>File incident →</button>
+            {% if not standalone %}<button class="tgl" type="button" {{ stimulus_action(controller, 'close') }}>Cancel</button>{% endif %}
+            <button class="cta" type="submit" {{ stimulus_target(controller, 'file') }} disabled>File incident →</button>
         </div>
         <noscript>
             <div class="i-sheetfoot">

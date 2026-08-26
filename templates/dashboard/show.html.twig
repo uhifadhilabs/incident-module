@@ -38,7 +38,7 @@
                    fresh tab — and it is where this falls back to without
                    JavaScript, so the button is a real link either way. #}
                 <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}"
-                   data-action="incident-report#open">{{ ux_icon('lucide:plus') }} Report incident</a>
+                   {{ stimulus_action('@uhifadhilabs/incident-module/incident-report', 'open', 'click') }}>{{ ux_icon('lucide:plus') }} Report incident</a>
             {% endif %}
         </div>
     </div>

@@ -51,7 +51,7 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertCount(4, $crawler->filter('.i-catpick .i-catopt'));
         // …and a field set per sub-category, so choosing one swaps the questions
         // without a round trip.
-        self::assertCount(16, $crawler->filter('[data-incident-report-target="fieldset"]'));
+        self::assertCount(16, $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"]'));
     }
 
     /**
@@ -66,17 +66,17 @@ final class ReportFlowTest extends FunctionalTestCase
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
 
-        $depredation = $crawler->filter('[data-incident-report-target="fieldset"][data-subcategory="livestock-depredation"]')->html();
+        $depredation = $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"][data-subcategory="livestock-depredation"]')->html();
         self::assertStringContainsString('Loss claimed', $depredation);
 
-        $natural = $crawler->filter('[data-incident-report-target="fieldset"][data-subcategory="natural-mortality"]')->html();
+        $natural = $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"][data-subcategory="natural-mortality"]')->html();
         self::assertStringNotContainsString('Loss claimed', $natural);
         self::assertStringNotContainsString('Fine to assess', $natural);
 
         // Roadkill sits beside natural mortality under the same kind and DOES
         // carry money — which is why the money row is a sub-category's business
         // and never a category's.
-        $roadkill = $crawler->filter('[data-incident-report-target="fieldset"][data-subcategory="roadkill"]')->html();
+        $roadkill = $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"][data-subcategory="roadkill"]')->html();
         self::assertStringContainsString('Fine to assess', $roadkill);
     }
 
@@ -93,7 +93,7 @@ final class ReportFlowTest extends FunctionalTestCase
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
 
-        $mortality = $crawler->filter('[data-incident-report-target="fieldset"][data-subcategory="roadkill"]');
+        $mortality = $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"][data-subcategory="roadkill"]');
         $siblings = $mortality->filter('.i-taxsub a')->each(static fn ($node) => $node->attr('data-subcategory'));
 
         self::assertSame(['roadkill', 'natural-mortality', 'disease-die-off', 'poisoning'], $siblings);
@@ -158,6 +158,42 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
+     * THE PICKER IS WIRED TO THE CONTROLLER THAT IS ACTUALLY REGISTERED.
+     *
+     * A controller shipped by a bundle is registered under its PACKAGE-QUALIFIED
+     * identifier — `uhifadhilabs--incident-module--incident-report`, not
+     * `incident-report` — so a target or action written with the short name is
+     * inert: the category cards do not light, the field set never swaps and the
+     * gate never opens. Nothing about that failure is visible in the markup,
+     * which is why it is pinned here.
+     *
+     * The test asks the page itself which identifier it registered and then
+     * demands the sheet speak that one, so it cannot drift again.
+     */
+    public function testTheSheetIsWiredToTheIdentifierThePageActuallyRegisters(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+
+        $identifier = $crawler->filter('[data-controller*="incident-report"]')->attr('data-controller');
+        self::assertNotNull($identifier);
+
+        self::assertCount(1, $crawler->filter(\sprintf('[data-%s-target="sheet"]', $identifier)));
+        self::assertCount(4, $crawler->filter(\sprintf('.i-catpick [data-%s-target="category"]', $identifier)));
+        self::assertCount(16, $crawler->filter(\sprintf('[data-%s-target="fieldset"]', $identifier)));
+        self::assertCount(1, $crawler->filter(\sprintf('[data-%s-target="gate"]', $identifier)));
+        self::assertCount(1, $crawler->filter(\sprintf('[data-%s-target="file"]', $identifier)));
+
+        // …and the actions name it too, or a click reaches nothing.
+        self::assertStringContainsString(
+            $identifier.'#choose',
+            (string) $crawler->filter('.i-catpick .i-catopt')->first()->attr('data-action'),
+        );
+    }
+
+    /**
      * THE GATE. Steps 1 and 2 are required and step 3 is not, so the File control
      * ships DEAD — the markup itself carries `disabled`, and only the controller
      * opens it once the required answers are there. A quiet line names what is
@@ -216,7 +252,9 @@ final class ReportFlowTest extends FunctionalTestCase
             'record' => Uuid::v7()->toRfc4122(),
             'label' => 'OBS-02 · lion tracks',
             'back' => '/areas/x/modules/patrols/observation/2',
-            'at' => '2026-08-22T08:15:00+00:00',
+            // In the source's own zone — East Africa Time, where the observation
+            // was made.
+            'at' => '2026-08-22T08:15:00+03:00',
             'lat' => '-3.2014',
             'lng' => '35.4622',
             'note' => 'Fresh lion tracks 400 m from the bomas.',
@@ -231,6 +269,10 @@ final class ReportFlowTest extends FunctionalTestCase
         // The position, in the observation page's own notation.
         self::assertStringContainsString('3°12\'05"S 35°27\'44"E', $card->filter('.facts')->text());
         self::assertStringContainsString('patrol observation', $card->filter('.facts')->text());
+        // THE TIME AS THE OBSERVER WROTE IT — 08:15 in the field, not 05:15 in
+        // UTC. A card meant to be recognised must not restate the moment in a
+        // zone nobody there was standing in.
+        self::assertStringContainsString('08:15', $card->filter('.facts')->text());
         // …and the way back to the record it came from.
         self::assertSame('/areas/x/modules/patrols/observation/2', $card->filter('.hd a.go')->attr('href'));
     }
@@ -346,7 +388,7 @@ final class ReportFlowTest extends FunctionalTestCase
 
         $dashboard = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
 
-        self::assertCount(1, $dashboard->filter('[data-incident-report-target="sheet"]'));
+        self::assertCount(1, $dashboard->filter('[data-uhifadhilabs--incident-module--incident-report-target="sheet"]'));
         self::assertCount(4, $dashboard->filter('.i-catpick .i-catopt'));
         // Closed until asked for — the dedicated page is the one that opens with
         // it already open.
