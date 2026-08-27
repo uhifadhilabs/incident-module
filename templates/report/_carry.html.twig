@@ -1,0 +1,19 @@
+{# WHAT THE FORM CARRIES WHATEVER CONTAINER IT IS IN: the token, and the
+   provenance.
+
+   The provenance travels as hidden fields so that whatever the filer changes on
+   the way through, the record it came from is the record it came from. It is
+   written once onto the incident and never again.
+
+   Parameters: csrfToken, prefill, errors
+   ========================================================================== #}
+<input type="hidden" name="_token" value="{{ csrfToken }}">
+{% if prefill.record %}
+    <input type="hidden" name="record" value="{{ prefill.record }}">
+    <input type="hidden" name="label" value="{{ prefill.label }}">
+    <input type="hidden" name="back" value="{{ prefill.backUrl }}">
+    <input type="hidden" name="source" value="{{ prefill.source ?? 'patrol' }}">
+{% endif %}
+{% if errors is not empty %}
+    <div class="i-errors">{% for error in errors %}<p>{{ error }}</p>{% endfor %}</div>
+{% endif %}

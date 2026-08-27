@@ -55,7 +55,9 @@ final class IncidentMapPayload
                 'geometry' => $geometry,
                 'properties' => [
                     'reference' => $incident->getReference(),
-                    'title' => $incident->getTitle(),
+                    // A map pin's label is a row, so it prints the first line —
+                    // the same line the register does.
+                    'title' => $incident->headline(),
                     'colour' => $incident->getCategory()->getColourKey(),
                     'category' => $incident->getCategory()->getLabel(),
                     'subcategory' => $incident->getSubcategory()->getLabel(),

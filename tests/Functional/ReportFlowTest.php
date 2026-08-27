@@ -17,17 +17,35 @@ use Symfony\Component\Uid\Uuid;
 use UhifadhiLabs\Incident\Entity\Incident;
 use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
 use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
+use UhifadhiLabs\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
 
 /**
  * FILING AN INCIDENT, over HTTP.
  *
  * The design's own economics are the thing under test: a report is CHEAP and a
- * verification is EXPENSIVE. Filing takes three short steps, almost nothing is
- * required, and what little is required is required because an incident cannot
- * be without it.
+ * verification is EXPENSIVE. Three answers file an incident — a kind, one line
+ * saying what happened, and a place — and everything else is offered on the
+ * record afterwards.
+ *
+ * THE CONTAINER FOLLOWS THE ENTRY POINT, and this file pins that rule:
+ * a filing that arrives carrying a source record opens as the SLIDE-OVER DRAWER
+ * over the register it came from; a filing that arrives from nowhere opens as
+ * the FULL PAGE. Both render the same step partials, gate the same three
+ * answers, and post to the same endpoint.
  */
 final class ReportFlowTest extends FunctionalTestCase
 {
+    /** The provenance a filing arriving from a patrol observation carries. */
+    private const array FROM_A_RECORD = [
+        'source' => 'patrol_observation',
+        'label' => 'observation 2 of patrol P-0142',
+        'back' => '/areas/x/modules/patrols/observation/2',
+        'at' => '2026-08-22T08:15:00+03:00',
+        'lat' => '-3.2014',
+        'lng' => '35.4622',
+        'note' => 'Fresh lion tracks 400 m from the bomas.',
+    ];
+
     private function reportUrl(string $areaUuid): string
     {
         return \sprintf('/areas/%s/modules/incidents/new', $areaUuid);
@@ -38,7 +56,36 @@ final class ReportFlowTest extends FunctionalTestCase
         return \sprintf('/areas/%s/modules/incidents', $areaUuid);
     }
 
-    public function testTheSheetRendersItsThreeStepsAndEveryKindOfIncident(): void
+    /** A filing from the record the fixture module actually holds photographs for. */
+    private function fromAStubbedRecordUrl(string $areaUuid): string
+    {
+        // array_merge, not `+`: a union keeps the LEFT side's keys, so the
+        // source token below would be silently ignored.
+        return $this->reportUrl($areaUuid).'?'.http_build_query(array_merge(
+            self::FROM_A_RECORD,
+            [
+                'record' => StubRecordFileSource::RECORD,
+                'source' => StubRecordFileSource::TOKEN,
+            ],
+        ));
+    }
+
+    /** The same route, carrying a record — which is what opens the drawer. */
+    private function fromARecordUrl(string $areaUuid, ?string $record = null): string
+    {
+        return $this->reportUrl($areaUuid).'?'.http_build_query(
+            self::FROM_A_RECORD + ['record' => $record ?? Uuid::v7()->toRfc4122()],
+        );
+    }
+
+    // ── THE FULL PAGE — standalone filing ────────────────────────────────────
+
+    /**
+     * A FILING THAT CAME FROM NOWHERE IS A PAGE. It has an address, it survives a
+     * reload, and nothing beside it can throw it away — which is the whole reason
+     * the centred sheet was retired as the container.
+     */
+    public function testStandaloneFilingRendersTheFullPageAtItsOwnRoute(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
@@ -46,12 +93,339 @@ final class ReportFlowTest extends FunctionalTestCase
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
 
         self::assertResponseIsSuccessful();
-        self::assertCount(3, $crawler->filter('.i-steps span:not(.arr)'));
-        // One chooser per kind of incident, all four.
+        self::assertCount(1, $crawler->filter('form.ro-form'));
+        // Not an overlay: no drawer, no stage, and nothing left of the sheet.
+        self::assertCount(0, $crawler->filter('.ro-drawer'));
+        self::assertCount(0, $crawler->filter('.ro-stage'));
+        self::assertStringNotContainsString('i-sheet', $crawler->html());
+        // Three headed sections down one column: kind, what happened, and the
+        // one that can wait.
+        self::assertCount(3, $crawler->filter('form.ro-form .ro-sect'));
+        // One chooser per kind of incident, all four, drawn as cards.
         self::assertCount(4, $crawler->filter('.i-catpick .i-catopt'));
         // …and a field set per sub-category, so choosing one swaps the questions
         // without a round trip.
         self::assertCount(16, $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"]'));
+    }
+
+    /** An honest back link, not a dismissal: it says where it goes. */
+    public function testTheFullPageOffersAWayBackToTheRegister(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+
+        self::assertSame(
+            $this->createUrl($this->uuidOf($area)),
+            $crawler->filter('.pghead .pgact a')->first()->attr('href'),
+        );
+        self::assertSame(
+            $this->createUrl($this->uuidOf($area)),
+            $crawler->filter('.ro-filebar a.tgl')->attr('href'),
+        );
+    }
+
+    // ── THE DRAWER — filing from a record ────────────────────────────────────
+
+    /**
+     * A FILING THAT ARRIVES FROM A RECORD IS A SLIDE-OVER, and the register it
+     * came from is still on screen behind it. That is the entire point of the
+     * container: filing about something you can still see never means having to
+     * remember it.
+     */
+    public function testFilingFromARecordRendersTheSlideOverWithThePageBehindIt(): void
+    {
+        $area = $this->anArea();
+        $this->anIncident($area, title: 'Lion killed four goats at Osinoni');
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        // The panel, and the dimmed pane it sits in.
+        self::assertCount(1, $crawler->filter('.ro-slideover'));
+        self::assertCount(1, $crawler->filter('.ro-slideover .ro-slideback'));
+        self::assertCount(1, $crawler->filter('.ro-slideover aside.ro-drawer'));
+        // It is a dialog, and it is modal — the register behind it is to be read,
+        // not worked.
+        self::assertSame('dialog', $crawler->filter('aside.ro-drawer')->attr('role'));
+        self::assertSame('true', $crawler->filter('aside.ro-drawer')->attr('aria-modal'));
+        // The page behind is the REGISTER, in the page's own flow, with real rows
+        // in it — not a picture of one.
+        self::assertCount(1, $crawler->filter('.ro-behind'));
+        self::assertStringContainsString(
+            'Lion killed four goats at Osinoni',
+            $crawler->filter('.ro-behind')->text(),
+        );
+        // …and it is context for the filer, so it is not read out twice.
+        self::assertSame('true', $crawler->filter('.ro-behind')->attr('aria-hidden'));
+        // The full page's container is not also on the screen.
+        self::assertCount(0, $crawler->filter('form.ro-form'));
+    }
+
+    /**
+     * CLOSING IS EXPLICIT, AND ONLY EXPLICIT. The X closes the panel and says
+     * where it goes — back to the record the filing came from. THE BACKDROP
+     * CLOSES NOTHING: a click that missed the panel may not discard a report in
+     * progress.
+     */
+    public function testTheSlideOverClosesByTheXAndNeverByTheBackdrop(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+
+        $identifier = $crawler->filter('[data-controller*="incident-report"]')->attr('data-controller');
+        self::assertNotNull($identifier);
+
+        // The X: a real link, so it works with no JavaScript at all, taken over
+        // by the controller to play the panel out and to ask before discarding.
+        self::assertSame('/areas/x/modules/patrols/observation/2', $crawler->filter('.ro-dhd a.x')->attr('href'));
+        self::assertStringContainsString(
+            $identifier.'#close',
+            (string) $crawler->filter('.ro-dhd a.x')->attr('data-action'),
+        );
+        // Cancel goes to the same place.
+        self::assertSame('/areas/x/modules/patrols/observation/2', $crawler->filter('.ro-dfoot a.tgl')->attr('href'));
+
+        // THE BACKDROP IS INERT. Nothing is wired to it, in any form.
+        self::assertNull($crawler->filter('.ro-slideback')->attr('data-action'));
+        self::assertNull($crawler->filter('.ro-slideback')->attr('onclick'));
+    }
+
+    /** The source card rides INSIDE the panel, above the questions. */
+    public function testTheSourceCardRidesInsideTheSlideOver(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+
+        self::assertCount(1, $crawler->filter('.ro-drawer .ro-dbody .i-src'));
+    }
+
+    /**
+     * THE PANEL SHIPS OUT. Nothing in the markup hides it — the controller marks
+     * it animated and the stylesheet only then takes over the slide, so a filer
+     * with no JavaScript meets the form rather than an empty pane.
+     */
+    public function testTheSlideOverIsNotHiddenByTheMarkupItShipsWith(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+
+        $slideover = $crawler->filter('.ro-slideover');
+        self::assertNull($slideover->attr('hidden'));
+        self::assertNull($slideover->attr('data-ro-animated'));
+        self::assertStringNotContainsString('open', (string) $slideover->attr('class'));
+    }
+
+    /**
+     * THE LINE ARRIVES ANSWERED. The observation already said what happened, and
+     * asking somebody to write it a second time is the surest way to get a report
+     * that never exists. It is editable — and the SOURCE CARD still shows the
+     * note verbatim, so trimming the line for the register never touches the
+     * original.
+     */
+    public function testTheLineIsPrefilledFromTheRecordsNoteAndTheCardKeepsTheOriginal(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+
+        // A TEXTAREA, in the same grammar as the verbatim note below it: what a
+        // person writes at the roadside is a sentence, not a database field.
+        $line = $crawler->filter('form textarea[name="title"]');
+        self::assertCount(1, $line);
+        self::assertSame('Fresh lion tracks 400 m from the bomas.', $line->text());
+        // Verbatim, above the questions, untouched by anything done to the line.
+        self::assertStringContainsString(
+            'Fresh lion tracks 400 m from the bomas.',
+            $crawler->filter('.i-src .note')->text(),
+        );
+        // …and a prefilled line COUNTS AS FILLED: the gate does not ask for it
+        // again, and with the category still to choose the File control is still
+        // dead.
+        self::assertStringNotContainsString('describe what happened', $crawler->filter('.ro-gate')->text());
+        self::assertNotNull($crawler->filter('button.ro-file')->attr('disabled'));
+    }
+
+    /**
+     * A FILING THAT ARRIVED COMPLETE IS FILEABLE ON SIGHT. Category, line and
+     * place all came with the record, so nothing is missing, the gate says
+     * nothing, and the control is alive before a single keystroke.
+     */
+    public function testAFilingThatArrivedCompleteShipsWithTheControlAlive(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $url = $this->fromARecordUrl($this->uuidOf($area)).'&category=livestock-depredation';
+        $crawler = $this->client->request('GET', $url);
+
+        self::assertNull($crawler->filter('button.ro-file')->attr('disabled'));
+        self::assertNotNull($crawler->filter('.ro-gate')->attr('hidden'));
+        self::assertNull($crawler->filter('.ro-dfoot .hint')->attr('hidden'));
+    }
+
+    /**
+     * A NOTE LONGER THAN THE REGISTER'S LINE IS CLAMPED, NEVER REFUSED. The note
+     * is written to be read, not to fit a column; nothing is lost, because the
+     * provenance link keeps the original reachable forever.
+     */
+    public function testALineLongerThanTheRegisterCanPrintIsStoredShortRatherThanRefused(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $html = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)))->html();
+        $this->client->request('POST', $this->createUrl($this->uuidOf($area)), [
+            '_token' => $this->tokenFrom($html),
+            'subcategory' => 'livestock-depredation',
+            'title' => str_repeat('a', 260),
+            'lat' => '-3.21',
+            'lng' => '35.25',
+        ]);
+
+        self::assertResponseRedirects();
+        $incident = $this->em->getRepository(Incident::class)->findOneBy([]);
+        self::assertNotNull($incident);
+        self::assertSame(200, mb_strlen($incident->getTitle()));
+    }
+
+    /**
+     * DEEP-LINKING THE DRAWER WITHOUT A RECORD FALLS BACK TO THE PAGE. A drawer
+     * needs something to be over; an address that opens one over nothing is a
+     * broken promise, so the same route renders the full page whenever no record
+     * arrived with it.
+     */
+    public function testTheDrawerRouteWithoutARecordFallsBackToTheFullPage(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        // Everything the seam sends EXCEPT the record — a truncated link, a
+        // hand-typed URL, a bookmark from a deleted observation.
+        $query = self::FROM_A_RECORD;
+        unset($query['label']);
+
+        $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)).'?'.http_build_query($query));
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter('form.ro-form'));
+        self::assertCount(0, $crawler->filter('.ro-drawer'));
+        // No record, so nothing claims one.
+        self::assertCount(0, $crawler->filter('.i-src'));
+    }
+
+    // ── ONE SET OF STEPS, TWO CONTAINERS ─────────────────────────────────────
+
+    /**
+     * BOTH CONTAINERS GATE IDENTICALLY. The File control ships DEAD in each, the
+     * same quiet line names the same missing answers, and the same three targets
+     * are wired — because they are the same partials, rendered twice.
+     */
+    public function testBothContainersShipTheSameDeadFileControlAndTheSameGate(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        // A record that carried nothing but its identity, so the two containers
+        // are asked for exactly the same three answers.
+        $bare = $this->reportUrl($this->uuidOf($area)).'?'.http_build_query([
+            'source' => 'patrol_observation',
+            'record' => Uuid::v7()->toRfc4122(),
+            'label' => 'observation 2 of patrol P-0142',
+        ]);
+
+        $page = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+        $drawer = $this->client->request('GET', $bare);
+
+        foreach ([$page, $drawer] as $crawler) {
+            $file = $crawler->filter('button.ro-file[type="submit"]');
+            self::assertCount(1, $file);
+            self::assertNotNull($file->attr('disabled'));
+            self::assertCount(1, $crawler->filter('.ro-gate'));
+            self::assertSame(
+                'choose a category · describe what happened · mark where it happened',
+                trim($crawler->filter('.ro-gate')->text()),
+            );
+        }
+
+        // And what a record DID carry, it is not asked for twice: this one came
+        // with a place and a line.
+        $prefilled = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+        self::assertSame('choose a category', trim($prefilled->filter('.ro-gate')->text()));
+    }
+
+    /**
+     * ONE SET OF STEP PARTIALS, NEVER TWO COPIES. Both containers render every
+     * sub-category's field set and every category chooser, wired to the same
+     * targets — a drift between them would show here first.
+     */
+    public function testBothContainersRenderTheSameStepsWiredToTheSameController(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $page = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+        $drawer = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+
+        foreach ([$page, $drawer] as $crawler) {
+            $identifier = $crawler->filter('[data-controller*="incident-report"]')->attr('data-controller');
+            self::assertNotNull($identifier);
+
+            self::assertCount(4, $crawler->filter(\sprintf('[data-%s-target="category"][data-subcategories*=","]', $identifier)));
+            self::assertCount(16, $crawler->filter(\sprintf('[data-%s-target="fieldset"]', $identifier)));
+            self::assertCount(1, $crawler->filter(\sprintf('[data-%s-target="gate"]', $identifier)));
+            self::assertCount(1, $crawler->filter(\sprintf('[data-%s-target="file"]', $identifier)));
+            self::assertCount(1, $crawler->filter(\sprintf('[data-%s-target="hint"]', $identifier)));
+            // One line, one place, one form — the fields are hoisted out of the
+            // swapped field sets, so there is exactly one of each to answer.
+            self::assertCount(1, $crawler->filter('form textarea[name="title"]'));
+            self::assertCount(1, $crawler->filter('form input[name="lat"]'));
+        }
+
+        // The kind is drawn as cards on the page and as chips in the drawer —
+        // the same partial, at two widths.
+        self::assertCount(4, $page->filter('.i-catpick .i-catopt'));
+        self::assertCount(4, $drawer->filter('.ro-chips .ro-chip'));
+    }
+
+    /**
+     * D'S QUICK-FILE DISCIPLINE, IN BOTH. Three answers file an incident; how
+     * bad, people, evidence and money are present but secondary, in the "add now
+     * or later on the record" grammar the append-only timeline makes honest.
+     */
+    public function testBothContainersOfferTheOptionalWorkAsSomethingThatCanWait(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $page = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+        $drawer = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+
+        foreach ([$page, $drawer] as $crawler) {
+            $later = $crawler->filter('.ro-later');
+            self::assertCount(1, $later);
+            foreach (['How bad', 'People', 'Evidence', 'Money'] as $offered) {
+                self::assertStringContainsString($offered, $later->text());
+            }
+            // Every one of them marked as something that can wait.
+            self::assertCount(4, $later->filter('.lrow .ro-opt'));
+            // …and the reason it is honest to move them: the append-only
+            // timeline keeps who added what and when.
+            self::assertStringContainsString('timeline keeps who added it and when', $later->text());
+
+            // Exactly the three ruled requirements are marked needed: the kind,
+            // the line, and the place.
+            self::assertCount(3, $crawler->filter('.ro-req'));
+        }
     }
 
     /**
@@ -98,6 +472,8 @@ final class ReportFlowTest extends FunctionalTestCase
 
         self::assertSame(['roadkill', 'natural-mortality', 'disease-die-off', 'poisoning'], $siblings);
     }
+
+    // ── THE SERVER, UNCHANGED ────────────────────────────────────────────────
 
     /** Filing writes an incident, at `reported`, and lands on its case file. */
     public function testFilingCreatesAReportedIncidentAndOpensIt(): void
@@ -158,61 +534,6 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * THE PICKER IS WIRED TO THE CONTROLLER THAT IS ACTUALLY REGISTERED.
-     *
-     * A controller shipped by a bundle is registered under its PACKAGE-QUALIFIED
-     * identifier — `uhifadhilabs--incident-module--incident-report`, not
-     * `incident-report` — so a target or action written with the short name is
-     * inert: the category cards do not light, the field set never swaps and the
-     * gate never opens. Nothing about that failure is visible in the markup,
-     * which is why it is pinned here.
-     *
-     * The test asks the page itself which identifier it registered and then
-     * demands the sheet speak that one, so it cannot drift again.
-     */
-    public function testTheSheetIsWiredToTheIdentifierThePageActuallyRegisters(): void
-    {
-        $area = $this->anArea();
-        $this->client->loginUser($this->aReporter());
-
-        $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
-
-        $identifier = $crawler->filter('[data-controller*="incident-report"]')->attr('data-controller');
-        self::assertNotNull($identifier);
-
-        self::assertCount(1, $crawler->filter(\sprintf('[data-%s-target="sheet"]', $identifier)));
-        self::assertCount(4, $crawler->filter(\sprintf('.i-catpick [data-%s-target="category"]', $identifier)));
-        self::assertCount(16, $crawler->filter(\sprintf('[data-%s-target="fieldset"]', $identifier)));
-        self::assertCount(1, $crawler->filter(\sprintf('[data-%s-target="gate"]', $identifier)));
-        self::assertCount(1, $crawler->filter(\sprintf('[data-%s-target="file"]', $identifier)));
-
-        // …and the actions name it too, or a click reaches nothing.
-        self::assertStringContainsString(
-            $identifier.'#choose',
-            (string) $crawler->filter('.i-catpick .i-catopt')->first()->attr('data-action'),
-        );
-    }
-
-    /**
-     * THE GATE. Steps 1 and 2 are required and step 3 is not, so the File control
-     * ships DEAD — the markup itself carries `disabled`, and only the controller
-     * opens it once the required answers are there. A quiet line names what is
-     * still missing rather than making anybody press a button to find out.
-     */
-    public function testTheFileControlShipsDisabledAndSaysWhatIsMissing(): void
-    {
-        $area = $this->anArea();
-        $this->client->loginUser($this->aReporter());
-
-        $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
-
-        $file = $crawler->filter('.i-sheetfoot button.cta[type="submit"]')->first();
-        self::assertNotNull($file->attr('disabled'));
-        self::assertStringContainsString('choose a category', $crawler->filter('.i-gate')->text());
-        self::assertStringContainsString('describe what happened', $crawler->filter('.i-gate')->text());
-    }
-
-    /**
      * AND THE SERVER AGREES. The gate is not a decoration in front of a
      * permissive endpoint: a filing missing one of the required steps is refused
      * with the same reason the quiet line gave.
@@ -234,6 +555,34 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertResponseStatusCodeSame(422);
         self::assertStringContainsString('One line saying what happened', $crawler->filter('.i-errors')->text());
         self::assertSame(0, $this->em->getRepository(Incident::class)->count([]));
+    }
+
+    /**
+     * A REFUSED FILING COMES BACK IN THE CONTAINER IT WAS MADE IN. Entry point
+     * decides the container, and being refused is not a new entry point: a
+     * filing from a record is answered in the drawer, over the register, with
+     * everything that was typed still there.
+     */
+    public function testARefusedFilingFromARecordComesBackInTheDrawer(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $query = http_build_query(self::FROM_A_RECORD + ['record' => Uuid::v7()->toRfc4122()]);
+        $html = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)).'?'.$query)->html();
+
+        $crawler = $this->client->request('POST', $this->createUrl($this->uuidOf($area)).'?'.$query, [
+            '_token' => $this->tokenFrom($html),
+            'subcategory' => 'livestock-depredation',
+            'title' => '',
+            'lat' => '-3.2014',
+            'lng' => '35.4622',
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertCount(1, $crawler->filter('.ro-drawer'));
+        self::assertCount(0, $crawler->filter('form.ro-form'));
+        self::assertStringContainsString('One line saying what happened', $crawler->filter('.i-errors')->text());
     }
 
     /**
@@ -275,6 +624,91 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertStringContainsString('08:15', $card->filter('.facts')->text());
         // …and the way back to the record it came from.
         self::assertSame('/areas/x/modules/patrols/observation/2', $card->filter('.hd a.go')->attr('href'));
+    }
+
+    /**
+     * THE SOURCE CARD SHOWS THE RECORD'S PHOTOGRAPHS — through the cross-module
+     * seam, and without this bundle knowing what an observation is.
+     *
+     * It has a record uuid and a source token from a query string, and it hands
+     * both straight to the platform's file registry, which asks the module that
+     * OWNS the record. Here that module is a fixture, which is the point: nothing
+     * in the report flow names it.
+     */
+    public function testTheSourceCardShowsTheRecordsPhotographs(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->fromAStubbedRecordUrl($this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        // A BUTTON, not a link: the shared preview reads a click inside an <a>
+        // as navigation and stands aside, so a thumbnail wrapped in one would
+        // leave the flow for a raw image file.
+        $shots = $crawler->filter('.i-src .shots button[type="button"]');
+        self::assertCount(2, $shots);
+        self::assertCount(0, $crawler->filter('.i-src .shots a'));
+
+        // Each one is drawn from the storage route by its THUMBNAIL key — the
+        // small picture, never the original, on a card.
+        self::assertStringContainsString(
+            'fieldwork/rec-1/first.jpg.thumb.jpg',
+            (string) $crawler->filter('.i-src .shots img')->first()->attr('src'),
+        );
+        self::assertCount(2, $crawler->filter('.i-src .shots img'));
+        // …and the strip says so in the card's own words.
+        self::assertStringContainsString('2 photographs', $crawler->filter('.i-src .seam')->text());
+    }
+
+    /**
+     * THEY OPEN IN THE SHARED PREVIEW — the one component every surface opens a
+     * file in, so a photograph looks the same and says the same things whether it
+     * is opened from the Files hub, from its own record, or from here. This module
+     * draws none of that overlay: it includes the component and puts the
+     * component's own data contract on each thumbnail.
+     */
+    public function testThePhotographsOpenInTheSharedPreviewComponent(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->fromAStubbedRecordUrl($this->uuidOf($area)));
+
+        $first = $crawler->filter('.i-src .shots button')->first();
+        // The trigger contract, filled from the FileEntry the owning module gave.
+        self::assertNotNull($first->attr('data-f-preview'));
+        self::assertSame('first.jpg', $first->attr('data-f-name'));
+        self::assertSame('REC-0001', $first->attr('data-f-rec'));
+        self::assertSame('Fieldwork', $first->attr('data-f-modlabel'));
+        self::assertStringContainsString('fieldwork/rec-1/first.jpg', (string) $first->attr('data-f-original'));
+
+        // The overlay itself, included once — this module ships no copy of it.
+        self::assertGreaterThan(0, $crawler->filter('[data-controller*="preview"]')->count());
+        // …and its stylesheet, loaded only where there is something to open.
+        self::assertStringContainsString('uhifadhilabsstorage/preview', $crawler->html());
+    }
+
+    /**
+     * NO PHOTOGRAPHS IS A FACT, NOT A FAILURE. A record nobody photographed, a
+     * token naming a module this deployment does not have, a storage bundle that
+     * is not installed — all of them draw a source card with no strip, and none of
+     * them costs anybody a report.
+     */
+    public function testACardWithNoPhotographsSimplyHasNoStrip(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aReporter());
+
+        // Same shape, a record the owning module has never heard of.
+        $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter('.i-src'));
+        self::assertCount(0, $crawler->filter('.i-src .shots'));
+        self::assertStringNotContainsString('photograph', $crawler->filter('.i-src .seam')->text());
+        // Nothing to open, so the overlay's stylesheet is not asked for either.
+        self::assertStringNotContainsString('uhifadhilabsstorage/preview', $crawler->html());
     }
 
     /** Nothing came from anywhere, so there is no card claiming otherwise. */
@@ -336,16 +770,17 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertSame(IncidentSourceEnum::PatrolObservation, $incident->getSource());
     }
 
-    /** A bad link opens an EMPTY form. It must never be an error page. */
+    /** A bad link opens an EMPTY form — as a page, since nothing came with it. */
     public function testAnUnreadablePrefillJustOpensAnEmptyForm(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
 
-        $this->client->request('GET', $this->reportUrl($this->uuidOf($area)).'?record=not-a-uuid&lat=999&at=nonsense');
+        $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)).'?record=not-a-uuid&lat=999&at=nonsense');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorNotExists('.i-src');
+        self::assertCount(0, $crawler->filter('.i-src'));
+        self::assertCount(1, $crawler->filter('form.ro-form'));
     }
 
     /** Filing needs "incidents.record". Signed in is not the same as permitted. */
@@ -377,21 +812,22 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * THE SAME COMPONENT, TWO DOORS: the dashboard mounts the identical sheet
-     * over itself, so filing does not feel like a different product depending on
-     * where you started.
+     * THE DASHBOARD'S REPORT BUTTON IS NOT ANCHORED TO A RECORD, so it is
+     * STANDALONE filing and it navigates to the full page. Nothing is mounted
+     * over the dashboard any more — the centred sheet is retired as a container.
      */
-    public function testTheDashboardMountsTheVerySameSheet(): void
+    public function testTheDashboardReportButtonNavigatesToTheFullPage(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
 
-        $dashboard = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+        $dashboard = $this->client->request('GET', $this->createUrl($this->uuidOf($area)));
 
-        self::assertCount(1, $dashboard->filter('[data-uhifadhilabs--incident-module--incident-report-target="sheet"]'));
-        self::assertCount(4, $dashboard->filter('.i-catpick .i-catopt'));
-        // Closed until asked for — the dedicated page is the one that opens with
-        // it already open.
-        self::assertStringNotContainsString('i-sheetbd open', $dashboard->html());
+        self::assertSame($this->reportUrl($this->uuidOf($area)), $dashboard->filter('.pgact a.cta')->attr('href'));
+        // A plain link, not a trigger: nothing opens over this page.
+        self::assertNull($dashboard->filter('.pgact a.cta')->attr('data-action'));
+        self::assertStringNotContainsString('i-sheet', $dashboard->html());
+        self::assertCount(0, $dashboard->filter('.ro-drawer'));
+        self::assertCount(0, $dashboard->filter('form.ro-form'));
     }
 }

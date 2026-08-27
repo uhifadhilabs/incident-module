@@ -41,6 +41,35 @@ enum IncidentSourceEnum: string
     /** Reported in person by a member of the community, outside a station. */
     case Community = 'community';
 
+    /**
+     * THE BADGE A WIRE TOKEN EARNS, and null where the token names nothing this
+     * module has heard of.
+     *
+     * The seam's `source` names the SENDING MODULE, singular, as that module puts
+     * it on the wire — patrol sends `patrol`. This enum names WHERE A REPORT CAME
+     * FROM, which is a different vocabulary and a STORED one: `patrol_observation`
+     * is on rows in the database and does not get renamed to tidy a query string.
+     *
+     * So the two are mapped here, in the one place, rather than left to a
+     * fallback that happened to land on the right case. A token this module does
+     * not know returns null and the caller decides — which is how a source that
+     * arrives from a module written after this one still files a report.
+     */
+    public static function forToken(?string $token): ?self
+    {
+        if (null === $token || '' === trim($token)) {
+            return null;
+        }
+
+        $token = strtolower(trim($token));
+
+        return match ($token) {
+            // What patrol puts on the wire, and its module slug as an alias.
+            'patrol', 'patrols' => self::PatrolObservation,
+            default => self::tryFrom($token),
+        };
+    }
+
     public function label(): string
     {
         return match ($this) {

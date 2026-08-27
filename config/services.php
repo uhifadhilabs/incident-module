@@ -142,8 +142,6 @@ return static function (ContainerConfigurator $container): void {
             // Null where the host runs no security: nobody is signed in, so the
             // dashboard renders the module's shipped composition for everyone.
             service('security.token_storage')->nullOnInvalid(),
-            // Likewise null without SecurityBundle: no token, no report sheet.
-            service('security.csrf.token_manager')->nullOnInvalid(),
             // Registered only under the bundle's SecurityBundle guard, so it is
             // genuinely absent in a host without security — and the board then
             // renders as a board of links.

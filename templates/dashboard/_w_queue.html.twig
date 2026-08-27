@@ -8,7 +8,7 @@
     {% for incident in dashboard.queue %}
         <div class="i-party i-queuerow">
             <span class="av">{{ incident.reference|slice(-3) }}</span>
-            <span class="nm">{{ incident.title }}<em>{{ incident.reference }} · {{ incident.subcategory.label }}</em></span>
+            <span class="nm">{{ incident.headline }}<em>{{ incident.reference }} · {{ incident.subcategory.label }}</em></span>
             {{ ui.status(incident.status) }}
             {{ ui.ageing(incident, dashboard.now) }}
             <a class="open-btn" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">Open →</a>

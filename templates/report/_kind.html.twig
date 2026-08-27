@@ -1,0 +1,32 @@
+{# STEP 1 — WHAT KIND OF INCIDENT. The first of the three answers a report cannot
+   be filed without.
+
+   ONE PARTIAL, TWO WIDTHS. The full page has room for the design's cards, each
+   naming the sub-categories under it; the drawer is one narrow column, so the
+   same choices are chips. Same targets, same data, same choose action — the
+   difference is presentation and nothing else, which is why this is one file and
+   not two.
+
+   Choosing a kind selects its FIRST sub-category; step 2 then offers the
+   siblings, exactly as the design draws it.
+
+   Parameters: controller, categories, chosen, compact
+   ========================================================================== #}
+<div class="{{ compact ? 'ro-chips' : 'i-catpick' }}">
+    {% for category in categories %}
+        {% set slugs = [] %}
+        {% for sub in category.subcategories %}{% set slugs = slugs|merge([sub.slug]) %}{% endfor %}
+        {% set lit = chosen and chosen.category.slug == category.slug %}
+        <label class="{{ compact ? 'ro-chip' : 'i-catopt' }}{{ lit ? ' on' }}"
+               {{ stimulus_target(controller, 'category')|stimulus_action(controller, 'choose', 'click') }}
+               data-subcategory="{{ slugs|first }}"
+               data-subcategories="{{ slugs|join(',') }}">
+            {% if compact %}
+                <i class="i-hue-{{ category.colourKey }}"></i>{{ category.label }}
+            {% else %}
+                <span class="r"><i class="i-hue-{{ category.colourKey }}"></i><b>{{ category.label }}</b></span>
+                <span class="d">{% for sub in category.subcategories %}{{ sub.label }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
+            {% endif %}
+        </label>
+    {% endfor %}
+</div>

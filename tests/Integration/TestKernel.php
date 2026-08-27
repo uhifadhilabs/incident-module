@@ -30,11 +30,14 @@ use Uhifadhi\Repository\WidgetCustomPresetRepository;
 use Uhifadhi\Repository\WidgetPreferenceRepository;
 use Uhifadhi\Service\WidgetEndpoint;
 use Uhifadhi\Service\WidgetService;
+use UhifadhiLabs\Incident\Repository\IncidentRepository;
 use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedModules;
 use UhifadhiLabs\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 use UhifadhiLabs\Incident\Tests\Integration\Fixtures\HeaderUserAuthenticator;
+use UhifadhiLabs\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
 use UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle;
+use UhifadhiLabs\Storage\Registry\FileSourceInterface;
 use UhifadhiLabs\Storage\UhifadhiLabsStorageBundle;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -125,6 +128,13 @@ final class TestKernel extends Kernel
         // reusable-bundle test kernel does not autoconfigure.
         $container->services()->set(FixedPermissionVoter::class)->tag('security.voter');
 
+        // ANOTHER MODULE, holding the photographs of a record this bundle knows
+        // nothing about — the far side of the cross-module file seam the report
+        // flow's source card draws through. Tagged by hand: a reusable-bundle
+        // test kernel does not autoconfigure.
+        $container->services()->set(StubRecordFileSource::class)
+            ->tag(FileSourceInterface::TAG);
+
         $container->extension('doctrine', [
             'dbal' => ['url' => '%env(INCIDENTS_TEST_DATABASE_URL)%'],
             'orm' => [
@@ -204,6 +214,10 @@ final class TestKernel extends Kernel
             $services->alias('test_public.'.$id, $id)->public();
         }
 
+        // The repositories are registered under their CLASS names, so their test
+        // aliases are keyed by hand.
+        $services->alias('test_public.incident.repository', IncidentRepository::class)->public();
+
         // A throwaway evidence store. Incidents writes no bytes through it yet
         // (see IncidentFileSource); it exists so the bundle boots as it does in
         // a host, and so the hub's registry has a real storage behind it.
@@ -224,6 +238,15 @@ final class TestKernel extends Kernel
         $controllers = \dirname(__DIR__, 2).'/src/Controller/';
         if (is_dir($controllers)) {
             $routes->import($controllers, 'attribute');
+        }
+
+        // THE EVIDENCE ROUTE, from the bundle that owns it. A real host importing
+        // uhifadhilabs/storage-module gets it; the report flow's source card
+        // serves the source record's photographs through it, so a kernel without
+        // it would prove the card works only in a deployment that cannot show one.
+        $evidence = \dirname(__DIR__, 2).'/vendor/uhifadhilabs/storage-module/src/Controller/EvidenceController.php';
+        if (is_file($evidence)) {
+            $routes->import($evidence, 'attribute');
         }
 
         // The host routes the bundle's crumbs and back-links generate URLs for —

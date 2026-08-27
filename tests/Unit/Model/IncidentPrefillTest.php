@@ -72,9 +72,14 @@ final class IncidentPrefillTest extends TestCase
      */
     public function testAKnownSourceIsNamedAndAnUnknownOneIsStillPrinted(): void
     {
+        // ONE TOKEN ON THE WIRE, and it is the one patrol actually sends: the
+        // seam's `source` names the SENDING MODULE, singular. The enum names
+        // WHERE A REPORT CAME FROM, which is a stored vocabulary that does not
+        // get renamed to tidy a query string — so the two are mapped, and both
+        // spellings print the same badge rather than one of them printing raw.
+        self::assertSame('patrol observation', new IncidentPrefill(source: 'patrol')->sourceLabel());
+        self::assertSame('patrol observation', new IncidentPrefill(source: 'patrols')->sourceLabel());
         self::assertSame('patrol observation', new IncidentPrefill(source: 'patrol_observation')->sourceLabel());
-        // What the patrols module actually sends today.
-        self::assertSame('patrol', new IncidentPrefill(source: 'patrol')->sourceLabel());
         self::assertSame('camera trap', new IncidentPrefill(source: 'camera-trap')->sourceLabel());
         self::assertSame('linked record', new IncidentPrefill()->sourceLabel());
     }
@@ -87,5 +92,46 @@ final class IncidentPrefillTest extends TestCase
         self::assertTrue(new IncidentPrefill(record: $record, label: 'OBS-02 · lion tracks')->hasProvenance());
         self::assertFalse(new IncidentPrefill(record: $record)->hasProvenance());
         self::assertFalse(new IncidentPrefill(label: 'OBS-02 · lion tracks')->hasProvenance());
+    }
+
+    /**
+     * THE SEAM SURVIVES THE POST. The form's action carries the prefill back to
+     * the server, because the container the flow re-opens in, the source card a
+     * refused filing comes back with and the provenance written onto the incident
+     * are all read from the query.
+     */
+    public function testThePrefillGoesBackOutAsTheQueryItArrivedAs(): void
+    {
+        $record = Uuid::v7();
+
+        $query = new IncidentPrefill(
+            record: $record,
+            label: 'observation 2 of patrol P-0142',
+            backUrl: '/areas/x/modules/patrols/observation/2',
+            source: 'patrol_observation',
+            occurredAt: new \DateTimeImmutable('2026-08-22T08:15:00+03:00'),
+            latitude: -3.2014,
+            longitude: 35.4622,
+            subcategorySlug: 'livestock-depredation',
+            note: 'Fresh lion tracks 400 m from the bomas.',
+        )->toQuery();
+
+        self::assertSame($record->toRfc4122(), $query['record']);
+        self::assertSame('observation 2 of patrol P-0142', $query['label']);
+        self::assertSame('/areas/x/modules/patrols/observation/2', $query['back']);
+        self::assertSame('patrol_observation', $query['source']);
+        // The moment in ITS OWN zone, so a round trip cannot silently restate a
+        // field observation in UTC.
+        self::assertSame('2026-08-22T08:15:00+03:00', $query['at']);
+        self::assertSame('-3.2014', $query['lat']);
+        self::assertSame('35.4622', $query['lng']);
+        self::assertSame('livestock-depredation', $query['category']);
+        self::assertSame('Fresh lion tracks 400 m from the bomas.', $query['note']);
+    }
+
+    /** Nothing arrived, so nothing is echoed — and junk that was dropped stays dropped. */
+    public function testAPrefillThatUnderstoodNothingEchoesNothing(): void
+    {
+        self::assertSame([], new IncidentPrefill()->toQuery());
     }
 }

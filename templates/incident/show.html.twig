@@ -21,7 +21,7 @@
 {% extends '@UhifadhiLabsIncident/base.html.twig' %}
 {% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
 
-{% block title %}{{ incident.reference }} — {{ incident.title }}{% endblock %}
+{% block title %}{{ incident.reference }} — {{ incident.headline }}{% endblock %}
 
 {% block incident_page %}
     {% set money = incident.money %}

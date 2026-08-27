@@ -23,7 +23,7 @@
                        data-reference="{{ incident.reference }}"
                        href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
                         <span class="id">{{ incident.reference }}<span class="age">{{ incident.ageInHours(dashboard.now) < 48 ? incident.ageInHours(dashboard.now) ~ ' h' : (incident.ageInHours(dashboard.now) // 24) ~ ' d' }}</span></span>
-                        <span class="tt">{{ incident.title }}</span>
+                        <span class="tt">{{ incident.headline }}</span>
                         <span class="mt">{{ incident.subcategory.label }} · {{ incident.zoneLabel }}</span>
                     </a>
                 {% endfor %}

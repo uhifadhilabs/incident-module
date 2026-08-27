@@ -19,13 +19,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\User;
 use Uhifadhi\Service\WidgetService;
 use UhifadhiLabs\Incident\Model\IncidentFilter;
-use UhifadhiLabs\Incident\Model\IncidentPrefill;
 use UhifadhiLabs\Incident\Model\IncidentWidgets;
 use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
 use UhifadhiLabs\Incident\Service\IncidentDashboardService;
@@ -79,12 +77,6 @@ final class IncidentController
         /** Whether the widget library exists in this host — it edits ONE person's layout. */
         private readonly bool $widgetScreens = false,
         private readonly ?TokenStorageInterface $tokenStorage = null,
-        /**
-         * Null where the host runs no security — and then the report sheet is not
-         * mounted over the dashboard at all, because a write with no token is a
-         * write this module will not offer.
-         */
-        private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
         /** Minted in one place — see the service's own docblock for why. */
         private readonly ?IncidentTransitionToken $transitionToken = null,
     ) {
@@ -118,13 +110,6 @@ final class IncidentController
             'widgets' => $this->widgets->resolve(IncidentWidgets::catalog(), $this->userId(), $area->getUuid()),
             'transitionCsrfToken' => $this->transitionToken?->forArea($area),
             'urls' => $this->widgetUrls->forArea($area),
-            // THE REPORT SHEET, mounted over this dashboard — the same component
-            // the dedicated page renders, so filing feels like one product from
-            // whichever surface you started on.
-            'prefill' => IncidentPrefill::fromRequest($request),
-            'reportCsrfToken' => $this->recordScreens
-                ? $this->csrfTokenManager?->getToken(IncidentReportController::CSRF_TOKEN_ID)->getValue()
-                : null,
         ]));
     }
 

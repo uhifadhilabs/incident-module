@@ -297,6 +297,25 @@ class Incident
         return $this;
     }
 
+    /**
+     * WHAT THE REGISTER PRINTS — the first line of the title, and only that.
+     *
+     * The report form asks what happened on a TEXTAREA, because what a person
+     * writes at the roadside is a sentence, not a database field, and a note
+     * copied in from an observation is usually longer than one line's worth. Every
+     * listing in this module is a row, though, and a row is one line high.
+     *
+     * So the field is comfortable and this is honest about the consequence: the
+     * whole answer is stored and shown on the case file, and every list prints its
+     * first line. Nothing is lost and nothing is silently reflowed.
+     */
+    public function headline(): string
+    {
+        $first = strtok($this->title, "\r\n");
+
+        return false === $first ? $this->title : rtrim($first);
+    }
+
     public function getNarrative(): ?string
     {
         return $this->narrative;

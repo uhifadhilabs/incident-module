@@ -13,7 +13,7 @@
             <tr>
                 <td><a href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">{{ ui.id(incident.reference) }}</a></td>
                 <td>{{ ui.cat(incident.category, incident.subcategory.label) }}</td>
-                <td class="i-what">{{ incident.title }}
+                <td class="i-what">{{ incident.headline }}
                     {# Provenance, in the row: where this record came from, written
                        once at filing and never edited. #}
                     <em>{{ incident.sourceRecordLabel ?? incident.source.badge }}</em></td>

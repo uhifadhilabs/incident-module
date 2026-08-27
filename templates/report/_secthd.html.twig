@@ -1,0 +1,13 @@
+{# A NUMBERED SECTION HEADING, and whether the section is needed to file.
+
+   One file so the two containers cannot drift on the thing that matters most
+   here: which steps a report cannot be filed without, and which can wait.
+
+   Parameters: n, heading, mark ('req' | 'opt' | null), markLabel
+   ========================================================================== #}
+<div class="ro-secthd">
+    <span class="n">{{ n }}</span>
+    <h3>{{ heading }}</h3>
+    <span class="sp"></span>
+    {% if mark %}<span class="ro-{{ mark }}">{{ markLabel }}</span>{% endif %}
+</div>

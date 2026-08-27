@@ -15,10 +15,11 @@
 {% block title %}{{ area.name }} — Incidents{% endblock %}
 
 {% block incident_page %}
-{# The report sheet wraps the page so its trigger in the header and the sheet at
-   the foot are inside one controller — the same component the dedicated page
-   renders, mounted over whichever surface you were on. #}
-<div {{ reportCsrfToken ? stimulus_controller('@uhifadhilabs/incident-module/incident-report') : '' }}>
+{# NOTHING OPENS OVER THIS PAGE. The report flow lives on its own route, in the
+   container its entry point earned — and this dashboard's Report button is not
+   anchored to any record, so it is standalone filing and it navigates to the full
+   page. See templates/report/show.html.twig. #}
+<div>
     <div class="crumb"><a href="{{ path('dashboard_index') }}">uhifadhi</a> / <a href="{{ path('dashboard_area_show', {uuid: area.uuid}) }}">{{ area.name|lower }}</a> / <a href="{{ path('dashboard_area_modules_grid', {uuid: area.uuid}) }}">modules</a> / incidents</div>
 
     <div class="pghead">
@@ -33,12 +34,10 @@
                 <a class="tgl w-act" href="{{ path('incident_widgets', {uuid: area.uuid}) }}">{{ ux_icon('lucide:layout-grid') }} Widget library</a>
             {% endif %}
             {% if recordScreens %}
-                {# Opens the report sheet over this dashboard. The dedicated page
-                   at incident_new is the SAME component, for a deep link or a
-                   fresh tab — and it is where this falls back to without
-                   JavaScript, so the button is a real link either way. #}
-                <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}"
-                   {{ stimulus_action('@uhifadhilabs/incident-module/incident-report', 'open', 'click') }}>{{ ux_icon('lucide:plus') }} Report incident</a>
+                {# STANDALONE FILING — nothing on this page is the record being
+                   filed about, so the flow gets the whole page and an address of
+                   its own. A plain link: no trigger, nothing to dismiss. #}
+                <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('lucide:plus') }} Report incident</a>
             {% endif %}
         </div>
     </div>
@@ -77,16 +76,5 @@
         {% endif %}
     </div>
 
-    {% if recordScreens and reportCsrfToken %}
-        {{ include('@UhifadhiLabsIncident/report/_sheet.html.twig', {
-            area: area,
-            categories: dashboard.categories,
-            prefill: prefill,
-            chosen: null,
-            csrfToken: reportCsrfToken,
-            errors: [],
-            standalone: false,
-        }, with_context: false) }}
-    {% endif %}
 </div>
 {% endblock %}

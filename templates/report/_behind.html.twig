@@ -1,0 +1,28 @@
+{# THE REGISTER, STILL THERE — under the slide-over, dimmed but legible.
+
+   It is the whole argument for that container: the thing you were reading when
+   you decided to file is still on screen. So these are REAL rows from this area's
+   register, newest first — not a drawing of one.
+
+   It is context, not a second listing: aria-hidden and unlinked, because
+   everything on it is one click away on the register itself, which all three ways
+   out of the panel lead back to.
+
+   Parameters: area, behind
+   ========================================================================== #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+<div class="c ro-behind" aria-hidden="true">
+    <span class="tab"><span class="idx">IN·01</span>Incident register<span class="src">· still on screen, behind the panel</span></span>
+    {% for incident in behind %}
+        <div class="rowline">
+            <span class="ref">{{ incident.reference }}</span>
+            <span>{{ incident.headline }}</span>
+            <span class="sp"></span>
+            {{ ui.cat(incident.category, incident.category.label) }}
+            {{ ui.status(incident.status) }}
+        </div>
+    {% else %}
+        <div class="use">Nothing filed in this area yet. This would be the first — which is a fact about the register,
+            not about the area.</div>
+    {% endfor %}
+</div>

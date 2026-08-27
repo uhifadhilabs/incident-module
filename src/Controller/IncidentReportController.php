@@ -29,22 +29,40 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\User;
+use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
 use UhifadhiLabs\Incident\Enum\IncidentSeverityEnum;
 use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
 use UhifadhiLabs\Incident\Model\IncidentPrefill;
 use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
+use UhifadhiLabs\Incident\Repository\IncidentRepository;
 use UhifadhiLabs\Incident\Repository\IncidentSubcategoryRepository;
 use UhifadhiLabs\Incident\Service\IncidentReportService;
+use UhifadhiLabs\Storage\Model\FileEntry;
+use UhifadhiLabs\Storage\Registry\FileRegistry;
 
 /**
- * REPORTING AN INCIDENT — three steps: what kind, what happened, who was
- * involved.
+ * REPORTING AN INCIDENT — three answers: what kind, what happened, and where.
  *
- * ONE COMPONENT, TWO DOORS. The dashboard opens the same sheet over itself; this
- * route is that sheet as its own page, for a deep link, a fresh tab, or the
- * patrols module's "File as incident" button. Filing must not feel like five
- * different products just because five dashboards can lead to it, so both doors
- * render the SAME partial.
+ * THE CONTAINER FOLLOWS THE ENTRY POINT, and this route serves both.
+ *
+ *   FILING FROM A RECORD — another module's "file as incident" button, or the
+ *   register's report control carrying context — opens the SLIDE-OVER DRAWER,
+ *   with the register legible behind it and the source card riding inside it.
+ *   Context you never lost in the first place.
+ *
+ *   STANDALONE FILING — a deep link, a fresh tab, the dashboard's Report button
+ *   when it is not anchored to a record — opens the FULL PAGE. There is nothing
+ *   to sit over, and a page reloads, deep-links, prints, and cannot be thrown
+ *   away by a click beside it.
+ *
+ * The test is {@see IncidentPrefill::hasProvenance()} and nothing else, which is
+ * why deep-linking this address with no record can never open a drawer over
+ * nothing: it renders the page instead.
+ *
+ * ONE SET OF STEPS. Both containers render the SAME step partials at two widths —
+ * filing must not feel like two different products just because two surfaces can
+ * lead to it — and both post here, to one endpoint, refused for the same three
+ * reasons.
  *
  * STEP 2 IS THE CATEGORY'S OWN. The fields are the sub-category's field set, and
  * the money row EXISTS ONLY where the sub-category carries money — choose a
@@ -68,15 +86,39 @@ final class IncidentReportController
     /** The token id the report form carries. */
     public const string CSRF_TOKEN_ID = 'incident_report';
 
+    /**
+     * How much of the register stays legible behind the drawer. Context, not a
+     * listing: enough rows to recognise where you are, and none of them
+     * reachable through a backdrop.
+     */
+    private const int ROWS_BEHIND = 8;
+
+    /** What the register can print: {@see Incident::$title} is varchar(200). */
+    private const int TITLE_LIMIT = 200;
+
     public function __construct(
         private readonly Environment $twig,
         private readonly UrlGeneratorInterface $router,
         private readonly IncidentReportService $reports,
         private readonly IncidentCategoryRepository $categories,
         private readonly IncidentSubcategoryRepository $subcategories,
+        private readonly IncidentRepository $incidents,
         private readonly AuthorizationCheckerInterface $authorization,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly TokenStorageInterface $tokenStorage,
+        /**
+         * THE PLATFORM'S FILE REGISTRY, and null where the host runs no Files
+         * hub. It is how the source card shows the observation's photographs
+         * without this bundle knowing anything about observations: it hands the
+         * registry the source token and the record uuid the seam arrived with,
+         * and the module that OWNS that record answers.
+         *
+         * Optional on purpose. A deployment with incidents and no storage bundle
+         * is a real deployment; it gets a source card with no photograph strip,
+         * which is the honest drawing of "there are no photographs here", not a
+         * broken page.
+         */
+        private readonly ?FileRegistry $fileRegistry = null,
     ) {
     }
 
@@ -94,15 +136,12 @@ final class IncidentReportController
         $this->denyUnlessGranted();
         $prefill = IncidentPrefill::fromRequest($request);
 
-        return new Response($this->twig->render('@UhifadhiLabsIncident/report/show.html.twig', [
-            'area' => $area,
-            'now' => new \DateTimeImmutable(),
-            'categories' => $this->categories->allInOrder(),
-            'prefill' => $prefill,
-            'chosen' => null === $prefill->subcategorySlug ? null : $this->subcategories->findOneBySlug($prefill->subcategorySlug),
-            'csrfToken' => $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue(),
-            'errors' => [],
-        ]));
+        return new Response($this->render(
+            $area,
+            $prefill,
+            null === $prefill->subcategorySlug ? null : $this->subcategories->findOneBySlug($prefill->subcategorySlug),
+            [],
+        ));
     }
 
     /**
@@ -127,7 +166,12 @@ final class IncidentReportController
         $prefill = IncidentPrefill::fromRequest($request);
         $subcategory = $this->subcategories->findOneBySlug($request->request->getString('subcategory'));
         $position = self::positionFrom($request) ?? $prefill->position();
-        $title = trim($request->request->getString('title'));
+        // CLAMPED, NEVER REFUSED. The line arrives prefilled from the source
+        // record's note, which is written to be read rather than to fit a column,
+        // so a long one is stored short instead of costing somebody their report.
+        // Nothing is lost: the note travels verbatim into the narrative and the
+        // provenance link keeps the original reachable forever.
+        $title = mb_substr(trim($request->request->getString('title')), 0, self::TITLE_LIMIT);
 
         $errors = [];
         if (null === $subcategory) {
@@ -141,18 +185,18 @@ final class IncidentReportController
         }
 
         if (null === $subcategory || null === $position || '' === $title) {
-            // 422 and the form back with its answers: the request was understood
-            // and simply cannot be stored, which is how every recording screen in
-            // this deployment answers a rejected form.
-            return new Response($this->twig->render('@UhifadhiLabsIncident/report/show.html.twig', [
-                'area' => $area,
-                'now' => new \DateTimeImmutable(),
-                'categories' => $this->categories->allInOrder(),
-                'prefill' => $prefill,
-                'chosen' => $subcategory,
-                'csrfToken' => $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue(),
-                'errors' => $errors,
-            ]), Response::HTTP_UNPROCESSABLE_ENTITY);
+            // 422 and the form back: the request was understood and simply cannot
+            // be stored, which is how every recording screen in this deployment
+            // answers a rejected form.
+            //
+            // IN THE CONTAINER IT WAS MADE IN. Being refused is not a new entry
+            // point, so a filing from a record is answered in the drawer over the
+            // register and a standalone one on its own page — which the prefill
+            // decides here exactly as it did on the way in.
+            return new Response(
+                $this->render($area, $prefill, $subcategory, $errors),
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
         }
 
         $incident = $this->reports->file(
@@ -162,7 +206,9 @@ final class IncidentReportController
             position: $position,
             now: new \DateTimeImmutable(),
             severity: IncidentSeverityEnum::tryFrom($request->request->getString('severity')) ?? IncidentSeverityEnum::Medium,
-            source: IncidentSourceEnum::tryFrom($request->request->getString('source'))
+            // The wire token, mapped once and deliberately — never a fallback
+            // that happens to land on the right case.
+            source: IncidentSourceEnum::forToken($request->request->getString('source'))
                 ?? ($prefill->hasProvenance() ? IncidentSourceEnum::PatrolObservation : IncidentSourceEnum::Direct),
             occurredAt: self::occurredAtFrom($request) ?? $prefill->occurredAt,
             narrative: self::narrativeFrom($request) ?? $prefill->note,
@@ -177,6 +223,75 @@ final class IncidentReportController
             'uuid' => $area->getUuidString(),
             'reference' => $incident->getReference(),
         ]));
+    }
+
+    /**
+     * THE FLOW, IN WHICHEVER CONTAINER ITS ENTRY POINT EARNED — rendered in one
+     * place so a fresh form and a refused one can never disagree about which.
+     *
+     * @param array<string, string> $errors
+     */
+    private function render(AreaOfInterest $area, IncidentPrefill $prefill, ?IncidentSubcategory $chosen, array $errors): string
+    {
+        $fromARecord = $prefill->hasProvenance();
+        $query = $prefill->toQuery();
+
+        return $this->twig->render('@UhifadhiLabsIncident/report/show.html.twig', [
+            'area' => $area,
+            'now' => new \DateTimeImmutable(),
+            'categories' => $this->categories->allInOrder(),
+            'prefill' => $prefill,
+            'chosen' => $chosen,
+            'csrfToken' => $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue(),
+            'errors' => $errors,
+            // THE FORM POSTS BACK TO ITS OWN ENTRY POINT. Without the seam on the
+            // action, pressing File would drop the provenance, the source card and
+            // the container all at once.
+            'createUrl' => $this->router->generate('incident_create', ['uuid' => $area->getUuidString()])
+                .([] === $query ? '' : '?'.http_build_query($query)),
+            // ONE WAY OUT, AND IT SAYS WHERE IT GOES: back to the record this
+            // filing came from, or to the register it was started from. Never a
+            // dismissal.
+            'cancelUrl' => $fromARecord && null !== $prefill->backUrl
+                ? $prefill->backUrl
+                : $this->router->generate('incident_dashboard', ['uuid' => $area->getUuidString()]),
+            // The register behind the drawer — real rows, because "the page you
+            // came from is still on screen" is the entire reason that container
+            // exists. The page needs none.
+            'behind' => $fromARecord ? $this->incidents->recentForArea($area, self::ROWS_BEHIND) : [],
+            // THE SOURCE RECORD'S PHOTOGRAPHS, asked of the module that owns them.
+            'sourceFiles' => $this->filesOf($prefill),
+        ]);
+    }
+
+    /**
+     * THE PHOTOGRAPHS OF THE RECORD THIS FILING CAME FROM.
+     *
+     * Asked of the platform's registry, which asks the module that owns the
+     * record — this bundle never names the patrols module, its routes or its key
+     * prefix, because a host may install either without the other. All it has is
+     * the token and the uuid the seam's query string carried, and that is exactly
+     * what {@see FileRegistry::forRecord()} takes.
+     *
+     * EVERY WAY OF HAVING NONE ANSWERS THE SAME. No storage bundle, no
+     * photographs, a token naming a module this deployment does not have, a
+     * registry having a bad day — all of them are an empty list and a card with
+     * no strip. None of them is an error, and none of them may cost anybody a
+     * report.
+     *
+     * @return list<FileEntry>
+     */
+    private function filesOf(IncidentPrefill $prefill): array
+    {
+        if (null === $this->fileRegistry || null === $prefill->source || null === $prefill->record) {
+            return [];
+        }
+
+        try {
+            return $this->fileRegistry->forRecord($prefill->source, $prefill->record->toRfc4122());
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     /** The point the form carries, as GeoJSON text, or null where it carried none. */

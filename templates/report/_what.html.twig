@@ -1,0 +1,145 @@
+{# STEP 2 — WHAT HAPPENED.
+
+   TWO OF THE THREE RULED REQUIREMENTS LIVE HERE: one line saying what happened,
+   and the place. They are marked, and only they are — how bad it was, when, and
+   the reporter's own words are offered in the same breath as "or later on the
+   record", because a figure guessed at the roadside is worse than none and the
+   append-only timeline records who added what and when either way.
+
+   WHAT HAPPENED IS A TEXTAREA, not a one-line field. What somebody writes at the
+   roadside is a sentence, and a note copied in from an observation is routinely
+   longer than a single line — so the box grows to fit what is in it rather than
+   scrolling a sentence sideways past a cursor. The caption says what is true of
+   the consequence: every listing in this module is a row, so the REGISTER SHOWS
+   THE FIRST LINE ({@see \UhifadhiLabs\Incident\Entity\Incident::headline()}) while
+   the whole answer is kept and shown on the case file.
+
+   IT ARRIVES ANSWERED WHEN THE FILING CAME FROM A RECORD. The source record's
+   note is put straight into it — the person filing has already written what
+   happened once, and asking them to write it again is the surest way to get a
+   report that never exists. It is fully editable, and the SOURCE CARD above still
+   shows the note verbatim, so editing this never touches the original. A long
+   note is prefilled whole and the field's own limit shows rather than silently
+   losing the end of it.
+
+   THE SHARED ANSWERS ARE ASKED ONCE. What happened, where, when, how bad and the
+   verbatim note belong to every kind of incident, so they are asked once, above
+   the swapped field sets — never sixteen times with fifteen of them disabled.
+
+   STEP 2 IS THEN THE SUB-CATEGORY'S OWN. Every sub-category's field set is
+   rendered and all but the chosen one are hidden AND disabled, so the posted form
+   carries only the fields the chosen kind of incident actually asks for. The
+   MONEY row exists only inside the field sets of sub-categories that carry money
+   — choose a natural mortality and there is no money row in the document at all.
+   Not disabled. Absent.
+
+   ONE PARTIAL, TWO WIDTHS: the drawer writes the one line on a full-width field
+   of its own, the page writes it on a labelled row. Same name, same gate, same
+   POST.
+
+   Parameters: controller, categories, chosen, prefill, compact
+   ========================================================================== #}
+{% if compact %}
+    <div class="ro-line">
+        <textarea class="ro-bigfield" name="title" maxlength="200" rows="2"
+                  placeholder="What happened — the register shows the first line"
+                  aria-label="What happened"
+                  {{ stimulus_target(controller, 'headline')|stimulus_action(controller, 'grow', 'input') }}>{{ prefill.note }}</textarea>
+        <span class="ro-req">needed to file</span>
+    </div>
+{% endif %}
+
+<div class="i-fieldset">
+    {% if not compact %}
+        <div class="i-fld"><label for="report-title">What happened</label>
+            <span><textarea id="report-title" name="title" maxlength="200" rows="2"
+                            placeholder="What happened — the register shows the first line"
+                            {{ stimulus_target(controller, 'headline')|stimulus_action(controller, 'grow', 'input') }}>{{ prefill.note }}</textarea>
+                <span class="ro-req">needed to file</span></span></div>
+    {% endif %}
+
+    {# THE PLACE — the one fact a report cannot be filed without and the one
+       nobody can add reliably tomorrow. It arrives already answered when the
+       filing came from a record, and stays editable because the record's guess
+       is still a guess. #}
+    <div class="i-fld"><label for="report-lat">Where</label>
+        <span><input type="text" id="report-lat" name="lat" inputmode="decimal" placeholder="latitude"
+                     value="{{ prefill.latitude }}">
+            <input type="text" name="lng" inputmode="decimal" placeholder="longitude" aria-label="Longitude"
+                   value="{{ prefill.longitude }}">
+            <span class="ro-req">needed to file</span>
+            {% if prefill.positionLabel %}<span class="i-kpi-note">{{ prefill.positionLabel }} · came with the {{ prefill.sourceLabel }}</span>{% endif %}</span></div>
+
+    <div class="i-fld"><label for="report-when">When</label>
+        <span><input type="datetime-local" id="report-when" name="occurred_at"
+                     value="{{ prefill.occurredAt ? prefill.occurredAt|date('Y-m-d\\TH:i', false) }}">
+            {% if prefill.occurredAt %}<span class="i-kpi-note">from the {{ prefill.sourceLabel }}</span>{% endif %}</span></div>
+
+    {# SECONDARY, AND SAID SO. Present — because the person filing may well know —
+       but never in the way of filing. #}
+    <div class="i-fld"><label for="report-severity">How bad</label>
+        <span><select id="report-severity" name="severity">
+                <option value="low">low</option>
+                <option value="medium" selected>medium</option>
+                <option value="high">high</option>
+            </select>
+            <span class="ro-opt">can wait</span>
+            <span class="i-kpi-note">defaults to medium — whoever verifies it decides properly</span></span></div>
+
+    <div class="i-fld"><label for="report-narrative">In their own words</label>
+        <span><textarea id="report-narrative" name="narrative" rows="3"
+                        placeholder="Verbatim — kept apart from the officer's assessment">{{ prefill.note }}</textarea>
+            <span class="ro-opt">can wait</span></span></div>
+</div>
+
+{# THE SUB-CATEGORY'S OWN QUESTIONS, one set per sub-category. #}
+{% for category in categories %}
+    {% for subcategory in category.subcategories %}
+        {% set isChosen = chosen and chosen.slug == subcategory.slug %}
+        <div class="i-fieldset i-step2" {{ stimulus_target(controller, 'fieldset') }}
+             data-subcategory="{{ subcategory.slug }}"{{ isChosen ? '' : ' hidden' }}>
+            <div class="hd">the fields {{ subcategory.label }} asks for</div>
+
+            {# The siblings under this kind. Choosing one swaps the whole field
+               set, because the sub-category is what decides the questions — and
+               whether there is a money row at all. #}
+            <div class="i-fld"><label>Sub-category</label>
+                <span><span class="i-taxsub">
+                    {%- for sibling in category.subcategories -%}
+                        <a href="#" class="{{ sibling.slug == subcategory.slug ? 'on' }}"
+                           {{ stimulus_target(controller, 'category')|stimulus_action(controller, 'choose', 'click') }}
+                           data-subcategory="{{ sibling.slug }}"
+                           data-subcategories="{{ sibling.slug }}">{{ sibling.label }}</a>
+                    {%- endfor -%}
+                </span></span></div>
+
+            {% for field in subcategory.fieldSet %}
+                <div class="i-fld"><label for="d-{{ subcategory.slug }}-{{ field.key }}">{{ field.label }}</label>
+                    <span><input type="text" id="d-{{ subcategory.slug }}-{{ field.key }}"
+                                 name="details_{{ field.key }}"{{ isChosen ? '' : ' disabled' }}></span></div>
+            {% endfor %}
+
+            {# ONLY where this kind of incident carries money. #}
+            {% if subcategory.carriesMoney %}
+                <div class="i-fld only"><label>{{ subcategory.moneyDirection.value == 'fine' ? 'Fine to assess' : 'Loss claimed' }}</label>
+                    <span class="i-kpi-note">Recorded on the case file once somebody has assessed it — filing is cheap,
+                        and a figure guessed at the roadside is worse than none.</span></div>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{# The chosen sub-category, as one value. The picker writes into it; without
+   JavaScript the radios below carry it. #}
+<input type="hidden" name="subcategory" value="{{ chosen ? chosen.slug }}" data-incident-report-subcategory>
+<noscript>
+    <div class="i-fieldset">
+        <div class="hd">what kind of incident</div>
+        {% for category in categories %}
+            {% for subcategory in category.subcategories %}
+                <div class="i-fld"><label><input type="radio" name="subcategory" value="{{ subcategory.slug }}"
+                    {{ chosen and chosen.slug == subcategory.slug ? 'checked' }}> {{ subcategory.path }}</label><span></span></div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</noscript>

@@ -515,47 +515,65 @@ html.light{
 .i-optnav a.on{color:var(--accT);background:var(--acc);border-color:var(--acc)}
 .i-optnav .sep{color:var(--dim);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px}
 
-/* ── THE REPORT / CREATE FLOW ─────────────────────────────────────────────
-   Mounted as a sheet over the register. Each direction opens it from its own
-   idiom, but the sheet itself is one component — filing an incident must not
-   feel like five different products.
-   → POST /areas/{uuid}/modules/incidents (CSRF `incident_report`)             */
-/* CENTRED, like every other overlay in the app (the files hub's .f-ov is the
-   precedent): the sheet sits in the middle of the viewport, never pinned under
-   the menubar, and when it is taller than the screen it — not the page behind
-   it — scrolls.
+/* ── THE REPORT FLOW ──────────────────────────────────────────────────────
+   Filing an incident lives on a ROUTE, in one of two containers chosen by where
+   the filing came from: the SLIDE-OVER DRAWER when it arrived from a record, with
+   the register legible behind it; the FULL PAGE when it did not. The centred
+   sheet that used to hold it is gone — a modal makes a promise about importance
+   this form contradicts, and a click beside it could throw a half-written report
+   away.
 
-   AND IT ESCAPES THE PAGE. `.page` is `position:relative;z-index:1`, so every
-   page block is its own stacking context and a z-index inside one is only ever
-   compared against its siblings — which is why the footer, sitting in a LATER
-   .page, painted straight over this sheet however high its z-index went. While
-   an overlay is open the page blocks stop stacking, so z-index 60 is measured
-   against the shell itself (sidebar 30, topbar 25) and the modal wins over all
-   of it. CSS, not script: the dedicated /new page renders the sheet open with
-   no JavaScript at all, and it must not be broken there either. */
-body:has(.i-sheetbd.open) .page{z-index:auto}
-.i-sheetbd{position:fixed;inset:0;z-index:60;background:rgba(4,8,6,.62);backdrop-filter:blur(3px);
-  display:none;place-items:center;padding:3vh 20px}
-.i-sheetbd.open{display:grid}
-.i-sheet{width:100%;max-width:760px;max-height:94vh;overflow-y:auto;overscroll-behavior:contain;
-  border-radius:16px;border:1px solid var(--ln2);
-  background:linear-gradient(180deg,var(--p1),var(--p2));box-shadow:0 22px 60px rgba(0,0,0,.45);
-  padding:22px 24px 20px}
-.i-sheethd{display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid var(--ln);
-  padding-bottom:14px;margin-bottom:16px}
-.i-sheethd h2{font-family:"Archivo",system-ui,sans-serif;font-size:18px;font-weight:700;margin:0 0 5px;
-  letter-spacing:-.02em}
-.i-sheethd p{margin:0;font-size:12.5px;color:var(--fog);line-height:1.55;max-width:70ch}
-.i-sheethd .x{margin-left:auto;flex:none;background:none;border:1px solid var(--ln2);border-radius:8px;
-  width:28px;height:28px;color:var(--fog);cursor:pointer;display:grid;place-items:center;font-size:15px;
-  line-height:1;font-family:inherit}
-.i-sheethd .x:hover{color:var(--tx);border-color:var(--fog)}
-.i-steps{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.i-steps span{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:700;
-  letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border:1px solid var(--ln);
-  border-radius:99px;padding:4px 10px 3px;line-height:1}
-.i-steps span.on{color:var(--accT);background:var(--acc);border-color:var(--acc)}
-.i-steps .arr{border:0;padding:0;color:var(--dim)}
+   Both containers render the SAME step partials, so almost everything below is
+   shared and only the frame differs.
+   → POST /areas/{uuid}/modules/incidents (CSRF `incident_report`)             */
+
+/* SHARED — the gate, the marks, and what a numbered section looks like. */
+.ro-secthd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ro-secthd .n{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:700;
+  letter-spacing:.14em;color:var(--dim);border:1px solid var(--ln2);border-radius:6px;
+  padding:4px 8px 3px;line-height:1}
+.ro-secthd h3{margin:0;font-family:"Archivo",system-ui,sans-serif;font-size:14.5px;font-weight:700;
+  letter-spacing:-.01em}
+.ro-secthd .sp{flex:1}
+/* THE GATE: one quiet line naming what is still missing, and a File control that
+   is dead until nothing is. The server refuses the same filing for the same three
+   reasons; this only says so sooner. */
+.ro-gate{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;letter-spacing:.04em;
+  color:var(--warn)}
+.ro-gate[hidden]{display:none}
+.ro-file:disabled{opacity:.42;cursor:not-allowed;box-shadow:none;filter:grayscale(.4)}
+/* The three answers a report cannot be filed without, marked — and nothing else. */
+.ro-req{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--acc);white-space:nowrap}
+/* "can wait" — the mark on everything that may be added now or on the record. */
+.ro-opt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border:1px dashed var(--ln2);
+  border-radius:99px;padding:3px 8px 2px;line-height:1;white-space:nowrap}
+/* Everything the short form did not ask, drawn as what happens next on the
+   record — where the append-only timeline keeps who added it and when. */
+.ro-later{display:grid;gap:0;margin-top:16px;border-top:1px solid var(--ln);padding-top:14px}
+.ro-later .lrow{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:12px;color:var(--fog);
+  border-bottom:1px solid var(--ln)}
+.ro-later .lrow:last-child{border-bottom:0}
+.ro-later .lrow b{color:var(--tx);font-weight:600;min-width:150px}
+.ro-later .lrow .sp{flex:1}
+
+/* ── THE FULL PAGE — standalone filing ───────────────────────────────────
+   A route of its own. Reloads, deep-links, prints, and survives a dropped
+   connection: the flow stops being a thing that can be lost by a stray click. */
+.ro-form{max-width:860px}
+.ro-sect{border-top:1px solid var(--ln);padding-top:16px;margin-top:20px}
+.ro-sect:first-of-type{border-top:0;padding-top:0;margin-top:0}
+/* The filing bar rides the bottom of the viewport, so the control and the gate
+   line stay in sight however long the form is. */
+.ro-filebar{position:sticky;bottom:0;display:flex;align-items:center;gap:12px;margin-top:22px;
+  border-top:1px solid var(--ln);padding:13px 0 14px;background:var(--cv);
+  box-shadow:0 -14px 20px -14px rgba(0,0,0,.55)}
+.ro-filebar .sp{flex:0 1 auto}
+.ro-filebar .hint,.ro-filebar .ro-gate{flex:1 1 auto;min-width:0}
+.ro-filebar .hint{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim)}
+.ro-filebar .cta,.ro-filebar .tgl{flex:none;white-space:nowrap}
+/* The kind, as cards: the page has room to name what is under each one. */
 .i-catpick{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:9px;margin-bottom:4px}
 .i-catopt{border:1px solid var(--ln2);border-radius:11px;padding:12px 13px;cursor:pointer;
   background:color-mix(in srgb,var(--fog) 4%,transparent);display:block;text-decoration:none;color:var(--tx)}
@@ -565,20 +583,130 @@ body:has(.i-sheetbd.open) .page{z-index:auto}
 .i-catopt .r i{width:8px;height:8px;border-radius:2px;flex:none;font-style:normal}
 .i-catopt .r b{font-size:12.5px;font-weight:600}
 .i-catopt .d{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim);line-height:1.5}
-.i-sheetfoot{display:flex;align-items:center;gap:12px;border-top:1px solid var(--ln);padding-top:15px;
-  margin-top:18px}
-.i-sheetfoot .sp{flex:1}
-.i-sheetfoot .hint{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim)}
 
-/* THE GATE. Steps 1 and 2 are required and step 3 is not, so the File control
-   is dead — visually and functionally — until the two that matter are answered,
-   and a quiet line says which one is still missing rather than making anybody
-   press a button to find out. The server refuses the same filing for the same
-   reasons; this only says so earlier. */
-.i-gate{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;letter-spacing:.04em;
-  color:var(--warn)}
-.i-gate[hidden]{display:none}
-.i-sheetfoot .cta:disabled{opacity:.42;cursor:not-allowed;box-shadow:none;filter:grayscale(.4)}
+/* A one-line answer deserves a line to write it on — and the mark that says
+   whether it is needed sits BESIDE it, on the same line, never stretched down the
+   side of a text area. */
+.ro-form .i-fld>span,.ro-drawer .i-fld>span{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.ro-form .i-fld>span>.ro-req,.ro-form .i-fld>span>.ro-opt,
+.ro-drawer .i-fld>span>.ro-req,.ro-drawer .i-fld>span>.ro-opt{align-self:center}
+.ro-form .i-fld input,.ro-form .i-fld textarea,.ro-form .i-fld select{flex:1 1 200px;min-width:0;
+  max-width:430px;font-family:inherit;font-size:13px;color:var(--tx);border:1px solid var(--ln2);
+  border-radius:8px;padding:8px 10px;background:color-mix(in srgb,var(--fog) 5%,transparent)}
+.ro-form .i-fld textarea{flex-basis:100%;line-height:1.5}
+/* What happened grows to fit; the verbatim note keeps its own handle. */
+.ro-form .i-fld #report-title{resize:none;overflow:hidden}
+.ro-form .i-fld input:focus,.ro-form .i-fld textarea:focus,.ro-form .i-fld select:focus{outline:none;
+  border-color:var(--acc)}
+/* The note that explains a secondary answer belongs under it, not squeezed
+   between it and its mark. */
+.ro-form .i-fld>span>.i-kpi-note,.ro-drawer .i-fld>span>.i-kpi-note{flex-basis:100%}
+
+/* ── THE SLIDE-OVER DRAWER — filing from a record ────────────────────────
+   A slide-over panel, SCOPED TO THE CONTENT PANE. It comes in from the right edge
+   of `.main` at full height and its dimming backdrop covers exactly that pane —
+   the sidebar stays visible on the left and the top bar above, so filing never
+   costs anybody their place in the app, only their place on the page.
+
+   The register stays where it was, dimmed but legible behind: you can still see
+   the thing you are filing about. Narrower than a page, so the form is one column
+   and reads top to bottom.
+
+   FIXED, WITH THE SHELL'S OWN GEOMETRY. `.main` is `position:relative` but the
+   incidents page renders inside `.page`, which is a stacking context of its own —
+   so the panel is positioned against the viewport and inset by the host shell's
+   sidebar width and top-bar height instead. Both are the host's numbers
+   (assets/styles/app.css: `.side{width:236px}`, `.side.rail{width:66px}`,
+   `.topbar{height:56px}`) and they are stated here once. */
+.ro-slideover{--ro-side:236px;--ro-top:56px;position:fixed;top:var(--ro-top);right:0;bottom:0;
+  left:var(--ro-side);z-index:60;pointer-events:none;transition:left .18s ease}
+/* The sidebar collapses to a rail; the panel's left edge follows it. */
+body:has(.side.rail) .ro-slideover{--ro-side:66px}
+.ro-slideover.open{pointer-events:auto}
+/* AND IT ESCAPES THE PAGE. `.page` is `position:relative;z-index:1`, so every page
+   block is its own stacking context and a z-index inside one is only ever compared
+   against its siblings — which is why a footer in a LATER .page paints straight
+   over an overlay however high its z-index goes. While the panel is out the page
+   blocks stop stacking, so z-index 60 is measured against the shell itself
+   (sidebar 30, topbar 25). CSS, not script. */
+body:has(.ro-slideover.open) .page{z-index:auto}
+/* Nothing behind the panel scrolls while it is out: the register is there to be
+   read, not navigated. */
+body:has(.ro-slideover.open){overflow:hidden}
+.ro-slideback{position:absolute;inset:0;background:color-mix(in srgb,#000 46%,transparent);
+  backdrop-filter:blur(2px);opacity:0;transition:opacity .28s ease}
+.ro-slideover.open .ro-slideback{opacity:1}
+.ro-drawer{position:absolute;top:0;right:0;bottom:0;width:min(600px,100%);display:flex;
+  flex-direction:column;border-left:1px solid var(--ln2);
+  background:linear-gradient(180deg,var(--p1),var(--p2));box-shadow:-22px 0 60px rgba(0,0,0,.4);
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.ro-slideover.open .ro-drawer{transform:none}
+/* Without the controller nothing adds `open`, so the panel ships out and the flow
+   is reachable exactly as it is with JavaScript. */
+.ro-slideover:not([data-ro-animated]){pointer-events:auto}
+.ro-slideover:not([data-ro-animated]) .ro-drawer{transform:none}
+.ro-slideover:not([data-ro-animated]) .ro-slideback{opacity:1}
+.ro-dhd{display:flex;align-items:flex-start;gap:12px;padding:16px 18px 14px;
+  border-bottom:1px solid var(--ln)}
+.ro-dhd h3{margin:0 0 4px;font-family:"Archivo",system-ui,sans-serif;font-size:15px;font-weight:700}
+.ro-dhd p{margin:0;font-size:11.5px;color:var(--fog);line-height:1.5}
+.ro-dhd .x{margin-left:auto;flex:none;background:none;border:1px solid var(--ln2);border-radius:8px;
+  width:26px;height:26px;color:var(--fog);text-decoration:none;display:grid;place-items:center;
+  font-size:14px;line-height:1;font-family:inherit}
+.ro-dhd .x:hover{color:var(--tx);border-color:var(--fog);text-decoration:none}
+/* The form spans the body and the foot, so the File control rides the bottom of
+   the panel while the questions scroll under it. */
+.ro-dform{flex:1;min-height:0;display:flex;flex-direction:column}
+.ro-dbody{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px 18px}
+.ro-dfoot{display:flex;align-items:center;gap:10px;padding:13px 18px 15px;border-top:1px solid var(--ln)}
+/* The note gives way; the control never does. A File button that wrapped onto
+   two lines because a reassurance grew is a control that looks broken at the
+   exact moment somebody is about to press it. */
+.ro-dfoot .sp{flex:0 1 auto}
+.ro-dfoot .hint,.ro-dfoot .ro-gate{flex:1 1 auto;min-width:0}
+.ro-dfoot .hint{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim)}
+.ro-dfoot .cta,.ro-dfoot .tgl{flex:none;white-space:nowrap}
+/* The kind, as chips: one narrow column has no room for the page's cards. */
+.ro-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.ro-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--ln2);border-radius:99px;
+  padding:9px 14px 8px;font-size:12.5px;font-weight:600;color:var(--tx);text-decoration:none;cursor:pointer;
+  background:color-mix(in srgb,var(--fog) 4%,transparent)}
+.ro-chip:hover{border-color:var(--acc);text-decoration:none}
+.ro-chip.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.ro-chip i{width:8px;height:8px;border-radius:2px;flex:none;font-style:normal}
+/* WHAT HAPPENED, on a box the width of the panel that GROWS TO FIT ITS ANSWER.
+   The answer is a sentence — often one copied in from an observation — and a
+   sentence that scrolls sideways past a cursor cannot be re-read before it is
+   filed. Same grammar as the verbatim note below it; the register prints its
+   first line. */
+.ro-line{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+.ro-line .ro-req{margin-top:14px}
+.ro-bigfield{flex:1;min-width:0;width:100%;font-family:inherit;font-size:15px;color:var(--tx);
+  border:1px solid var(--ln2);border-radius:12px;padding:12px 14px;
+  background:color-mix(in srgb,var(--fog) 5%,transparent);line-height:1.5;
+  resize:none;overflow:hidden}
+.ro-bigfield:focus{outline:none;border-color:var(--acc)}
+.ro-drawer .i-fld{grid-template-columns:96px 1fr}
+.ro-drawer .i-fld input,.ro-drawer .i-fld textarea,.ro-drawer .i-fld select{flex:1 1 120px;min-width:0;
+  max-width:100%;font-family:inherit;font-size:12.5px;color:var(--tx);border:1px solid var(--ln2);
+  border-radius:8px;padding:6px 9px;background:color-mix(in srgb,var(--fog) 5%,transparent)}
+.ro-drawer .i-fld textarea{flex-basis:100%}
+.ro-drawer .i-fld input:focus,.ro-drawer .i-fld textarea:focus,.ro-drawer .i-fld select:focus{outline:none;
+  border-color:var(--acc)}
+/* The register behind it — real rows from this area, drawn as the page it covers. */
+.ro-behind .rowline{display:flex;align-items:center;gap:12px;padding:9px 0;
+  border-bottom:1px solid var(--ln);font-size:12px}
+.ro-behind .rowline:last-child{border-bottom:0}
+.ro-behind .rowline .ref{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;
+  color:var(--acc);flex:none}
+.ro-behind .rowline .sp{flex:1}
+
+/* On a narrow screen there is no sidebar left to preserve, so the pane is the
+   screen and the panel is all of it. */
+@media (max-width:900px){
+  .ro-slideover{left:0;--ro-top:0px}
+  .ro-drawer{width:100%;border-left:0}
+}
 
 /* ── THE SOURCE CARD ──────────────────────────────────────────────────────
    How is the filing user going to remember the context of what happened? By
@@ -605,9 +733,9 @@ body:has(.i-sheetbd.open) .page{z-index:auto}
 .i-src .facts b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:600;
   color:var(--tx)}
 .i-src .shots{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
-.i-src .shots a{display:block;width:76px;height:57px;border-radius:8px;overflow:hidden;
+.i-src .shots a,.i-src .shots button{display:block;width:76px;height:57px;padding:0;cursor:pointer;border-radius:8px;overflow:hidden;
   border:1px solid var(--ln2);background:color-mix(in srgb,var(--fog) 12%,transparent)}
-.i-src .shots a:hover{border-color:var(--acc)}
+.i-src .shots a:hover,.i-src .shots button:hover{border-color:var(--acc)}
 .i-src .shots img{width:100%;height:100%;object-fit:cover;display:block}
 .i-src .seam{margin:11px 0 0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;
   letter-spacing:.06em;color:var(--dim)}

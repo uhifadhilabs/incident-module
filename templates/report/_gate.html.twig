@@ -1,0 +1,54 @@
+{# THE GATE — the same three answers, in both containers.
+
+   The File control is DEAD, visually and functionally, until a kind is chosen,
+   one line says what happened and the place is marked. A quiet line names
+   whatever is still missing rather than making anybody press a disabled button to
+   find out.
+
+   THE SERVER REFUSES THE SAME FILING for the same three reasons
+   ({@see IncidentReportController::create}); this only says so sooner. The button
+   ships disabled so a filer without JavaScript is never shown a control that
+   would be refused, and the noscript block hands it back because without the
+   controller nothing can enable it.
+
+   THE MISSING LIST IS COMPUTED HERE TOO, not only in the controller: a filing
+   that arrived from a record already has its place, and a gate that asked for it
+   anyway until the first keystroke would be lying on first paint.
+
+   CANCEL IS A REAL LINK, in both containers — the honest back link on the page,
+   the explicit close on the drawer. Nothing here can be dismissed by clicking
+   beside it.
+
+   Parameters: controller, chosen, prefill, cancelUrl, compact
+   ========================================================================== #}
+{% set missing = [] %}
+{% if not chosen %}{% set missing = missing|merge(['choose a category']) %}{% endif %}
+{# A line the source record already wrote COUNTS AS FILLED: the filer said what
+   happened once, in the field, and the form must not pretend they did not. #}
+{% if not prefill.note %}{% set missing = missing|merge(['describe what happened']) %}{% endif %}
+{% if prefill.latitude is null or prefill.longitude is null %}
+    {% set missing = missing|merge(['mark where it happened']) %}
+{% endif %}
+
+<div class="{{ compact ? 'ro-dfoot' : 'ro-filebar' }}">
+    {# The gate REPLACES the reassuring line rather than crowding in beside it:
+       both are the same quiet mono note in the same place, and only one of them
+       is worth reading at a time. #}
+    <span class="hint" {{ stimulus_target(controller, 'hint') }}{{ missing is empty ? '' : ' hidden' }}>Nothing is
+        written until you file. A filed incident starts at <b class="acc">reported</b> and cannot skip
+        verification.</span>
+    <span class="ro-gate" {{ stimulus_target(controller, 'gate') }}{{ missing is empty ? ' hidden' : '' }}>{{ missing|join(' · ') }}</span>
+    <span class="sp"></span>
+    <a class="tgl" href="{{ cancelUrl }}">Cancel</a>
+    <button class="cta ro-file" type="submit" {{ stimulus_target(controller, 'file') }}{{ missing is empty ? '' : ' disabled' }}>
+        {{- compact ? 'File →' : 'File incident →' -}}
+    </button>
+</div>
+<noscript>
+    <div class="{{ compact ? 'ro-dfoot' : 'ro-filebar' }}">
+        <span class="hint">Choose a kind above, say what happened and give the place — the report is refused without
+            all three.</span>
+        <span class="sp"></span>
+        <button class="cta" type="submit">File incident →</button>
+    </div>
+</noscript>

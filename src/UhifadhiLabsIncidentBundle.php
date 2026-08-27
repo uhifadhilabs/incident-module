@@ -244,9 +244,15 @@ final class UhifadhiLabsIncidentBundle extends AbstractBundle
                     service('incident.report'),
                     service(IncidentCategoryRepository::class),
                     service(IncidentSubcategoryRepository::class),
+                    // The register that stays legible behind the report drawer.
+                    service(IncidentRepository::class),
                     service('security.authorization_checker'),
                     service('security.csrf.token_manager'),
                     service('security.token_storage'),
+                    // The platform's file registry, and genuinely absent where the
+                    // host runs no Files hub — then the source card simply has no
+                    // photograph strip. See the controller's own note.
+                    service('storage.file_registry')->nullOnInvalid(),
                 ])
                 ->public();
             $services->alias(IncidentReportController::class, 'incident.controller.report')->public();

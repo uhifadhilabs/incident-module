@@ -106,6 +106,32 @@ final class IncidentRepository extends ServiceEntityRepository
     }
 
     /**
+     * THE REGISTER BEHIND THE REPORT DRAWER — this area's newest filings, capped.
+     *
+     * Deliberately NOT {@see findFiltered()}: the drawer's backdrop answers "what
+     * am I filing next to", and a month window would empty it on the first of the
+     * month, leaving a drawer over nothing. Unfiltered and unpaged, because it is
+     * context rather than a listing nobody can act on through a backdrop.
+     *
+     * @return list<Incident>
+     */
+    public function recentForArea(AreaOfInterest $area, int $limit): array
+    {
+        /** @var list<Incident> $incidents */
+        $incidents = $this->createQueryBuilder('i')
+            ->join('i.subcategory', 's')->addSelect('s')
+            ->join('s.category', 'c')->addSelect('c')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->orderBy('i.reportedAt', 'DESC')
+            ->addOrderBy('i.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return $incidents;
+    }
+
+    /**
      * EVERYTHING WAITING ON ONE PERSON, oldest first: an incident they reported
      * that nobody has verified, or one they are the responder on. Closed and
      * resolved work is not waiting on anybody, so it is not here.

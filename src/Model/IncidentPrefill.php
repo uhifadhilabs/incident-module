@@ -27,7 +27,7 @@ use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
  * filing sends a person to `incident_new` carrying what it knows:
  *
  *   /areas/{uuid}/modules/incidents/new
- *       ?source=patrol_observation
+ *       ?source=patrol
  *       &record=<uuid of the observation>
  *       &label=observation 2 of patrol P-0142
  *       &back=<url of that observation's page>
@@ -42,6 +42,16 @@ use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
  * {@see record} and {@see label} are written once onto the incident and never
  * again ({@see \UhifadhiLabs\Incident\Entity\Incident::recordProvenance()}), so
  * the observation and the incident stay tied together forever.
+ *
+ * THE `source` TOKEN NAMES THE SENDING MODULE, singular, as that module puts it
+ * on the wire: patrol sends `patrol`
+ * ({@see \UhifadhiLabs\Patrol\Storage\PatrolFileSource::SOURCE_TOKEN} — named
+ * here only in prose, because neither bundle may name the other's classes). It is
+ * ONE token and it does two jobs: it names the badge the incident wears
+ * ({@see IncidentSourceEnum::forToken()}), and it is handed straight back to the
+ * platform's file registry to ask that module for the record's PHOTOGRAPHS, which
+ * is how the source card shows them without this bundle knowing what an
+ * observation is.
  *
  * Every field is untrusted, so an unreadable one is simply absent and the form
  * opens empty in that place — a bad link must produce a blank form, never an
@@ -121,8 +131,46 @@ final readonly class IncidentPrefill
 
         // The BADGE, not the label: the card prints a fact in a row of facts, and
         // the register already prints provenance with these same short words.
-        return IncidentSourceEnum::tryFrom($this->source)?->badge()
+        return IncidentSourceEnum::forToken($this->source)?->badge()
             ?? str_replace(['_', '-'], ' ', $this->source);
+    }
+
+    /**
+     * THE SEAM, BACK OUT AGAIN — what the form must POST to so the filing it
+     * submits still knows where it came from.
+     *
+     * The form's action carries this, because the container the flow opens in,
+     * the source card a refused filing comes back with, and the provenance
+     * written onto the incident are all read from the query. A form that posted
+     * to the bare create URL would lose all three the moment anybody pressed
+     * File.
+     *
+     * Only what THIS class understood is echoed back: an unreadable coordinate or
+     * a junk parameter is dropped on the way in and never reflected on the way
+     * out.
+     *
+     * @return array<string, string>
+     */
+    public function toQuery(): array
+    {
+        $query = [];
+        foreach ([
+            'record' => $this->record?->toRfc4122(),
+            'label' => $this->label,
+            'back' => $this->backUrl,
+            'source' => $this->source,
+            'at' => $this->occurredAt?->format(\DateTimeInterface::ATOM),
+            'lat' => null === $this->latitude ? null : (string) $this->latitude,
+            'lng' => null === $this->longitude ? null : (string) $this->longitude,
+            'category' => $this->subcategorySlug,
+            'note' => $this->note,
+        ] as $key => $value) {
+            if (null !== $value) {
+                $query[$key] = $value;
+            }
+        }
+
+        return $query;
     }
 
     public static function fromRequest(Request $request): self

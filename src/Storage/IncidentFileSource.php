@@ -25,6 +25,7 @@ use UhifadhiLabs\Storage\Enum\ThumbStateEnum;
 use UhifadhiLabs\Storage\Model\FileEntry;
 use UhifadhiLabs\Storage\Model\FileGuard;
 use UhifadhiLabs\Storage\Registry\FileSourceInterface;
+use UhifadhiLabs\Storage\Registry\HoldsNoRecordFilesTrait;
 use UhifadhiLabs\Storage\Service\EvidenceKey;
 
 /**
@@ -59,6 +60,15 @@ use UhifadhiLabs\Storage\Service\EvidenceKey;
  */
 final class IncidentFileSource implements FileSourceInterface
 {
+    /*
+     * INCIDENTS DOES NOT PUBLISH ITS EVIDENCE BY RECORD — yet. The seam exists so
+     * one module can draw another's record; nothing today shows an incident's
+     * evidence from outside incidents, and a source that answered would be
+     * guessing at a consumer that does not exist. When one does, this trait comes
+     * off and the method is written.
+     */
+    use HoldsNoRecordFilesTrait;
+
     /** The module slug the hub counts incidents by, and the colour files.css draws its dot in. */
     public const string SLUG = 'incidents';
 

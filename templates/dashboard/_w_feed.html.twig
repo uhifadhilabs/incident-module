@@ -13,7 +13,7 @@
                 <span class="mark"><i class="i-hue-{{ incident.category.colourKey }}"></i></span>
                 <span class="bd">
                     <span class="hl">{{ ui.id(incident.reference) }}{{ ui.cat(incident.category, incident.subcategory.label) }}{{ ui.status(incident.status) }}</span>
-                    <span class="tt">{{ incident.title }}</span>
+                    <span class="tt">{{ incident.headline }}</span>
                     <span class="mt">{{ ui.zone(incident) }}<span>{{ incident.source.badge }}</span>{% if incident.sourceRecordLabel %}<span>{{ incident.sourceRecordLabel }}</span>{% endif %}</span>
                 </span>
                 <span class="rt"><span class="open-btn">Open →</span></span>

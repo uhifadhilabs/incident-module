@@ -1,53 +1,52 @@
-{# THE REPORT FLOW as its own page — for a deep link, a fresh tab, or the patrols
-   module's "File as incident" button, which arrives here already carrying the
-   observation. The same sheet the dashboard opens over itself; one component,
-   two doors. #}
+{# ============================================================================
+   THE REPORT FLOW. One route, one POST, one set of step partials — and TWO
+   CONTAINERS, chosen by where the filing came from.
+
+   FILING FROM A RECORD IS A DRAWER. When the seam carried a record — another
+   module's "file as incident" button, the register's report control with context
+   — the flow opens as a slide-over panel with the register legible behind it and
+   the source card riding inside it. Context you never lost in the first place.
+
+   FILING FROM NOWHERE IS A PAGE. A deep link, a fresh tab, the dashboard's Report
+   button: there is nothing to sit over, so the flow takes the whole page. It
+   reloads, it deep-links, it prints, and no click beside it can throw it away.
+
+   WHICH MEANS THE FALLBACK IS FREE. A drawer needs something to be over and a
+   record to be about; an address that has neither renders the page instead, so
+   this route can never open a drawer over nothing.
+
+   The two containers share every step: the kind, the questions, the things that
+   can wait, and the gate are ONE set of partials rendered at two widths.
+   ========================================================================== #}
 {% extends '@UhifadhiLabsIncident/base.html.twig' %}
 
 {% block title %}Report an incident — {{ area.name }}{% endblock %}
 
-{% block incident_page %}
-    <div class="crumb"><a href="{{ path('dashboard_index') }}">uhifadhi</a> / <a href="{{ path('dashboard_area_show', {uuid: area.uuid}) }}">{{ area.name|lower }}</a> / <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / new</div>
-
-    <div class="pghead">
-        <div>
-            <h1 class="pg">Report an incident</h1>
-            <p class="pgsub">The same sheet the dashboard opens over itself, as its own page. Three short steps, and
-                almost nothing is required — a half-remembered report that exists beats a perfect one that was never
-                filed. The cost is moved to verification, where somebody competent is looking anyway.</p>
-        </div>
-        <div class="pgact w-pgact">
-            <a class="tgl w-act" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('lucide:chevron-left') }} Back to incidents</a>
-        </div>
-    </div>
-
-    {% if prefill.hasProvenance %}
-        <div class="i-lensnote">{{ ux_icon('lucide:git-branch') }}<div><b>Arriving from another record.</b> Its category
-            guess, coordinates, timestamp and note are already in the form, and the link between the two records is made
-            the moment you file. Everything here is editable except that link, which is written once and never again.</div></div>
+{# THE FILE PREVIEW's vocabulary, and ONLY where the card actually has
+   photographs to open in it. This module does not require the storage bundle —
+   a deployment with incidents and no Files hub is a real deployment — so asking
+   for that bundle's stylesheet unconditionally would be a 404 on every report
+   page in such a host. #}
+{% block stylesheets %}
+    {{ parent() }}
+    {% if sourceFiles is not empty %}
+        <link rel="stylesheet" href="{{ asset('bundles/uhifadhilabsstorage/preview.css') }}">
     {% endif %}
+{% endblock %}
 
-    <div {{ stimulus_controller('@uhifadhilabs/incident-module/incident-report') }}>
-        {{ include('@UhifadhiLabsIncident/report/_sheet.html.twig', {
-            area: area,
-            categories: categories,
-            prefill: prefill,
-            chosen: chosen,
-            csrfToken: csrfToken,
-            errors: errors,
-            standalone: true,
-        }, with_context: false) }}
-    </div>
-
-    <div class="c i-rules">
-        <span class="tab"><span class="idx">IN·R1</span>What filing does<span class="src">· the rules the form enforces</span></span>
-        <div class="rln"><span>Starting state</span><span class="mono acc">reported — never verified</span></div>
-        <div class="rln"><span>Money fields</span><span class="mono">rendered only by categories that carry them</span></div>
-        <div class="rln"><span>Department</span><span class="mono">recorded, never restricting</span></div>
-        <div class="rln"><span>Provenance</span><span class="mono">written once, never editable</span></div>
-        <div class="rln"><span>Evidence</span><span class="mono">copied from the source, original timestamps kept</span></div>
-        <div class="use">A report is cheap and a verification is expensive, and the design says so: filing takes three
-            short steps and almost nothing is required. The cost is moved to verification, where somebody competent is
-            looking anyway.</div>
-    </div>
+{% block incident_page %}
+    {% set container = prefill.hasProvenance ? '_drawer' : '_page' %}
+    {{ include('@UhifadhiLabsIncident/report/' ~ container ~ '.html.twig', {
+        controller: '@uhifadhilabs/incident-module/incident-report',
+        area: area,
+        categories: categories,
+        prefill: prefill,
+        chosen: chosen,
+        csrfToken: csrfToken,
+        errors: errors,
+        createUrl: createUrl,
+        cancelUrl: cancelUrl,
+        behind: behind,
+        sourceFiles: sourceFiles,
+    }, with_context: false) }}
 {% endblock %}

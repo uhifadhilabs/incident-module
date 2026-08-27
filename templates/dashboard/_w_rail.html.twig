@@ -15,7 +15,7 @@
         {% set incident = dashboard.rail.incident %}
         <div class="i-railhd">
             <a class="i-railid" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">{{ incident.reference }}</a>
-            <span class="i-railttl">{{ incident.title }}</span>
+            <span class="i-railttl">{{ incident.headline }}</span>
             {{ ui.cat(incident.category, incident.subcategory.label) }}
             {{ ui.status(incident.status) }}
             <span class="i-spacer"></span>
