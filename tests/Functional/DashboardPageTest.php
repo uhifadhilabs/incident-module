@@ -59,7 +59,7 @@ final class DashboardPageTest extends FunctionalTestCase
 
         self::assertResponseIsSuccessful();
         foreach ([
-            'kpis', 'register', 'queue', 'maplist', 'map', 'zones', 'spark', 'feed',
+            'kpis', 'register', 'queue', 'report', 'maplist', 'map', 'zones', 'spark', 'feed',
             'evidence', 'categories', 'matrix', 'money', 'board', 'sla', 'funnel', 'rail',
         ] as $widget) {
             self::assertGreaterThan(

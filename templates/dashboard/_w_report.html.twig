@@ -1,0 +1,46 @@
+{# IN·16 — the way IN to the report flow, on the dashboard.
+
+   THE ENTRY CARD, NOT THE FORM. What it surfaces is the ruled quick-file
+   discipline — a kind, one line saying what happened, a place, and nothing else
+   required — so a person reads the price of filing before they start. The form
+   itself lives on one route, in one set of step partials, and is not duplicated
+   here: a second, shorter form would be a second product.
+
+   IT OPENS THE FULL PAGE, NEVER THE DRAWER. The container follows the entry
+   point, and the test is whether the filing came FROM A RECORD. Nothing on a
+   dashboard is the record being filed about — the register behind it is a
+   listing, not a source — so this is standalone filing: there is nothing for a
+   drawer to sit over and nothing to inherit a place, a time or a note from. A
+   page reloads, deep-links, prints, and no click beside it can throw a
+   half-written report away. See templates/report/show.html.twig.
+
+   THE LAST FILING IS CONTEXT, not a listing: "did the one I just filed land?" is
+   the question somebody filing in a run actually has, and one line answers it.
+   It is the newest incident in the WINDOW the page is filtered to, because every
+   widget on this dashboard reads that one filter.
+
+   The button exists only where the record routes do — a host running no security
+   registers none, and a dead link into nowhere is worse than an honest line. #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+{% set last = dashboard.recent is empty ? null : dashboard.recent|first %}
+<div class="c" data-w="report">
+    <span class="tab"><span class="idx">IN·16</span>File an incident<span class="src">· three answers · the rest follows on the record</span></span>
+    <div class="use" style="margin:0 2px 12px">A report is cheap and a verification is expensive. Three answers and the record exists — how bad it was, who was involved, the photographs and any money are offered afterwards on the case file, where the timeline keeps who added what and when.</div>
+    <div class="rln"><span><b>1</b> What kind</span><span class="mono" style="font-size:11px">{{ dashboard.categories|length }} kinds, then the sub-category</span></div>
+    <div class="rln"><span><b>2</b> What happened</span><span class="mono" style="font-size:11px">one line — the register prints it</span></div>
+    <div class="rln"><span><b>3</b> Where</span><span class="mono" style="font-size:11px">the place, on the map</span></div>
+    <div class="rln">
+        <span class="i-sub">
+            {%- if last is null -%}
+                nothing filed here yet — yours will be the first
+            {%- else -%}
+                last filed here · <a class="mono acc" href="{{ path('incident_show', {uuid: area.uuid, reference: last.reference}) }}">{{ last.reference }}</a> · {{ ui.when(last.reportedAt, dashboard.now) }}
+            {%- endif -%}
+        </span>
+        {% if recordScreens %}
+            <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('lucide:plus') }} Report an incident</a>
+        {% else %}
+            <span class="chip idle">filing is not enabled here</span>
+        {% endif %}
+    </div>
+</div>

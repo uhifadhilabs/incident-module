@@ -42,16 +42,50 @@ final class IncidentWidgetsTest extends TestCase
         );
     }
 
-    /** Sixteen widgets, including the rail the design added to the status board. */
-    public function testItShipsTheSixteenWidgetsTheDesignDeclares(): void
+    /**
+     * Seventeen widgets, including the rail the design added to the status board
+     * and the report entry card it added to case files.
+     */
+    public function testItShipsTheSeventeenWidgetsTheDesignDeclares(): void
     {
         self::assertSame([
-            'kpis', 'register', 'queue',
+            'kpis', 'register', 'queue', 'report',
             'maplist', 'map', 'zones',
             'spark', 'feed', 'evidence',
             'categories', 'matrix', 'money',
             'board', 'sla', 'funnel', 'rail',
         ], IncidentWidgets::catalog()->ids());
+    }
+
+    /**
+     * THE REPORT ENTRY CARD is filed under Case files — the direction of whoever
+     * keeps the register, and a new file is the file drawer's own verb — and it
+     * is OFF, because the dashboard header already carries a Report control.
+     */
+    public function testTheReportEntryCardShipsOffAndUnderCaseFiles(): void
+    {
+        $card = IncidentWidgets::catalog()->get('report');
+
+        self::assertSame('File an incident', $card->label);
+        self::assertSame('a', $card->group);
+        self::assertFalse($card->on, 'The entry card is a second door; nobody gets it unasked.');
+        self::assertSame(6, $card->cols);
+        self::assertSame([12, 9, 6], IncidentWidgets::catalog()->spans('report'));
+    }
+
+    /**
+     * ADDING IT CHANGED NO DESIGN. The five directions and the shipped
+     * composition are exactly what they were, so a person who adopted one sees
+     * nothing new appear on their dashboard.
+     */
+    public function testNoDesignTheSurfaceShipsComposesTheEntryCard(): void
+    {
+        $catalog = IncidentWidgets::catalog();
+
+        self::assertArrayNotHasKey('report', $catalog->defaultLayout());
+        foreach ($catalog->presets() as $preset) {
+            self::assertArrayNotHasKey('report', $preset->layout, \sprintf('Design "%s" gained a widget.', $preset->id));
+        }
     }
 
     /**

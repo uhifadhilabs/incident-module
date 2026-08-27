@@ -98,6 +98,20 @@ final class IncidentWidgets
             new Widget('kpis', 'KPI strip', 'a', 12, [12, 9, 6, 3], on: true, note: 'Open incidents, this month\'s filings, money outstanding and time-to-verify.'),
             new Widget('register', 'Incident register', 'a', 12, [12, 9, 6], on: true, note: 'Every incident as a row: id, category, what happened, zone, status, severity, money.'),
             new Widget('queue', 'My queue', 'a', 12, [12, 9, 6], on: false, note: 'Only what is waiting on you, oldest first, with the clock against each one.'),
+            // THE WAY IN TO THE REPORT FLOW, filed under Case files: that is the
+            // direction of whoever keeps the register, and opening a new file is
+            // the file drawer's own verb.
+            //
+            // OFF, and in no design the surface ships. The dashboard header
+            // already carries a Report control, so this card is for somebody who
+            // files often enough to want the discipline and the last filing in
+            // their composition — a second door nobody asked for would just be
+            // two of the same button.
+            //
+            // It opens the FULL PAGE rather than the drawer: a dashboard is
+            // standalone context. See the partial for why that follows from the
+            // container ruling rather than from a preference.
+            new Widget('report', 'File an incident', 'a', 6, [12, 9, 6], on: false, note: 'The three answers a report cannot be without, and the button that opens the filing page.'),
             new Widget('maplist', 'Map + results', 'b', 12, [12, 9], on: false, note: 'The map at full height with the matching incidents docked beside it.'),
             new Widget('map', 'Incident map', 'b', 12, [12, 9, 6], on: true, note: 'Where every incident was filed; hue is the category, hollow means closed.'),
             new Widget('zones', 'By zone', 'b', 6, [12, 9, 6, 3], on: false, note: 'Incidents by the zone they fall in, this month.'),
