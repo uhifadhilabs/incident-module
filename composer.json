@@ -3,6 +3,7 @@
     "description": "Incidents: what happened in an area — poaching, human–wildlife conflict (with fines and compensation), unauthorized construction and roadkill, as one record type served to every department that needs it.",
     "type": "symfony-bundle",
     "keywords": [
+        "symfony-ux",
         "incidents",
         "poaching",
         "human-wildlife-conflict",
