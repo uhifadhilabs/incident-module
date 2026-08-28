@@ -31,6 +31,26 @@ export default class extends Controller {
             return;
         }
 
+        // A Turbo preview is a display-only clone of the last snapshot; the real
+        // connect follows on the live render. Building a map here means building
+        // it twice into the same navigation, and the preview copy dies mid-add
+        // when Turbo swaps the body under it.
+        if (document.documentElement.hasAttribute('data-turbo-preview')) {
+            return;
+        }
+
+        // A restored snapshot still carries the previous map's panes and
+        // leaflet-* classes (the DOM survives the cache even though the map
+        // instance did not). Leaflet must start from the same blank container it
+        // got on first load.
+        this.element.innerHTML = '';
+        this.element.className = this.element.className.replace(/\bleaflet-\S+/g, '').trim();
+
+        // Disconnect fires only after Turbo has already replaced the body — too
+        // late to keep the cached snapshot clean. Tear down before it caches.
+        this.beforeCache = () => this.teardown();
+        document.addEventListener('turbo:before-cache', this.beforeCache);
+
         this.map = this.L.map(this.element, { zoomControl: true, attributionControl: false });
         this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(this.map);
 
@@ -56,7 +76,24 @@ export default class extends Controller {
     }
 
     disconnect() {
-        this.map?.remove();
+        this.teardown();
+    }
+
+    teardown() {
+        if (this.beforeCache) {
+            document.removeEventListener('turbo:before-cache', this.beforeCache);
+            this.beforeCache = null;
+        }
+        // stop() before remove(): an animation still in flight fires on a pane
+        // remove() has already detached (same crash leaflet_plate documents in
+        // patrol-module). And when Turbo has already swapped the body away, the
+        // map's DOM is gone before remove() runs — that must not throw either.
+        try {
+            this.map?.stop();
+            this.map?.remove();
+        } catch (error) {
+            // The map being torn down is the outcome we wanted.
+        }
         this.map = null;
     }
 
