@@ -51,6 +51,27 @@ export default class extends Controller {
         this.beforeCache = () => this.teardown();
         document.addEventListener('turbo:before-cache', this.beforeCache);
 
+        // A container without layout (a hidden widget-library preview card, a
+        // collapsed panel) gives Leaflet's vector renderer no bounds, and the
+        // first geometry added dies in _clipPoints. Build only once the element
+        // actually has a size.
+        if (0 === this.element.clientWidth || 0 === this.element.clientHeight) {
+            this.sizeObserver = new ResizeObserver(() => {
+                if (this.element.clientWidth > 0 && this.element.clientHeight > 0) {
+                    this.sizeObserver.disconnect();
+                    this.sizeObserver = null;
+                    this.build();
+                }
+            });
+            this.sizeObserver.observe(this.element);
+
+            return;
+        }
+
+        this.build();
+    }
+
+    build() {
         this.map = this.L.map(this.element, { zoomControl: true, attributionControl: false });
         this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(this.map);
 
@@ -80,6 +101,8 @@ export default class extends Controller {
     }
 
     teardown() {
+        this.sizeObserver?.disconnect();
+        this.sizeObserver = null;
         if (this.beforeCache) {
             document.removeEventListener('turbo:before-cache', this.beforeCache);
             this.beforeCache = null;
