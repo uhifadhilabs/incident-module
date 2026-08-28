@@ -282,6 +282,11 @@ html.light{
 .i-split{display:grid;grid-template-columns:minmax(0,1fr) 388px;gap:18px;align-items:stretch}
 @media(max-width:1100px){.i-split{grid-template-columns:1fr}}
 .i-split>.i-mapcol{min-width:0;display:flex;flex-direction:column}
+/* The map's height must exist BEFORE Leaflet builds: the controller refuses a
+   zero-size container, so a .viewer whose height only came from the map's own
+   content would never get a map at all. Applies wherever the widget renders —
+   the split dashboard column AND the widget library's full-width section. */
+.c[data-w=map] .viewer{min-height:460px;display:grid}
 .i-split>.i-mapcol .viewer{flex:1;min-height:460px;display:grid}
 .i-split>.i-mapcol .viewer>svg{width:100%;height:100%}
 .i-listcol{display:flex;flex-direction:column;min-height:0;border:1px solid var(--ln);border-radius:14px;
