@@ -73,6 +73,13 @@ export default class extends Controller {
 
     build() {
         this.map = this.L.map(this.element, { zoomControl: true, attributionControl: false });
+        // The view must exist BEFORE any vector layer: on a view-less map every
+        // addLayer is deferred until the first setView, and draining that queue
+        // trips Leaflet 1.9.4 when a geoJSON group and a bare circleMarker share
+        // the renderer ("reading 'min'" in _clipPoints). Reproduced and bisected
+        // in-browser; setting the world view first is the verified fix, and
+        // fitBounds below still wins whenever there is anything to frame.
+        this.map.setView([0, 0], 2);
         this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(this.map);
 
         const bounds = this.L.latLngBounds([]);
@@ -90,10 +97,8 @@ export default class extends Controller {
 
         if (bounds.isValid()) {
             this.map.fitBounds(bounds.pad(0.08));
-        } else {
-            // Nothing to show is not an error; the world is a fine default.
-            this.map.setView([0, 0], 2);
         }
+        // Nothing to show is not an error; the world view set above stands.
     }
 
     disconnect() {
