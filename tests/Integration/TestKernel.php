@@ -204,6 +204,7 @@ final class TestKernel extends Kernel
             'incident.taxonomy_installer',
             'incident.report',
             'incident.dashboard',
+            'incident.overview.figures',
             'incident.transitions',
             'incident.zone_locator',
             // The storage seam: the source itself, and the registry the hub

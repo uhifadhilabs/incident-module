@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace UhifadhiLabs\Incident\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
@@ -21,6 +22,9 @@ use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\Department;
 use Uhifadhi\Entity\User;
 use UhifadhiLabs\Incident\Entity\Incident;
+use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
+use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
+use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
 use UhifadhiLabs\Incident\Model\IncidentFilter;
 
 /**
@@ -121,6 +125,9 @@ final class IncidentRepository extends ServiceEntityRepository
         $incidents = $this->createQueryBuilder('i')
             ->join('i.subcategory', 's')->addSelect('s')
             ->join('s.category', 'c')->addSelect('c')
+            // The zone comes with it: every row that prints one prints it, and a
+            // lazy association here is one query per row on a list of rows.
+            ->leftJoin('i.zone', 'z')->addSelect('z')
             ->andWhere('i.area = :area')->setParameter('area', $area)
             ->orderBy('i.reportedAt', 'DESC')
             ->addOrderBy('i.id', 'DESC')
@@ -129,6 +136,262 @@ final class IncidentRepository extends ServiceEntityRepository
             ->getResult();
 
         return $incidents;
+    }
+
+    /*
+     * ── WHAT THE AREA OVERVIEW ASKS ─────────────────────────────────────────
+     *
+     * The module's own dashboard loads ONE month and reads it nine ways, because
+     * every widget on that screen is a reading of the same window. The overview
+     * is the opposite shape: four small cards asking four unrelated questions
+     * about four different sets — where the open work is (all of it), what came
+     * in today, the newest handful, and what is still owed (which has no window
+     * at all). Loading a month would answer none of them, and loading the whole
+     * register to count it in PHP would be a table scan for a bar chart.
+     *
+     * So: aggregates in SQL where the set is unbounded, and rows in PHP where
+     * the set is bounded by the question itself (open work, today's filings, an
+     * area's outstanding money).
+     */
+
+    /** How many incidents this area has ever had — the denominator on "6 of 47". */
+    public function countFor(AreaOfInterest $area): int
+    {
+        return (int) $this->createQueryBuilder('i')
+            ->select('COUNT(i.id)')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * THE FIVE-STATE BAR: how many incidents are sitting in each place right now.
+     *
+     * In SQL rather than in PHP because it is the ONE overview figure whose set
+     * is the whole register: an area with ten years of filings would otherwise
+     * load ten years to draw five numbers.
+     *
+     * @return array<string, int> status value => count, every place present
+     */
+    public function statusTallyFor(AreaOfInterest $area): array
+    {
+        // Doctrine converts an `enumType` column even in a scalar select, so the
+        // key comes back as the enum and not as the string it is stored as.
+        /** @var list<array{status: IncidentStatusEnum, n: int|string}> $rows */
+        $rows = $this->createQueryBuilder('i')
+            ->select('i.status AS status, COUNT(i.id) AS n')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->groupBy('i.status')
+            ->getQuery()
+            ->getResult();
+
+        // Every place present, at zero where nothing is there — a bar that
+        // dropped an empty segment would redraw itself on a quiet week and the
+        // reader would think the workflow had changed.
+        $tally = [];
+        foreach (IncidentStatusEnum::ordered() as $place) {
+            $tally[$place->value] = 0;
+        }
+        foreach ($rows as $row) {
+            $tally[$row['status']->value] = (int) $row['n'];
+        }
+
+        return $tally;
+    }
+
+    /**
+     * EVERY INCIDENT STILL SOMEBODY'S WORK, with the taxonomy and the zone
+     * loaded — the set behind the past-term list, the attention items and the
+     * open-incidents map layer.
+     *
+     * Rows and not a count, because each of those needs the incident itself; the
+     * set is bounded by the work being open, which is the number an area manager
+     * could in principle read one morning.
+     *
+     * @return list<Incident>
+     */
+    public function openFor(AreaOfInterest $area): array
+    {
+        /** @var list<Incident> $incidents */
+        $incidents = $this->createQueryBuilder('i')
+            ->join('i.subcategory', 's')->addSelect('s')
+            ->join('s.category', 'c')->addSelect('c')
+            ->leftJoin('i.zone', 'z')->addSelect('z')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->andWhere('i.status IN (:open)')
+            ->setParameter('open', array_map(
+                static fn (IncidentStatusEnum $place) => $place->value,
+                array_filter(IncidentStatusEnum::ordered(), static fn (IncidentStatusEnum $place) => $place->isOpen()),
+            ))
+            ->orderBy('i.reportedAt', 'ASC')
+            ->addOrderBy('i.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $incidents;
+    }
+
+    /**
+     * What was FILED in a window — one day of it, on the overview.
+     *
+     * @return list<Incident>
+     */
+    public function filedBetween(AreaOfInterest $area, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        /** @var list<Incident> $incidents */
+        $incidents = $this->createQueryBuilder('i')
+            ->join('i.subcategory', 's')->addSelect('s')
+            ->join('s.category', 'c')->addSelect('c')
+            ->leftJoin('i.zone', 'z')->addSelect('z')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->andWhere('i.reportedAt >= :from')->setParameter('from', $from)
+            ->andWhere('i.reportedAt < :to')->setParameter('to', $to)
+            ->orderBy('i.reportedAt', 'ASC')
+            ->addOrderBy('i.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $incidents;
+    }
+
+    /**
+     * HOW MANY WERE FINISHED WITH in a window — resolved or closed IN it, whenever
+     * they were filed. A different question from {@see filedBetween()} and
+     * deliberately not reconcilable with it: a day's work is not a day's filings.
+     */
+    public function countClosedOutBetween(AreaOfInterest $area, \DateTimeImmutable $from, \DateTimeImmutable $to): int
+    {
+        return (int) $this->createQueryBuilder('i')
+            ->select('COUNT(i.id)')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->andWhere('(i.resolvedAt >= :from AND i.resolvedAt < :to) OR (i.closedAt >= :from AND i.closedAt < :to)')
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * THE MONEY THIS AREA IS STILL OWED OR STILL OWES — every incident whose money
+     * record has not been settled and has not been waived, oldest first.
+     *
+     * The outstanding balance is derived in PHP everywhere else
+     * ({@see \UhifadhiLabs\Incident\Entity\IncidentMoney::outstanding()}), and the
+     * SQL here says the same thing in SQL rather than loading every money record
+     * an area has ever had to filter four of them out. The COALESCE is that
+     * method's own fallback chain — approved, then assessed, then claimed — and if
+     * one changes the other must.
+     *
+     * NO WINDOW. This is the one figure on the overview that is not about today:
+     * a claim approved in july is still unpaid in august, and windowing it would
+     * quietly forgive it on the first of the month.
+     *
+     * @return list<Incident>
+     */
+    public function outstandingMoneyFor(AreaOfInterest $area): array
+    {
+        /** @var list<Incident> $incidents */
+        $incidents = $this->createQueryBuilder('i')
+            ->join('i.subcategory', 's')->addSelect('s')
+            ->join('s.category', 'c')->addSelect('c')
+            ->leftJoin('i.zone', 'z')->addSelect('z')
+            ->join('i.money', 'm')->addSelect('m')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->andWhere('m.waivedAt IS NULL')
+            ->andWhere('COALESCE(m.approved, m.assessed, m.claimed, 0) > m.settled')
+            ->orderBy('i.reportedAt', 'ASC')
+            ->addOrderBy('i.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $incidents;
+    }
+
+    /**
+     * The money PUT ON THE RECORD in a window, both directions, as the sums the
+     * "assessed this month" line prints.
+     *
+     * Scoped by when the INCIDENT was filed, because a figure has no timestamp of
+     * its own — which is exactly why the line says "assessed this month" against a
+     * month of filings and not "assessed in the last thirty days".
+     *
+     * @return array<string, int> money direction value => the sum signed off
+     */
+    public function moneyAssessedBetween(AreaOfInterest $area, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        /** @var list<array{direction: MoneyDirectionEnum, total: int|string|null}> $rows */
+        $rows = $this->createQueryBuilder('i')
+            ->join('i.money', 'm')
+            ->select('m.direction AS direction, SUM(COALESCE(m.approved, m.assessed, m.claimed, 0)) AS total')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->andWhere('i.reportedAt >= :from')->setParameter('from', $from)
+            ->andWhere('i.reportedAt < :to')->setParameter('to', $to)
+            ->groupBy('m.direction')
+            ->getQuery()
+            ->getResult();
+
+        $totals = [];
+        foreach (MoneyDirectionEnum::cases() as $direction) {
+            $totals[$direction->value] = 0;
+        }
+        foreach ($rows as $row) {
+            $totals[$row['direction']->value] = (int) $row['total'];
+        }
+
+        return $totals;
+    }
+
+    /**
+     * How long each verified incident took to be verified, in hours — the set the
+     * MEDIAN is taken over.
+     *
+     * Two columns rather than the rows, because nothing about this figure needs
+     * an incident: it is the one aggregate on the overview whose set really is
+     * "everything this area ever verified".
+     *
+     * @return list<float>
+     */
+    public function hoursToVerifyFor(AreaOfInterest $area): array
+    {
+        /** @var list<array{reportedAt: \DateTimeImmutable, verifiedAt: \DateTimeImmutable}> $rows */
+        $rows = $this->createQueryBuilder('i')
+            ->select('i.reportedAt AS reportedAt, i.verifiedAt AS verifiedAt')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->andWhere('i.verifiedAt IS NOT NULL')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(
+            static fn (array $row): float => ($row['verifiedAt']->getTimestamp() - $row['reportedAt']->getTimestamp()) / 3600,
+            $rows,
+        );
+    }
+
+    /**
+     * THE TERMS THIS AREA ACTUALLY WORKS TO, shortest promise first.
+     *
+     * Read from the register rather than from the taxonomy as configured: the
+     * card names the shortest and the longest term an incident HERE is held to,
+     * and a deployment with a two-hour category nobody in this area has ever
+     * filed under would otherwise be quoted a term it does not keep.
+     *
+     * @return list<IncidentSubcategory>
+     */
+    public function termsInUseFor(AreaOfInterest $area): array
+    {
+        /** @var list<IncidentSubcategory> $subcategories */
+        $subcategories = $this->getEntityManager()->createQueryBuilder()
+            ->select('s')
+            ->from(IncidentSubcategory::class, 's')
+            ->join(Incident::class, 'i', Join::WITH, 'i.subcategory = s')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->groupBy('s.id')
+            ->orderBy('s.termHours', 'ASC')
+            ->addOrderBy('s.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $subcategories;
     }
 
     /**

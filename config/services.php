@@ -25,6 +25,7 @@ use UhifadhiLabs\Incident\Repository\IncidentRepository;
 use UhifadhiLabs\Incident\Repository\IncidentSubcategoryRepository;
 use UhifadhiLabs\Incident\Repository\IncidentZoneLocator;
 use UhifadhiLabs\Incident\Service\IncidentDashboardService;
+use UhifadhiLabs\Incident\Service\IncidentOverviewFigures;
 use UhifadhiLabs\Incident\Service\IncidentReportService;
 use UhifadhiLabs\Incident\Service\IncidentTaxonomyInstaller;
 use UhifadhiLabs\Incident\Service\IncidentTransitionService;
@@ -70,6 +71,20 @@ return static function (ContainerConfigurator $container): void {
             service(IncidentRepository::class),
             service(IncidentCategoryRepository::class),
             service('incident.transitions'),
+            param('incident.currency'),
+        ]);
+
+    /*
+     * THE MODULE'S READING OF ONE AREA'S MORNING — what it contributes to the
+     * HOST's area overview: four cards, two right-now tiles, its attention items,
+     * its map layer. All five ask this one service, and it memoises per (area,
+     * instant), so a page that draws several of them measures the register once.
+     */
+    $services->set('incident.overview.figures', IncidentOverviewFigures::class)
+        ->args([
+            service(IncidentRepository::class),
+            service(IncidentCategoryRepository::class),
+            service('router'),
             param('incident.currency'),
         ]);
 
