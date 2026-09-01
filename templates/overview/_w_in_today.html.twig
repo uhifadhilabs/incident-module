@@ -1,0 +1,55 @@
+{# IN·A2 — TODAY, AND NOTHING ELSE.
+
+   Every number on this card is scoped to ONE DAY and compared with the SAME
+   WEEKDAY A WEEK AGO, so none of them reconciles with the module's own monthly
+   dashboard — and must not. A saturday in an area with a livestock market is a
+   different kind of day from a friday, which is why the comparison is not
+   "yesterday".
+
+   → UhifadhiLabs\Incident\Overview\IncidentOverviewContributor #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+{% set o = by.incidents.overview %}
+<div class="c" data-w="in_today">
+    <span class="tab"><span class="idx">IN·A2</span>Incidents today<span class="src">· {{ o.day|date('D j M')|lower }} · {{ o.today|length }} filed</span></span>
+    <span class="ao-by incidents"><i></i>incidents</span>
+    <div class="grid g2" style="margin-bottom:6px;gap:14px">
+        <div class="kpi hot">
+            <b class="disp">{{ o.today|length }}<em>filed</em></b>
+            <span class="sub">{{ o.lastWeek|length }} on {{ o.lastWeekDay|date('D j M')|lower }}</span>
+        </div>
+        <div class="kpi">
+            {# A DIFFERENT QUESTION FROM THE ONE BESIDE IT: what was finished with
+               today, whenever it was filed. The two are deliberately not a pair
+               that adds up. #}
+            <b class="disp">{{ o.closedOutToday }}<em>closed out</em></b>
+            <span class="sub">resolved or closed today</span>
+        </div>
+    </div>
+    {% for category in o.categories %}
+        {% set filed = o.todayFor(category) %}
+        <div class="rln">
+            <span>{{ ui.cat(category, category.slug) }}</span>
+            {% if filed is empty %}
+                <span class="mono d" style="font-size:11px">none today</span>
+            {% else %}
+                <span class="mono" style="font-size:11px">{{ filed|length }} · {% for incident in filed %}{{ incident.reference }}{{ not loop.last ? ', ' }}{% endfor %}</span>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <div class="rln">
+        <span class="fog">Where</span>
+        {% if o.todayZones is empty %}
+            <span class="mono d" style="font-size:11px">nothing filed today</span>
+        {% else %}
+            <span class="mono" style="font-size:11px">{% for zone, count in o.todayZones %}{{ zone }} {{ count }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
+        {% endif %}
+    </div>
+    <div class="use">
+        {% if o.todayFromRecords > 0 %}
+            {{ o.todayFromRecords }} of today’s {{ o.today|length }} {{ o.todayFromRecords == 1 ? 'was' : 'were' }} filed from another module’s record and {{ o.todayFromRecords == 1 ? 'keeps its' : 'keep their' }} id for good.
+        {% else %}
+            Nothing filed today came from another module’s record.
+        {% endif %}
+        This month’s totals live on the module’s own dashboard — today’s numbers deliberately do not add up to them.
+    </div>
+</div>

@@ -1,0 +1,30 @@
+{# THE MODULE'S WHOLE OVERVIEW SECTION AS ONE WIDGET — its heading and its
+   cards, stacked. What the "Module columns" direction is made of: after a thin
+   host band the page is literally the sum of its modules, one column each.
+
+   IT INCLUDES THE CARDS; IT DOES NOT RESTATE THEM. The rule that keeps a column
+   honest is the module's to keep, and the host cannot check it: a column may
+   only include widgets the module already contributes ON THEIR OWN, so a card
+   can never read one way as a widget and another inside the column. Every one of
+   the three below is `in_flow`, `in_today` and `in_money` — the same file, the
+   same figures, the same instant.
+
+   `_context` is the ONE map the host handed this partial, passed straight down
+   with `with_context: false` again, so a card inside the column reads exactly
+   what it reads outside it.
+
+   → UhifadhiLabs\Incident\Overview\IncidentOverviewContributor #}
+{% set o = by.incidents.overview %}
+<div data-w="in_column">
+    <div class="ao-col">
+        <i class="incidents"></i>
+        <b>Incidents</b>
+        <span class="n">{{ o.openCount }} open · {{ o.today|length }} filed today</span>
+        <a href="{{ o.dashboardUrl }}">Open the module &rarr;</a>
+    </div>
+    <div class="ao-colstack">
+        {{ include('@UhifadhiLabsIncident/overview/_w_in_flow.html.twig', _context, with_context: false) }}
+        {{ include('@UhifadhiLabsIncident/overview/_w_in_today.html.twig', _context, with_context: false) }}
+        {{ include('@UhifadhiLabsIncident/overview/_w_in_money.html.twig', _context, with_context: false) }}
+    </div>
+</div>

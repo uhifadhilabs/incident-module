@@ -1,0 +1,53 @@
+{# IN·A1 — THE FIVE-STATE FLOW, on the host's area overview.
+
+   THE BAR IS GENERATED FROM THE STATE MACHINE, never written out. A status is
+   never a dropdown and never a different set of names in two places, so this
+   iterates IncidentStatusEnum::ordered() — the same list the module's own funnel
+   narrows through, the same list the status board columns sit in. Adding a place
+   to the workflow adds a segment here and nowhere else.
+
+   Rendered by the host with `with_context: false`: everything below arrives in
+   ONE map, this module's own figures under `by.incidents`.
+
+   → UhifadhiLabs\Incident\Overview\IncidentOverviewContributor #}
+{% set o = by.incidents.overview %}
+<div class="c" data-w="in_flow">
+    <span class="tab"><span class="idx">IN·A1</span>Open by state<span class="src">· {{ o.openCount }} open of {{ o.total }} on the register</span></span>
+    {# THE CONTRIBUTOR TAG. Provenance has to survive a screenshot: this card came
+       from the incidents module and leaves with it. #}
+    <span class="ao-by incidents"><i></i>incidents</span>
+    <div class="ao-flow">
+        {% for place in o.places %}
+            <a class="s{{ loop.index }}" href="{{ o.statusUrl(place) }}"><span class="n">{{ o.count(place) }}</span><span class="s">{{ place.label }}</span><span class="b"></span></a>
+        {% endfor %}
+    </div>
+    <div class="rln" style="margin-top:12px">
+        <span class="fog">Past their term</span>
+        {% if o.pastTerm is empty %}
+            {# Not an absent state: the module knows every term and every age, so
+               "none" here is a measurement and is drawn as the quiet answer. #}
+            <span class="mono" style="font-size:11px">none — every open incident is inside its own term</span>
+        {% else %}
+            <span class="mono r" style="font-size:11px">{{ o.pastTerm|length }} · {% for incident in o.pastTerm|slice(0, 3) %}{{ incident.reference }} ({{ o.ageLabel(incident) }}){{ not loop.last ? ', ' }}{% endfor %}{% if o.pastTerm|length > 3 %} +{{ o.pastTerm|length - 3 }} more{% endif %}</span>
+        {% endif %}
+    </div>
+    <div class="rln">
+        <span class="fog">Median time to verify</span>
+        {% if o.medianHoursToVerify is null %}
+            {# AN EM DASH, NEVER A ZERO: nothing verified yet is not "verified
+               instantly", and a 0 here would be the module inventing a figure. #}
+            <span class="mono d" style="font-size:11px">— · nothing in this area has been verified yet</span>
+        {% else %}
+            <span class="mono" style="font-size:11px">{% if o.medianHoursToVerify < 48 %}{{ o.medianHoursToVerify|number_format(0) }} h{% else %}{{ (o.medianHoursToVerify / 24)|number_format(1) }} d{% endif %}{% if o.shortestTerm and o.longestTerm %} · the term is {{ o.shortestTerm.termLabel }} for {{ o.shortestTerm.label }}, {{ o.longestTerm.termLabel }} for {{ o.longestTerm.label }}{% endif %}</span>
+        {% endif %}
+    </div>
+    <div class="rln">
+        <span class="fog">Filed today</span>
+        {% if o.today is empty %}
+            <span class="mono d" style="font-size:11px">nothing yet today</span>
+        {% else %}
+            <span class="mono acc" style="font-size:11px">{{ o.today|length }} · all still in {{ o.todayPlaces }}</span>
+        {% endif %}
+    </div>
+    <div class="use">An incident cannot skip verification and reaches <b>closed</b> by time, not by a person. Each category promises its own term &mdash; one global SLA would be a lie about all of them.</div>
+</div>

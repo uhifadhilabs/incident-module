@@ -1,0 +1,54 @@
+{# IN·A4 — THE ONE NUMBER ON THIS PAGE THAT IS NOT ABOUT TODAY.
+
+   It is here because an unpaid claim is what a community remembers. It carries
+   no window at all: a claim approved in july is still unpaid in august, and
+   scoping this card to a month would quietly forgive it on the first.
+
+   THE TWO DIRECTIONS ARE NEVER ADDED TOGETHER — a fine is owed TO the authority
+   and a claim is owed BY it. The design refuses to sum them and so does this:
+   two plates, two figures, no total anywhere on the card.
+
+   → UhifadhiLabs\Incident\Overview\IncidentOverviewContributor #}
+{% set o = by.incidents.overview %}
+{% set fines = o.finesDue %}
+{% set claims = o.compensationUnpaid %}
+{% set finesMonth = o.finesAssessedThisMonth %}
+{% set claimsMonth = o.compensationApprovedThisMonth %}
+{% set oldest = o.oldestUnpaid %}
+<div class="c" data-w="in_money">
+    <span class="tab"><span class="idx">IN·A4</span>Money outstanding<span class="src">· {{ o.currency }} · everything still owed</span></span>
+    <span class="ao-by incidents"><i></i>incidents</span>
+    <div class="grid g2" style="margin-bottom:6px;gap:14px">
+        <div class="kpi">
+            <b class="disp">{{ (fines / 1000000)|number_format(2) }}<em>M</em></b>
+            <span class="sub">fines assessed and unpaid</span>
+        </div>
+        <div class="kpi hot">
+            <b class="disp">{{ (claims / 1000000)|number_format(1) }}<em>M</em></b>
+            <span class="sub">compensation approved, not paid</span>
+        </div>
+    </div>
+    <div class="rln">
+        <span class="fog">Assessed this month</span>
+        <span class="mono" style="font-size:11px">{{ (finesMonth / 1000000)|number_format(2) }}M fines · {{ (claimsMonth / 1000000)|number_format(1) }}M compensation approved</span>
+    </div>
+    <div class="rln">
+        <span class="fog">Oldest unpaid claim</span>
+        {% if oldest is null %}
+            {# AN EM DASH, NOT A ZERO. "0 d" would name a claim that does not
+               exist; this area owes nobody anything today. #}
+            <span class="mono d" style="font-size:11px">— · no compensation is outstanding</span>
+        {% else %}
+            <span class="mono w" style="font-size:11px">{{ o.ageLabel(oldest) }} · {{ oldest.reference }} · {{ oldest.zoneLabel }}</span>
+        {% endif %}
+    </div>
+    <div class="rln">
+        <span class="fog">Claims waiting</span>
+        {# THE DESIGN SAYS "HOUSEHOLDS" AND THE MODULE DOES NOT RECORD ONE. It
+           records claims and the parties to them, and one household can be two
+           parties, so counting households would be a guess dressed as a figure.
+           The row counts what is actually written down and says which. #}
+        <span class="mono" style="font-size:11px">{{ o.openClaims }} {{ o.openClaims == 1 ? 'claim' : 'claims' }} · {{ o.claimZones }} {{ o.claimZones == 1 ? 'zone' : 'zones' }}</span>
+    </div>
+    <div class="use">The only number on this page that is not about today, and it is here because an unpaid claim is what a community remembers. It is <a href="{{ o.dashboardUrl }}">a link into the module&rsquo;s money board</a>, never edited here.</div>
+</div>

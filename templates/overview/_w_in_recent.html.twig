@@ -1,0 +1,31 @@
+{# IN·A3 — THE LAST HANDFUL FILED, newest first, each opening its case.
+
+   The row is `.i-hit`, which is the HOST's vocabulary and not this module's: the
+   same row is drawn in the results column docked beside the operational map, and
+   two surfaces means the rule for how it looks is not a module's to keep. What
+   is inside it — the case number, the kind, the place in the workflow — is this
+   module's, and comes from the macros the whole module draws its chips from.
+
+   → UhifadhiLabs\Incident\Overview\IncidentOverviewContributor #}
+{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+{% set o = by.incidents.overview %}
+<div class="c" data-w="in_recent">
+    <span class="tab"><span class="idx">IN·A3</span>Latest incidents<span class="src">· newest first · {{ o.latest|length }} of {{ o.total }}</span></span>
+    <span class="ao-by incidents"><i></i>incidents</span>
+    {% for incident in o.latest %}
+        <a class="i-hit" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
+            <span class="r1"><span class="id">{{ incident.reference }}</span>{{ ui.cat(incident.category, incident.subcategory.label) }}{{ ui.status(incident.status) }}</span>
+            <span class="r2">{{ incident.headline }}</span>
+            <span class="r3">
+                {{ ui.zone(incident) }}
+                {{ ui.when(incident.reportedAt, o.now) }}
+                {# Open and past its OWN category's term. A resolved incident is
+                   judged on the time it took, so the tag is not repeated once the
+                   work is finished with. #}
+                {% if incident.status.isOpen and incident.isPastTerm(o.now) %}<span class="i-mtag due">past term</span>{% endif %}
+            </span>
+        </a>
+    {% else %}
+        <div class="use">Nothing has been filed in this area yet.</div>
+    {% endfor %}
+</div>

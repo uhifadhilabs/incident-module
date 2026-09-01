@@ -120,6 +120,17 @@ final readonly class IncidentOverview
         return $open;
     }
 
+    /**
+     * How long one incident has been open, said the way this module says it —
+     * so a card and an attention item raised about the same record print the
+     * same words. The rule lives in {@see IncidentAge}; this is the reading of
+     * it against THIS page's one instant.
+     */
+    public function ageLabel(Incident $incident): string
+    {
+        return IncidentAge::label($incident->ageInHours($this->now));
+    }
+
     /** Whether this area has a register at all. An area with none says nothing. */
     public function isEmpty(): bool
     {
@@ -194,6 +205,35 @@ final readonly class IncidentOverview
     public function assessedThisMonth(MoneyDirectionEnum $direction): int
     {
         return $this->assessedMonth[$direction->value] ?? 0;
+    }
+
+    /*
+     * The four figures the money card prints, named. A template must be able to
+     * ask for them without naming an enum case — a Twig file reaching for
+     * `constant('…\MoneyDirectionEnum::Fine')` is the module's vocabulary
+     * spelled out in a place nobody would think to grep.
+     */
+
+    /** Fines assessed and uncollected — owed TO the authority. */
+    public function finesDue(): int
+    {
+        return $this->outstanding(MoneyDirectionEnum::Fine);
+    }
+
+    /** Compensation approved and unpaid — owed BY it. Never added to the above. */
+    public function compensationUnpaid(): int
+    {
+        return $this->outstanding(MoneyDirectionEnum::Compensation);
+    }
+
+    public function finesAssessedThisMonth(): int
+    {
+        return $this->assessedThisMonth(MoneyDirectionEnum::Fine);
+    }
+
+    public function compensationApprovedThisMonth(): int
+    {
+        return $this->assessedThisMonth(MoneyDirectionEnum::Compensation);
     }
 
     /**
