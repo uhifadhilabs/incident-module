@@ -61,6 +61,17 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
  */
 final class UhifadhiLabsIncidentBundle extends AbstractBundle
 {
+    /**
+     * WHERE THIS BUNDLE'S VOCABULARY IS SERVED FROM — what AssetMapper serves
+     * public/incidents.css under, stated once because it has two readers that
+     * must never disagree: `templates/base.html.twig`, which links it on every
+     * incidents page of the module's own, and
+     * {@see IncidentOverviewContributor::stylesheet()}, which hands it to a HOST
+     * that is rendering this module's plates on the area overview. The bundle's
+     * name is the bundle's own knowledge, and no host should have to derive it.
+     */
+    public const string STYLESHEET = 'bundles/uhifadhilabsincident/incidents.css';
+
     /** Config lives under "incident:", not the class-derived "uhifadhi_labs_incident:". */
     protected string $extensionAlias = 'incident';
 

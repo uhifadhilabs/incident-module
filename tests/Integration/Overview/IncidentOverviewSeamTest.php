@@ -16,6 +16,7 @@ namespace UhifadhiLabs\Incident\Tests\Integration\Overview;
 use Uhifadhi\Model\Widget;
 use Uhifadhi\Overview\AttentionItem;
 use Uhifadhi\Overview\AttentionSeverity;
+use Uhifadhi\Overview\ContributesStylesheetInterface;
 use Uhifadhi\Overview\MapLayer;
 use Uhifadhi\Overview\NowTile;
 use Uhifadhi\Overview\PulseEvent;
@@ -27,6 +28,7 @@ use UhifadhiLabs\Incident\Overview\IncidentNowTiles;
 use UhifadhiLabs\Incident\Overview\IncidentOverviewContributor;
 use UhifadhiLabs\Incident\Overview\IncidentPulse;
 use UhifadhiLabs\Incident\Tests\Integration\OverviewTestCase;
+use UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle;
 
 /**
  * WHAT THIS MODULE PUTS ON THE HOST'S AREA OVERVIEW — the five contracts, each
@@ -66,6 +68,31 @@ final class IncidentOverviewSeamTest extends OverviewTestCase
         self::assertSame(
             '@UhifadhiLabsIncident/overview/_w_in_flow.html.twig',
             \sprintf($contributor->partialPattern(), 'in_flow'),
+        );
+    }
+
+    /**
+     * THE ONE SURFACE SOMEBODY ELSE RENDERS THIS MODULE'S MARKUP ON. Every
+     * incidents page of the module's own extends `base.html.twig`, which links
+     * incidents.css; the area overview extends the HOST'S layout, so without
+     * this the category chips, the five-state flow bar and the money tone on a
+     * contributed plate render naked. The interface is optional — a contributor
+     * with no CSS of its own does not implement it — so what is pinned here is
+     * that this one does.
+     */
+    public function testTheContributorTellsTheHostWhichStylesheetItsPlatesWear(): void
+    {
+        $contributor = $this->contributor();
+
+        self::assertInstanceOf(ContributesStylesheetInterface::class, $contributor);
+        // What AssetMapper serves the bundle's public/ under — the SAME string
+        // base.html.twig links, because both read the bundle's own constant and
+        // the path is therefore written once.
+        self::assertSame('bundles/uhifadhilabsincident/incidents.css', $contributor->stylesheet());
+        self::assertSame(UhifadhiLabsIncidentBundle::STYLESHEET, $contributor->stylesheet());
+        self::assertStringContainsString(
+            "constant('UhifadhiLabs\\\\Incident\\\\UhifadhiLabsIncidentBundle::STYLESHEET')",
+            (string) file_get_contents(__DIR__.'/../../../templates/base.html.twig'),
         );
     }
 

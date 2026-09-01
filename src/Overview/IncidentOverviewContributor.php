@@ -15,10 +15,12 @@ namespace UhifadhiLabs\Incident\Overview;
 
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Model\WidgetGroup;
+use Uhifadhi\Overview\ContributesStylesheetInterface;
 use Uhifadhi\Overview\OverviewContributorInterface;
 use UhifadhiLabs\Incident\Model\IncidentOverviewWidgets;
 use UhifadhiLabs\Incident\Module\IncidentModuleProvider;
 use UhifadhiLabs\Incident\Service\IncidentOverviewFigures;
+use UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle;
 
 /**
  * WHAT THIS MODULE PUTS ON `/areas/{uuid}` — four cards and a column, in the
@@ -42,7 +44,7 @@ use UhifadhiLabs\Incident\Service\IncidentOverviewFigures;
  * forgot the tag would show up only as this module's section quietly missing
  * from every area's widget library.
  */
-final readonly class IncidentOverviewContributor implements OverviewContributorInterface
+final readonly class IncidentOverviewContributor implements ContributesStylesheetInterface, OverviewContributorInterface
 {
     public function __construct(
         private IncidentOverviewFigures $figures,
@@ -72,6 +74,25 @@ final readonly class IncidentOverviewContributor implements OverviewContributorI
     public function partialPattern(): string
     {
         return IncidentOverviewWidgets::PARTIAL_PATTERN;
+    }
+
+    /**
+     * THE PLATES WEAR THIS MODULE'S OWN VOCABULARY, and here the HOST renders
+     * them.
+     *
+     * Every incidents page of the module's own extends `base.html.twig`, which
+     * links this same sheet; the area overview extends the host's layout, so
+     * without this the category chips, the five-state flow bar and the money
+     * tone on a contributed plate render naked. The host asks only contributors
+     * that implement {@see ContributesStylesheetInterface} — one with no CSS of
+     * its own does not, and is asked nothing.
+     *
+     * The path is the BUNDLE'S constant, so this and base.html.twig cannot name
+     * two different files.
+     */
+    public function stylesheet(): string
+    {
+        return UhifadhiLabsIncidentBundle::STYLESHEET;
     }
 
     /**

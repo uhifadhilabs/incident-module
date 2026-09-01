@@ -18,7 +18,10 @@
        incident map and an area map cannot disagree about how a layer draws.
        MapLibre is deliberately NOT used. #}
     <link rel="stylesheet" href="{{ asset('leaflet/leaflet.css') }}">
-    <link rel="stylesheet" href="{{ asset('bundles/uhifadhilabsincident/incidents.css') }}">
+    {# The path is the bundle's own constant, not a literal: the area overview is
+       rendered by the HOST, which links this same sheet from the contributor's
+       stylesheet() — and a path typed twice is a path that eventually differs. #}
+    <link rel="stylesheet" href="{{ asset(constant('UhifadhiLabs\\Incident\\UhifadhiLabsIncidentBundle::STYLESHEET')) }}">
 {% endblock %}
 
 {% block javascripts %}
