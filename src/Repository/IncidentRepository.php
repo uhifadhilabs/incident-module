@@ -261,14 +261,45 @@ final class IncidentRepository extends ServiceEntityRepository
      */
     public function countClosedOutBetween(AreaOfInterest $area, \DateTimeImmutable $from, \DateTimeImmutable $to): int
     {
-        return (int) $this->createQueryBuilder('i')
+        return (int) $this->closedOut($area, $from, $to)
             ->select('COUNT(i.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * The same set as rows — what the map's "resolved &amp; closed" layer draws.
+     *
+     * THE LAYER IS WINDOWED AND THE LEGEND SAYS SO. Every incident an area ever
+     * closed is unbounded and, on the morning this page is for, uninteresting: a
+     * plate about today does not need last year's roadkill. The window is the
+     * layer's own, stated in its label, rather than a silent cap that would make
+     * the map disagree with the register.
+     *
+     * @return list<Incident>
+     */
+    public function closedOutBetween(AreaOfInterest $area, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        /** @var list<Incident> $incidents */
+        $incidents = $this->closedOut($area, $from, $to)
+            ->join('i.subcategory', 's')->addSelect('s')
+            ->join('s.category', 'c')->addSelect('c')
+            ->leftJoin('i.zone', 'z')->addSelect('z')
+            ->orderBy('i.reportedAt', 'DESC')
+            ->addOrderBy('i.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return $incidents;
+    }
+
+    private function closedOut(AreaOfInterest $area, \DateTimeImmutable $from, \DateTimeImmutable $to): QueryBuilder
+    {
+        return $this->createQueryBuilder('i')
             ->andWhere('i.area = :area')->setParameter('area', $area)
             ->andWhere('(i.resolvedAt >= :from AND i.resolvedAt < :to) OR (i.closedAt >= :from AND i.closedAt < :to)')
             ->setParameter('from', $from)
-            ->setParameter('to', $to)
-            ->getQuery()
-            ->getSingleScalarResult();
+            ->setParameter('to', $to);
     }
 
     /**

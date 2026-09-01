@@ -205,6 +205,14 @@ final class TestKernel extends Kernel
             'incident.report',
             'incident.dashboard',
             'incident.overview.figures',
+            // The five area-overview providers. Tagged by hand in the extension
+            // (a reusable bundle does not autoconfigure), and public here so the
+            // seam test can ask each one what it contributes.
+            'incident.overview.contributor',
+            'incident.overview.now_tiles',
+            'incident.overview.attention',
+            'incident.overview.map_layers',
+            'incident.overview.pulse',
             'incident.transitions',
             'incident.zone_locator',
             // The storage seam: the source itself, and the registry the hub

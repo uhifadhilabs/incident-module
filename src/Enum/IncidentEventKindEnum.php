@@ -35,6 +35,25 @@ enum IncidentEventKindEnum: string
     /** A figure on the money record changed. */
     case Money = 'money';
 
+    /**
+     * WHAT HAPPENED, as the area pulse prints it — the module's own words for
+     * its own move, which the host never interprets.
+     *
+     * A transition says nothing here on purpose: the row wears the module's
+     * status chip for the place it landed in, and repeating the place in the
+     * verb would print it twice. See
+     * {@see \UhifadhiLabs\Incident\Overview\IncidentPulse}.
+     */
+    public function moveLabel(): string
+    {
+        return match ($this) {
+            self::Transition => 'moved to',
+            self::Note => 'note added',
+            self::Evidence => 'evidence attached',
+            self::Money => 'money updated',
+        };
+    }
+
     /** The modifier the `.i-tl-item` wears; a note is the timeline's default. */
     public function cssClass(): string
     {

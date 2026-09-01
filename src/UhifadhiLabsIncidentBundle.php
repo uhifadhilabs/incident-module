@@ -28,7 +28,13 @@ use UhifadhiLabs\Incident\Controller\IncidentWidgetsController;
 use UhifadhiLabs\Incident\DependencyInjection\IncidentConfiguration;
 use UhifadhiLabs\Incident\Module\IncidentDepartmentKpiProvider;
 use UhifadhiLabs\Incident\Module\IncidentModuleProvider;
+use UhifadhiLabs\Incident\Overview\IncidentAttention;
+use UhifadhiLabs\Incident\Overview\IncidentMapLayers;
+use UhifadhiLabs\Incident\Overview\IncidentNowTiles;
+use UhifadhiLabs\Incident\Overview\IncidentOverviewContributor;
+use UhifadhiLabs\Incident\Overview\IncidentPulse;
 use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
+use UhifadhiLabs\Incident\Repository\IncidentEventRepository;
 use UhifadhiLabs\Incident\Repository\IncidentEvidenceRepository;
 use UhifadhiLabs\Incident\Repository\IncidentRepository;
 use UhifadhiLabs\Incident\Repository\IncidentSubcategoryRepository;
@@ -292,6 +298,48 @@ final class UhifadhiLabsIncidentBundle extends AbstractBundle
          * figures when a department attaches the module of that slug, and captions
          * the plates with that name.
          */
+        /*
+         * THE AREA-OVERVIEW SEAM — five contracts, five tags, and every one of
+         * them applied BY HAND for the reason spelled out above: a reusable
+         * bundle is not autoconfigured, so the host's registerForAutoconfiguration
+         * never fires here.
+         *
+         * The tag names are written as literal strings rather than read off the
+         * host's interface constants, exactly as 'uhifadhi.module' and
+         * 'uhifadhi.department_kpi' are: the host classes are a DEV dependency of
+         * this bundle (tests/Fixtures/Uhifadhi), so referencing a constant would
+         * compile against a copy rather than against the host, and the copy going
+         * stale would be invisible until an area's overview quietly lost this
+         * module's section.
+         *
+         * A missing tag looks like a module nobody installed:
+         *   widget_provider  the headed section and its five widgets vanish
+         *   now_tile         the two IN·N plates leave the right-now strip
+         *   attention        late work stops asking for anybody
+         *   map.layer        open incidents stop being drawn, legend and all
+         *   pulse            the module's moves stop reaching the area's stream
+         * Every one of them is covered by IncidentOverviewSeamTest.
+         */
+        $services->set('incident.overview.contributor', IncidentOverviewContributor::class)
+            ->args([service('incident.overview.figures')])
+            ->tag('uhifadhi.overview.widget_provider');
+
+        $services->set('incident.overview.now_tiles', IncidentNowTiles::class)
+            ->args([service('incident.overview.figures')])
+            ->tag('uhifadhi.overview.now_tile');
+
+        $services->set('incident.overview.attention', IncidentAttention::class)
+            ->args([service('incident.overview.figures'), service('router')])
+            ->tag('uhifadhi.overview.attention');
+
+        $services->set('incident.overview.map_layers', IncidentMapLayers::class)
+            ->args([service(IncidentRepository::class)])
+            ->tag('uhifadhi.map.layer');
+
+        $services->set('incident.overview.pulse', IncidentPulse::class)
+            ->args([service(IncidentEventRepository::class), service('router')])
+            ->tag('uhifadhi.overview.pulse');
+
         $services->set('incident.department_kpi_provider', IncidentDepartmentKpiProvider::class)
             ->args([
                 service(IncidentRepository::class),
