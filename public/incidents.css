@@ -13,6 +13,17 @@
    vocabulary that patrols.css also declares, and it belongs in the host's own
    stylesheet. Until that is ruled on, both modules carry their own copy — the
    duplication is deliberate and marked, not accidental.
+
+   TWO VOCABULARIES HAVE ALREADY GONE THAT WAY, and the DIRECTION B and
+   DIRECTION C blocks say where and why: the docked map split and the
+   day-grouped feed row are drawn on the host's area overview as well as here,
+   and a rule that two surfaces depend on is not a module's to keep. The
+   module's own pages get them from the host — every incidents page extends
+   layout.html.twig, so app.css loads before this file.
+
+   THE LAST BLOCK IS THE OTHER DIRECTION: the host's area overview leaves a
+   contributor's colour to the contributor, so the module paints its own dots
+   and its own status chips into the host's neutral slots there.
    ========================================================================== */
 
 /* TOKEN BRIDGE — byte-faithful port of the design's incidents.css, which
@@ -278,68 +289,37 @@ html.light{
 
 /* ── DIRECTION B · MAP-LED ────────────────────────────────────────────────
    The map is the page. The list docks beside it and scrolls independently, so
-   panning never loses your place in the results.                             */
-.i-split{display:grid;grid-template-columns:minmax(0,1fr) 388px;gap:18px;align-items:stretch}
-@media(max-width:1100px){.i-split{grid-template-columns:1fr}}
-.i-split>.i-mapcol{min-width:0;display:flex;flex-direction:column}
-/* The map's height must exist BEFORE Leaflet builds: the controller refuses a
-   zero-size container, so a .viewer whose height only came from the map's own
-   content would never get a map at all. Applies wherever the widget renders —
-   the split dashboard column AND the widget library's full-width section. */
+   panning never loses your place in the results.
+
+   THE SPLIT ITSELF NOW LIVES IN THE HOST, beside .viewer in
+   assets/styles/app.css: .i-split, .i-mapcol, .i-listcol, .i-listhd,
+   .i-listbody, .i-hit and .i-pincard. The area overview draws the same split,
+   and two surfaces means the vocabulary is not a module's — the same markup
+   must render identically on both. The copy that stood here had already
+   drifted from itself: a second .i-listcol further down this file capped the
+   column at 520px and put the scrollbar back, so which rule won depended on
+   where the cascade stopped. That is exactly the failure one copy prevents.
+
+   A module adds map CONTENT — its pins, its hues, its legend entry. It never
+   ships a second plate and never a second split.
+
+   ONE RULE STAYS, and it is genuinely this module's: the widget library's
+   full-width preview renders the map plate outside any split, and the map
+   controller refuses a zero-height container. Nothing in the host's split
+   covers a `.c[data-w=map]` standing on its own.                             */
 .c[data-w=map] .viewer{min-height:460px;display:grid}
-.i-split>.i-mapcol .viewer{flex:1;min-height:460px;display:grid}
-.i-split>.i-mapcol .viewer>svg{width:100%;height:100%}
-.i-listcol{display:flex;flex-direction:column;min-height:0;border:1px solid var(--ln);border-radius:14px;
-  background:linear-gradient(180deg,var(--p1),var(--p2));box-shadow:var(--shadow);overflow:hidden}
-.i-listhd{padding:12px 15px;border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:9px;
-  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:600;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--fog)}
-.i-listhd .n{margin-left:auto;color:var(--acc);letter-spacing:.04em}
-.i-listbody{overflow-y:auto;max-height:min(64vh,620px);padding:4px 8px 8px}
-.i-hit{display:block;padding:11px 8px;border-bottom:1px dashed color-mix(in srgb,var(--fog) 16%,transparent);
-  text-decoration:none;color:var(--tx);border-left:2px solid transparent;cursor:pointer}
-.i-hit:last-child{border-bottom:0}
-.i-hit:hover{background:color-mix(in srgb,var(--acc) 5%,transparent);text-decoration:none}
-.i-hit.on{background:color-mix(in srgb,var(--acc) 9%,transparent);border-left-color:var(--acc)}
-.i-hit .r1{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
-.i-hit .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--acc)}
-.i-hit .r2{font-size:12.5px;line-height:1.5;color:var(--tx)}
-.i-hit .r3{display:flex;align-items:center;gap:9px;margin-top:6px;flex-wrap:wrap;
-  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
-/* The map's own floating pieces — a marker key and a hovered-pin card. */
-.i-pincard{position:absolute;z-index:4;left:12px;bottom:12px;width:262px;padding:12px 13px;border-radius:11px;
-  background:rgba(10,14,11,.9);border:1px solid rgba(234,242,236,.2);color:#EAF2EC}
-.i-pincard .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
-  color:#3ED9A8;margin-bottom:5px;display:block}
-.i-pincard .tt{font-size:12px;line-height:1.5;margin-bottom:7px}
-.i-pincard .mt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:rgba(234,242,236,.62)}
 
 /* ── DIRECTION C · FEED ───────────────────────────────────────────────────
-   Reverse-chronological, grouped by day. A day is a sticky header with the
-   day's own counts, so scrolling never loses the date.                       */
-.i-day{position:sticky;top:56px;z-index:4;display:flex;align-items:center;gap:12px;
-  padding:9px 2px;margin:22px 0 4px;
-  background:color-mix(in srgb,var(--cv) 92%,transparent);backdrop-filter:blur(8px)}
-.i-day b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--tx)}
-.i-day .cnt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
-.i-day::after{content:"";flex:1;height:1px;background:var(--ln2)}
-.i-feed{display:flex;gap:14px;padding:14px 2px;border-bottom:1px dashed color-mix(in srgb,var(--fog) 18%,transparent);
-  align-items:flex-start;text-decoration:none;color:var(--tx)}
-.i-feed:hover{background:color-mix(in srgb,var(--acc) 4%,transparent);text-decoration:none}
-.i-feed .gut{width:56px;flex:none;text-align:right;padding-top:2px}
-.i-feed .gut .hm{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:700;color:var(--tx);display:block}
-.i-feed .gut .ago{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;color:var(--dim);display:block;margin-top:3px}
-.i-feed .mark{width:11px;flex:none;position:relative;align-self:stretch}
-.i-feed .mark i{position:absolute;left:1px;top:5px;width:9px;height:9px;border-radius:2px;font-style:normal}
-.i-feed .bd{flex:1;min-width:0}
-.i-feed .bd .hl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
-.i-feed .bd .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--acc)}
-.i-feed .bd .tt{font-size:13px;line-height:1.55}
-.i-feed .bd .mt{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:7px;
-  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
-.i-feed .rt{flex:none;align-self:center}
-/* the load sparkline above the feed */
+   Reverse-chronological, grouped by day.
+
+   THE DAY-GROUPED ROW NOW LIVES IN THE HOST, beside the docked split in
+   assets/styles/app.css: .i-day and .i-feed with their parts. The host's own
+   area pulse IS that vocabulary — one row per move, newest first, under a
+   sticky day heading — and this module's feed draws the same row. Two surfaces
+   means it is not a module stylesheet's, for the same reason the split is not.
+
+   THE SPARKLINE STAYS. It is the load bar above the feed: one bar per day of
+   the module's own window, and nothing outside this module draws it.          */
 .i-spark{display:flex;align-items:flex-end;gap:3px;height:38px}
 .i-spark i{flex:1;background:color-mix(in srgb,var(--acc) 45%,transparent);border-radius:2px 2px 0 0;min-height:2px}
 .i-spark i.hot{background:var(--acc)}
@@ -786,9 +766,6 @@ body:has(.ro-slideover.open){overflow:hidden}
 .i-hue-comp{background:var(--i-comp)}
 .i-hue-mort{background:var(--i-mort)}
 
-/* The docked results column beside a map plate. */
-.i-listcol{flex:1;min-width:280px;max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
-
 /* Small typographic slots the design set inline. */
 .i-queuenote{margin:0 2px 8px}
 .i-queuerow{cursor:pointer}
@@ -826,3 +803,33 @@ body:has(.ro-slideover.open){overflow:hidden}
   padding:10px 12px;margin-bottom:14px;font-size:12px}
 .i-errors p{margin:0 0 4px}
 .i-errors p:last-child{margin:0}
+
+/* ── ON THE HOST'S AREA OVERVIEW ──────────────────────────────────────────
+   THE HOST DRAWS THE SURFACE AND KNOWS NO MODULE'S COLOUR. Every contributor
+   slot on /areas/{uuid} — the tag on a plate, the dot beside an attention row,
+   the column heading, the legend group, the duty board — is painted the quiet
+   fog by default, and the module that filled the slot paints its own. That is
+   the same seam the widgets ride: the host holds the shape, a module holds
+   everything about itself, and uninstalling the module takes its colour with
+   it rather than leaving an orphaned rule in the host's stylesheet.
+
+   The hue is the register's leading category, which is what the module's pins,
+   its chips and its map layer already wear — so "incidents" is one colour
+   wherever it is named, on this page and on the module's own.                */
+.ao-by.incidents i,
+.ao-att .m i.incidents,
+.ao-col i.incidents,
+.ao-legend .grp > b i.incidents,
+.ao-dot.incidents{background:var(--i-poach)}
+.ao-board a.dot-incidents .k::before{background:var(--i-poach)}
+
+/* THE PULSE ROW IS THE HOST'S; THE STATE ON IT IS THIS MODULE'S. The host
+   prints a move inside a neutral .ao-move and adds whatever stateClass the
+   module's PulseEvent returned — so these are the SAME five keys .i-st wears,
+   and a status cannot read one colour on a case file and another in the area's
+   stream. See IncidentPulse and IncidentStatusEnum::cssClass().             */
+.ao-move.rep{color:var(--warn)}
+.ao-move.ver{color:var(--acc)}
+.ao-move.wip{color:var(--i-mort)}
+.ao-move.res{color:var(--ok)}
+.ao-move.cls{color:var(--dim)}
