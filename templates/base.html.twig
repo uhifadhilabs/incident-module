@@ -13,11 +13,11 @@
 {% block stylesheets %}
     {{ parent() }}
     {# Leaflet FIRST, so incidents.css can restyle its controls into the design's
-       pills. Both files are the host's own self-hosted copy (assets/leaflet/) —
+       pills. Both files come from uhifadhilabs/map-module, by its own constants —
        never a CDN, and the same Leaflet the host's area map runs on, so an
        incident map and an area map cannot disagree about how a layer draws.
        MapLibre is deliberately NOT used. #}
-    <link rel="stylesheet" href="{{ asset('leaflet/leaflet.css') }}">
+    <link rel="stylesheet" href="{{ asset(constant('UhifadhiLabs\\Map\\UhifadhiLabsMapBundle::LEAFLET_CSS')) }}">
     {# The path is the bundle's own constant, not a literal: the area overview is
        rendered by the HOST, which links this same sheet from the contributor's
        stylesheet() — and a path typed twice is a path that eventually differs. #}
@@ -27,7 +27,7 @@
 {% block javascripts %}
     {# A classic <script> in <head> runs before the deferred importmap modules,
        so `window.L` is there by the time a Stimulus controller connects. #}
-    <script src="{{ asset('leaflet/leaflet.js') }}"></script>
+    <script src="{{ asset(constant('UhifadhiLabs\\Map\\UhifadhiLabsMapBundle::LEAFLET_JS')) }}"></script>
     {{ parent() }}
 {% endblock %}
 

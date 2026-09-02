@@ -202,8 +202,10 @@ Then, in the host:
 The host must already provide what every uhifadhi module bundle binds to:
 `Uhifadhi\Entity\{AreaOfInterest,Zone,User,Position,Department}`, the widget
 framework (`Uhifadhi\Service\{WidgetService,WidgetEndpoint}` and
-`templates/widgets/_library.html.twig`), `layout.html.twig`, self-hosted Leaflet
-under `assets/leaflet/`, and symfony/ux-icons with the `lucide` set imported.
+`templates/widgets/_library.html.twig`), `layout.html.twig`, and symfony/ux-icons
+with the `lucide` set imported. Leaflet and the map seam are no longer among the
+host's obligations: they come from `uhifadhilabs/map-module`, which this bundle
+requires directly.
 
 ### Optional — evidence on the Files hub
 

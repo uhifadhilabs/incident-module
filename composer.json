@@ -34,6 +34,7 @@
         "symfony/twig-bundle": "^7.3 || ^8.0",
         "symfony/uid": "^7.3 || ^8.0",
         "symfony/ux-icons": "^3.4",
+        "uhifadhilabs/map-module": "dev-main",
         "uhifadhilabs/module-contracts": "dev-main"
     },
     "autoload": {
@@ -99,6 +100,11 @@
         {
             "type": "vcs",
             "url": "https://github.com/uhifadhilabs/storage-module"
+        },
+        {
+            "name": "map-module",
+            "type": "vcs",
+            "url": "https://github.com/uhifadhilabs/map-module"
         }
     ]
 }
