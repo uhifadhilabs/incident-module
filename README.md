@@ -15,6 +15,7 @@ wildlife mortality. A [uhifadhi](https://github.com/uhifadhilabs) module bundle.
 - [Configuration](#configuration)
 - [Dev tooling](#dev-tooling)
 - [Development](#development)
+- [License](#license)
 
 ## Charter
 
@@ -296,3 +297,10 @@ composer check      # cs:check -> phpstan (max) -> phpunit
   screens over HTTP through a test kernel that plays the host — including the
   host's own widget framework, so "it rides the host framework" is demonstrated
   rather than asserted.
+
+## License
+
+**AGPL-3.0-or-later** — see [LICENSE](LICENSE): the same license as the
+uhifadhi host this module plugs into. Use, modify and self-host freely; if you
+offer a modified version to users over a network, they are entitled to the
+source of what they're running.
