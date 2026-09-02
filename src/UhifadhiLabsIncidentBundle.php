@@ -32,6 +32,7 @@ use UhifadhiLabs\Incident\Overview\IncidentAttention;
 use UhifadhiLabs\Incident\Overview\IncidentMapLayers;
 use UhifadhiLabs\Incident\Overview\IncidentNowTiles;
 use UhifadhiLabs\Incident\Overview\IncidentOverviewContributor;
+use UhifadhiLabs\Incident\Overview\IncidentOverviewCopy;
 use UhifadhiLabs\Incident\Overview\IncidentPulse;
 use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
 use UhifadhiLabs\Incident\Repository\IncidentEventRepository;
@@ -346,6 +347,13 @@ final class UhifadhiLabsIncidentBundle extends AbstractBundle
         $services->set('incident.overview.map_layers', IncidentMapLayers::class)
             ->args([service(IncidentRepository::class)])
             ->tag('uhifadhi.map.layer');
+
+        // THE MODULE'S WORDS INSIDE THE HOST'S SENTENCES. Not a widget and not a
+        // part of one: the phrase the host drops into its own copy about the
+        // operational plate, so "open incidents" is said by the module that draws
+        // them rather than written into the host.
+        $services->set('incident.overview.copy', IncidentOverviewCopy::class)
+            ->tag('uhifadhi.overview.copy');
 
         $services->set('incident.overview.pulse', IncidentPulse::class)
             ->args([service(IncidentEventRepository::class), service('router')])

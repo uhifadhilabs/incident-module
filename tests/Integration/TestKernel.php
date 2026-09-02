@@ -213,6 +213,7 @@ final class TestKernel extends Kernel
             'incident.overview.attention',
             'incident.overview.map_layers',
             'incident.overview.pulse',
+            'incident.overview.copy',
             'incident.transitions',
             'incident.zone_locator',
             // The storage seam: the source itself, and the registry the hub

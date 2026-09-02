@@ -19,6 +19,7 @@ use Uhifadhi\Overview\AttentionSeverity;
 use Uhifadhi\Overview\ContributesStylesheetInterface;
 use Uhifadhi\Overview\MapLayer;
 use Uhifadhi\Overview\NowTile;
+use Uhifadhi\Overview\OverviewCopyProviderInterface;
 use Uhifadhi\Overview\PulseEvent;
 use UhifadhiLabs\Incident\Model\IncidentOverview;
 use UhifadhiLabs\Incident\Model\IncidentOverviewWidgets;
@@ -26,6 +27,7 @@ use UhifadhiLabs\Incident\Overview\IncidentAttention;
 use UhifadhiLabs\Incident\Overview\IncidentMapLayers;
 use UhifadhiLabs\Incident\Overview\IncidentNowTiles;
 use UhifadhiLabs\Incident\Overview\IncidentOverviewContributor;
+use UhifadhiLabs\Incident\Overview\IncidentOverviewCopy;
 use UhifadhiLabs\Incident\Overview\IncidentPulse;
 use UhifadhiLabs\Incident\Tests\Integration\OverviewTestCase;
 use UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle;
@@ -251,6 +253,29 @@ final class IncidentOverviewSeamTest extends OverviewTestCase
         self::assertSame([], $this->pulse()->pulseFor($area, $now->modify('-10 minutes'), $now));
     }
 
+    /**
+     * THE MODULE'S WORDS INSIDE THE HOST'S SENTENCE. The host's line about its
+     * operational plate used to say "open incidents" in the host's own copy,
+     * which promised them to areas with no register. The phrase is the module's
+     * now — a phrase, lower case and unpunctuated, because the sentence, the
+     * conjunction and the full stop are the host's.
+     */
+    public function testTheModuleContributesItsPhraseAndNoSentence(): void
+    {
+        $copy = $this->service('incident.overview.copy');
+        self::assertInstanceOf(IncidentOverviewCopy::class, $copy);
+
+        self::assertSame(['open incidents'], $copy->copyFragments(OverviewCopyProviderInterface::SLOT_MAP_LAYERS));
+        // What a map-led page is worth adopting for is a claim this module does
+        // not make — silence is an answer, not a gap.
+        self::assertSame([], $copy->copyFragments(OverviewCopyProviderInterface::SLOT_MAP_GROUND_SPOTTING));
+
+        foreach ($copy->copyFragments(OverviewCopyProviderInterface::SLOT_MAP_LAYERS) as $phrase) {
+            self::assertSame(mb_strtolower($phrase), $phrase, $phrase.' is capitalised — the host decides where the sentence starts.');
+            self::assertStringEndsNotWith('.', $phrase);
+        }
+    }
+
     /** class => the service id the bundle registers it under. */
     private const array SERVICES = [
         IncidentOverviewContributor::class => 'incident.overview.contributor',
@@ -258,6 +283,7 @@ final class IncidentOverviewSeamTest extends OverviewTestCase
         IncidentAttention::class => 'incident.overview.attention',
         IncidentMapLayers::class => 'incident.overview.map_layers',
         IncidentPulse::class => 'incident.overview.pulse',
+        IncidentOverviewCopy::class => 'incident.overview.copy',
     ];
 
     private function contributor(): IncidentOverviewContributor
