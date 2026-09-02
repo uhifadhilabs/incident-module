@@ -181,7 +181,7 @@ final class UhifadhiLabsIncidentBundle extends AbstractBundle
 
         /*
          * INCIDENTS ON THE PLATFORM'S FILES HUB — registered only where the host
-         * actually runs uhifadhilabs/storage-module.
+         * actually runs uhifadhi/storage-module.
          *
          * OPTIONAL, unlike patrol's hard requirement, and the difference is real
          * rather than stylistic: patrol's photographs ARE stored through that

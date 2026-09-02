@@ -38,7 +38,7 @@ use UhifadhiLabs\Storage\Service\EvidenceKey;
  * done to it.
  *
  * WHAT IS HONEST HERE, AND WHAT IS NOT YET TRUE. Incidents has not adopted
- * uhifadhilabs/storage-module's upload path: {@see IncidentEvidence::getPath()}
+ * uhifadhi/storage-module's upload path: {@see IncidentEvidence::getPath()}
  * is nullable, the demo seeder writes rows with NO path at all, and no row has a
  * recorded byte size, a detected mime type or a generated preview. Three
  * consequences run through the mapping below, each chosen so the hub is told

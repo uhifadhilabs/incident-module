@@ -55,7 +55,7 @@ final class IncidentOverviewWidgets
     {
         return new WidgetGroup(
             self::GROUP,
-            'Incidents · uhifadhilabs/incident-module',
+            'Incidents · uhifadhi/incident-module',
             'What the incidents module contributes to the area overview: the five-state flow of what is still open, today’s filings, the latest cases, and the money the area is owed or owes. The state machine reads exactly as it does on the module’s own pages, because it is the same component.',
         );
     }

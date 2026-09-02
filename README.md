@@ -1,4 +1,4 @@
-# uhifadhilabs/incident-module
+# uhifadhi/incident-module
 
 What happened in an area, recorded once: poaching, human–wildlife conflict
 (with the fines and compensation that follow), compliance and encroachment, and
@@ -174,7 +174,7 @@ guarded by something a host can see and assign.
 ## Installation
 
 ```bash
-composer require uhifadhilabs/incident-module
+composer require uhifadhi/incident-module
 ```
 
 The bundle registers via Flex (`"type": "symfony-bundle"`), which adds
@@ -204,12 +204,12 @@ The host must already provide what every uhifadhi module bundle binds to:
 framework (`Uhifadhi\Service\{WidgetService,WidgetEndpoint}` and
 `templates/widgets/_library.html.twig`), `layout.html.twig`, and symfony/ux-icons
 with the `lucide` set imported. Leaflet and the map seam are no longer among the
-host's obligations: they come from `uhifadhilabs/map-module`, which this bundle
+host's obligations: they come from `uhifadhi/map-module`, which this bundle
 requires directly.
 
 ### Optional — evidence on the Files hub
 
-Where a host also runs `uhifadhilabs/storage-module` and mounts its cross-module
+Where a host also runs `uhifadhi/storage-module` and mounts its cross-module
 hub at `/files`, this module puts its evidence on it: `IncidentFileSource` is
 tagged `storage.file_source` and hands over one entry per `IncidentEvidence`,
 carrying the case file it belongs to (`INC-0313`, linked to its own page), the

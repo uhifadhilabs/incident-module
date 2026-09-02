@@ -36,7 +36,7 @@ final class IncidentOverviewWidgetsTest extends TestCase
         // it is PROVENANCE: the package name is in the label because a person has
         // to be able to tell which installed thing put these cards on the page.
         self::assertSame('incidents', $group->id);
-        self::assertSame('Incidents · uhifadhilabs/incident-module', $group->label);
+        self::assertSame('Incidents · uhifadhi/incident-module', $group->label);
         self::assertStringContainsString('the five-state flow of what is still open', $group->description);
     }
 

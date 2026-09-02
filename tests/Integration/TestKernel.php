@@ -251,10 +251,10 @@ final class TestKernel extends Kernel
         }
 
         // THE EVIDENCE ROUTE, from the bundle that owns it. A real host importing
-        // uhifadhilabs/storage-module gets it; the report flow's source card
+        // uhifadhi/storage-module gets it; the report flow's source card
         // serves the source record's photographs through it, so a kernel without
         // it would prove the card works only in a deployment that cannot show one.
-        $evidence = \dirname(__DIR__, 2).'/vendor/uhifadhilabs/storage-module/src/Controller/EvidenceController.php';
+        $evidence = \dirname(__DIR__, 2).'/vendor/uhifadhi/storage-module/src/Controller/EvidenceController.php';
         if (is_file($evidence)) {
             $routes->import($evidence, 'attribute');
         }
