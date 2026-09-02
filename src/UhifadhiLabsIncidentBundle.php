@@ -136,7 +136,7 @@ final class UhifadhiLabsIncidentBundle extends AbstractBundle
         // via registerForAutoconfiguration, but that only fires for autoconfigured
         // services — and a reusable bundle doesn't autoconfigure — so the tag is
         // applied explicitly here.
-        $category = \is_string($config['module_category'] ?? null) ? $config['module_category'] : 'pressure';
+        $category = \is_string($config['module_category'] ?? null) ? $config['module_category'] : 'operations';
         $services->set('incident.module_provider', IncidentModuleProvider::class)
             ->args([$category])
             ->tag('uhifadhi.module');

@@ -21,7 +21,7 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
  * config/packages/incident.yaml:
  *
  *   incident:
- *     module_category: pressure   # catalogue category for the tile
+ *     module_category: operations   # catalogue category for the tile
  *     dev_tools: false            # dev-only commands (when@dev / when@test)
  *     currency: TZS               # what money on an incident is denominated in
  *     taxonomy:                   # OPTIONAL — omit to install the shipped four × sixteen
@@ -58,8 +58,12 @@ final class IncidentConfiguration
         $root
             ->children()
                 ->scalarNode('module_category')
+                    // OPERATIONS: filing the incident register under 'pressure'
+                    // said the module MEASURES human pressure on the ecosystem.
+                    // It records the work of answering it, which is a different
+                    // thing. A deployment may still override it.
                     ->info('Catalogue category the Incidents module is filed under in each area.')
-                    ->defaultValue('pressure')->cannotBeEmpty()
+                    ->defaultValue('operations')->cannotBeEmpty()
                 ->end()
                 ->booleanNode('dev_tools')
                     ->info('Register dev-only tooling (seeders, fixtures). The recipe enables this via when@dev/when@test.')

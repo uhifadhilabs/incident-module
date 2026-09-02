@@ -22,12 +22,12 @@ final class IncidentModuleProviderTest extends TestCase
 {
     public function testDeclaresTheIncidentsModule(): void
     {
-        $provider = new IncidentModuleProvider('pressure');
+        $provider = new IncidentModuleProvider('operations');
 
         self::assertInstanceOf(ModuleProviderInterface::class, $provider);
         self::assertSame('incidents', $provider->slug());
         self::assertSame('Incidents', $provider->name());
-        self::assertSame('pressure', $provider->category());
+        self::assertSame('operations', $provider->category());
         self::assertSame('Field incident reports', $provider->dataSource());
         self::assertSame('triangle-alert', $provider->icon());
     }
@@ -43,7 +43,7 @@ final class IncidentModuleProviderTest extends TestCase
      */
     public function testTheHostLinksStraightToTheIncidentsDashboard(): void
     {
-        self::assertSame('incident_dashboard', new IncidentModuleProvider('pressure')->entryRoute());
+        self::assertSame('incident_dashboard', new IncidentModuleProvider('operations')->entryRoute());
     }
 
     /**
@@ -57,7 +57,7 @@ final class IncidentModuleProviderTest extends TestCase
      */
     public function testDeclaresTheRecordAndManageTiersAndNothingElse(): void
     {
-        $permissions = new IncidentModuleProvider('pressure')->permissions();
+        $permissions = new IncidentModuleProvider('operations')->permissions();
 
         self::assertSame(
             ['incidents.record', 'incidents.manage'],

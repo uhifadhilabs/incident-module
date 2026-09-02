@@ -90,7 +90,7 @@ final class ModuleSeamRegistrationTest extends KernelTestCase
         /** @var CollectedModules $catalogue */
         $catalogue = self::getContainer()->get(CollectedModules::class);
 
-        self::assertSame('pressure', $catalogue->bySlug()['incidents']->category());
+        self::assertSame('operations', $catalogue->bySlug()['incidents']->category());
     }
 
     protected function tearDown(): void

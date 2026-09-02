@@ -236,7 +236,7 @@ round.
 ```yaml
 # config/packages/incident.yaml
 incident:
-    module_category: pressure   # catalogue category for the module tile
+    module_category: operations   # catalogue category for the module tile
     currency: TZS               # what money on an incident is denominated in
     dev_tools: false            # dev-only tooling; enable via when@dev / when@test
 

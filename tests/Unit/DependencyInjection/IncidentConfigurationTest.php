@@ -41,7 +41,7 @@ final class IncidentConfigurationTest extends TestCase
     {
         $config = $this->process([]);
 
-        self::assertSame('pressure', $config['module_category']);
+        self::assertSame('operations', $config['module_category']);
         self::assertFalse($config['dev_tools']);
     }
 
