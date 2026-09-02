@@ -11,7 +11,7 @@
 <div class="c" data-w="board">
     <span class="tab"><span class="idx">IN·12</span>Status board<span class="src">· {{ transitionCsrfToken ? 'drag a card to move an incident on' : 'read-only — moving needs the manage permission' }}</span></span>
     <div class="i-board"
-         {{ stimulus_controller('@uhifadhilabs/incident-module/incident-board', {
+         {{ stimulus_controller('@uhifadhi/incident-module/incident-board', {
              url: path('incident_transition', {uuid: area.uuid, reference: 'INC-0000', transition: 'verify'}),
              csrf: transitionCsrfToken ?? '',
          }) }}>

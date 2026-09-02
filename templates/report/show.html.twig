@@ -37,7 +37,7 @@
 {% block incident_page %}
     {% set container = prefill.hasProvenance ? '_drawer' : '_page' %}
     {{ include('@UhifadhiLabsIncident/report/' ~ container ~ '.html.twig', {
-        controller: '@uhifadhilabs/incident-module/incident-report',
+        controller: '@uhifadhi/incident-module/incident-report',
         area: area,
         categories: categories,
         prefill: prefill,

@@ -13,7 +13,7 @@
     <span class="tab"><span class="idx">IN·03</span>Incident map<span class="src">· one filter drives map AND register</span></span>
     {{ include('@UhifadhiLabsIncident/dashboard/_filters.html.twig') }}
     <div class="viewer"
-         {{ stimulus_controller('@uhifadhilabs/incident-module/incident-map', {
+         {{ stimulus_controller('@uhifadhi/incident-module/incident-map', {
              incidents: dashboard.mapPayload,
              boundary: area.geom,
          }) }}></div>

@@ -105,7 +105,7 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertCount(4, $crawler->filter('.i-catpick .i-catopt'));
         // …and a field set per sub-category, so choosing one swaps the questions
         // without a round trip.
-        self::assertCount(16, $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"]'));
+        self::assertCount(16, $crawler->filter('[data-uhifadhi--incident-module--incident-report-target="fieldset"]'));
     }
 
     /** An honest back link, not a dismissal: it says where it goes. */
@@ -440,17 +440,17 @@ final class ReportFlowTest extends FunctionalTestCase
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
 
-        $depredation = $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"][data-subcategory="livestock-depredation"]')->html();
+        $depredation = $crawler->filter('[data-uhifadhi--incident-module--incident-report-target="fieldset"][data-subcategory="livestock-depredation"]')->html();
         self::assertStringContainsString('Loss claimed', $depredation);
 
-        $natural = $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"][data-subcategory="natural-mortality"]')->html();
+        $natural = $crawler->filter('[data-uhifadhi--incident-module--incident-report-target="fieldset"][data-subcategory="natural-mortality"]')->html();
         self::assertStringNotContainsString('Loss claimed', $natural);
         self::assertStringNotContainsString('Fine to assess', $natural);
 
         // Roadkill sits beside natural mortality under the same kind and DOES
         // carry money — which is why the money row is a sub-category's business
         // and never a category's.
-        $roadkill = $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"][data-subcategory="roadkill"]')->html();
+        $roadkill = $crawler->filter('[data-uhifadhi--incident-module--incident-report-target="fieldset"][data-subcategory="roadkill"]')->html();
         self::assertStringContainsString('Fine to assess', $roadkill);
     }
 
@@ -467,7 +467,7 @@ final class ReportFlowTest extends FunctionalTestCase
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
 
-        $mortality = $crawler->filter('[data-uhifadhilabs--incident-module--incident-report-target="fieldset"][data-subcategory="roadkill"]');
+        $mortality = $crawler->filter('[data-uhifadhi--incident-module--incident-report-target="fieldset"][data-subcategory="roadkill"]');
         $siblings = $mortality->filter('.i-taxsub a')->each(static fn ($node) => $node->attr('data-subcategory'));
 
         self::assertSame(['roadkill', 'natural-mortality', 'disease-die-off', 'poisoning'], $siblings);
