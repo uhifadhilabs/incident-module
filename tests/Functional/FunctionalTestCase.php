@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Functional;
+namespace Uhifadhi\Incident\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -20,11 +20,11 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\User;
 use Uhifadhi\Entity\Zone;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
-use UhifadhiLabs\Incident\Service\IncidentReportService;
-use UhifadhiLabs\Incident\Service\IncidentTaxonomyInstaller;
-use UhifadhiLabs\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Service\IncidentReportService;
+use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 
 /**
  * THE SCREENS, THROUGH A REAL KERNEL. Every page below is fetched over HTTP

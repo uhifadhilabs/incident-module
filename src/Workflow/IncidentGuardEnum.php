@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Workflow;
+namespace Uhifadhi\Incident\Workflow;
 
 /**
  * THE GUARDS, BY NAME. Part of the definition ({@see IncidentWorkflow::guardFor()})

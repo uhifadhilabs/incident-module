@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Functional;
+namespace Uhifadhi\Incident\Tests\Functional;
 
 /**
  * THE DASHBOARD, rendered. Every widget the module ships is drawn against real

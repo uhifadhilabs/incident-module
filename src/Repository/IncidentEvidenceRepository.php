@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Repository;
+namespace Uhifadhi\Incident\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use UhifadhiLabs\Incident\Entity\IncidentEvidence;
+use Uhifadhi\Incident\Entity\IncidentEvidence;
 
 /**
  * The query surface over photographs and documents attached to incidents.
@@ -44,7 +44,7 @@ final class IncidentEvidenceRepository extends ServiceEntityRepository
      *
      * Rows with no stored path are NOT filtered out in SQL, deliberately: what
      * counts as a usable key is the storage seam's rule, and it is applied where
-     * that rule lives ({@see \UhifadhiLabs\Incident\Storage\IncidentFileSource}),
+     * that rule lives ({@see \Uhifadhi\Incident\Storage\IncidentFileSource}),
      * not spread into a query nothing else reads.
      *
      * @return list<IncidentEvidence>

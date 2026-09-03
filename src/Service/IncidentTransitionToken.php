@@ -11,12 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Service;
+namespace Uhifadhi\Incident\Service;
 
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Uhifadhi\Entity\AreaOfInterest;
-use UhifadhiLabs\Incident\Controller\IncidentDetailController;
+use Uhifadhi\Incident\Controller\IncidentDetailController;
 
 /**
  * THE TOKEN A SURFACE POSTS A TRANSITION WITH — minted in exactly one place.

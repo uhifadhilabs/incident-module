@@ -11,37 +11,37 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident;
+namespace Uhifadhi\Incident;
 
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Uhifadhi\Incident\Command\SeedDemoCommand;
+use Uhifadhi\Incident\Command\SyncTaxonomyCommand;
+use Uhifadhi\Incident\Controller\IncidentDetailController;
+use Uhifadhi\Incident\Controller\IncidentReportController;
+use Uhifadhi\Incident\Controller\IncidentWidgetsController;
+use Uhifadhi\Incident\DependencyInjection\IncidentConfiguration;
+use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
+use Uhifadhi\Incident\Module\IncidentModuleProvider;
+use Uhifadhi\Incident\Overview\IncidentAttention;
+use Uhifadhi\Incident\Overview\IncidentMapLayers;
+use Uhifadhi\Incident\Overview\IncidentNowTiles;
+use Uhifadhi\Incident\Overview\IncidentOverviewContributor;
+use Uhifadhi\Incident\Overview\IncidentOverviewCopy;
+use Uhifadhi\Incident\Overview\IncidentPulse;
+use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Repository\IncidentEventRepository;
+use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
+use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
+use Uhifadhi\Incident\Service\IncidentTransitionToken;
+use Uhifadhi\Incident\Storage\IncidentFileSource;
 use Uhifadhi\Service\WidgetEndpoint;
 use Uhifadhi\Service\WidgetService;
-use UhifadhiLabs\Incident\Command\SeedDemoCommand;
-use UhifadhiLabs\Incident\Command\SyncTaxonomyCommand;
-use UhifadhiLabs\Incident\Controller\IncidentDetailController;
-use UhifadhiLabs\Incident\Controller\IncidentReportController;
-use UhifadhiLabs\Incident\Controller\IncidentWidgetsController;
-use UhifadhiLabs\Incident\DependencyInjection\IncidentConfiguration;
-use UhifadhiLabs\Incident\Module\IncidentDepartmentKpiProvider;
-use UhifadhiLabs\Incident\Module\IncidentModuleProvider;
-use UhifadhiLabs\Incident\Overview\IncidentAttention;
-use UhifadhiLabs\Incident\Overview\IncidentMapLayers;
-use UhifadhiLabs\Incident\Overview\IncidentNowTiles;
-use UhifadhiLabs\Incident\Overview\IncidentOverviewContributor;
-use UhifadhiLabs\Incident\Overview\IncidentOverviewCopy;
-use UhifadhiLabs\Incident\Overview\IncidentPulse;
-use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
-use UhifadhiLabs\Incident\Repository\IncidentEventRepository;
-use UhifadhiLabs\Incident\Repository\IncidentEvidenceRepository;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
-use UhifadhiLabs\Incident\Repository\IncidentSubcategoryRepository;
-use UhifadhiLabs\Incident\Service\IncidentTransitionToken;
-use UhifadhiLabs\Incident\Storage\IncidentFileSource;
-use UhifadhiLabs\Storage\Registry\FileSourceInterface;
+use Uhifadhi\Storage\Registry\FileSourceInterface;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -60,7 +60,7 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
  * against. It is a data decision, and a bundle that wrote rows into a host's
  * database on boot would be making it for them.
  */
-final class UhifadhiLabsIncidentBundle extends AbstractBundle
+final class UhifadhiIncidentBundle extends AbstractBundle
 {
     /**
      * WHERE THIS BUNDLE'S VOCABULARY IS SERVED FROM — what AssetMapper serves
@@ -71,7 +71,7 @@ final class UhifadhiLabsIncidentBundle extends AbstractBundle
      * that is rendering this module's plates on the area overview. The bundle's
      * name is the bundle's own knowledge, and no host should have to derive it.
      */
-    public const string STYLESHEET = 'bundles/uhifadhilabsincident/incidents.css';
+    public const string STYLESHEET = 'bundles/uhifadhiincident/incidents.css';
 
     /** Config lives under "incident:", not the class-derived "uhifadhi_labs_incident:". */
     protected string $extensionAlias = 'incident';
@@ -84,7 +84,7 @@ final class UhifadhiLabsIncidentBundle extends AbstractBundle
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         // The bundle's public/ dir is auto-registered by AssetMapper under the
-        // namespace `bundles/uhifadhilabsincident` and content-versioned — no
+        // namespace `bundles/uhifadhiincident` and content-versioned — no
         // config here, no assets:install. That is where incidents.css is served
         // from; see templates/base.html.twig.
 
@@ -107,10 +107,10 @@ final class UhifadhiLabsIncidentBundle extends AbstractBundle
             $container->extension('doctrine', [
                 'orm' => [
                     'mappings' => [
-                        'UhifadhiLabsIncident' => [
+                        'UhifadhiIncident' => [
                             'type' => 'attribute',
                             'dir' => __DIR__.'/Entity',
-                            'prefix' => 'UhifadhiLabs\\Incident\\Entity',
+                            'prefix' => 'Uhifadhi\\Incident\\Entity',
                             'is_bundle' => false,
                         ],
                     ],
@@ -202,7 +202,7 @@ final class UhifadhiLabsIncidentBundle extends AbstractBundle
          * appear on /files — the hub grows by MODULES, so a missing source looks
          * exactly like a module nobody installed.
          */
-        $hasStorage = \is_array($bundles) && isset($bundles['UhifadhiLabsStorageBundle']);
+        $hasStorage = \is_array($bundles) && isset($bundles['UhifadhiStorageBundle']);
         $builder->setParameter('incident.files_hub', $hasStorage);
 
         if ($hasStorage) {

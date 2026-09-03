@@ -11,15 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Overview;
+namespace Uhifadhi\Incident\Overview;
 
 use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Incident\Model\IncidentHues;
+use Uhifadhi\Incident\Model\IncidentMapPayload;
+use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
+use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Overview\MapLayer;
 use Uhifadhi\Overview\MapLayerProviderInterface;
-use UhifadhiLabs\Incident\Model\IncidentHues;
-use UhifadhiLabs\Incident\Model\IncidentMapPayload;
-use UhifadhiLabs\Incident\Model\IncidentOverviewWidgets;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
 
 /**
  * THIS MODULE'S TWO LAYERS ON THE HOST'S ONE OPERATIONAL PLATE.

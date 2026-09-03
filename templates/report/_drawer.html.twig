@@ -43,7 +43,7 @@
         </div>
     </div>
 
-    {{ include('@UhifadhiLabsIncident/report/_behind.html.twig', {area: area, behind: behind}, with_context: false) }}
+    {{ include('@UhifadhiIncident/report/_behind.html.twig', {area: area, behind: behind}, with_context: false) }}
 
     {# ── THE SLIDE-OVER ──────────────────────────────────────────────────── #}
     <div class="ro-slideover" {{ stimulus_target(controller, 'slideover') }}>
@@ -69,22 +69,22 @@
                gate whatever the filer typed into. #}
             <form class="ro-dform" method="post" action="{{ createUrl }}"
                   {{ stimulus_target(controller, 'form')|stimulus_action(controller, 'gate', 'input')|stimulus_action(controller, 'gate', 'change') }}>
-                {{ include('@UhifadhiLabsIncident/report/_carry.html.twig', {csrfToken: csrfToken, prefill: prefill, errors: errors}, with_context: false) }}
+                {{ include('@UhifadhiIncident/report/_carry.html.twig', {csrfToken: csrfToken, prefill: prefill, errors: errors}, with_context: false) }}
 
                 <div class="ro-dbody">
-                    {{ include('@UhifadhiLabsIncident/report/_source.html.twig', {prefill: prefill, files: sourceFiles}, with_context: false) }}
+                    {{ include('@UhifadhiIncident/report/_source.html.twig', {prefill: prefill, files: sourceFiles}, with_context: false) }}
 
-                    {{ include('@UhifadhiLabsIncident/report/_secthd.html.twig', {n: 1, heading: 'What kind', mark: 'req', markLabel: 'needed'}, with_context: false) }}
-                    {{ include('@UhifadhiLabsIncident/report/_kind.html.twig', {controller: controller, categories: categories, chosen: chosen, compact: true}, with_context: false) }}
+                    {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 1, heading: 'What kind', mark: 'req', markLabel: 'needed'}, with_context: false) }}
+                    {{ include('@UhifadhiIncident/report/_kind.html.twig', {controller: controller, categories: categories, chosen: chosen, compact: true}, with_context: false) }}
 
-                    {{ include('@UhifadhiLabsIncident/report/_secthd.html.twig', {n: 2, heading: 'What happened', mark: null, markLabel: null}, with_context: false) }}
-                    {{ include('@UhifadhiLabsIncident/report/_what.html.twig', {controller: controller, categories: categories, chosen: chosen, prefill: prefill, compact: true}, with_context: false) }}
+                    {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 2, heading: 'What happened', mark: null, markLabel: null}, with_context: false) }}
+                    {{ include('@UhifadhiIncident/report/_what.html.twig', {controller: controller, categories: categories, chosen: chosen, prefill: prefill, compact: true}, with_context: false) }}
 
-                    {{ include('@UhifadhiLabsIncident/report/_secthd.html.twig', {n: 3, heading: 'People & evidence', mark: 'opt', markLabel: 'can wait'}, with_context: false) }}
-                    {{ include('@UhifadhiLabsIncident/report/_later.html.twig', {prefill: prefill, compact: true}, with_context: false) }}
+                    {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 3, heading: 'People & evidence', mark: 'opt', markLabel: 'can wait'}, with_context: false) }}
+                    {{ include('@UhifadhiIncident/report/_later.html.twig', {prefill: prefill, compact: true}, with_context: false) }}
                 </div>
 
-                {{ include('@UhifadhiLabsIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl, compact: true}, with_context: false) }}
+                {{ include('@UhifadhiIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl, compact: true}, with_context: false) }}
             </form>
         </aside>
     </div>

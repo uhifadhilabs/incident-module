@@ -4,7 +4,7 @@ import { Controller } from '@hotwired/stimulus';
  * IN·03 / IN·04 — where every incident was filed.
  *
  * SELF-HOSTED LEAFLET, read off `window.L`. The host loads it as a classic
- * script in <head> (see @UhifadhiLabsIncident/base.html.twig), so it is there
+ * script in <head> (see @UhifadhiIncident/base.html.twig), so it is there
  * before this module runs. MapLibre is deliberately not used anywhere in this
  * deployment: raster tiles plus GeoJSON need no WebGL, and WebGL failed silently
  * — a blank map — in constrained environments.

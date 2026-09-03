@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Unit\Enum;
+namespace Uhifadhi\Incident\Tests\Unit\Enum;
 
 use PHPUnit\Framework\TestCase;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 
 /**
  * The five places, and only five. The design's IN·M1 card names them and the

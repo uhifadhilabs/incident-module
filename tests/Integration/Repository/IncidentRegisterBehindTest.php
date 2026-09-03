@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Repository;
+namespace Uhifadhi\Incident\Tests\Integration\Repository;
 
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
-use UhifadhiLabs\Incident\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
  * THE REGISTER BEHIND THE DRAWER. The slide-over container is only worth having

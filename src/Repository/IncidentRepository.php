@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Repository;
+namespace Uhifadhi\Incident\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
@@ -21,11 +21,11 @@ use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\Department;
 use Uhifadhi\Entity\User;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Model\IncidentFilter;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Model\IncidentFilter;
 
 /**
  * EVERY QUESTION THE INCIDENTS SURFACES ASK, in one place.
@@ -307,7 +307,7 @@ final class IncidentRepository extends ServiceEntityRepository
      * record has not been settled and has not been waived, oldest first.
      *
      * The outstanding balance is derived in PHP everywhere else
-     * ({@see \UhifadhiLabs\Incident\Entity\IncidentMoney::outstanding()}), and the
+     * ({@see \Uhifadhi\Incident\Entity\IncidentMoney::outstanding()}), and the
      * SQL here says the same thing in SQL rather than loading every money record
      * an area has ever had to filter four of them out. The COALESCE is that
      * method's own fallback chain — approved, then assessed, then claimed — and if
@@ -551,13 +551,13 @@ final class IncidentRepository extends ServiceEntityRepository
      * wants the twelve newest photographs in the area, never the photographs of
      * the twelve newest incidents. Those are different lists.
      *
-     * @return list<\UhifadhiLabs\Incident\Entity\IncidentEvidence>
+     * @return list<\Uhifadhi\Incident\Entity\IncidentEvidence>
      */
     public function latestEvidence(IncidentFilter $filter, int $limit): array
     {
         $qb = $this->getEntityManager()->createQueryBuilder()
             ->select('ev')
-            ->from(\UhifadhiLabs\Incident\Entity\IncidentEvidence::class, 'ev')
+            ->from(\Uhifadhi\Incident\Entity\IncidentEvidence::class, 'ev')
             ->join('ev.incident', 'i')->addSelect('i')
             ->join('i.subcategory', 's')->addSelect('s')
             ->join('s.category', 'c')->addSelect('c')
@@ -565,7 +565,7 @@ final class IncidentRepository extends ServiceEntityRepository
             ->addOrderBy('ev.id', 'DESC')
             ->setMaxResults($limit);
 
-        /** @var list<\UhifadhiLabs\Incident\Entity\IncidentEvidence> $evidence */
+        /** @var list<\Uhifadhi\Incident\Entity\IncidentEvidence> $evidence */
         $evidence = $this->applyFilter($qb, $filter)->getQuery()->getResult();
 
         return $evidence;

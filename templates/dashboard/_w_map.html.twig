@@ -8,10 +8,10 @@
    filled means still open, hollow means resolved or closed, a dashed ring means
    high severity. The same legend renders here, on the map+results plate, and on
    the case file — one macro, three places. #}
-{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+{% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="map">
     <span class="tab"><span class="idx">IN·03</span>Incident map<span class="src">· one filter drives map AND register</span></span>
-    {{ include('@UhifadhiLabsIncident/dashboard/_filters.html.twig') }}
+    {{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}
     <div class="viewer"
          {{ stimulus_controller('@uhifadhi/incident-module/incident-map', {
              incidents: dashboard.mapPayload,

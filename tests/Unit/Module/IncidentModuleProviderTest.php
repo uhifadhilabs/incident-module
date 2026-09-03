@@ -11,12 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Unit\Module;
+namespace Uhifadhi\Incident\Tests\Unit\Module;
 
 use PHPUnit\Framework\TestCase;
-use UhifadhiLabs\Incident\Module\IncidentModuleProvider;
-use UhifadhiLabs\ModuleContracts\ModulePermission;
-use UhifadhiLabs\ModuleContracts\ModuleProviderInterface;
+use Uhifadhi\Incident\Module\IncidentModuleProvider;
+use Uhifadhi\ModuleContracts\ModulePermission;
+use Uhifadhi\ModuleContracts\ModuleProviderInterface;
 
 final class IncidentModuleProviderTest extends TestCase
 {

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Model;
+namespace Uhifadhi\Incident\Model;
 
 use Uhifadhi\Model\Widget;
 use Uhifadhi\Model\WidgetGroup;
@@ -36,7 +36,7 @@ use Uhifadhi\Model\WidgetGroup;
  *
  * Static rather than a service, exactly as {@see IncidentWidgets} is: a
  * catalogue is a statement of what a surface ships, it has no dependencies, and
- * nothing may vary it at runtime. {@see \UhifadhiLabs\Incident\Overview\IncidentOverviewContributor}
+ * nothing may vary it at runtime. {@see \Uhifadhi\Incident\Overview\IncidentOverviewContributor}
  * is what hands it to the host.
  */
 final class IncidentOverviewWidgets
@@ -49,7 +49,7 @@ final class IncidentOverviewWidgets
      * each plate is rendered from its own bundle's template namespace, which is
      * how the host's own overview template can contain no widget markup at all.
      */
-    public const string PARTIAL_PATTERN = '@UhifadhiLabsIncident/overview/_w_%s.html.twig';
+    public const string PARTIAL_PATTERN = '@UhifadhiIncident/overview/_w_%s.html.twig';
 
     public static function group(): WidgetGroup
     {

@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Entity;
+namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use UhifadhiLabs\Incident\Entity\Trait\TimestampableTrait;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Repository\IncidentMoneyRepository;
+use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Repository\IncidentMoneyRepository;
 
 /**
  * THE MONEY ON ONE INCIDENT — and there are FOUR amounts, not one, because they

@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Functional;
+namespace Uhifadhi\Incident\Tests\Functional;
 
 use Symfony\Component\Uid\Uuid;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Enum\IncidentSourceEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
 
 /**
  * FILING AN INCIDENT, over HTTP.
@@ -686,7 +686,7 @@ final class ReportFlowTest extends FunctionalTestCase
         // The overlay itself, included once — this module ships no copy of it.
         self::assertGreaterThan(0, $crawler->filter('[data-controller*="preview"]')->count());
         // …and its stylesheet, loaded only where there is something to open.
-        self::assertStringContainsString('uhifadhilabsstorage/preview', $crawler->html());
+        self::assertStringContainsString('uhifadhistorage/preview', $crawler->html());
     }
 
     /**
@@ -708,7 +708,7 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertCount(0, $crawler->filter('.i-src .shots'));
         self::assertStringNotContainsString('photograph', $crawler->filter('.i-src .seam')->text());
         // Nothing to open, so the overlay's stylesheet is not asked for either.
-        self::assertStringNotContainsString('uhifadhilabsstorage/preview', $crawler->html());
+        self::assertStringNotContainsString('uhifadhistorage/preview', $crawler->html());
     }
 
     /** Nothing came from anywhere, so there is no card claiming otherwise. */

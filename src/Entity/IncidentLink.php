@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Entity;
+namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Entity\User;
-use UhifadhiLabs\Incident\Entity\Trait\TimestampableTrait;
-use UhifadhiLabs\Incident\Repository\IncidentLinkRepository;
+use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
+use Uhifadhi\Incident\Repository\IncidentLinkRepository;
 
 /**
  * "THESE TWO ARE RELATED" — and A LINK IS A CLAIM, so it carries who made it.

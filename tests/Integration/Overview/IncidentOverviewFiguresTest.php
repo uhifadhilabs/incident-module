@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Overview;
+namespace Uhifadhi\Incident\Tests\Integration\Overview;
 
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Service\IncidentOverviewFigures;
-use UhifadhiLabs\Incident\Tests\Integration\OverviewTestCase;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Service\IncidentOverviewFigures;
+use Uhifadhi\Incident\Tests\Integration\OverviewTestCase;
 
 /**
  * WHAT THE FOUR OVERVIEW CARDS READ, against a real register in a real database.

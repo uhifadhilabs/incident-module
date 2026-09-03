@@ -11,19 +11,19 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Overview;
+namespace Uhifadhi\Incident\Overview;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Model\IncidentAge;
+use Uhifadhi\Incident\Model\IncidentOverview;
+use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
+use Uhifadhi\Incident\Service\IncidentOverviewFigures;
 use Uhifadhi\Overview\AttentionItem;
 use Uhifadhi\Overview\AttentionProviderInterface;
 use Uhifadhi\Overview\AttentionSeverity;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Model\IncidentAge;
-use UhifadhiLabs\Incident\Model\IncidentOverview;
-use UhifadhiLabs\Incident\Model\IncidentOverviewWidgets;
-use UhifadhiLabs\Incident\Service\IncidentOverviewFigures;
 
 /**
  * WHAT THIS MODULE PUTS IN THE HOST'S "NEEDS ATTENTION" LIST — two kinds of row,

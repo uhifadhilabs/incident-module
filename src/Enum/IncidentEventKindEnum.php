@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Enum;
+namespace Uhifadhi\Incident\Enum;
 
 /**
  * WHAT KIND OF THING HAPPENED, on the append-only timeline that is the spine of
@@ -42,7 +42,7 @@ enum IncidentEventKindEnum: string
      * A transition says nothing here on purpose: the row wears the module's
      * status chip for the place it landed in, and repeating the place in the
      * verb would print it twice. See
-     * {@see \UhifadhiLabs\Incident\Overview\IncidentPulse}.
+     * {@see \Uhifadhi\Incident\Overview\IncidentPulse}.
      */
     public function moveLabel(): string
     {

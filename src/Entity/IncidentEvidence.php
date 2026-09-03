@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Entity;
+namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use UhifadhiLabs\Incident\Entity\Trait\TimestampableTrait;
-use UhifadhiLabs\Incident\Enum\EvidenceKindEnum;
-use UhifadhiLabs\Incident\Repository\IncidentEvidenceRepository;
+use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
+use Uhifadhi\Incident\Enum\EvidenceKindEnum;
+use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 
 /**
  * A PHOTOGRAPH OR A DOCUMENT attached to an incident.

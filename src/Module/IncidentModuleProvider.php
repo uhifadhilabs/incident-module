@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Module;
+namespace Uhifadhi\Incident\Module;
 
-use UhifadhiLabs\Incident\Controller\IncidentDetailController;
-use UhifadhiLabs\Incident\Controller\IncidentReportController;
-use UhifadhiLabs\ModuleContracts\ModulePermission;
-use UhifadhiLabs\ModuleContracts\ModuleProviderInterface;
-use UhifadhiLabs\ModuleContracts\ModuleProviderTrait;
+use Uhifadhi\Incident\Controller\IncidentDetailController;
+use Uhifadhi\Incident\Controller\IncidentReportController;
+use Uhifadhi\ModuleContracts\ModulePermission;
+use Uhifadhi\ModuleContracts\ModuleProviderInterface;
+use Uhifadhi\ModuleContracts\ModuleProviderTrait;
 
 /**
  * Declares the one module this bundle contributes — "Incidents": what happened

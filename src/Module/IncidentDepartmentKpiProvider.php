@@ -11,14 +11,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Module;
+namespace Uhifadhi\Incident\Module;
 
 use Uhifadhi\Entity\Department;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Module\DepartmentKpi;
 use Uhifadhi\Module\DepartmentKpiProviderInterface;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
 
 /**
  * WHAT THIS DEPARTMENT'S PEOPLE DID WITH THE INCIDENTS MODULE, this month.

@@ -8,7 +8,7 @@
 
    The rail itself is the SAME component the case file draws — identical markup,
    identical guards. #}
-{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+{% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="rail">
     <span class="tab"><span class="idx">IN·15</span>Where things stand<span class="src">· {{ dashboard.rail ? dashboard.rail.reason : 'nothing is on your desk' }}</span></span>
     {% if dashboard.rail %}
@@ -21,7 +21,7 @@
             <span class="i-spacer"></span>
             <a class="open-btn" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">Open the case →</a>
         </div>
-        {{ include('@UhifadhiLabsIncident/dashboard/_rail.html.twig', {
+        {{ include('@UhifadhiIncident/dashboard/_rail.html.twig', {
             area: area,
             rail: dashboard.rail,
             canManage: false,

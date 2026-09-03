@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Overview;
+namespace Uhifadhi\Incident\Overview;
 
+use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Overview\OverviewCopyProviderInterface;
-use UhifadhiLabs\Incident\Model\IncidentOverviewWidgets;
 
 /**
  * THE MODULE'S WORDS INSIDE THE HOST'S SENTENCES.

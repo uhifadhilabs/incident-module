@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Entity;
+namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use UhifadhiLabs\Incident\Entity\Trait\TimestampableTrait;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Repository\IncidentSubcategoryRepository;
+use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 
 /**
  * WHAT EXACTLY HAPPENED — the sixteen the design's reference card lists under

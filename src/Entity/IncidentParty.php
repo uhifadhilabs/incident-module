@@ -11,14 +11,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Entity;
+namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Entity\User;
-use UhifadhiLabs\Incident\Entity\Trait\TimestampableTrait;
-use UhifadhiLabs\Incident\Enum\PartyRoleEnum;
-use UhifadhiLabs\Incident\Repository\IncidentPartyRepository;
+use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
+use Uhifadhi\Incident\Enum\PartyRoleEnum;
+use Uhifadhi\Incident\Repository\IncidentPartyRepository;
 
 /**
  * SOMEBODY — OR SOMETHING — INVOLVED, wearing a role.

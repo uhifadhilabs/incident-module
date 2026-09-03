@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Enum;
+namespace Uhifadhi\Incident\Enum;
 
 /**
  * THE LEGAL MOVES between the five places — four of them, and no others.

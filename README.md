@@ -178,7 +178,7 @@ composer require uhifadhi/incident-module
 ```
 
 The bundle registers via Flex (`"type": "symfony-bundle"`), which adds
-`UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle` to `config/bundles.php`.
+`Uhifadhi\Incident\UhifadhiIncidentBundle` to `config/bundles.php`.
 
 Then, in the host:
 

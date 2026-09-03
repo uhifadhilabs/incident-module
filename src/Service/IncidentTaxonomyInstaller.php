@@ -11,15 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Service;
+namespace Uhifadhi\Incident\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
-use UhifadhiLabs\Incident\Entity\IncidentCategory;
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Model\IncidentTaxonomy;
-use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
-use UhifadhiLabs\Incident\Repository\IncidentSubcategoryRepository;
+use Uhifadhi\Incident\Entity\IncidentCategory;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Model\IncidentTaxonomy;
+use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 
 /**
  * PUTS THE TAXONOMY IN THE DATABASE, and can be run again tomorrow.
@@ -130,7 +130,7 @@ final readonly class IncidentTaxonomyInstaller
 
         /**
          * The configuration tree is validated by
-         * {@see \UhifadhiLabs\Incident\DependencyInjection\IncidentConfiguration},
+         * {@see \Uhifadhi\Incident\DependencyInjection\IncidentConfiguration},
          * so by the time it reaches here it has the shape below.
          *
          * @var array<string, array{label: string, colour: string, leads: list<string>, subcategories: array<string, array{label: string, money: string|null, term_hours: int, fields: list<string>}>}> $configured

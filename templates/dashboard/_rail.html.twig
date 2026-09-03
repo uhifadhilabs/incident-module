@@ -21,7 +21,7 @@
             <div class="n"><i>{{ step.state == 'done' ? '✓' : step.place.step }}</i><b>{{ step.place.label }}</b></div>
             <div class="mt">
                 {%- if step.at %}{{ step.at|date('D j M H:i') }}
-                {%- elseif step.place.value == 'closed' %}auto-closes {{ constant('UhifadhiLabs\\Incident\\Workflow\\IncidentWorkflow::CLOSE_AFTER_DAYS') }} days after resolution
+                {%- elseif step.place.value == 'closed' %}auto-closes {{ constant('Uhifadhi\\Incident\\Workflow\\IncidentWorkflow::CLOSE_AFTER_DAYS') }} days after resolution
                 {%- else %}not reached{% endif -%}
             </div>
         </div>

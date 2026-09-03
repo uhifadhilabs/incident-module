@@ -11,16 +11,16 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Overview;
+namespace Uhifadhi\Incident\Overview;
 
 use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
+use Uhifadhi\Incident\Module\IncidentModuleProvider;
+use Uhifadhi\Incident\Service\IncidentOverviewFigures;
+use Uhifadhi\Incident\UhifadhiIncidentBundle;
 use Uhifadhi\Model\WidgetGroup;
 use Uhifadhi\Overview\ContributesStylesheetInterface;
 use Uhifadhi\Overview\OverviewContributorInterface;
-use UhifadhiLabs\Incident\Model\IncidentOverviewWidgets;
-use UhifadhiLabs\Incident\Module\IncidentModuleProvider;
-use UhifadhiLabs\Incident\Service\IncidentOverviewFigures;
-use UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle;
 
 /**
  * WHAT THIS MODULE PUTS ON `/areas/{uuid}` — four cards and a column, in the
@@ -92,7 +92,7 @@ final readonly class IncidentOverviewContributor implements ContributesStyleshee
      */
     public function stylesheet(): string
     {
-        return UhifadhiLabsIncidentBundle::STYLESHEET;
+        return UhifadhiIncidentBundle::STYLESHEET;
     }
 
     /**

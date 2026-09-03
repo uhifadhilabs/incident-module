@@ -11,15 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Storage;
+namespace Uhifadhi\Incident\Tests\Integration\Storage;
 
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentEvidence;
-use UhifadhiLabs\Incident\Enum\EvidenceKindEnum;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Tests\Integration\IntegrationTestCase;
-use UhifadhiLabs\Storage\Enum\GuardStateEnum;
-use UhifadhiLabs\Storage\Registry\FileRegistry;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentEvidence;
+use Uhifadhi\Incident\Enum\EvidenceKindEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Storage\Enum\GuardStateEnum;
+use Uhifadhi\Storage\Registry\FileRegistry;
 
 /**
  * INCIDENTS REACHES THE FILES HUB — through the tag, not through a template.

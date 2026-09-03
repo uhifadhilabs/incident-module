@@ -11,14 +11,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Service;
+namespace Uhifadhi\Incident\Tests\Integration\Service;
 
-use UhifadhiLabs\Incident\Entity\IncidentCategory;
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
-use UhifadhiLabs\Incident\Service\IncidentTaxonomyInstaller;
-use UhifadhiLabs\Incident\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Incident\Entity\IncidentCategory;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
  * THE ONE HOST INSTALL STEP. Without a taxonomy there is nothing to file an

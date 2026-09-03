@@ -11,15 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Unit\Enum;
+namespace Uhifadhi\Incident\Tests\Unit\Enum;
 
 use PHPUnit\Framework\TestCase;
-use UhifadhiLabs\Incident\Enum\EvidenceKindEnum;
-use UhifadhiLabs\Incident\Enum\IncidentEventKindEnum;
-use UhifadhiLabs\Incident\Enum\IncidentSeverityEnum;
-use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Enum\PartyRoleEnum;
+use Uhifadhi\Incident\Enum\EvidenceKindEnum;
+use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
+use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
+use Uhifadhi\Incident\Enum\IncidentSourceEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Enum\PartyRoleEnum;
 
 /**
  * The small vocabularies the design draws chips and badges from. Each one is

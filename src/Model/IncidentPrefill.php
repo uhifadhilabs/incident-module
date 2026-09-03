@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Model;
+namespace Uhifadhi\Incident\Model;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Uuid;
-use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
+use Uhifadhi\Incident\Enum\IncidentSourceEnum;
 
 /**
  * A REPORT ARRIVING FROM SOMEWHERE ELSE — the seam behind the patrols module's
@@ -40,12 +40,12 @@ use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
  * filer can overrule; the note is copied in and stays editable until the incident
  * is verified. What is NOT negotiable is the link: whatever the filer changes,
  * {@see record} and {@see label} are written once onto the incident and never
- * again ({@see \UhifadhiLabs\Incident\Entity\Incident::recordProvenance()}), so
+ * again ({@see \Uhifadhi\Incident\Entity\Incident::recordProvenance()}), so
  * the observation and the incident stay tied together forever.
  *
  * THE `source` TOKEN NAMES THE SENDING MODULE, singular, as that module puts it
  * on the wire: patrol sends `patrol`
- * ({@see \UhifadhiLabs\Patrol\Storage\PatrolFileSource::SOURCE_TOKEN} — named
+ * ({@see \Uhifadhi\Patrol\Storage\PatrolFileSource::SOURCE_TOKEN} — named
  * here only in prose, because neither bundle may name the other's classes). It is
  * ONE token and it does two jobs: it names the badge the incident wears
  * ({@see IncidentSourceEnum::forToken()}), and it is handed straight back to the

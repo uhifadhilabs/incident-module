@@ -6,8 +6,8 @@
    different kind of day from a friday, which is why the comparison is not
    "yesterday".
 
-   → UhifadhiLabs\Incident\Overview\IncidentOverviewContributor #}
-{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+   → Uhifadhi\Incident\Overview\IncidentOverviewContributor #}
+{% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 {% set o = by.incidents.overview %}
 <div class="c" data-w="in_today">
     <span class="tab"><span class="idx">IN·A2</span>Incidents today<span class="src">· {{ o.day|date('D j M')|lower }} · {{ o.today|length }} filed</span></span>

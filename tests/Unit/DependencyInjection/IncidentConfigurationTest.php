@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Unit\DependencyInjection;
+namespace Uhifadhi\Incident\Tests\Unit\DependencyInjection;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
-use UhifadhiLabs\Incident\DependencyInjection\IncidentConfiguration;
+use Uhifadhi\Incident\DependencyInjection\IncidentConfiguration;
 
 final class IncidentConfigurationTest extends TestCase
 {

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Enum;
+namespace Uhifadhi\Incident\Enum;
 
 /**
  * WHICH WAY THE MONEY RUNS. Two directions, and the design refuses to add them
@@ -20,7 +20,7 @@ namespace UhifadhiLabs\Incident\Enum;
  * column would lose the argument an incident is usually about.
  *
  * Which direction an incident carries — if any — is the SUB-CATEGORY's business
- * ({@see \UhifadhiLabs\Incident\Entity\IncidentSubcategory::getMoneyDirection()}),
+ * ({@see \Uhifadhi\Incident\Entity\IncidentSubcategory::getMoneyDirection()}),
  * which is how roadkill can carry a fine while natural mortality carries nothing.
  */
 enum MoneyDirectionEnum: string

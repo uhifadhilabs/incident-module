@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\DependencyInjection;
+namespace Uhifadhi\Incident\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
@@ -38,7 +38,7 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
  *
  * THE TAXONOMY IS DEPLOYMENT VOCABULARY. It is validated here and installed by
  * `incidents:taxonomy:sync`; leaving it out installs the tree the design's
- * reference card draws ({@see \UhifadhiLabs\Incident\Model\IncidentTaxonomy}).
+ * reference card draws ({@see \Uhifadhi\Incident\Model\IncidentTaxonomy}).
  * A configured tree REPLACES the default rather than merging with it — a
  * half-overridden classification scheme is nobody's scheme.
  *

@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Unit\Model;
+namespace Uhifadhi\Incident\Tests\Unit\Model;
 
 use PHPUnit\Framework\TestCase;
-use UhifadhiLabs\Incident\Model\DemoMonth;
-use UhifadhiLabs\Incident\Model\IncidentTaxonomy;
+use Uhifadhi\Incident\Model\DemoMonth;
+use Uhifadhi\Incident\Model\IncidentTaxonomy;
 
 /**
  * THE SAMPLE MONTH ADDS UP TO WHAT THE GALLERY SAYS IT DOES.

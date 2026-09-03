@@ -11,14 +11,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Fixtures;
+namespace Uhifadhi\Incident\Tests\Integration\Fixtures;
 
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Uhifadhi\Entity\User;
-use UhifadhiLabs\Incident\Controller\IncidentDetailController;
-use UhifadhiLabs\Incident\Controller\IncidentReportController;
+use Uhifadhi\Incident\Controller\IncidentDetailController;
+use Uhifadhi\Incident\Controller\IncidentReportController;
 
 /**
  * Test stand-in for the HOST's permission voter. The bundle only DECLARES

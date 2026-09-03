@@ -11,15 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration;
+namespace Uhifadhi\Incident\Tests\Integration;
 
 use Uhifadhi\Entity\AreaOfInterest;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentMoney;
-use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Service\IncidentReportService;
-use UhifadhiLabs\Incident\Service\IncidentTransitionService;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentMoney;
+use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Service\IncidentReportService;
+use Uhifadhi\Incident\Service\IncidentTransitionService;
 
 /**
  * ONE REGISTER, READ BY EVERY OVERVIEW TEST.

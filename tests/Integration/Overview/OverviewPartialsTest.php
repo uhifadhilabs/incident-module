@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Overview;
+namespace Uhifadhi\Incident\Tests\Integration\Overview;
 
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Overview\IncidentOverviewContributor;
-use UhifadhiLabs\Incident\Tests\Integration\OverviewTestCase;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Overview\IncidentOverviewContributor;
+use Uhifadhi\Incident\Tests\Integration\OverviewTestCase;
 
 /**
  * THE FIVE PLATES, RENDERED THE WAY THE HOST RENDERS THEM.

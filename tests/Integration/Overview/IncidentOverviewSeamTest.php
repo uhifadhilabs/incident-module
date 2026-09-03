@@ -11,8 +11,18 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Overview;
+namespace Uhifadhi\Incident\Tests\Integration\Overview;
 
+use Uhifadhi\Incident\Model\IncidentOverview;
+use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
+use Uhifadhi\Incident\Overview\IncidentAttention;
+use Uhifadhi\Incident\Overview\IncidentMapLayers;
+use Uhifadhi\Incident\Overview\IncidentNowTiles;
+use Uhifadhi\Incident\Overview\IncidentOverviewContributor;
+use Uhifadhi\Incident\Overview\IncidentOverviewCopy;
+use Uhifadhi\Incident\Overview\IncidentPulse;
+use Uhifadhi\Incident\Tests\Integration\OverviewTestCase;
+use Uhifadhi\Incident\UhifadhiIncidentBundle;
 use Uhifadhi\Model\Widget;
 use Uhifadhi\Overview\AttentionItem;
 use Uhifadhi\Overview\AttentionSeverity;
@@ -21,16 +31,6 @@ use Uhifadhi\Overview\MapLayer;
 use Uhifadhi\Overview\NowTile;
 use Uhifadhi\Overview\OverviewCopyProviderInterface;
 use Uhifadhi\Overview\PulseEvent;
-use UhifadhiLabs\Incident\Model\IncidentOverview;
-use UhifadhiLabs\Incident\Model\IncidentOverviewWidgets;
-use UhifadhiLabs\Incident\Overview\IncidentAttention;
-use UhifadhiLabs\Incident\Overview\IncidentMapLayers;
-use UhifadhiLabs\Incident\Overview\IncidentNowTiles;
-use UhifadhiLabs\Incident\Overview\IncidentOverviewContributor;
-use UhifadhiLabs\Incident\Overview\IncidentOverviewCopy;
-use UhifadhiLabs\Incident\Overview\IncidentPulse;
-use UhifadhiLabs\Incident\Tests\Integration\OverviewTestCase;
-use UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle;
 
 /**
  * WHAT THIS MODULE PUTS ON THE HOST'S AREA OVERVIEW — the five contracts, each
@@ -66,9 +66,9 @@ final class IncidentOverviewSeamTest extends OverviewTestCase
         );
         // A pattern per contributor: every plate is rendered out of this bundle's
         // own template namespace, which is why the host's page holds no markup.
-        self::assertSame('@UhifadhiLabsIncident/overview/_w_%s.html.twig', $contributor->partialPattern());
+        self::assertSame('@UhifadhiIncident/overview/_w_%s.html.twig', $contributor->partialPattern());
         self::assertSame(
-            '@UhifadhiLabsIncident/overview/_w_in_flow.html.twig',
+            '@UhifadhiIncident/overview/_w_in_flow.html.twig',
             \sprintf($contributor->partialPattern(), 'in_flow'),
         );
     }
@@ -90,10 +90,10 @@ final class IncidentOverviewSeamTest extends OverviewTestCase
         // What AssetMapper serves the bundle's public/ under — the SAME string
         // base.html.twig links, because both read the bundle's own constant and
         // the path is therefore written once.
-        self::assertSame('bundles/uhifadhilabsincident/incidents.css', $contributor->stylesheet());
-        self::assertSame(UhifadhiLabsIncidentBundle::STYLESHEET, $contributor->stylesheet());
+        self::assertSame('bundles/uhifadhiincident/incidents.css', $contributor->stylesheet());
+        self::assertSame(UhifadhiIncidentBundle::STYLESHEET, $contributor->stylesheet());
         self::assertStringContainsString(
-            "constant('UhifadhiLabs\\\\Incident\\\\UhifadhiLabsIncidentBundle::STYLESHEET')",
+            "constant('Uhifadhi\\\\Incident\\\\UhifadhiIncidentBundle::STYLESHEET')",
             (string) file_get_contents(__DIR__.'/../../../templates/base.html.twig'),
         );
     }

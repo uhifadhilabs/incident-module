@@ -11,22 +11,22 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Command;
+namespace Uhifadhi\Incident\Tests\Integration\Command;
 
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Model\DemoMonth;
-use UhifadhiLabs\Incident\Model\IncidentFilter;
-use UhifadhiLabs\Incident\Service\IncidentDashboardService;
-use UhifadhiLabs\Incident\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Model\DemoMonth;
+use Uhifadhi\Incident\Model\IncidentFilter;
+use Uhifadhi\Incident\Service\IncidentDashboardService;
+use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
  * THE DESIGN'S SAMPLE MONTH, SEEDED — and then read back through the DASHBOARD.
  *
- * {@see \UhifadhiLabs\Incident\Tests\Unit\Model\DemoMonthTest} adds the table up;
+ * {@see \Uhifadhi\Incident\Tests\Unit\Model\DemoMonthTest} adds the table up;
  * this proves the table survives being written to a real database and walked
  * through the real workflow, and that the widgets then print the numbers the
  * preset gallery states.

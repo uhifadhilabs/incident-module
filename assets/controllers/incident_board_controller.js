@@ -102,7 +102,7 @@ export default class extends Controller {
 
 /**
  * Which move lands an incident in which column. The names are the workflow's own
- * ({@see UhifadhiLabs\Incident\Enum\IncidentTransitionEnum}); a column with no
+ * ({@see Uhifadhi\Incident\Enum\IncidentTransitionEnum}); a column with no
  * move into it — "closed", which the clock reaches and no person does — has no
  * entry here, so a drop onto it asks for a move the server refuses and says why.
  */

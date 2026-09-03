@@ -11,17 +11,17 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Service;
+namespace Uhifadhi\Incident\Service;
 
 use Uhifadhi\Entity\User;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentEvent;
-use UhifadhiLabs\Incident\Enum\IncidentEventKindEnum;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
-use UhifadhiLabs\Incident\Exception\IncidentTransitionException;
-use UhifadhiLabs\Incident\Workflow\IncidentGuardEnum;
-use UhifadhiLabs\Incident\Workflow\IncidentWorkflow;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentEvent;
+use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
+use Uhifadhi\Incident\Exception\IncidentTransitionException;
+use Uhifadhi\Incident\Workflow\IncidentGuardEnum;
+use Uhifadhi\Incident\Workflow\IncidentWorkflow;
 
 /**
  * THE ONLY SUPPORTED WAY AN INCIDENT MOVES.

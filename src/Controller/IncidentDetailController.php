@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Controller;
+namespace Uhifadhi\Incident\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -31,13 +31,13 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\User;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
-use UhifadhiLabs\Incident\Exception\IncidentTransitionException;
-use UhifadhiLabs\Incident\Model\IncidentMapPayload;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
-use UhifadhiLabs\Incident\Service\IncidentDashboardService;
-use UhifadhiLabs\Incident\Service\IncidentTransitionService;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
+use Uhifadhi\Incident\Exception\IncidentTransitionException;
+use Uhifadhi\Incident\Model\IncidentMapPayload;
+use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Service\IncidentDashboardService;
+use Uhifadhi\Incident\Service\IncidentTransitionService;
 
 /**
  * ONE CASE FILE — the whole record on one page, and the one place an incident is
@@ -54,7 +54,7 @@ use UhifadhiLabs\Incident\Service\IncidentTransitionService;
  *     the step is reached — never rendered-and-disabled. There is no empty
  *     "resolution" form sitting on a freshly reported incident inviting somebody
  *     to fill it in early. The template asks
- *     {@see \UhifadhiLabs\Incident\Model\IncidentRail::hasReached()} and renders
+ *     {@see \Uhifadhi\Incident\Model\IncidentRail::hasReached()} and renders
  *     nothing when the answer is no.
  *
  * The incident is looked up WITHIN THE AREA in the URL: an incident from another
@@ -92,7 +92,7 @@ final class IncidentDetailController
         $incident = $this->incidentIn($area, $reference);
         $now = new \DateTimeImmutable();
 
-        return new Response($this->twig->render('@UhifadhiLabsIncident/incident/show.html.twig', [
+        return new Response($this->twig->render('@UhifadhiIncident/incident/show.html.twig', [
             'area' => $area,
             'now' => $now,
             'incident' => $incident,

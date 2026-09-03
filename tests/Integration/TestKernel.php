@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration;
+namespace Uhifadhi\Incident\Tests\Integration;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use FundiStadi\PostGISBundle\FundiStadiPostGISBundle;
@@ -26,19 +26,19 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\UX\Icons\UXIconsBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Entity\User;
+use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\HeaderUserAuthenticator;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
+use Uhifadhi\Incident\UhifadhiIncidentBundle;
 use Uhifadhi\Repository\WidgetCustomPresetRepository;
 use Uhifadhi\Repository\WidgetPreferenceRepository;
 use Uhifadhi\Service\WidgetEndpoint;
 use Uhifadhi\Service\WidgetService;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
-use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
-use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedModules;
-use UhifadhiLabs\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
-use UhifadhiLabs\Incident\Tests\Integration\Fixtures\HeaderUserAuthenticator;
-use UhifadhiLabs\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
-use UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle;
-use UhifadhiLabs\Storage\Registry\FileSourceInterface;
-use UhifadhiLabs\Storage\UhifadhiLabsStorageBundle;
+use Uhifadhi\Storage\Registry\FileSourceInterface;
+use Uhifadhi\Storage\UhifadhiStorageBundle;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -81,8 +81,8 @@ final class TestKernel extends Kernel
         // here in the order a host registers it: flysystem first, because the
         // storage bundle PREPENDS a flysystem storage.
         yield new FlysystemBundle();
-        yield new UhifadhiLabsStorageBundle();
-        yield new UhifadhiLabsIncidentBundle();
+        yield new UhifadhiStorageBundle();
+        yield new UhifadhiIncidentBundle();
     }
 
     protected function configureContainer(ContainerConfigurator $container): void

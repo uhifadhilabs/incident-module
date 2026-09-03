@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Model;
+namespace Uhifadhi\Incident\Model;
 
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 
 /**
  * THE STATE MACHINE, MADE VISIBLE, for ONE incident — the component the design

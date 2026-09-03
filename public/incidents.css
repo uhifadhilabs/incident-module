@@ -3,8 +3,8 @@
    ----------------------------------------------------------------------------
    PORTED VERBATIM from the design app's incidents.css, which is the spec. It is
    served by AssetMapper from this bundle's public/ directory as
-   `bundles/uhifadhilabsincident/incidents.css` (content-versioned, no
-   assets:install) and loaded by @UhifadhiLabsIncident/base.html.twig — so these
+   `bundles/uhifadhiincident/incidents.css` (content-versioned, no
+   assets:install) and loaded by @UhifadhiIncident/base.html.twig — so these
    rules exist only where the module renders, and the host's own stylesheet never
    mentions incidents.
 
@@ -43,7 +43,7 @@
 /* ── THE TAXONOMY PALETTE ─────────────────────────────────────────────────
    Four top-level categories. Each owns one hue everywhere it appears: the
    category chip, the map marker, the matrix column, the kanban card rule.
-   → UhifadhiLabs\Incident\Enum\IncidentCategory::colour()                    */
+   → Uhifadhi\Incident\Enum\IncidentCategory::colour()                    */
 :root{
   --i-poach:#E05B41;   /* poaching & wildlife crime      — Protection        */
   --i-hwc:#DBA33F;     /* human–wildlife conflict        — Protection + Ecology */
@@ -83,7 +83,7 @@ html.light{
 /* ── STATUS CHIP ──────────────────────────────────────────────────────────
    The workflow made visible. Five states, one shape, read left to right in
    the order the machine walks them.
-   → the Symfony Workflow places on UhifadhiLabs\Incident\Entity\Incident      */
+   → the Symfony Workflow places on Uhifadhi\Incident\Entity\Incident      */
 .i-st{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:700;
   letter-spacing:.1em;text-transform:uppercase;border-radius:6px;padding:3.5px 9px 2.5px;
   border:1px solid;white-space:nowrap;line-height:1;display:inline-block}
@@ -153,7 +153,7 @@ html.light{
    plain number — it always carries its currency, its direction (owed to the
    authority vs owed by it) and its settlement state, because an unpaid fine
    and a paid one are different facts.
-   → UhifadhiLabs\Incident\ValueObject\Money (integer minor units + currency)  */
+   → Uhifadhi\Incident\ValueObject\Money (integer minor units + currency)  */
 .i-moneyblock{border:1px solid color-mix(in srgb,var(--i-money) 30%,transparent);border-radius:12px;
   padding:14px 16px 12px;background:color-mix(in srgb,var(--i-money) 5%,transparent)}
 .i-moneyblock .hd{display:flex;align-items:center;gap:8px;margin:0 0 10px}
@@ -183,7 +183,7 @@ html.light{
    An incident's spine. One rail, one dot per event, the dot coloured by what
    kind of event it was: a transition (accent), a note (fog), evidence (warn),
    money (money hue). Append-only — nothing here is ever edited.
-   → UhifadhiLabs\Incident\Entity\IncidentEvent, ordered by occurredAt         */
+   → Uhifadhi\Incident\Entity\IncidentEvent, ordered by occurredAt         */
 .i-tl{position:relative;padding-left:26px;margin-top:6px}
 .i-tl::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:1px;background:var(--ln2)}
 .i-tl-item{position:relative;padding:0 0 18px}
@@ -221,7 +221,7 @@ html.light{
    People and organisations attached to an incident with a ROLE. A suspect, a
    claimant, a witness and the ranger who reported it are the same shape of
    record wearing different roles — the design refuses to build four tables.
-   → UhifadhiLabs\Incident\Entity\IncidentParty (role enum + free identity)    */
+   → Uhifadhi\Incident\Entity\IncidentParty (role enum + free identity)    */
 .i-party{display:flex;align-items:center;gap:11px;padding:9px 0;
   border-bottom:1px dashed color-mix(in srgb,var(--fog) 18%,transparent)}
 .i-party:last-child{border-bottom:0}

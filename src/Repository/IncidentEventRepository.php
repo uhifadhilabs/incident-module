@@ -11,12 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Repository;
+namespace Uhifadhi\Incident\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Uhifadhi\Entity\AreaOfInterest;
-use UhifadhiLabs\Incident\Entity\IncidentEvent;
+use Uhifadhi\Incident\Entity\IncidentEvent;
 
 /**
  * The query surface over events on one incident, oldest first — the append-only timeline.

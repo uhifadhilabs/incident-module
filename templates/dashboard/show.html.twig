@@ -10,7 +10,7 @@
    (Uhifadhi\Service\WidgetService), which is why arranging this dashboard works
    exactly as it does on departments, team and zones.
    ========================================================================== #}
-{% extends '@UhifadhiLabsIncident/base.html.twig' %}
+{% extends '@UhifadhiIncident/base.html.twig' %}
 
 {% block title %}{{ area.name }} — Incidents{% endblock %}
 
@@ -42,7 +42,7 @@
         </div>
     </div>
 
-    {{ include('@UhifadhiLabsIncident/dashboard/_lensbar.html.twig') }}
+    {{ include('@UhifadhiIncident/dashboard/_lensbar.html.twig') }}
 
     {% set widgetContext = {
         area: area,
@@ -65,7 +65,7 @@
                would render this cell 48px wide (see the host's widget framework). #}
             <div class="w-cell w-span-{{ widget.cols }}" data-widget-id="{{ widget.id }}" data-widget-cols="{{ widget.cols }}">
                 <div class="w-inner">
-                    {{ include('@UhifadhiLabsIncident/dashboard/_w_' ~ widget.id ~ '.html.twig', widgetContext, with_context: false) }}
+                    {{ include('@UhifadhiIncident/dashboard/_w_' ~ widget.id ~ '.html.twig', widgetContext, with_context: false) }}
                 </div>
             </div>
         {% endfor %}

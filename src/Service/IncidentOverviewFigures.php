@@ -11,15 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Service;
+namespace Uhifadhi\Incident\Service;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Entity\AreaOfInterest;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Model\IncidentOverview;
-use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Model\IncidentOverview;
+use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Repository\IncidentRepository;
 
 /**
  * BUILDS THIS MODULE'S READING OF ONE AREA'S MORNING, once per render.

@@ -11,9 +11,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Model;
+namespace Uhifadhi\Incident\Model;
 
-use UhifadhiLabs\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\Incident;
 
 /**
  * WHAT A MAP DRAWS, and what each mark MEANS.

@@ -18,8 +18,8 @@
    category that carries no money has NO money card, and the fields a roadkill
    asks for are not the fields a depredation asks for.
    ========================================================================== #}
-{% extends '@UhifadhiLabsIncident/base.html.twig' %}
-{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+{% extends '@UhifadhiIncident/base.html.twig' %}
+{% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 
 {% block title %}{{ incident.reference }} — {{ incident.headline }}{% endblock %}
 
@@ -46,7 +46,7 @@
         {{ ui.zone(incident) }}
     </div>
 
-    {{ include('@UhifadhiLabsIncident/dashboard/_rail.html.twig', {
+    {{ include('@UhifadhiIncident/dashboard/_rail.html.twig', {
         area: area,
         rail: rail,
         canManage: canManage,

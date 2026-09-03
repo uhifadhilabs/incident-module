@@ -11,22 +11,22 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Service;
+namespace Uhifadhi\Incident\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\User;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentEvent;
-use UhifadhiLabs\Incident\Entity\IncidentParty;
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
-use UhifadhiLabs\Incident\Enum\IncidentEventKindEnum;
-use UhifadhiLabs\Incident\Enum\IncidentSeverityEnum;
-use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
-use UhifadhiLabs\Incident\Enum\PartyRoleEnum;
-use UhifadhiLabs\Incident\Model\IncidentPrefill;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
-use UhifadhiLabs\Incident\Repository\IncidentZoneLocator;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentEvent;
+use Uhifadhi\Incident\Entity\IncidentParty;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
+use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
+use Uhifadhi\Incident\Enum\IncidentSourceEnum;
+use Uhifadhi\Incident\Enum\PartyRoleEnum;
+use Uhifadhi\Incident\Model\IncidentPrefill;
+use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Repository\IncidentZoneLocator;
 
 /**
  * FILING AN INCIDENT — the only door in.

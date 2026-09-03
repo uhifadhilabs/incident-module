@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Exception;
+namespace Uhifadhi\Incident\Exception;
 
 /**
  * A move the workflow refuses — because it is not legal from where the incident

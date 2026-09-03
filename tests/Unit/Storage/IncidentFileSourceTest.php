@@ -11,21 +11,21 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Unit\Storage;
+namespace Uhifadhi\Incident\Tests\Unit\Storage;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Entity\AreaOfInterest;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentCategory;
-use UhifadhiLabs\Incident\Entity\IncidentEvidence;
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
-use UhifadhiLabs\Incident\Enum\EvidenceKindEnum;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Storage\IncidentFileSource;
-use UhifadhiLabs\Storage\Enum\FileKindEnum;
-use UhifadhiLabs\Storage\Enum\GuardStateEnum;
-use UhifadhiLabs\Storage\Enum\ThumbStateEnum;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentCategory;
+use Uhifadhi\Incident\Entity\IncidentEvidence;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Enum\EvidenceKindEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Storage\IncidentFileSource;
+use Uhifadhi\Storage\Enum\FileKindEnum;
+use Uhifadhi\Storage\Enum\GuardStateEnum;
+use Uhifadhi\Storage\Enum\ThumbStateEnum;
 
 /**
  * What the Files hub is told about an incident's evidence.

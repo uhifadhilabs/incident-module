@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Service;
+namespace Uhifadhi\Incident\Service;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Entity\AreaOfInterest;

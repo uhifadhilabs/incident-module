@@ -11,14 +11,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Command;
+namespace Uhifadhi\Incident\Command;
 
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use UhifadhiLabs\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 
 /**
  * PUTS THE KINDS OF INCIDENT IN THE DATABASE — the one host step that is not

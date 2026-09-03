@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Command;
+namespace Uhifadhi\Incident\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -24,26 +24,26 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\User;
 use Uhifadhi\Entity\Zone;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentEvent;
-use UhifadhiLabs\Incident\Entity\IncidentEvidence;
-use UhifadhiLabs\Incident\Entity\IncidentMoney;
-use UhifadhiLabs\Incident\Entity\IncidentParty;
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
-use UhifadhiLabs\Incident\Enum\EvidenceKindEnum;
-use UhifadhiLabs\Incident\Enum\IncidentEventKindEnum;
-use UhifadhiLabs\Incident\Enum\IncidentSeverityEnum;
-use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Enum\PartyRoleEnum;
-use UhifadhiLabs\Incident\Model\DemoMonth;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
-use UhifadhiLabs\Incident\Repository\IncidentSubcategoryRepository;
-use UhifadhiLabs\Incident\Repository\IncidentZoneLocator;
-use UhifadhiLabs\Incident\Service\IncidentTaxonomyInstaller;
-use UhifadhiLabs\Incident\Service\IncidentTransitionService;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentEvent;
+use Uhifadhi\Incident\Entity\IncidentEvidence;
+use Uhifadhi\Incident\Entity\IncidentMoney;
+use Uhifadhi\Incident\Entity\IncidentParty;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Enum\EvidenceKindEnum;
+use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
+use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
+use Uhifadhi\Incident\Enum\IncidentSourceEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Enum\PartyRoleEnum;
+use Uhifadhi\Incident\Model\DemoMonth;
+use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
+use Uhifadhi\Incident\Repository\IncidentZoneLocator;
+use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Service\IncidentTransitionService;
 
 /**
  * SEEDS THE DESIGN'S SAMPLE MONTH — the forty-seven incidents the gallery talks

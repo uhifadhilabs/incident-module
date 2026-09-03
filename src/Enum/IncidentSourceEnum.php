@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Enum;
+namespace Uhifadhi\Incident\Enum;
 
 /**
  * WHERE THE REPORT CAME FROM — a badge on the record, never a stage of work.

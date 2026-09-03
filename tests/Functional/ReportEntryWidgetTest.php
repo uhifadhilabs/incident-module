@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Functional;
+namespace Uhifadhi\Incident\Tests\Functional;
 
 use Uhifadhi\Model\WidgetDom;
 
@@ -20,7 +20,7 @@ use Uhifadhi\Model\WidgetDom;
  * filing fast.
  *
  * It is the static twin of the design's `report` widget
- * (incidents.widgets.js → @UhifadhiLabsIncident/dashboard/_w_report.html.twig),
+ * (incidents.widgets.js → @UhifadhiIncident/dashboard/_w_report.html.twig),
  * so the copy asserted below is quoted from that declaration. The design app is
  * NOT a dependency of this package — CI checks out this repo alone — so fidelity
  * is asserted against the twin's words rather than by reading its file, and a

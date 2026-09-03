@@ -11,14 +11,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Model;
+namespace Uhifadhi\Incident\Model;
 
 /**
  * THE TAXONOMY THE MODULE SHIPS WITH — the design's reference card (IN·09), as
  * data: four kinds of incident and the sixteen sub-categories under them.
  *
  * IT IS A DEFAULT, NOT A LAW. A deployment overrides the whole tree under
- * `incident.taxonomy` and {@see \UhifadhiLabs\Incident\Service\IncidentTaxonomyInstaller}
+ * `incident.taxonomy` and {@see \Uhifadhi\Incident\Service\IncidentTaxonomyInstaller}
  * writes whatever it finds; nothing in this bundle switches on a slug. What is
  * here is what a fresh install gets so that the module is usable the hour it is
  * switched on, rather than being an empty form asking somebody to invent a

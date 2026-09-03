@@ -11,14 +11,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Fixtures;
+namespace Uhifadhi\Incident\Tests\Integration\Fixtures;
 
 use Symfony\Component\Security\Core\User\UserInterface;
-use UhifadhiLabs\Storage\Enum\FileKindEnum;
-use UhifadhiLabs\Storage\Enum\GuardStateEnum;
-use UhifadhiLabs\Storage\Model\FileEntry;
-use UhifadhiLabs\Storage\Model\FileGuard;
-use UhifadhiLabs\Storage\Registry\FileSourceInterface;
+use Uhifadhi\Storage\Enum\FileKindEnum;
+use Uhifadhi\Storage\Enum\GuardStateEnum;
+use Uhifadhi\Storage\Model\FileEntry;
+use Uhifadhi\Storage\Model\FileGuard;
+use Uhifadhi\Storage\Registry\FileSourceInterface;
 
 /**
  * THE MODULE ON THE OTHER SIDE OF THE SEAM, played by a fixture.

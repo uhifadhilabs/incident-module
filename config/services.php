@@ -13,30 +13,30 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Incident\Controller\IncidentController;
+use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Repository\IncidentEventRepository;
+use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
+use Uhifadhi\Incident\Repository\IncidentLinkRepository;
+use Uhifadhi\Incident\Repository\IncidentMoneyRepository;
+use Uhifadhi\Incident\Repository\IncidentPartyRepository;
+use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
+use Uhifadhi\Incident\Repository\IncidentZoneLocator;
+use Uhifadhi\Incident\Service\IncidentDashboardService;
+use Uhifadhi\Incident\Service\IncidentOverviewFigures;
+use Uhifadhi\Incident\Service\IncidentReportService;
+use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Service\IncidentTransitionService;
+use Uhifadhi\Incident\Service\IncidentWidgetUrls;
 use Uhifadhi\Service\WidgetService;
-use UhifadhiLabs\Incident\Controller\IncidentController;
-use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
-use UhifadhiLabs\Incident\Repository\IncidentEventRepository;
-use UhifadhiLabs\Incident\Repository\IncidentEvidenceRepository;
-use UhifadhiLabs\Incident\Repository\IncidentLinkRepository;
-use UhifadhiLabs\Incident\Repository\IncidentMoneyRepository;
-use UhifadhiLabs\Incident\Repository\IncidentPartyRepository;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
-use UhifadhiLabs\Incident\Repository\IncidentSubcategoryRepository;
-use UhifadhiLabs\Incident\Repository\IncidentZoneLocator;
-use UhifadhiLabs\Incident\Service\IncidentDashboardService;
-use UhifadhiLabs\Incident\Service\IncidentOverviewFigures;
-use UhifadhiLabs\Incident\Service\IncidentReportService;
-use UhifadhiLabs\Incident\Service\IncidentTaxonomyInstaller;
-use UhifadhiLabs\Incident\Service\IncidentTransitionService;
-use UhifadhiLabs\Incident\Service\IncidentWidgetUrls;
 
 /*
  * The bundle's static service wiring.
  *
  * PHP (not YAML) on purpose: a reusable bundle must not force symfony/yaml onto
  * hosts, and FQCN references stay refactor-safe and phpstan-checked. Imported by
- * UhifadhiLabsIncidentBundle::loadExtension(), which keeps only the config-DRIVEN
+ * UhifadhiIncidentBundle::loadExtension(), which keeps only the config-DRIVEN
  * definitions (module category, taxonomy, currency, dev tooling).
  *
  * Everything below is defined EXPLICITLY — no autowire(), no autoconfigure(), and
@@ -137,7 +137,7 @@ return static function (ContainerConfigurator $container): void {
      *
      * The writing screens (the report flow, the transition endpoint) and the
      * widget library are registered in the bundle's SecurityBundle guard instead —
-     * see UhifadhiLabsIncidentBundle::loadExtension().
+     * see UhifadhiIncidentBundle::loadExtension().
      */
     // The library's URL map, shared by the dashboard and the library itself.
     $services->set('incident.widget_urls', IncidentWidgetUrls::class)

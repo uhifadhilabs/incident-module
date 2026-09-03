@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Functional;
+namespace Uhifadhi\Incident\Tests\Functional;
 
+use Uhifadhi\Incident\Model\IncidentWidgets;
 use Uhifadhi\Service\WidgetEndpoint;
-use UhifadhiLabs\Incident\Model\IncidentWidgets;
 
 /**
  * THE WIDGET LIBRARY, on the HOST's framework.

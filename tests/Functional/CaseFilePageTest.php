@@ -11,12 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Functional;
+namespace Uhifadhi\Incident\Tests\Functional;
 
-use UhifadhiLabs\Incident\Entity\IncidentMoney;
-use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Service\IncidentTransitionService;
+use Uhifadhi\Incident\Entity\IncidentMoney;
+use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Service\IncidentTransitionService;
 
 /**
  * THE CASE FILE, rendered — and the two contracts the design will not bend on.

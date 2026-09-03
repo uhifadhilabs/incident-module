@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Workflow;
+namespace Uhifadhi\Incident\Workflow;
 
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 
 /**
  * THE DEFINITION — places, transitions, and the two rules that are not simply
@@ -31,7 +31,7 @@ use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
  *
  *  1. **The definition is DATA, expressed here and nowhere else.** No other class
  *     in this bundle names a place-to-place move. Twig asks the incident for its
- *     status and asks {@see \UhifadhiLabs\Incident\Service\IncidentTransitionService}
+ *     status and asks {@see \Uhifadhi\Incident\Service\IncidentTransitionService}
  *     what is available; controllers name a transition by its enum value from the
  *     URL. Grep for `IncidentStatusEnum::Verified` outside this namespace and the
  *     entity's own columns and you will find rendering, never routing.
@@ -40,7 +40,7 @@ use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
  *     {@see guardFor()}. The UI needs the sentence anyway — the design's toolbar
  *     prints "Close — only reachable from resolved" — so the reason is not extra
  *     work done for a hypothetical future.
- *  3. **The marking is a single column** ({@see \UhifadhiLabs\Incident\Entity\Incident::getStatus()}),
+ *  3. **The marking is a single column** ({@see \Uhifadhi\Incident\Entity\Incident::getStatus()}),
  *     which is what Symfony's Workflow calls a single-state marking store. An
  *     incident is in exactly one place; nothing here needs a multiple-state
  *     workflow, and adopting one later would be a data migration, not a swap.

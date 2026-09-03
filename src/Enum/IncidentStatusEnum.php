@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Enum;
+namespace Uhifadhi\Incident\Enum;
 
 /**
  * WHERE AN INCIDENT IS — the five places of the incident workflow, and the only
@@ -28,7 +28,7 @@ namespace UhifadhiLabs\Incident\Enum;
  *    because the record has to be able to say it is finished.
  *
  * The legal moves between these places live in {@see IncidentTransitionEnum} and
- * the guards on them in {@see \UhifadhiLabs\Incident\Workflow\IncidentWorkflow} —
+ * the guards on them in {@see \Uhifadhi\Incident\Workflow\IncidentWorkflow} —
  * this enum knows only the places and how they read.
  */
 enum IncidentStatusEnum: string

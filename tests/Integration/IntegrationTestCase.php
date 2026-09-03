@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration;
+namespace Uhifadhi\Incident\Tests\Integration;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -21,9 +21,9 @@ use Uhifadhi\Entity\Department;
 use Uhifadhi\Entity\Position;
 use Uhifadhi\Entity\User;
 use Uhifadhi\Entity\Zone;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
-use UhifadhiLabs\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 
 /**
  * Symfony-standard kernel testing: KernelTestCase + KERNEL_CLASS (phpunit.dist.xml)
@@ -152,7 +152,7 @@ abstract class IntegrationTestCase extends KernelTestCase
         ?\DateTimeImmutable $at = null,
         ?User $reportedBy = null,
     ): Incident {
-        /** @var \UhifadhiLabs\Incident\Service\IncidentReportService $reports */
+        /** @var \Uhifadhi\Incident\Service\IncidentReportService $reports */
         $reports = static::getContainer()->get('test_public.incident.report');
 
         return $reports->file(

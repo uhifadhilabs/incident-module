@@ -11,12 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Model;
+namespace Uhifadhi\Incident\Model;
 
 use Symfony\Component\HttpFoundation\Request;
 use Uhifadhi\Entity\AreaOfInterest;
-use UhifadhiLabs\Incident\Entity\IncidentCategory;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Entity\IncidentCategory;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 
 /**
  * THE ONE FILTER. The design says it in the markup of three separate widgets:

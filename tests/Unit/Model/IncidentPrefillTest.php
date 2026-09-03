@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Unit\Model;
+namespace Uhifadhi\Incident\Tests\Unit\Model;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\Uuid;
-use UhifadhiLabs\Incident\Model\IncidentPrefill;
+use Uhifadhi\Incident\Model\IncidentPrefill;
 
 /**
  * WHAT THE SOURCE CARD READS.

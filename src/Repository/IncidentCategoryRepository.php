@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Repository;
+namespace Uhifadhi\Incident\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use UhifadhiLabs\Incident\Entity\IncidentCategory;
+use Uhifadhi\Incident\Entity\IncidentCategory;
 
 /**
  * The taxonomy's top level. It is SEEDED DATA, so every read here is ordered by

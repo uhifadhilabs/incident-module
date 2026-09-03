@@ -11,17 +11,17 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Module;
+namespace Uhifadhi\Incident\Tests\Integration\Module;
 
 use Uhifadhi\Entity\Department;
+use Uhifadhi\Incident\Entity\IncidentMoney;
+use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
+use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Service\IncidentTransitionService;
+use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 use Uhifadhi\Module\DepartmentKpi;
-use UhifadhiLabs\Incident\Entity\IncidentMoney;
-use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Module\IncidentDepartmentKpiProvider;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
-use UhifadhiLabs\Incident\Service\IncidentTransitionService;
-use UhifadhiLabs\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
  * WHAT A DEPARTMENT'S PEOPLE DID WITH THIS MODULE — the host's performance seam,

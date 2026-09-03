@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Controller;
+namespace Uhifadhi\Incident\Controller;
 
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,13 +22,13 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\User;
+use Uhifadhi\Incident\Model\IncidentFilter;
+use Uhifadhi\Incident\Model\IncidentWidgets;
+use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Service\IncidentDashboardService;
+use Uhifadhi\Incident\Service\IncidentTransitionToken;
+use Uhifadhi\Incident\Service\IncidentWidgetUrls;
 use Uhifadhi\Service\WidgetService;
-use UhifadhiLabs\Incident\Model\IncidentFilter;
-use UhifadhiLabs\Incident\Model\IncidentWidgets;
-use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
-use UhifadhiLabs\Incident\Service\IncidentDashboardService;
-use UhifadhiLabs\Incident\Service\IncidentTransitionToken;
-use UhifadhiLabs\Incident\Service\IncidentWidgetUrls;
 
 /**
  * THE INCIDENTS DASHBOARD for one area — the widget surface.
@@ -48,7 +48,7 @@ use UhifadhiLabs\Incident\Service\IncidentWidgetUrls;
  *
  * ONE FILTER DRIVES EVERYTHING. The request's query is read ONCE, into an
  * {@see IncidentFilter}, and every widget on the page reads the one
- * {@see \UhifadhiLabs\Incident\Model\IncidentDashboard} built from it — so the
+ * {@see \Uhifadhi\Incident\Model\IncidentDashboard} built from it — so the
  * map, the register and the charts can never be answering different questions.
  */
 final class IncidentController
@@ -98,7 +98,7 @@ final class IncidentController
         $viewer = $this->viewer();
         $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...self::monthRange($now));
 
-        return new Response($this->twig->render('@UhifadhiLabsIncident/dashboard/show.html.twig', [
+        return new Response($this->twig->render('@UhifadhiIncident/dashboard/show.html.twig', [
             'area' => $area,
             'now' => $now,
             'dashboard' => $this->dashboard->build($filter, $now, $viewer),

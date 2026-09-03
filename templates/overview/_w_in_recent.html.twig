@@ -6,8 +6,8 @@
    is inside it — the case number, the kind, the place in the workflow — is this
    module's, and comes from the macros the whole module draws its chips from.
 
-   → UhifadhiLabs\Incident\Overview\IncidentOverviewContributor #}
-{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+   → Uhifadhi\Incident\Overview\IncidentOverviewContributor #}
+{% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 {% set o = by.incidents.overview %}
 <div class="c" data-w="in_recent">
     <span class="tab"><span class="idx">IN·A3</span>Latest incidents<span class="src">· newest first · {{ o.latest|length }} of {{ o.total }}</span></span>

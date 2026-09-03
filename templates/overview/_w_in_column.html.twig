@@ -13,7 +13,7 @@
    with `with_context: false` again, so a card inside the column reads exactly
    what it reads outside it.
 
-   → UhifadhiLabs\Incident\Overview\IncidentOverviewContributor #}
+   → Uhifadhi\Incident\Overview\IncidentOverviewContributor #}
 {% set o = by.incidents.overview %}
 <div data-w="in_column">
     <div class="ao-col">
@@ -23,8 +23,8 @@
         <a href="{{ o.dashboardUrl }}">Open the module &rarr;</a>
     </div>
     <div class="ao-colstack">
-        {{ include('@UhifadhiLabsIncident/overview/_w_in_flow.html.twig', _context, with_context: false) }}
-        {{ include('@UhifadhiLabsIncident/overview/_w_in_today.html.twig', _context, with_context: false) }}
-        {{ include('@UhifadhiLabsIncident/overview/_w_in_money.html.twig', _context, with_context: false) }}
+        {{ include('@UhifadhiIncident/overview/_w_in_flow.html.twig', _context, with_context: false) }}
+        {{ include('@UhifadhiIncident/overview/_w_in_today.html.twig', _context, with_context: false) }}
+        {{ include('@UhifadhiIncident/overview/_w_in_money.html.twig', _context, with_context: false) }}
     </div>
 </div>

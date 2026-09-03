@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Module;
+namespace Uhifadhi\Incident\Tests\Integration\Module;
 
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use UhifadhiLabs\Incident\Module\IncidentModuleProvider;
-use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
-use UhifadhiLabs\Incident\Tests\Integration\Fixtures\CollectedModules;
-use UhifadhiLabs\ModuleContracts\ModulePermission;
+use Uhifadhi\Incident\Module\IncidentModuleProvider;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
+use Uhifadhi\ModuleContracts\ModulePermission;
 
 /**
  * The host contract: installing this bundle puts "incidents" in the catalogue.

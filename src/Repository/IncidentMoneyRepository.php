@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Repository;
+namespace Uhifadhi\Incident\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use UhifadhiLabs\Incident\Entity\IncidentMoney;
+use Uhifadhi\Incident\Entity\IncidentMoney;
 
 /**
  * The query surface over the money records hanging off incidents that carry any.

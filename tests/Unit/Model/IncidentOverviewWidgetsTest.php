@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Unit\Model;
+namespace Uhifadhi\Incident\Tests\Unit\Model;
 
 use PHPUnit\Framework\TestCase;
+use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Model\Widget;
-use UhifadhiLabs\Incident\Model\IncidentOverviewWidgets;
 
 /**
  * The declaration this module puts into the HOST's area-overview library — a

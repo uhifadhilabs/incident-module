@@ -11,22 +11,22 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Storage;
+namespace Uhifadhi\Incident\Storage;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentEvidence;
-use UhifadhiLabs\Incident\Enum\EvidenceKindEnum;
-use UhifadhiLabs\Incident\Repository\IncidentEvidenceRepository;
-use UhifadhiLabs\Storage\Enum\FileKindEnum;
-use UhifadhiLabs\Storage\Enum\GuardStateEnum;
-use UhifadhiLabs\Storage\Enum\ThumbStateEnum;
-use UhifadhiLabs\Storage\Model\FileEntry;
-use UhifadhiLabs\Storage\Model\FileGuard;
-use UhifadhiLabs\Storage\Registry\FileSourceInterface;
-use UhifadhiLabs\Storage\Registry\HoldsNoRecordFilesTrait;
-use UhifadhiLabs\Storage\Service\EvidenceKey;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentEvidence;
+use Uhifadhi\Incident\Enum\EvidenceKindEnum;
+use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
+use Uhifadhi\Storage\Enum\FileKindEnum;
+use Uhifadhi\Storage\Enum\GuardStateEnum;
+use Uhifadhi\Storage\Enum\ThumbStateEnum;
+use Uhifadhi\Storage\Model\FileEntry;
+use Uhifadhi\Storage\Model\FileGuard;
+use Uhifadhi\Storage\Registry\FileSourceInterface;
+use Uhifadhi\Storage\Registry\HoldsNoRecordFilesTrait;
+use Uhifadhi\Storage\Service\EvidenceKey;
 
 /**
  * AN INCIDENT'S EVIDENCE, ON THE PLATFORM'S FILES HUB.

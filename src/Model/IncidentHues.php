@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Model;
+namespace Uhifadhi\Incident\Model;
 
 /**
  * THE FOUR CATEGORY HUES, AS COLOURS RATHER THAN AS CLASS NAMES.

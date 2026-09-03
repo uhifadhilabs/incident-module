@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Controller;
+namespace Uhifadhi\Incident\Controller;
 
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -26,14 +26,14 @@ use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\User;
+use Uhifadhi\Incident\Model\IncidentFilter;
+use Uhifadhi\Incident\Model\IncidentWidgets;
+use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Service\IncidentDashboardService;
+use Uhifadhi\Incident\Service\IncidentTransitionToken;
+use Uhifadhi\Incident\Service\IncidentWidgetUrls;
 use Uhifadhi\Service\WidgetEndpoint;
 use Uhifadhi\Service\WidgetService;
-use UhifadhiLabs\Incident\Model\IncidentFilter;
-use UhifadhiLabs\Incident\Model\IncidentWidgets;
-use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
-use UhifadhiLabs\Incident\Service\IncidentDashboardService;
-use UhifadhiLabs\Incident\Service\IncidentTransitionToken;
-use UhifadhiLabs\Incident\Service\IncidentWidgetUrls;
 
 /**
  * THE WIDGET LIBRARY for the incidents surface — the one editing screen.
@@ -90,7 +90,7 @@ final class IncidentWidgetsController
         $now = new \DateTimeImmutable();
         $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...IncidentController::monthRange($now));
 
-        return new Response($this->twig->render('@UhifadhiLabsIncident/dashboard/widgets.html.twig', [
+        return new Response($this->twig->render('@UhifadhiIncident/dashboard/widgets.html.twig', [
             'area' => $area,
             // The preset component, whole, over this surface's catalogue and this
             // AREA's routes.
@@ -99,7 +99,7 @@ final class IncidentWidgetsController
             'customPresets' => $this->widgets->customPresets($catalog, $userId, $areaUuid),
             'active' => $this->widgets->activeRef($catalog, $userId, $areaUuid),
             'widgets' => $this->widgets->resolve($catalog, $userId, $areaUuid),
-            'partial' => '@UhifadhiLabsIncident/dashboard/_w_%s.html.twig',
+            'partial' => '@UhifadhiIncident/dashboard/_w_%s.html.twig',
             // EVERY widget partial renders the REAL widget on REAL data here, at
             // full size — the picture of a widget IS the widget, so what you
             // arrange is exactly what you get.

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Controller;
+namespace Uhifadhi\Incident\Controller;
 
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -29,16 +29,16 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\User;
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
-use UhifadhiLabs\Incident\Enum\IncidentSeverityEnum;
-use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
-use UhifadhiLabs\Incident\Model\IncidentPrefill;
-use UhifadhiLabs\Incident\Repository\IncidentCategoryRepository;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
-use UhifadhiLabs\Incident\Repository\IncidentSubcategoryRepository;
-use UhifadhiLabs\Incident\Service\IncidentReportService;
-use UhifadhiLabs\Storage\Model\FileEntry;
-use UhifadhiLabs\Storage\Registry\FileRegistry;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
+use Uhifadhi\Incident\Enum\IncidentSourceEnum;
+use Uhifadhi\Incident\Model\IncidentPrefill;
+use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
+use Uhifadhi\Incident\Service\IncidentReportService;
+use Uhifadhi\Storage\Model\FileEntry;
+use Uhifadhi\Storage\Registry\FileRegistry;
 
 /**
  * REPORTING AN INCIDENT — three answers: what kind, what happened, and where.
@@ -236,7 +236,7 @@ final class IncidentReportController
         $fromARecord = $prefill->hasProvenance();
         $query = $prefill->toQuery();
 
-        return $this->twig->render('@UhifadhiLabsIncident/report/show.html.twig', [
+        return $this->twig->render('@UhifadhiIncident/report/show.html.twig', [
             'area' => $area,
             'now' => new \DateTimeImmutable(),
             'categories' => $this->categories->allInOrder(),

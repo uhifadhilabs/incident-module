@@ -7,7 +7,7 @@
    board is an accelerator, never the only door.
 
    → POST /areas/{uuid}/modules/incidents/{reference}/transition/{name} #}
-{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+{% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="board">
     <span class="tab"><span class="idx">IN·12</span>Status board<span class="src">· {{ transitionCsrfToken ? 'drag a card to move an incident on' : 'read-only — moving needs the manage permission' }}</span></span>
     <div class="i-board"

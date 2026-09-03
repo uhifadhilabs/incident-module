@@ -31,31 +31,31 @@
 
 <div {{ stimulus_controller(controller) }}>
     {% if prefill.hasProvenance %}
-        {{ include('@UhifadhiLabsIncident/report/_source.html.twig', {prefill: prefill, files: sourceFiles}, with_context: false) }}
+        {{ include('@UhifadhiIncident/report/_source.html.twig', {prefill: prefill, files: sourceFiles}, with_context: false) }}
     {% endif %}
 
     {# input and change both bubble, so ONE action on the form re-reads the gate
        whatever the filer typed into. #}
     <form class="ro-form" method="post" action="{{ createUrl }}"
           {{ stimulus_action(controller, 'gate', 'input')|stimulus_action(controller, 'gate', 'change') }}>
-        {{ include('@UhifadhiLabsIncident/report/_carry.html.twig', {csrfToken: csrfToken, prefill: prefill, errors: errors}, with_context: false) }}
+        {{ include('@UhifadhiIncident/report/_carry.html.twig', {csrfToken: csrfToken, prefill: prefill, errors: errors}, with_context: false) }}
 
         <div class="ro-sect">
-            {{ include('@UhifadhiLabsIncident/report/_secthd.html.twig', {n: 1, heading: 'What kind of incident', mark: 'req', markLabel: 'needed to file'}, with_context: false) }}
-            {{ include('@UhifadhiLabsIncident/report/_kind.html.twig', {controller: controller, categories: categories, chosen: chosen, compact: false}, with_context: false) }}
+            {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 1, heading: 'What kind of incident', mark: 'req', markLabel: 'needed to file'}, with_context: false) }}
+            {{ include('@UhifadhiIncident/report/_kind.html.twig', {controller: controller, categories: categories, chosen: chosen, compact: false}, with_context: false) }}
         </div>
 
         <div class="ro-sect">
-            {{ include('@UhifadhiLabsIncident/report/_secthd.html.twig', {n: 2, heading: 'What happened', mark: null, markLabel: null}, with_context: false) }}
-            {{ include('@UhifadhiLabsIncident/report/_what.html.twig', {controller: controller, categories: categories, chosen: chosen, prefill: prefill, compact: false}, with_context: false) }}
+            {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 2, heading: 'What happened', mark: null, markLabel: null}, with_context: false) }}
+            {{ include('@UhifadhiIncident/report/_what.html.twig', {controller: controller, categories: categories, chosen: chosen, prefill: prefill, compact: false}, with_context: false) }}
         </div>
 
         <div class="ro-sect">
-            {{ include('@UhifadhiLabsIncident/report/_secthd.html.twig', {n: 3, heading: 'People & evidence', mark: 'opt', markLabel: 'this one can wait'}, with_context: false) }}
-            {{ include('@UhifadhiLabsIncident/report/_later.html.twig', {prefill: prefill, compact: false}, with_context: false) }}
+            {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 3, heading: 'People & evidence', mark: 'opt', markLabel: 'this one can wait'}, with_context: false) }}
+            {{ include('@UhifadhiIncident/report/_later.html.twig', {prefill: prefill, compact: false}, with_context: false) }}
         </div>
 
-        {{ include('@UhifadhiLabsIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl, compact: false}, with_context: false) }}
+        {{ include('@UhifadhiIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl, compact: false}, with_context: false) }}
     </form>
 </div>
 

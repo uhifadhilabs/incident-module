@@ -28,7 +28,7 @@
        may not name the patrols module's classes, its routes or its key prefix,
        because a host may install either module without the other. So it asks the
        hub's registry, which asks the module that OWNS the record
-       ({@see \UhifadhiLabs\Storage\Registry\FileRegistry::forRecord()}), and gets
+       ({@see \Uhifadhi\Storage\Registry\FileRegistry::forRecord()}), and gets
        back the same FileEntry the Files hub gets.
 
        GRACEFUL WHEN THERE IS NOTHING. The storage bundle absent, the observation
@@ -40,7 +40,7 @@
        file in, so a photograph looks the same and says the same things whether it
        is opened from the Files hub, from its observation, or from here. #}
     {% if files is not empty %}
-        {% import '@UhifadhiLabsStorage/overlay/_preview.html.twig' as preview %}
+        {% import '@UhifadhiStorage/overlay/_preview.html.twig' as preview %}
         {# A BUTTON, NOT A LINK, and the preview component is why: it reads a
            click inside an <a> as navigation and stands aside, so a thumbnail
            wrapped in one would leave the flow for a raw image file. `type=button`
@@ -55,7 +55,7 @@
                 </button>
             {% endfor %}
         </div>
-        {{ include('@UhifadhiLabsStorage/overlay/_preview.html.twig') }}
+        {{ include('@UhifadhiStorage/overlay/_preview.html.twig') }}
     {% endif %}
 
     <p class="seam">

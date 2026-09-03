@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Entity\Trait;
+namespace Uhifadhi\Incident\Entity\Trait;
 
 use Doctrine\ORM\Mapping as ORM;
 

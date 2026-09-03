@@ -2,7 +2,7 @@
 
    A human injury is 72 hours and a construction notice is 14 days; one global
    SLA would be a lie about both, which is why the term is read off the row. #}
-{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+{% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="sla">
     <span class="tab"><span class="idx">IN·13</span>Ageing &amp; breaches<span class="src">· {{ dashboard.pastTermCount }} past term</span></span>
     {% for incident in dashboard.ageing %}

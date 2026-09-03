@@ -11,21 +11,21 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Unit\Service;
+namespace Uhifadhi\Incident\Tests\Unit\Service;
 
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Entity\AreaOfInterest;
-use UhifadhiLabs\Incident\Entity\Incident;
-use UhifadhiLabs\Incident\Entity\IncidentCategory;
-use UhifadhiLabs\Incident\Entity\IncidentMoney;
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
-use UhifadhiLabs\Incident\Enum\IncidentEventKindEnum;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Enum\IncidentTransitionEnum;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Exception\IncidentTransitionException;
-use UhifadhiLabs\Incident\Service\IncidentTransitionService;
-use UhifadhiLabs\Incident\Workflow\IncidentWorkflow;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentCategory;
+use Uhifadhi\Incident\Entity\IncidentMoney;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Exception\IncidentTransitionException;
+use Uhifadhi\Incident\Service\IncidentTransitionService;
+use Uhifadhi\Incident\Workflow\IncidentWorkflow;
 
 /**
  * THE STATE MACHINE'S OWN TESTS. Every rule the design states in prose is one

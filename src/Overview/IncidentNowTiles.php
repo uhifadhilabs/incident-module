@@ -11,14 +11,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Overview;
+namespace Uhifadhi\Incident\Overview;
 
 use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Incident\Model\IncidentOverview;
+use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
+use Uhifadhi\Incident\Service\IncidentOverviewFigures;
 use Uhifadhi\Overview\NowTile;
 use Uhifadhi\Overview\NowTileProviderInterface;
-use UhifadhiLabs\Incident\Model\IncidentOverview;
-use UhifadhiLabs\Incident\Model\IncidentOverviewWidgets;
-use UhifadhiLabs\Incident\Service\IncidentOverviewFigures;
 
 /**
  * THIS MODULE'S TWO TILES IN THE HOST'S RIGHT-NOW STRIP — where the open work

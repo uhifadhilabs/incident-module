@@ -18,7 +18,7 @@
    The two containers share every step: the kind, the questions, the things that
    can wait, and the gate are ONE set of partials rendered at two widths.
    ========================================================================== #}
-{% extends '@UhifadhiLabsIncident/base.html.twig' %}
+{% extends '@UhifadhiIncident/base.html.twig' %}
 
 {% block title %}Report an incident — {{ area.name }}{% endblock %}
 
@@ -30,13 +30,13 @@
 {% block stylesheets %}
     {{ parent() }}
     {% if sourceFiles is not empty %}
-        <link rel="stylesheet" href="{{ asset('bundles/uhifadhilabsstorage/preview.css') }}">
+        <link rel="stylesheet" href="{{ asset('bundles/uhifadhistorage/preview.css') }}">
     {% endif %}
 {% endblock %}
 
 {% block incident_page %}
     {% set container = prefill.hasProvenance ? '_drawer' : '_page' %}
-    {{ include('@UhifadhiLabsIncident/report/' ~ container ~ '.html.twig', {
+    {{ include('@UhifadhiIncident/report/' ~ container ~ '.html.twig', {
         controller: '@uhifadhi/incident-module/incident-report',
         area: area,
         categories: categories,

@@ -11,15 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Overview;
+namespace Uhifadhi\Incident\Overview;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Incident\Model\IncidentHues;
+use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
+use Uhifadhi\Incident\Repository\IncidentEventRepository;
 use Uhifadhi\Overview\PulseEvent;
 use Uhifadhi\Overview\PulseProviderInterface;
-use UhifadhiLabs\Incident\Model\IncidentHues;
-use UhifadhiLabs\Incident\Model\IncidentOverviewWidgets;
-use UhifadhiLabs\Incident\Repository\IncidentEventRepository;
 
 /**
  * THIS MODULE'S MOVES IN THE AREA PULSE.
@@ -32,7 +32,7 @@ use UhifadhiLabs\Incident\Repository\IncidentEventRepository;
  *
  * WHEN THE PLATFORM'S WORKFLOW MODULE LANDS, THIS IS WHAT IT FILLS. The
  * roadmap's state machines and audit trail replace
- * {@see \UhifadhiLabs\Incident\Workflow\IncidentWorkflow} and the timeline
+ * {@see \Uhifadhi\Incident\Workflow\IncidentWorkflow} and the timeline
  * behind it; this class keeps answering the same interface with the same rows,
  * because nothing here knows where the events came from.
  *

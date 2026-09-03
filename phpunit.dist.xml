@@ -8,7 +8,7 @@
          failOnNotice="true"
          failOnWarning="true">
     <php>
-        <env name="KERNEL_CLASS" value="UhifadhiLabs\Incident\Tests\Integration\TestKernel"/>
+        <env name="KERNEL_CLASS" value="Uhifadhi\Incident\Tests\Integration\TestKernel"/>
         <!--
             A REAL PostGIS database. The integration and functional suites rebuild
             the schema per test and assert on what was actually stored — the module

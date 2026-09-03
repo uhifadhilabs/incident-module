@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Entity;
+namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -21,11 +21,11 @@ use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\Department;
 use Uhifadhi\Entity\User;
 use Uhifadhi\Entity\Zone;
-use UhifadhiLabs\Incident\Entity\Trait\TimestampableTrait;
-use UhifadhiLabs\Incident\Enum\IncidentSeverityEnum;
-use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
+use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
+use Uhifadhi\Incident\Enum\IncidentSourceEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Repository\IncidentRepository;
 
 /**
  * ONE EVENT, IN ONE AREA, AT ONE PLACE, IN ONE CATEGORY, AT ONE POINT IN A
@@ -377,7 +377,7 @@ class Incident
 
     /**
      * Deliberately package-blunt: this is the raw setter, and the ONLY supported
-     * caller is {@see \UhifadhiLabs\Incident\Service\IncidentTransitionService},
+     * caller is {@see \Uhifadhi\Incident\Service\IncidentTransitionService},
      * which is where the guards live. A screen that moves an incident by calling
      * this directly has skipped verification, and the whole design says it cannot.
      */

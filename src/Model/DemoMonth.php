@@ -11,9 +11,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Model;
+namespace Uhifadhi\Incident\Model;
 
-use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
 
 /**
  * THE DESIGN'S SAMPLE MONTH, as data — the forty-seven incidents every widget in
@@ -28,7 +28,7 @@ use UhifadhiLabs\Incident\Entity\IncidentSubcategory;
  *   TZS 12,400,000 claimed in compensation, 9,200,000 approved, 4,700,000 paid
  *   seven zones
  *
- * {@see \UhifadhiLabs\Incident\Tests\Unit\Model\DemoMonthTest} adds those columns
+ * {@see \Uhifadhi\Incident\Tests\Unit\Model\DemoMonthTest} adds those columns
  * up and fails if a row ever drifts, because a demo that quietly stopped matching
  * the spec is worse than no demo: every screenshot in the gallery would be a
  * claim the product no longer supports.

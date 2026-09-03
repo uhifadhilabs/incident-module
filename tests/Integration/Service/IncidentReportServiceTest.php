@@ -11,15 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration\Service;
+namespace Uhifadhi\Incident\Tests\Integration\Service;
 
 use Symfony\Component\Uid\Uuid;
-use UhifadhiLabs\Incident\Enum\IncidentSourceEnum;
-use UhifadhiLabs\Incident\Enum\IncidentStatusEnum;
-use UhifadhiLabs\Incident\Enum\MoneyDirectionEnum;
-use UhifadhiLabs\Incident\Model\IncidentPrefill;
-use UhifadhiLabs\Incident\Service\IncidentReportService;
-use UhifadhiLabs\Incident\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Incident\Enum\IncidentSourceEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Model\IncidentPrefill;
+use Uhifadhi\Incident\Service\IncidentReportService;
+use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
  * FILING, against a real database and a real PostGIS.

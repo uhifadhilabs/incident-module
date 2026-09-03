@@ -11,14 +11,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace UhifadhiLabs\Incident\Tests\Integration;
+namespace Uhifadhi\Incident\Tests\Integration;
 
 use Doctrine\Bundle\DoctrineBundle\Mapping\MappingDriver as DoctrineBundleMappingDriver;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\Driver\MappingDriverChain;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use UhifadhiLabs\Incident\UhifadhiLabsIncidentBundle;
+use Uhifadhi\Incident\UhifadhiIncidentBundle;
 
 /**
  * The smoke test: registering the bundle in a real kernel compiles a real
@@ -30,10 +30,10 @@ final class BundleBootTest extends KernelTestCase
     {
         $kernel = self::bootKernel();
 
-        self::assertArrayHasKey('UhifadhiLabsIncidentBundle', $kernel->getBundles());
+        self::assertArrayHasKey('UhifadhiIncidentBundle', $kernel->getBundles());
         self::assertInstanceOf(
-            UhifadhiLabsIncidentBundle::class,
-            $kernel->getBundle('UhifadhiLabsIncidentBundle'),
+            UhifadhiIncidentBundle::class,
+            $kernel->getBundle('UhifadhiIncidentBundle'),
         );
     }
 
@@ -45,7 +45,7 @@ final class BundleBootTest extends KernelTestCase
     {
         $kernel = self::bootKernel();
 
-        self::assertSame('incident', $kernel->getBundle('UhifadhiLabsIncidentBundle')
+        self::assertSame('incident', $kernel->getBundle('UhifadhiIncidentBundle')
             ->getContainerExtension()?->getAlias());
     }
 
@@ -71,12 +71,12 @@ final class BundleBootTest extends KernelTestCase
         }
 
         self::assertInstanceOf(MappingDriverChain::class, $driver);
-        self::assertArrayHasKey('UhifadhiLabs\Incident\Entity', $driver->getDrivers());
+        self::assertArrayHasKey('Uhifadhi\Incident\Entity', $driver->getDrivers());
 
         // The eight tables the module owns, mapped without a line of host config.
         $mapped = [];
         foreach ($em->getMetadataFactory()->getAllMetadata() as $metadata) {
-            if (str_starts_with($metadata->getName(), 'UhifadhiLabs\\Incident\\Entity\\')) {
+            if (str_starts_with($metadata->getName(), 'Uhifadhi\\Incident\\Entity\\')) {
                 $mapped[] = $metadata->getTableName();
             }
         }

@@ -9,7 +9,7 @@
    automatically have that directory added as an asset path, using the namespace:
    bundles/<BundleName>" — and under AssetMapper those assets are automatically
    content-versioned. So public/incidents.css is served as
-   bundles/uhifadhilabsincident/incidents.css with a digest, no assets:install. #}
+   bundles/uhifadhiincident/incidents.css with a digest, no assets:install. #}
 {% block stylesheets %}
     {{ parent() }}
     {# Leaflet FIRST, so incidents.css can restyle its controls into the design's
@@ -17,17 +17,17 @@
        never a CDN, and the same Leaflet the host's area map runs on, so an
        incident map and an area map cannot disagree about how a layer draws.
        MapLibre is deliberately NOT used. #}
-    <link rel="stylesheet" href="{{ asset(constant('UhifadhiLabs\\Map\\UhifadhiLabsMapBundle::LEAFLET_CSS')) }}">
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Map\\UhifadhiMapBundle::LEAFLET_CSS')) }}">
     {# The path is the bundle's own constant, not a literal: the area overview is
        rendered by the HOST, which links this same sheet from the contributor's
        stylesheet() — and a path typed twice is a path that eventually differs. #}
-    <link rel="stylesheet" href="{{ asset(constant('UhifadhiLabs\\Incident\\UhifadhiLabsIncidentBundle::STYLESHEET')) }}">
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Incident\\UhifadhiIncidentBundle::STYLESHEET')) }}">
 {% endblock %}
 
 {% block javascripts %}
     {# A classic <script> in <head> runs before the deferred importmap modules,
        so `window.L` is there by the time a Stimulus controller connects. #}
-    <script src="{{ asset(constant('UhifadhiLabs\\Map\\UhifadhiLabsMapBundle::LEAFLET_JS')) }}"></script>
+    <script src="{{ asset(constant('Uhifadhi\\Map\\UhifadhiMapBundle::LEAFLET_JS')) }}"></script>
     {{ parent() }}
 {% endblock %}
 

@@ -1,9 +1,9 @@
 {# IN·07 — newest first, grouped by day, with each day's own count. Reads like a
    radio log, which is what a duty officer on shift actually wants. #}
-{% import '@UhifadhiLabsIncident/dashboard/_ui.html.twig' as ui %}
+{% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="feed">
     <span class="tab"><span class="idx">IN·07</span>Incident feed<span class="src">· newest first · grouped by day</span></span>
-    {{ include('@UhifadhiLabsIncident/dashboard/_filters.html.twig') }}
+    {{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}
     {% for day in dashboard.recentByDay %}
         {% set stillOpen = day.incidents|filter(i => i.status.isOpen)|length %}
         <div class="i-day"><b>{{ day.day|date('j M')|lower }}</b><span class="cnt">{{ day.incidents|length }} filed · {{ stillOpen }} still open</span></div>
