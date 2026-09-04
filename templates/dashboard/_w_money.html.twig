@@ -6,7 +6,7 @@
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div data-w="money">
     <div class="c">
-        <span class="tab"><span class="idx">IN·11</span>Fines &amp; compensation<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }} · {{ dashboard.currency }}</span></span>
+        <span class="tab">Fines &amp; compensation<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }} · {{ dashboard.currency }}</span></span>
         <div class="use i-moneynote">Two directions of money and the design refuses to add them together: a <b>fine</b> is owed to the authority by somebody, a <b>compensation claim</b> is owed by the authority to somebody. Only categories that carry money show these fields at all.</div>
         <div class="grid g2 i-moneygrid">
             {% for direction, totals in dashboard.money %}

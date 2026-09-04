@@ -24,7 +24,7 @@
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 {% set last = dashboard.recent is empty ? null : dashboard.recent|first %}
 <div class="c" data-w="report">
-    <span class="tab"><span class="idx">IN·16</span>File an incident<span class="src">· three answers · the rest follows on the record</span></span>
+    <span class="tab">File an incident<span class="src">· three answers · the rest follows on the record</span></span>
     <div class="use" style="margin:0 2px 12px">A report is cheap and a verification is expensive. Three answers and the record exists — how bad it was, who was involved, the photographs and any money are offered afterwards on the case file, where the timeline keeps who added what and when.</div>
     <div class="rln"><span><b>1</b> What kind</span><span class="mono" style="font-size:11px">{{ dashboard.categories|length }} kinds, then the sub-category</span></div>
     <div class="rln"><span><b>2</b> What happened</span><span class="mono" style="font-size:11px">one line — the register prints it</span></div>

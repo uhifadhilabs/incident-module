@@ -10,7 +10,7 @@
    identical guards. #}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="rail">
-    <span class="tab"><span class="idx">IN·15</span>Where things stand<span class="src">· {{ dashboard.rail ? dashboard.rail.reason : 'nothing is on your desk' }}</span></span>
+    <span class="tab">Where things stand<span class="src">· {{ dashboard.rail ? dashboard.rail.reason : 'nothing is on your desk' }}</span></span>
     {% if dashboard.rail %}
         {% set incident = dashboard.rail.incident %}
         <div class="i-railhd">

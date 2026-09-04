@@ -6,7 +6,7 @@
 {% set reached = dashboard.reachedCounts %}
 {% set widest = dashboard.filedCount > 0 ? dashboard.filedCount : 1 %}
 <div class="c" data-w="funnel">
-    <span class="tab"><span class="idx">IN·14</span>Status funnel<span class="src">· this window’s {{ dashboard.filedCount }} incidents</span></span>
+    <span class="tab">Status funnel<span class="src">· this window’s {{ dashboard.filedCount }} incidents</span></span>
     <svg class="ch" viewBox="0 0 470 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="How many incidents reached each state">
         <line class="grid" x1="118" y1="4" x2="118" y2="160"/>
         {% for place in dashboard.places %}

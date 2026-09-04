@@ -53,9 +53,19 @@ final class CaseFilePageTest extends FunctionalTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1.pg', $incident->getReference());
-        // The design's numbered sections, all of them, on one page.
-        foreach (['IN·01', 'IN·02', 'IN·04', 'IN·05', 'IN·06', 'IN·07', 'IN·08'] as $section) {
-            self::assertStringContainsString($section, $crawler->html(), \sprintf('Section %s is missing.', $section));
+        /*
+         * The design's sections, all of them, on one page — named by the words
+         * in their tab rather than by the workshop's reference for the frame.
+         * The reference lives in the design files and never in the markup, so
+         * reading it here would have been reading the one thing a warden cannot
+         * see. The heading IS what they see, and it is what has to be there.
+         */
+        $tabs = $crawler->filter('span.tab')->each(static fn ($tab) => $tab->text());
+        foreach (['Where', 'Incident meta', 'Timeline', 'Involved parties', 'Provenance & links', 'Evidence', 'Narrative'] as $section) {
+            self::assertNotEmpty(
+                array_filter($tabs, static fn (string $tab) => str_starts_with($tab, $section)),
+                \sprintf('Section “%s” is missing.', $section),
+            );
         }
     }
 
@@ -93,10 +103,10 @@ final class CaseFilePageTest extends FunctionalTestCase
         ));
 
         $html = $crawler->html();
-        self::assertStringContainsString('IN·S1', $html, 'Step one has been reached and must have its panel.');
-        self::assertStringNotContainsString('IN·S2', $html, 'Verification has not happened; its panel must not exist.');
-        self::assertStringNotContainsString('IN·S3', $html);
-        self::assertStringNotContainsString('IN·S4', $html);
+        self::assertStringContainsString('Step 1 —', $html, 'Step one has been reached and must have its panel.');
+        self::assertStringNotContainsString('Step 2 —', $html, 'Verification has not happened; its panel must not exist.');
+        self::assertStringNotContainsString('Step 3 —', $html);
+        self::assertStringNotContainsString('Step 4 —', $html);
     }
 
     /** …and the panel APPEARS once the step is reached, because it is the same rule read forwards. */
@@ -115,10 +125,10 @@ final class CaseFilePageTest extends FunctionalTestCase
         ));
 
         $html = $crawler->html();
-        self::assertStringContainsString('IN·S1', $html);
-        self::assertStringContainsString('IN·S2', $html);
+        self::assertStringContainsString('Step 1 —', $html);
+        self::assertStringContainsString('Step 2 —', $html);
         // The next one is still not reached, and so still does not exist.
-        self::assertStringNotContainsString('IN·S3', $html);
+        self::assertStringNotContainsString('Step 3 —', $html);
     }
 
     /**
@@ -214,7 +224,7 @@ final class CaseFilePageTest extends FunctionalTestCase
 
         // Nothing assessed yet: no card, on either of them.
         $before = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $claim->getReference()));
-        self::assertStringNotContainsString('IN·03', $before->html());
+        self::assertCount(0, $before->filter('.i-moneyblock'));
 
         // Somebody opens a claim — and the card is there.
         new IncidentMoney($claim, MoneyDirectionEnum::Compensation)
@@ -222,12 +232,12 @@ final class CaseFilePageTest extends FunctionalTestCase
         $this->em->flush();
 
         $after = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $claim->getReference()));
-        self::assertStringContainsString('IN·03', $after->html());
+        self::assertCount(1, $after->filter('.i-moneyblock'));
         self::assertStringContainsString('1,200,000', $after->html());
 
         // A category that carries no money never grows one.
         $without = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $mortality->getReference()));
-        self::assertStringNotContainsString('IN·03', $without->html());
+        self::assertCount(0, $without->filter('.i-moneyblock'));
     }
 
     /**

@@ -110,7 +110,9 @@ final class ReportEntryWidgetTest extends FunctionalTestCase
 
         $card = $this->client->request('GET', $this->dashboardUrl($this->uuidOf($area)))->filter('[data-w="report"]');
 
-        self::assertSame('IN·16', $card->filter('.tab .idx')->text());
+        // The workshop’s own reference for this frame stays in the design files:
+        // the tab carries the card’s name and nothing the reader cannot follow.
+        self::assertCount(0, $card->filter('.tab .idx'));
         self::assertStringContainsString('File an incident', $card->filter('.tab')->text());
         self::assertStringContainsString(
             'A report is cheap and a verification is expensive.',

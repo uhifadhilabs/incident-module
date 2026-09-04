@@ -10,7 +10,7 @@
    the case file — one macro, three places. #}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="map">
-    <span class="tab"><span class="idx">IN·03</span>Incident map<span class="src">· one filter drives map AND register</span></span>
+    <span class="tab">Incident map<span class="src">· one filter drives map AND register</span></span>
     {{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}
     <div class="viewer"
          {{ stimulus_controller('@uhifadhi/incident-module/incident-map', {

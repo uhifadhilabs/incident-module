@@ -4,7 +4,7 @@
    SLA would be a lie about both, which is why the term is read off the row. #}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="sla">
-    <span class="tab"><span class="idx">IN·13</span>Ageing &amp; breaches<span class="src">· {{ dashboard.pastTermCount }} past term</span></span>
+    <span class="tab">Ageing &amp; breaches<span class="src">· {{ dashboard.pastTermCount }} past term</span></span>
     {% for incident in dashboard.ageing %}
         <div class="rln">
             <span><a class="mono acc i-slaid" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">{{ incident.reference }}</a> <span class="i-sub">{{ incident.subcategory.label }}</span></span>

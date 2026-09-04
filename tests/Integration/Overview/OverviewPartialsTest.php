@@ -39,7 +39,8 @@ final class OverviewPartialsTest extends OverviewTestCase
 
         self::assertStringContainsString('data-w="in_flow"', $html);
         // Provenance survives a screenshot: the index prefix and the tag.
-        self::assertStringContainsString('<span class="idx">IN·A1</span>', $html);
+        // The workshop’s own reference for this frame stays in the design files.
+        self::assertStringNotContainsString("IN\u{00B7}A1", $html);
         self::assertStringContainsString('<span class="ao-by incidents"><i></i>incidents</span>', $html);
 
         // FIVE SEGMENTS, in workflow order, each numbered by its position — so
@@ -85,7 +86,8 @@ final class OverviewPartialsTest extends OverviewTestCase
     {
         $html = $this->render('in_today', $this->aRegister());
 
-        self::assertStringContainsString('<span class="idx">IN·A2</span>', $html);
+        // The workshop’s own reference for this frame stays in the design files.
+        self::assertStringNotContainsString("IN\u{00B7}A2", $html);
         self::assertStringContainsString('· sat 22 aug · 3 filed', $html);
         self::assertStringContainsString('<span class="sub">1 on sat 15 aug</span>', $html);
         self::assertStringContainsString('<b class="disp">1<em>closed out</em></b>', $html);
@@ -101,7 +103,8 @@ final class OverviewPartialsTest extends OverviewTestCase
     {
         $html = $this->render('in_recent', $this->aRegister());
 
-        self::assertStringContainsString('<span class="idx">IN·A3</span>', $html);
+        // The workshop’s own reference for this frame stays in the design files.
+        self::assertStringNotContainsString("IN\u{00B7}A3", $html);
         self::assertStringContainsString('class="i-hit"', $html);
         self::assertStringContainsString('<span class="id">INC-0003</span>', $html);
         self::assertStringContainsString('class="i-cat mort"', $html);
@@ -114,7 +117,8 @@ final class OverviewPartialsTest extends OverviewTestCase
     {
         $html = $this->render('in_money', $this->aRegister());
 
-        self::assertStringContainsString('<span class="idx">IN·A4</span>', $html);
+        // The workshop’s own reference for this frame stays in the design files.
+        self::assertStringNotContainsString("IN\u{00B7}A4", $html);
         self::assertStringContainsString('<b class="disp">2.55<em>M</em></b>', $html);
         self::assertStringContainsString('<b class="disp">4.5<em>M</em></b>', $html);
         // Nowhere on the plate are they added: 7.05 would be a number about

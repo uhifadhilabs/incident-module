@@ -7,7 +7,7 @@
 {% set rows = dashboard.zoneCounts %}
 {% set most = rows is empty ? 1 : max(rows) %}
 <div class="c" data-w="zones">
-    <span class="tab"><span class="idx">IN·05</span>Incidents by zone<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }}</span></span>
+    <span class="tab">Incidents by zone<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }}</span></span>
     {% if rows is empty %}
         <div class="use">Nothing to place. No incident was filed in this window.</div>
     {% else %}

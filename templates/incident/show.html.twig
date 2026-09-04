@@ -55,7 +55,7 @@
 
     <div class="i-cols">
         <div class="c plate-fill wide">
-            <span class="tab"><span class="idx">IN·01</span>Where<span class="src">· {{ incident.zoneLabel }}</span></span>
+            <span class="tab">Where<span class="src">· {{ incident.zoneLabel }}</span></span>
             <div class="viewer"
                  {{ stimulus_controller('@uhifadhi/incident-module/incident-map', {
                      incidents: mapPayload,
@@ -67,7 +67,7 @@
 
         <div class="side">
             <div class="c">
-                <span class="tab"><span class="idx">IN·02</span>Incident meta</span>
+                <span class="tab">Incident meta</span>
                 <div class="i-meta"><span>id</span><b>{{ incident.reference }}</b></div>
                 <div class="i-meta"><span>category</span><b>{{ incident.subcategory.path }}</b></div>
                 <div class="i-meta"><span>status</span><b>{{ incident.status.label }}</b></div>
@@ -84,7 +84,7 @@
                natural mortality there is no card at all — absent, not empty. #}
             {% if money %}
                 <div class="c">
-                    <span class="tab"><span class="idx">IN·03</span>Money<span class="src">· this category carries {{ money.direction.value }}</span></span>
+                    <span class="tab">Money<span class="src">· this category carries {{ money.direction.value }}</span></span>
                     <div class="i-moneyblock">
                         <div class="hd">{{ ux_icon('lucide:circle-dollar-sign') }}<b>{{ money.direction.heading }}</b></div>
                         {% if money.claimed is not null %}<div class="i-mrow"><span>claimed</span>{{ ui.amount(money.currency, money.claimed) }}</div>{% endif %}
@@ -105,7 +105,7 @@
 
     <div class="i-cols">
         <div class="c wide">
-            <span class="tab"><span class="idx">IN·04</span>Timeline<span class="src">· {{ incident.events|length }} events · append-only</span></span>
+            <span class="tab">Timeline<span class="src">· {{ incident.events|length }} events · append-only</span></span>
             <div class="i-tl">
                 {% for event in incident.events %}
                     <div class="i-tl-item {{ event.kind.cssClass }}">
@@ -120,7 +120,7 @@
 
         <div class="side">
             <div class="c">
-                <span class="tab"><span class="idx">IN·05</span>Involved parties<span class="src">· {{ incident.parties|length }}</span></span>
+                <span class="tab">Involved parties<span class="src">· {{ incident.parties|length }}</span></span>
                 {% for party in incident.parties %}
                     <div class="i-party">
                         <span class="av">{{ party.initials }}</span>
@@ -136,7 +136,7 @@
             </div>
 
             <div class="c">
-                <span class="tab"><span class="idx">IN·06</span>Provenance &amp; links</span>
+                <span class="tab">Provenance &amp; links</span>
                 {% if incident.hasProvenance %}
                     <a class="i-prov" href="{{ incident.sourceRecordUrl ?? '#' }}">{{ ux_icon('lucide:git-branch') }}
                         <span class="bd"><b>{{ incident.sourceRecordLabel }}</b> — this incident was filed from that record and stays
@@ -161,7 +161,7 @@
 
     <div class="i-cols">
         <div class="c wide">
-            <span class="tab"><span class="idx">IN·07</span>Evidence<span class="src">· {{ incident.evidence|length }} attached</span></span>
+            <span class="tab">Evidence<span class="src">· {{ incident.evidence|length }} attached</span></span>
             <div class="i-evgrid">
                 {% for item in incident.evidence %}
                     <span class="i-ph {{ item.kind.cssClass }}">{{ ux_icon(item.kind.value == 'document' ? 'lucide:file-text' : 'lucide:image') }}
@@ -175,7 +175,7 @@
         </div>
 
         <div class="c side">
-            <span class="tab"><span class="idx">IN·08</span>Narrative<span class="src">· as taken · verbatim</span></span>
+            <span class="tab">Narrative<span class="src">· as taken · verbatim</span></span>
             {% if incident.narrative %}
                 <div class="i-quote">“{{ incident.narrative }}”</div>
             {% else %}
@@ -199,7 +199,7 @@
            never a person's panel, because the clock reaches it. #}
         {% for step in rail.steps|filter(s => s.state != 'todo' and s.place.value != 'closed') %}
             <div class="c{{ step.state == 'now' ? ' i-step-now' }}">
-                <span class="tab"><span class="idx">IN·S{{ step.place.step }}</span>Step {{ step.place.step }} — {{ step.place.label }}<span class="src">· {{ step.state == 'now' ? 'current step' : 'done' }}</span></span>
+                <span class="tab">Step {{ step.place.step }} — {{ step.place.label }}<span class="src">· {{ step.state == 'now' ? 'current step' : 'done' }}</span></span>
                 {# The event that PUT it in this place — the filing itself for
                    step one, and the transition for every step after. #}
                 {% set stepEvents = step.place.value == 'reported'

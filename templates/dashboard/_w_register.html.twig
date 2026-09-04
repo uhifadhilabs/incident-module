@@ -5,7 +5,7 @@
    readings. #}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="register">
-    <span class="tab"><span class="idx">IN·01</span>Incident register<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }} · latest {{ min(dashboard.recent|length, 14) }} of {{ dashboard.recentTotal }}</span></span>
+    <span class="tab">Incident register<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }} · latest {{ min(dashboard.recent|length, 14) }} of {{ dashboard.recentTotal }}</span></span>
     {{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}
     <table class="tbl">
         <tr><th>id</th><th>category</th><th>what happened</th><th>zone</th><th>status</th><th>severity</th><th class="num">money</th><th>reported</th><th></th></tr>

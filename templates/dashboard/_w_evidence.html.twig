@@ -5,7 +5,7 @@
    incident, and keeps its ORIGINAL timestamp and position. So each tile names the
    case it belongs to, and prints the moment the handset recorded. #}
 <div class="c" data-w="evidence">
-    <span class="tab"><span class="idx">IN·08</span>Latest evidence<span class="src">· photographs and documents · newest first</span></span>
+    <span class="tab">Latest evidence<span class="src">· photographs and documents · newest first</span></span>
     <div class="i-evgrid">
         {% for item in dashboard.evidence %}
             <a class="i-ph {{ item.kind.cssClass }}" href="{{ path('incident_show', {uuid: area.uuid, reference: item.incident.reference}) }}">

@@ -6,7 +6,7 @@
    card says so, because a label nobody explains is a label people assume the
    worst about. #}
 <div class="c" data-w="categories">
-    <span class="tab"><span class="idx">IN·09</span>What the categories are<span class="src">· the reference card · {{ dashboard.categories|length }} kinds</span></span>
+    <span class="tab">What the categories are<span class="src">· the reference card · {{ dashboard.categories|length }} kinds</span></span>
     <div class="i-tax">
         {% for category in dashboard.categories %}
             <div class="i-taxg{{ category.slug in dashboard.filter.categorySlugs ? ' on' }}">

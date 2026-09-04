@@ -10,7 +10,7 @@
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 {% set o = by.incidents.overview %}
 <div class="c" data-w="in_recent">
-    <span class="tab"><span class="idx">IN·A3</span>Latest incidents<span class="src">· newest first · {{ o.latest|length }} of {{ o.total }}</span></span>
+    <span class="tab">Latest incidents<span class="src">· newest first · {{ o.latest|length }} of {{ o.total }}</span></span>
     <span class="ao-by incidents"><i></i>incidents</span>
     {% for incident in o.latest %}
         <a class="i-hit" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">

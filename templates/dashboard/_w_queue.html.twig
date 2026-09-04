@@ -3,7 +3,7 @@
    one is its own category's term, never a global SLA. #}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="queue">
-    <span class="tab"><span class="idx">IN·02</span>My queue<span class="src">· oldest first</span></span>
+    <span class="tab">My queue<span class="src">· oldest first</span></span>
     <div class="use i-queuenote">Everything waiting on <b>you</b>. The clock is the category's own term, not one global SLA.</div>
     {% for incident in dashboard.queue %}
         <div class="i-party i-queuerow">

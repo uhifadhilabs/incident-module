@@ -1,7 +1,7 @@
 {# IN·06 — the thirty-day load, one bar per DAY including the quiet ones. Skipping
    an empty day would silently compress the month and make a lull look like work. #}
 <div class="c" data-w="spark">
-    <span class="tab"><span class="idx">IN·06</span>Thirty-day load<span class="src">· one bar per day · {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }}</span></span>
+    <span class="tab">Thirty-day load<span class="src">· one bar per day · {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }}</span></span>
     {% set peak = dashboard.peakCount %}
     <div class="i-spark">
         {% for day, count in dashboard.dailyCounts %}
