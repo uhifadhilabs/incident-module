@@ -158,12 +158,15 @@ which become the incident's provenance and are never editable again.
 ## Permissions
 
 Declared, never granted: the host folds these into its permission catalogue for
-admins to assign, and they vanish with the module on uninstall.
+admins to assign, and they vanish with the module on uninstall. Each carries the
+sentence the host's permission matrix prints under the name, because "Incidents ·
+Manage" says which words this module chose and not what ticking the box hands
+over.
 
-| Value | What it guards |
-|---|---|
-| `incidents.record` | Filing an incident. |
-| `incidents.manage` | Moving one through its workflow. |
+| Value | Name | Printed under it |
+|---|---|---|
+| `incidents.record` | Incidents · Record | File an incident: what happened, where, and the evidence for it. |
+| `incidents.manage` | Incidents · Manage | Move an incident through verification, response and closure, and settle the fines and compensation on it. |
 
 The split is the design's own economics — *a report is cheap and a verification
 is expensive*. The design's IN·R1 card says filing should need no permission of
@@ -182,10 +185,32 @@ The bundle registers via Flex (`"type": "symfony-bundle"`), which adds
 
 Then, in the host:
 
-1. **Migrate.** The bundle maps its own entities, so no doctrine mappings block
+1. **Answer the user contract.** Five columns name a person — who reported the
+   incident, who it is assigned to, who acted on the event, who linked it to
+   another, and the team member behind a party to it — and none of them names an
+   account class. They are mapped to
+   `Uhifadhi\ModuleContracts\Entity\UserInterface`, and the installation resolves
+   that interface to whatever it calls its people. Install
+   `uhifadhi/team-module` and the answer arrives with it (0.3.2 and later states
+   the resolution from its own bundle); otherwise write one line naming your own
+   class, under the `orm:` key already in `config/packages/doctrine.yaml`:
+
+   ```yaml
+   doctrine:
+       orm:
+           resolve_target_entities:
+               Uhifadhi\ModuleContracts\Entity\UserInterface: App\Entity\Person
+   ```
+
+   Until something answers it, the bundle installs and the kernel boots, but
+   anything that walks the metadata — including the `diff` below — stops on the
+   unresolved interface. Deleting an account later sets those five columns null
+   and leaves the incidents standing, which is why each of those records keeps
+   the person's name beside the relation.
+2. **Migrate.** The bundle maps its own entities, so no doctrine mappings block
    is needed — just `bin/console doctrine:migrations:diff` and review. It adds
    the seven `incident*` tables above and nothing else; it alters no host table.
-2. **Install the taxonomy** — the one step that is not automatic, because it is a
+3. **Install the taxonomy** — the one step that is not automatic, because it is a
    data decision and a bundle that wrote rows into a host's database on boot would
    be making it for them:
 
@@ -196,12 +221,13 @@ Then, in the host:
    Idempotent and non-destructive. Run it again after any change to
    `incident.taxonomy`; a kind of incident that has left the configuration is
    **left alone**, never deleted, because case files are filed against it.
-3. **Enable the Stimulus controllers** in `assets/controllers.json` (the recipe
+4. **Enable the Stimulus controllers** in `assets/controllers.json` (the recipe
    does this): `incident-map`, `incident-board`, `incident-report`.
 
 The host must already provide what every uhifadhi module bundle binds to:
-`Uhifadhi\Entity\{AreaOfInterest,Zone,User,Position,Department}`, the widget
-framework (`Uhifadhi\Service\{WidgetService,WidgetEndpoint}` and
+`Uhifadhi\Entity\{AreaOfInterest,Zone,Position,Department}` and an account class
+answering the user contract above, the widget framework
+(`Uhifadhi\Service\{WidgetService,WidgetEndpoint}` and
 `templates/widgets/_library.html.twig`), `layout.html.twig`, and symfony/ux-icons
 with the `lucide` set imported. Leaflet and the map seam are no longer among the
 host's obligations: they come from `uhifadhi/map-module`, which this bundle

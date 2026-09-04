@@ -66,4 +66,23 @@ final class IncidentModuleProviderTest extends TestCase
         self::assertSame(['Incidents', 'Incidents'], array_map(static fn (ModulePermission $p) => $p->umbrella, $permissions));
         self::assertSame(['Record', 'Manage'], array_map(static fn (ModulePermission $p) => $p->action, $permissions));
     }
+
+    /**
+     * The sentences the host's permission matrix prints under the two names.
+     * "Incidents · Manage" says which words this module chose; the sentence says
+     * what ticking the box hands over — and with these two the difference is the
+     * whole design, because one of them is cheap and the other settles money.
+     */
+    public function testEachTierCarriesTheSentenceTheMatrixPrints(): void
+    {
+        $permissions = new IncidentModuleProvider('operations')->permissions();
+
+        self::assertSame(
+            [
+                'File an incident: what happened, where, and the evidence for it.',
+                'Move an incident through verification, response and closure, and settle the fines and compensation on it.',
+            ],
+            array_map(static fn (ModulePermission $p) => $p->description, $permissions),
+        );
+    }
 }

@@ -85,13 +85,27 @@ final class IncidentModuleProvider implements ModuleProviderInterface
      * hide a row from another — a view permission is exactly the tool somebody
      * would eventually use to do it.
      *
+     * EACH TIER CARRIES A SENTENCE, printed under the name in the host's matrix.
+     * The two names differ by one word, and the words alone do not tell an
+     * administrator that the second one settles money; the sentences do.
+     *
      * @return list<ModulePermission>
      */
     public function permissions(): array
     {
         return [
-            new ModulePermission(IncidentReportController::RECORD_PERMISSION, 'Incidents', 'Record'),
-            new ModulePermission(IncidentDetailController::MANAGE_PERMISSION, 'Incidents', 'Manage'),
+            new ModulePermission(
+                IncidentReportController::RECORD_PERMISSION,
+                'Incidents',
+                'Record',
+                'File an incident: what happened, where, and the evidence for it.',
+            ),
+            new ModulePermission(
+                IncidentDetailController::MANAGE_PERMISSION,
+                'Incidents',
+                'Manage',
+                'Move an incident through verification, response and closure, and settle the fines and compensation on it.',
+            ),
         ];
     }
 }
