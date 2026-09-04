@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Service;
 
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
@@ -22,6 +21,7 @@ use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Model\IncidentRail;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * BUILDS THE DASHBOARD, once per request.
@@ -62,7 +62,7 @@ final readonly class IncidentDashboardService
     ) {
     }
 
-    public function build(IncidentFilter $filter, \DateTimeImmutable $now, ?User $viewer = null): IncidentDashboard
+    public function build(IncidentFilter $filter, \DateTimeImmutable $now, ?UserInterface $viewer = null): IncidentDashboard
     {
         $incidents = $this->incidents->findFiltered($filter);
 
@@ -96,7 +96,7 @@ final readonly class IncidentDashboardService
      * rendering an empty card. Null only when they have touched nothing and
      * nothing is waiting on them.
      */
-    public function rail(IncidentFilter $filter, \DateTimeImmutable $now, ?User $viewer): ?IncidentRail
+    public function rail(IncidentFilter $filter, \DateTimeImmutable $now, ?UserInterface $viewer): ?IncidentRail
     {
         if (null === $viewer) {
             return null;

@@ -25,13 +25,13 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Model\IncidentWidgets;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 use Uhifadhi\Service\WidgetEndpoint;
 use Uhifadhi\Service\WidgetService;
 
@@ -245,10 +245,10 @@ final class IncidentWidgetsController
         return new RedirectResponse($this->router->generate('incident_widgets', ['uuid' => $area->getUuidString()]));
     }
 
-    private function viewer(): ?User
+    private function viewer(): ?UserInterface
     {
         $user = $this->tokenStorage->getToken()?->getUser();
 
-        return $user instanceof User ? $user : null;
+        return $user instanceof UserInterface ? $user : null;
     }
 }

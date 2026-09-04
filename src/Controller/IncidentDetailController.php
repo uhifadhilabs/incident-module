@@ -30,7 +30,6 @@ use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 use Uhifadhi\Incident\Exception\IncidentTransitionException;
@@ -38,6 +37,7 @@ use Uhifadhi\Incident\Model\IncidentMapPayload;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * ONE CASE FILE — the whole record on one page, and the one place an incident is
@@ -214,11 +214,11 @@ final class IncidentDetailController
     }
 
     /** Who is making the move. Null in a host without security — the timeline says so honestly. */
-    private function actor(): ?User
+    private function actor(): ?UserInterface
     {
         $user = $this->tokenStorage?->getToken()?->getUser();
 
-        return $user instanceof User ? $user : null;
+        return $user instanceof UserInterface ? $user : null;
     }
 
     /**
@@ -226,7 +226,7 @@ final class IncidentDetailController
      * form. Kept BESIDE the account on the event, so the record still names them
      * if the account is later removed.
      */
-    public static function nameOf(?User $user): ?string
+    public static function nameOf(?UserInterface $user): ?string
     {
         if (null === $user) {
             return null;

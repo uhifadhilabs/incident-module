@@ -15,10 +15,10 @@ namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * ONE THING THAT HAPPENED TO AN INCIDENT — the spine of the record.
@@ -74,9 +74,9 @@ class IncidentEvent
      * Who did it. Null is honest for the clock's own events — an auto-close has no
      * author, and inventing one would put a person's name on a machine's action.
      */
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: UserInterface::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    private ?User $actor = null;
+    private ?UserInterface $actor = null;
 
     /** The name the author is printed under, kept even if the user row later goes. */
     #[ORM\Column(length: 120, nullable: true)]
@@ -147,7 +147,7 @@ class IncidentEvent
         return $this;
     }
 
-    public function getActor(): ?User
+    public function getActor(): ?UserInterface
     {
         return $this->actor;
     }
@@ -158,7 +158,7 @@ class IncidentEvent
     }
 
     /** Set once, at construction time — see {@see withDetail()}. */
-    public function withActor(?User $actor, ?string $actorName = null): static
+    public function withActor(?UserInterface $actor, ?string $actorName = null): static
     {
         $this->actor = $actor;
         $this->actorName = $actorName;

@@ -21,13 +21,13 @@ use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Model\IncidentWidgets;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 use Uhifadhi\Service\WidgetService;
 
 /**
@@ -114,11 +114,11 @@ final class IncidentController
     }
 
     /** Null where the host runs no security, or nobody is signed in: the shipped composition. */
-    private function viewer(): ?User
+    private function viewer(): ?UserInterface
     {
         $user = $this->tokenStorage?->getToken()?->getUser();
 
-        return $user instanceof User ? $user : null;
+        return $user instanceof UserInterface ? $user : null;
     }
 
     private function userId(): ?int

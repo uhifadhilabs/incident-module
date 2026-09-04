@@ -20,12 +20,12 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\Department;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\IncidentFilter;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * EVERY QUESTION THE INCIDENTS SURFACES ASK, in one place.
@@ -432,7 +432,7 @@ final class IncidentRepository extends ServiceEntityRepository
      *
      * @return list<Incident>
      */
-    public function queueFor(User $user, ?AreaOfInterest $area = null): array
+    public function queueFor(UserInterface $user, ?AreaOfInterest $area = null): array
     {
         $qb = $this->createQueryBuilder('i')
             ->join('i.subcategory', 's')->addSelect('s')
@@ -465,7 +465,7 @@ final class IncidentRepository extends ServiceEntityRepository
      * {@see queueFor()} and says so in its own header, rather than rendering an
      * empty card.
      */
-    public function lastTouchedBy(User $user, ?AreaOfInterest $area = null): ?Incident
+    public function lastTouchedBy(UserInterface $user, ?AreaOfInterest $area = null): ?Incident
     {
         $qb = $this->createQueryBuilder('i')
             ->join('i.events', 'e')

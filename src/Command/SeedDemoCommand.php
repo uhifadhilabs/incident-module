@@ -22,7 +22,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Entity\Zone;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
@@ -44,6 +43,7 @@ use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * SEEDS THE DESIGN'S SAMPLE MONTH — the forty-seven incidents the gallery talks
@@ -156,7 +156,7 @@ final class SeedDemoCommand extends Command
     /**
      * @param array{reference: string, day: int, hour: int, minute: int, subcategory: string, status: string, severity: string, zone: string, title: string, narrative: string|null, source: string, money: array{claimed: int|null, assessed: int|null, approved: int|null, settled: int|null}|null, evidence: int, parties: list<array{role: string, name: string, described: string|null}>} $row
      * @param array<string, Zone>                                                                                                                                                                                                                                                                                                                                                              $zones
-     * @param list<User>                                                                                                                                                                                                                                                                                                                                                                       $recorders
+     * @param list<UserInterface>                                                                                                                                                                                                                                                                                                                                                              $recorders
      */
     private function file(
         AreaOfInterest $area,
@@ -226,7 +226,7 @@ final class SeedDemoCommand extends Command
      * the status column directly would be able to produce states the product
      * cannot, and the first bug report would be about the seeded data.
      */
-    private function walkTo(Incident $incident, IncidentStatusEnum $target, \DateTimeImmutable $reportedAt, ?User $actor, ?string $actorName): void
+    private function walkTo(Incident $incident, IncidentStatusEnum $target, \DateTimeImmutable $reportedAt, ?UserInterface $actor, ?string $actorName): void
     {
         $at = $reportedAt;
         foreach ([
@@ -297,17 +297,17 @@ final class SeedDemoCommand extends Command
      * no people: accounts are the host's business (seeder:accounts), and inventing
      * users here would put names on a performance page that nobody recognises.
      *
-     * @return list<User>
+     * @return list<UserInterface>
      */
     private function recorders(): array
     {
-        /** @var list<User> $users */
-        $users = $this->entityManager->getRepository(User::class)->findBy([], ['id' => 'ASC'], 6);
+        /** @var list<UserInterface> $users */
+        $users = $this->entityManager->getRepository(UserInterface::class)->findBy([], ['id' => 'ASC'], 6);
 
         return $users;
     }
 
-    private static function nameOf(?User $user): ?string
+    private static function nameOf(?UserInterface $user): ?string
     {
         if (null === $user) {
             return null;

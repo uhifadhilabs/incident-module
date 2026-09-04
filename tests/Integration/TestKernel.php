@@ -25,14 +25,15 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\UX\Icons\UXIconsBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Tests\Fixtures\Account\User;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\HeaderUserAuthenticator;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
 use Uhifadhi\Incident\UhifadhiIncidentBundle;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 use Uhifadhi\Repository\WidgetCustomPresetRepository;
 use Uhifadhi\Repository\WidgetPreferenceRepository;
 use Uhifadhi\Service\WidgetEndpoint;
@@ -52,8 +53,10 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
  * that is only tested against mocks of its host is a module nobody has proved
  * installs:
  *
- *  - the host ENTITIES (AreaOfInterest, Zone, User, Position, Department) are
- *    mapped from tests/Fixtures/Uhifadhi/Entity;
+ *  - the host ENTITIES (AreaOfInterest, Zone, Position, Department) are mapped
+ *    from tests/Fixtures/Uhifadhi/Entity, and the PERSON is not among them: the
+ *    module points at one through a published contract, so this kernel supplies
+ *    an account class of its own and resolves the contract to it;
  *  - the host's WIDGET FRAMEWORK (WidgetService, WidgetEndpoint and their two
  *    entities) is registered here exactly as the host registers it, so the
  *    incidents dashboard and library are exercised on the REAL framework rather
@@ -143,14 +146,32 @@ final class TestKernel extends Kernel
                 // the column names it will actually meet.
                 'naming_strategy' => 'doctrine.orm.naming_strategy.underscore',
                 'mappings' => [
-                    // The dev-only Uhifadhi\Entity stubs, so the Incident relations
-                    // resolve standalone (the real ones live inside uhifadhi).
+                    // The dev-only Uhifadhi\Entity stubs (area, zone, position,
+                    // department), so the Incident relations resolve standalone.
+                    // They stand in for host things this module has no published
+                    // contract for yet; the PERSON is not among them any more —
+                    // see the account mapping and the resolution below.
                     'UhifadhiHostStubs' => [
                         'type' => 'attribute',
                         'dir' => \dirname(__DIR__).'/Fixtures/Uhifadhi/Entity',
                         'prefix' => 'Uhifadhi\\Entity',
                         'is_bundle' => false,
                     ],
+                    // The test installation's own account class, mapped the way
+                    // an installation maps the module that provides its team.
+                    'TestInstallationAccount' => [
+                        'type' => 'attribute',
+                        'dir' => \dirname(__DIR__).'/Fixtures/Account',
+                        'prefix' => 'Uhifadhi\\Incident\\Tests\\Fixtures\\Account',
+                        'is_bundle' => false,
+                    ],
+                ],
+                // THE ONE LINE AN INSTALLATION WRITES. Every person on an
+                // incident is declared against the contract, so without this the
+                // bundle cannot build a schema at all — and with it, the foreign
+                // keys point at whatever account table the installation has.
+                'resolve_target_entities' => [
+                    UserInterface::class => User::class,
                 ],
             ],
         ]);

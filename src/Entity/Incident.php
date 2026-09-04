@@ -19,13 +19,13 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\Department;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Entity\Zone;
 use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * ONE EVENT, IN ONE AREA, AT ONE PLACE, IN ONE CATEGORY, AT ONE POINT IN A
@@ -154,14 +154,14 @@ class Incident
      * holds, so a null here is a row no department can claim — which is the honest
      * answer for a seeded or imported incident.
      */
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: UserInterface::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    private ?User $reportedBy = null;
+    private ?UserInterface $reportedBy = null;
 
     /** Whose queue it sits in. */
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: UserInterface::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    private ?User $assignedTo = null;
+    private ?UserInterface $assignedTo = null;
 
     /** Recorded, never restricting — see the class docblock. */
     #[ORM\ManyToOne(targetEntity: Department::class)]
@@ -477,24 +477,24 @@ class Incident
         return $this;
     }
 
-    public function getReportedBy(): ?User
+    public function getReportedBy(): ?UserInterface
     {
         return $this->reportedBy;
     }
 
-    public function setReportedBy(?User $reportedBy): static
+    public function setReportedBy(?UserInterface $reportedBy): static
     {
         $this->reportedBy = $reportedBy;
 
         return $this;
     }
 
-    public function getAssignedTo(): ?User
+    public function getAssignedTo(): ?UserInterface
     {
         return $this->assignedTo;
     }
 
-    public function setAssignedTo(?User $assignedTo): static
+    public function setAssignedTo(?UserInterface $assignedTo): static
     {
         $this->assignedTo = $assignedTo;
 

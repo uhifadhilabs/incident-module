@@ -18,12 +18,12 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Entity\Zone;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Tests\Fixtures\Account\User;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 
 /**

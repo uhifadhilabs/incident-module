@@ -15,10 +15,10 @@ namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Incident\Enum\PartyRoleEnum;
 use Uhifadhi\Incident\Repository\IncidentPartyRepository;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * SOMEBODY — OR SOMETHING — INVOLVED, wearing a role.
@@ -63,9 +63,9 @@ class IncidentParty
     private ?string $describedAs = null;
 
     /** The account, where the party is somebody the deployment has one for. */
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: UserInterface::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    private ?User $user = null;
+    private ?UserInterface $user = null;
 
     public function __construct(Incident $incident, PartyRoleEnum $role, string $name)
     {
@@ -128,12 +128,12 @@ class IncidentParty
         return $this;
     }
 
-    public function getUser(): ?User
+    public function getUser(): ?UserInterface
     {
         return $this->user;
     }
 
-    public function setUser(?User $user): static
+    public function setUser(?UserInterface $user): static
     {
         $this->user = $user;
 

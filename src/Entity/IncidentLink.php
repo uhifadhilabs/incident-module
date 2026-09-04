@@ -15,9 +15,9 @@ namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Incident\Repository\IncidentLinkRepository;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * "THESE TWO ARE RELATED" — and A LINK IS A CLAIM, so it carries who made it.
@@ -58,9 +58,9 @@ class IncidentLink
     #[ORM\Column(length: 300, nullable: true)]
     private ?string $note = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: UserInterface::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    private ?User $linkedBy = null;
+    private ?UserInterface $linkedBy = null;
 
     #[ORM\Column(length: 120, nullable: true)]
     private ?string $linkedByName = null;
@@ -110,7 +110,7 @@ class IncidentLink
         return $this;
     }
 
-    public function getLinkedBy(): ?User
+    public function getLinkedBy(): ?UserInterface
     {
         return $this->linkedBy;
     }
@@ -120,7 +120,7 @@ class IncidentLink
         return $this->linkedByName;
     }
 
-    public function setLinkedBy(?User $linkedBy, ?string $name = null): static
+    public function setLinkedBy(?UserInterface $linkedBy, ?string $name = null): static
     {
         $this->linkedBy = $linkedBy;
         $this->linkedByName = $name;

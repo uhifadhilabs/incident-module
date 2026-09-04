@@ -28,7 +28,6 @@ use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
 use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
@@ -37,6 +36,7 @@ use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentReportService;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 use Uhifadhi\Storage\Model\FileEntry;
 use Uhifadhi\Storage\Registry\FileRegistry;
 
@@ -365,11 +365,11 @@ final class IncidentReportController
         }
     }
 
-    private function filer(): ?User
+    private function filer(): ?UserInterface
     {
         $user = $this->tokenStorage->getToken()?->getUser();
 
-        return $user instanceof User ? $user : null;
+        return $user instanceof UserInterface ? $user : null;
     }
 
     private function flash(Request $request, string $message): void

@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Service;
 
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
@@ -22,6 +21,7 @@ use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 use Uhifadhi\Incident\Exception\IncidentTransitionException;
 use Uhifadhi\Incident\Workflow\IncidentGuardEnum;
 use Uhifadhi\Incident\Workflow\IncidentWorkflow;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * THE ONLY SUPPORTED WAY AN INCIDENT MOVES.
@@ -128,7 +128,7 @@ final readonly class IncidentTransitionService
         Incident $incident,
         IncidentTransitionEnum $transition,
         \DateTimeImmutable $at,
-        ?User $actor = null,
+        ?UserInterface $actor = null,
         ?string $actorName = null,
         ?string $note = null,
     ): IncidentEvent {
@@ -172,7 +172,7 @@ final readonly class IncidentTransitionService
         Incident $incident,
         IncidentTransitionEnum $transition,
         \DateTimeImmutable $at,
-        ?User $actor,
+        ?UserInterface $actor,
         ?string $actorName,
         ?string $note,
         bool $byClock,

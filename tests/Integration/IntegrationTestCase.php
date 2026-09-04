@@ -19,11 +19,11 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Uhifadhi\Entity\AreaOfInterest;
 use Uhifadhi\Entity\Department;
 use Uhifadhi\Entity\Position;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Entity\Zone;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Tests\Fixtures\Account\User;
 
 /**
  * Symfony-standard kernel testing: KernelTestCase + KERNEL_CLASS (phpunit.dist.xml)

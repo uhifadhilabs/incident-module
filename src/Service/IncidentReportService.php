@@ -15,7 +15,6 @@ namespace Uhifadhi\Incident\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\User;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Entity\IncidentParty;
@@ -27,6 +26,7 @@ use Uhifadhi\Incident\Enum\PartyRoleEnum;
 use Uhifadhi\Incident\Model\IncidentPrefill;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
+use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * FILING AN INCIDENT — the only door in.
@@ -73,7 +73,7 @@ final readonly class IncidentReportService
         IncidentSourceEnum $source = IncidentSourceEnum::Direct,
         ?\DateTimeImmutable $occurredAt = null,
         ?string $narrative = null,
-        ?User $reportedBy = null,
+        ?UserInterface $reportedBy = null,
         ?IncidentPrefill $prefill = null,
         array $details = [],
     ): Incident {
@@ -141,7 +141,7 @@ final readonly class IncidentReportService
     }
 
     /** "J. Mollel" — the design's form for a person's name on a record. */
-    private static function nameOf(?User $user): ?string
+    private static function nameOf(?UserInterface $user): ?string
     {
         if (null === $user) {
             return null;
