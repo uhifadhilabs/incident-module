@@ -63,7 +63,7 @@ use Uhifadhi\ModuleContracts\Entity\UserInterface;
  */
 final class IncidentDetailController
 {
-    /** Moving an incident on is the expensive half of the workflow — see the module's README. */
+    /** Moving an incident on is the expensive half of the workflow — see `docs/permissions.md`. */
     public const string MANAGE_PERMISSION = 'incidents.manage';
 
     public function __construct(

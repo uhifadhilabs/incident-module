@@ -76,7 +76,7 @@ use Uhifadhi\Storage\Registry\FileRegistry;
  * "anyone with Modules access · not a permission of its own"; a POST that CREATES
  * a record still has to be guarded by something a host can grant, so the module
  * DECLARES this permission and a deployment that agrees with the design grants it
- * to everyone who can reach the module. See the README's Permissions section.
+ * to everyone who can reach the module. See `docs/permissions.md`.
  */
 final class IncidentReportController
 {
