@@ -134,4 +134,55 @@ final class DashboardPageTest extends FunctionalTestCase
         self::assertGreaterThan(0, $crawler->filter('.i-lensbar a[data-lens="all"]')->count());
         self::assertStringContainsString('A lens, not a fence', $crawler->filter('.i-lensnote')->text());
     }
+
+    /**
+     * A DOOR THE VIEWER CANNOT OPEN IS NOT DRAWN.
+     *
+     * "Report incident" opens the screen that CREATES an incident, and that
+     * screen enforces incidents.record in code. The dashboard was deciding
+     * whether to draw the control from `incident.record_screens` — a
+     * compile-time parameter answering a different question: whether the route
+     * EXISTS in this installation, which it does wherever SecurityBundle is
+     * registered. So the page asked about the installation and printed the
+     * answer as if it were about the person.
+     *
+     * A control the viewer may not have is ABSENT rather than greyed out: a
+     * disabled button tells somebody a screen exists and they are not trusted
+     * with it, while a live link that fails tells them nothing until the click
+     * is gone.
+     */
+    public function testTheReportControlIsOfferedOnlyToSomebodyWhoMayFile(): void
+    {
+        $area = $this->anArea();
+        $this->anIncident($area);
+
+        // Staff, signed in, holding neither permission — the shape of the very
+        // first person an installation adds after the administrator.
+        $this->client->loginUser($this->aUser('bystander@example.test', 'Neema', 'Kimaro'));
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('.pgact a[href$="/incidents/new"]'));
+
+        // …and the reporter, who may, is handed it.
+        $this->client->loginUser($this->aReporter());
+        $offered = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertCount(1, $offered->filter('.pgact a[href$="/incidents/new"]'));
+    }
+
+    /**
+     * THE SAME QUESTION INSIDE A WIDGET. The report entry card carries the same
+     * door, and it may not answer differently from the header above it.
+     */
+    public function testTheReportCardsControlAsksTheSameQuestion(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aUser('bystander@example.test', 'Neema', 'Kimaro'));
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('a[href$="/incidents/new"]'));
+    }
 }

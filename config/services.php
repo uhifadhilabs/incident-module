@@ -168,9 +168,16 @@ return static function (ContainerConfigurator $container): void {
             // dashboard renders the module's shipped composition for everyone.
             service('security.token_storage')->nullOnInvalid(),
             // Registered only under the bundle's SecurityBundle guard, so it is
-            // genuinely absent in a host without security — and the board then
-            // renders as a board of links.
+            // genuinely absent in an installation without security — and the
+            // board then renders as a board of links.
             service('incident.transition_token')->nullOnInvalid(),
+            // Whether THIS VIEWER may file — a different question from whether
+            // the filing screen exists, and the dashboard has to ask both before
+            // it offers a door. Null under the same condition as the token
+            // storage, and the answer is then "no door", which is right: an
+            // installation with no authorization checker cannot enforce
+            // incidents.record either, so the filing route does not exist.
+            service('security.authorization_checker')->nullOnInvalid(),
         ])
         ->public();
 

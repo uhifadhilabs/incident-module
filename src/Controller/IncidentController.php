@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Environment;
 use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Model\IncidentFilter;
@@ -72,13 +73,19 @@ final class IncidentController
         private readonly IncidentCategoryRepository $categories,
         private readonly WidgetService $widgets,
         private readonly IncidentWidgetUrls $widgetUrls,
-        /** Whether the writing screens exist in this host — they need SecurityBundle. */
+        /**
+         * Whether the writing screens EXIST in this installation — they need
+         * SecurityBundle. A question about the installation, never about the
+         * viewer; {@see self::mayRecord()} asks the other one.
+         */
         private readonly bool $recordScreens = false,
         /** Whether the widget library exists in this host — it edits ONE person's layout. */
         private readonly bool $widgetScreens = false,
         private readonly ?TokenStorageInterface $tokenStorage = null,
         /** Minted in one place — see the service's own docblock for why. */
         private readonly ?IncidentTransitionToken $transitionToken = null,
+        /** Null without security — see {@see self::mayRecord()}. */
+        private readonly ?AuthorizationCheckerInterface $authorization = null,
     ) {
     }
 
@@ -103,7 +110,7 @@ final class IncidentController
             'now' => $now,
             'dashboard' => $this->dashboard->build($filter, $now, $viewer),
             'filter' => $filter,
-            'recordScreens' => $this->recordScreens,
+            'recordScreens' => $this->mayRecord(),
             'widgetScreens' => $this->widgetScreens,
             // Which widgets this person keeps, how wide, in what order — the
             // module's shipped composition until they adopt one of the five.
@@ -113,7 +120,36 @@ final class IncidentController
         ]));
     }
 
-    /** Null where the host runs no security, or nobody is signed in: the shipped composition. */
+    /**
+     * WHETHER TO OFFER THE FILING SCREEN — and it is TWO questions, not one,
+     * which is the bug this method exists to fix.
+     *
+     * The first is about the INSTALLATION: the screen that creates an incident is
+     * registered only where SecurityBundle is, so where it is absent there is no
+     * route to link at. That is `$this->recordScreens`, decided at compile time.
+     *
+     * The second is about THE VIEWER: that screen enforces `incidents.record` in
+     * code, so somebody without it who follows the link gets a 403. Asking only
+     * the first question meant every signed-in person was handed the door, and
+     * the ones who could not open it found out by being refused.
+     *
+     * A CONTROL THE VIEWER MAY NOT HAVE IS ABSENT, never greyed out — the fleet's
+     * rule, and the stronger reading here: a disabled button tells somebody a
+     * screen exists and they are not trusted with it, and a live link that fails
+     * tells them nothing until they have lost the click.
+     *
+     * Null checker means no door, which is correct rather than defensive: an
+     * installation with no authorization checker has no filing route either,
+     * because the bundle registers none without SecurityBundle.
+     */
+    private function mayRecord(): bool
+    {
+        return $this->recordScreens
+            && null !== $this->authorization
+            && $this->authorization->isGranted(IncidentReportController::RECORD_PERMISSION);
+    }
+
+    /** Null where the installation runs no security, or nobody is signed in: the shipped composition. */
     private function viewer(): ?UserInterface
     {
         $user = $this->tokenStorage?->getToken()?->getUser();
