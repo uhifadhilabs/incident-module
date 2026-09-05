@@ -64,8 +64,11 @@ Then, in the host:
    Idempotent and non-destructive. Run it again after any change to
    `incident.taxonomy`; a kind of incident that has left the configuration is
    **left alone**, never deleted, because case files are filed against it.
-4. **Enable the Stimulus controllers** in `assets/controllers.json` (the recipe
-   does this): `incident-map`, `incident-board`, `incident-report`.
+The three Stimulus controllers — `incident-map`, `incident-board`,
+`incident-report` — need no step of their own: Flex synchronises
+`assets/controllers.json` from this package's own `assets/package.json` on every
+`composer require`/`update`, because the package declares the `symfony-ux`
+keyword.
 
 Everything this module binds to now arrives as a module of its own, and composer
 installs all of them: the area an incident happens in and its zones from
