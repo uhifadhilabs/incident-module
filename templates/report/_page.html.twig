@@ -51,11 +51,6 @@
             {{ include('@UhifadhiIncident/report/_what.html.twig', {controller: controller, categories: categories, chosen: chosen, prefill: prefill, compact: false}, with_context: false) }}
         </div>
 
-        <div class="ro-sect">
-            {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 3, heading: 'People & evidence', mark: 'opt', markLabel: 'this one can wait'}, with_context: false) }}
-            {{ include('@UhifadhiIncident/report/_later.html.twig', {prefill: prefill, compact: false}, with_context: false) }}
-        </div>
-
         {{ include('@UhifadhiIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl, compact: false}, with_context: false) }}
     </form>
 </div>

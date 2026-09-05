@@ -79,9 +79,6 @@
 
                     {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 2, heading: 'What happened', mark: null, markLabel: null}, with_context: false) }}
                     {{ include('@UhifadhiIncident/report/_what.html.twig', {controller: controller, categories: categories, chosen: chosen, prefill: prefill, compact: true}, with_context: false) }}
-
-                    {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 3, heading: 'People & evidence', mark: 'opt', markLabel: 'can wait'}, with_context: false) }}
-                    {{ include('@UhifadhiIncident/report/_later.html.twig', {prefill: prefill, compact: true}, with_context: false) }}
                 </div>
 
                 {{ include('@UhifadhiIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl, compact: true}, with_context: false) }}

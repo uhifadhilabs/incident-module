@@ -98,9 +98,11 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertCount(0, $crawler->filter('.ro-drawer'));
         self::assertCount(0, $crawler->filter('.ro-stage'));
         self::assertStringNotContainsString('i-sheet', $crawler->html());
-        // Three headed sections down one column: kind, what happened, and the
-        // one that can wait.
-        self::assertCount(3, $crawler->filter('form.ro-form .ro-sect'));
+        // TWO headed sections down one column: what kind, and what happened.
+        // There was a third — "People & evidence — can wait" — and it asked
+        // nothing; the promise it carried is one line beside the File control
+        // now. A headed step must have a question in it.
+        self::assertCount(2, $crawler->filter('form.ro-form .ro-sect'));
         // One chooser per kind of incident, all four, drawn as cards.
         self::assertCount(4, $crawler->filter('.i-catpick .i-catopt'));
         // …and a field set per sub-category, so choosing one swaps the questions
@@ -398,11 +400,21 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * D'S QUICK-FILE DISCIPLINE, IN BOTH. Three answers file an incident; how
-     * bad, people, evidence and money are present but secondary, in the "add now
-     * or later on the record" grammar the append-only timeline makes honest.
+     * THE QUICK-FILE DISCIPLINE IS ONE SENTENCE, NOT A SECTION.
+     *
+     * Section 3 was "People & evidence — can wait": a headed section containing
+     * four rows of prose, each with a "can wait" pill, and an explainer listing
+     * how bad / people / evidence / money. It had NO INPUTS. A form section with
+     * nothing to fill in is teaching copy dressed as UI — the reader counts three
+     * steps, finds the third asks nothing, and learns that a heading here does
+     * not mean a question.
+     *
+     * The promise survives, because the promise was the point: one quiet line
+     * beside the File control, in both containers, saying what is needed now and
+     * what is added on the record afterwards. Two steps, two questions, and the
+     * discipline stated once where the decision to file is actually made.
      */
-    public function testBothContainersOfferTheOptionalWorkAsSomethingThatCanWait(): void
+    public function testTheQuickFileDisciplineIsOneLineAndNotASection(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
@@ -411,19 +423,21 @@ final class ReportFlowTest extends FunctionalTestCase
         $drawer = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
 
         foreach ([$page, $drawer] as $crawler) {
-            $later = $crawler->filter('.ro-later');
-            self::assertCount(1, $later);
-            foreach (['How bad', 'People', 'Evidence', 'Money'] as $offered) {
-                self::assertStringContainsString($offered, $later->text());
-            }
-            // Every one of them marked as something that can wait.
-            self::assertCount(4, $later->filter('.lrow .ro-opt'));
-            // …and the reason it is honest to move them: the append-only
-            // timeline keeps who added what and when.
-            self::assertStringContainsString('timeline keeps who added it and when', $later->text());
+            // The section, its rows and its pills are gone from the document.
+            self::assertCount(0, $crawler->filter('.ro-later'));
+            self::assertStringNotContainsString('Then, on the record', $crawler->text());
+            self::assertStringNotContainsString('People & evidence', $crawler->text());
 
-            // Exactly the three ruled requirements are marked needed: the kind,
-            // the line, and the place.
+            // …and the one line stands in their place, beside the File control.
+            $promise = $crawler->filter('.ro-promise');
+            self::assertCount(1, $promise);
+            self::assertStringContainsString(
+                'Only the kind, what happened and where are needed now. Severity, people, evidence and money are added on the record afterwards.',
+                $promise->text(),
+            );
+
+            // Exactly the three ruled requirements are still marked needed: the
+            // kind, the line, and the place.
             self::assertCount(3, $crawler->filter('.ro-req'));
         }
     }
