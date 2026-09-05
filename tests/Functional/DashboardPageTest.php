@@ -39,6 +39,20 @@ final class DashboardPageTest extends FunctionalTestCase
         // …and nothing else, because a widget that is off is ABSENT.
         self::assertCount(0, $crawler->filter('[data-w="board"]'));
         self::assertSelectorTextContains('h1.pg', 'Incidents');
+
+        /*
+         * THE TAB TITLE NAMES THE AREA EXACTLY ONCE.
+         *
+         * The shell's document composes it as page — place — brand, where the
+         * place is the area the request is in, so a page that names the area
+         * itself prints it twice ("Sample Area — Incidents — Sample Area —
+         * Uhifadhi"). Every screen of this module did, which is what a
+         * `layout.html.twig` that composed nothing left behind.
+         *
+         * The rule is pinned rather than the string, so it holds for any area in
+         * any installation.
+         */
+        self::assertSame(1, substr_count($crawler->filter('title')->first()->text(), $area->getName() ?? ''));
     }
 
     /**

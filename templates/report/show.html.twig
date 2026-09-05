@@ -20,7 +20,9 @@
    ========================================================================== #}
 {% extends '@UhifadhiIncident/base.html.twig' %}
 
-{% block title %}Report an incident — {{ area.name }}{% endblock %}
+{# A PAGE SAYS ONLY WHAT IT IS. The shell's document composes the tab title as
+   page — place — brand, so naming the area here would print it twice. #}
+{% block title %}Report an incident{% endblock %}
 
 {# THE FILE PREVIEW's vocabulary, and ONLY where the card actually has
    photographs to open in it. This module does not require the storage bundle —
