@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Functional;
 
-use Uhifadhi\Incident\Model\IncidentWidgets;
-use Uhifadhi\Service\WidgetEndpoint;
+use Uhifadhi\Incident\Widget\IncidentWidgets;
+use Uhifadhi\Widget\Service\WidgetEndpoint;
 
 /**
  * THE WIDGET LIBRARY, on the HOST's framework.

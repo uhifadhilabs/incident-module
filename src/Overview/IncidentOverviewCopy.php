@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Overview;
 
+use Uhifadhi\Area\Overview\OverviewCopyProviderInterface;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
-use Uhifadhi\Overview\OverviewCopyProviderInterface;
 
 /**
  * THE MODULE'S WORDS INSIDE THE HOST'S SENTENCES.

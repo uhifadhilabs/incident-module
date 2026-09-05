@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Overview;
 
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Area\Overview\NowTile;
+use Uhifadhi\Area\Overview\NowTileProviderInterface;
 use Uhifadhi\Incident\Model\IncidentOverview;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
-use Uhifadhi\Overview\NowTile;
-use Uhifadhi\Overview\NowTileProviderInterface;
 
 /**
  * THIS MODULE'S TWO TILES IN THE HOST'S RIGHT-NOW STRIP — where the open work

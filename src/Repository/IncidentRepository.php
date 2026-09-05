@@ -18,8 +18,7 @@ use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
-use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\Department;
+use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
@@ -496,16 +495,26 @@ final class IncidentRepository extends ServiceEntityRepository
      * which is the same order of magnitude as the register the module already
      * draws.
      *
-     * The slice is by the position the RECORDER holds, per the host's seam. It is
-     * reporting and not permission: nothing else in this class filters by
-     * department, and no screen may.
+     * The slice is by the position the RECORDER holds, per the area module's
+     * seam. It is reporting and not permission: nothing else in this class
+     * filters by department, and no screen may.
+     *
+     * THE DEPARTMENT ARRIVES AS AN ID, because no package publishes a contract
+     * for one — {@see \Uhifadhi\Area\Kpi\DepartmentRef} is the same decision made
+     * one layer up, and by the time the question reaches SQL it is one integer
+     * anyway.
      *
      * @return list<Incident>
      */
-    public function findForDepartment(Department $department, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    public function findForDepartment(int $departmentId, \DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
+        $scoped = $this->departmentScoped($departmentId, $from, $to);
+        if (null === $scoped) {
+            return [];
+        }
+
         /** @var list<Incident> $incidents */
-        $incidents = $this->departmentScoped($department, $from, $to)
+        $incidents = $scoped
             ->join('i.subcategory', 's')->addSelect('s')
             ->join('s.category', 'c')->addSelect('c')
             ->leftJoin('i.money', 'm')->addSelect('m')
@@ -519,15 +528,20 @@ final class IncidentRepository extends ServiceEntityRepository
     /**
      * How many incidents this department's people recorded, per area — what the
      * per-area performance widget reads. Keyed by area name because that is what
-     * the widget prints and the host's {@see \Uhifadhi\Module\DepartmentKpi} keys
+     * the widget prints and the host's {@see \Uhifadhi\Area\Kpi\DepartmentKpi} keys
      * an area's share by.
      *
      * @return array<string, int>
      */
-    public function countForDepartmentByArea(Department $department, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    public function countForDepartmentByArea(int $departmentId, \DateTimeImmutable $from, \DateTimeImmutable $to): array
     {
+        $scoped = $this->departmentScoped($departmentId, $from, $to);
+        if (null === $scoped) {
+            return [];
+        }
+
         /** @var list<array{name: string, n: int|string}> $rows */
-        $rows = $this->departmentScoped($department, $from, $to)
+        $rows = $scoped
             ->join('i.area', 'a')
             ->select('a.name AS name, COUNT(i.id) AS n')
             ->groupBy('a.name')
@@ -628,14 +642,40 @@ final class IncidentRepository extends ServiceEntityRepository
 
     /**
      * Incidents recorded in a window by somebody holding a position filed under
-     * this department — the host KPI seam's slice, written once.
+     * this department — the area module's KPI slice, written once.
+     *
+     * THE CHAIN IS WALKED IN THE MAPPING, NOT ASSUMED. `incident → reportedBy`
+     * points at whatever class the installation resolved the person contract to,
+     * and only an installation that also has an ORG CHART gives that class a
+     * `position`, and the position a `department`. An installation with a bare
+     * account class of its own has neither, and asking for `u.position` there is
+     * not a wrong answer but a DQL error at query time.
+     *
+     * So the associations are checked before they are named, and NULL means "this
+     * installation cannot answer department questions at all" — which the callers
+     * report as no rows rather than as zero. That is the honest reading: nobody
+     * here holds a position, so nobody's filings are this department's.
      */
-    private function departmentScoped(Department $department, \DateTimeImmutable $from, \DateTimeImmutable $to): QueryBuilder
+    private function departmentScoped(int $departmentId, \DateTimeImmutable $from, \DateTimeImmutable $to): ?QueryBuilder
     {
+        $entityManager = $this->getEntityManager();
+        $account = $entityManager->getClassMetadata(Incident::class)->getAssociationTargetClass('reportedBy');
+        $accountMeta = $entityManager->getClassMetadata($account);
+        if (!$accountMeta->hasAssociation('position')) {
+            return null;
+        }
+        $positionMeta = $entityManager->getClassMetadata($accountMeta->getAssociationTargetClass('position'));
+        if (!$positionMeta->hasAssociation('department')) {
+            return null;
+        }
+
         return $this->createQueryBuilder('i')
             ->join('i.reportedBy', 'u')
             ->join('u.position', 'p')
-            ->andWhere('p.department = :department')->setParameter('department', $department)
+            // Compared against the IDENTIFIER, never against an entity: this
+            // repository is given an id precisely so it never has to name the
+            // class the id belongs to.
+            ->andWhere('p.department = :department')->setParameter('department', $departmentId)
             ->andWhere('i.reportedAt >= :from')->setParameter('from', $from)
             ->andWhere('i.reportedAt < :to')->setParameter('to', $to);
     }

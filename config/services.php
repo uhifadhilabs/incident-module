@@ -29,7 +29,8 @@ use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
-use Uhifadhi\Service\WidgetService;
+use Uhifadhi\Incident\Twig\IncidentTrailExtension;
+use Uhifadhi\Widget\Service\WidgetService;
 
 /*
  * The bundle's static service wiring.
@@ -128,6 +129,15 @@ return static function (ContainerConfigurator $container): void {
             ->args([service('doctrine')])
             ->tag('doctrine.repository_service');
     }
+
+    /*
+     * THE CRUMB'S ONE HELPER — `incident_url()`, which answers null for a screen
+     * the installation did not mount instead of throwing the page away. See
+     * IncidentTrailExtension for why a module's breadcrumb cannot use path().
+     */
+    $services->set('incident.twig.trail', IncidentTrailExtension::class)
+        ->args([service('router')])
+        ->tag('twig.extension');
 
     /*
      * The dashboard. Routes reference "IncidentController::dashboard" and

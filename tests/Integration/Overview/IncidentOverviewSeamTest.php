@@ -13,6 +13,13 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Integration\Overview;
 
+use Uhifadhi\Area\Overview\AttentionItem;
+use Uhifadhi\Area\Overview\AttentionSeverity;
+use Uhifadhi\Area\Overview\ContributesStylesheetInterface;
+use Uhifadhi\Area\Overview\MapLayer;
+use Uhifadhi\Area\Overview\NowTile;
+use Uhifadhi\Area\Overview\OverviewCopyProviderInterface;
+use Uhifadhi\Area\Overview\PulseEvent;
 use Uhifadhi\Incident\Model\IncidentOverview;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Overview\IncidentAttention;
@@ -23,14 +30,7 @@ use Uhifadhi\Incident\Overview\IncidentOverviewCopy;
 use Uhifadhi\Incident\Overview\IncidentPulse;
 use Uhifadhi\Incident\Tests\Integration\OverviewTestCase;
 use Uhifadhi\Incident\UhifadhiIncidentBundle;
-use Uhifadhi\Model\Widget;
-use Uhifadhi\Overview\AttentionItem;
-use Uhifadhi\Overview\AttentionSeverity;
-use Uhifadhi\Overview\ContributesStylesheetInterface;
-use Uhifadhi\Overview\MapLayer;
-use Uhifadhi\Overview\NowTile;
-use Uhifadhi\Overview\OverviewCopyProviderInterface;
-use Uhifadhi\Overview\PulseEvent;
+use Uhifadhi\Widget\Model\Widget;
 
 /**
  * WHAT THIS MODULE PUTS ON THE HOST'S AREA OVERVIEW — the five contracts, each

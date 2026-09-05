@@ -18,6 +18,13 @@ use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Uhifadhi\Area\Kpi\DepartmentKpiProviderInterface;
+use Uhifadhi\Area\Overview\AttentionProviderInterface;
+use Uhifadhi\Area\Overview\MapLayerProviderInterface;
+use Uhifadhi\Area\Overview\NowTileProviderInterface;
+use Uhifadhi\Area\Overview\OverviewContributorInterface;
+use Uhifadhi\Area\Overview\OverviewCopyProviderInterface;
+use Uhifadhi\Area\Overview\PulseProviderInterface;
 use Uhifadhi\Incident\Command\SeedDemoCommand;
 use Uhifadhi\Incident\Command\SyncTaxonomyCommand;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
@@ -39,9 +46,11 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Storage\IncidentFileSource;
-use Uhifadhi\Service\WidgetEndpoint;
-use Uhifadhi\Service\WidgetService;
+use Uhifadhi\Incident\Widget\IncidentWidgets;
 use Uhifadhi\Storage\Registry\FileSourceInterface;
+use Uhifadhi\Widget\Registry\WidgetSurfaceInterface;
+use Uhifadhi\Widget\Service\WidgetEndpoint;
+use Uhifadhi\Widget\Service\WidgetService;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -211,6 +220,25 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 ->tag(FileSourceInterface::TAG);
         }
 
+        /*
+         * THE WIDGET SURFACE, in the registry — the catalogue naming itself so
+         * something can find it.
+         *
+         * OUTSIDE THE SECURITY GUARD BELOW, deliberately. The library screen that
+         * edits a layout needs a person and therefore a firewall, but the
+         * CATALOGUE is true of every installation that registered this bundle: an
+         * installation with no firewall still renders the dashboard, as the
+         * shipped composition, for everyone.
+         *
+         * And the tag is what `widget:prune` walks. A surface no service claims is
+         * a surface whose stored layouts read as orphans — so registering this
+         * only where security happens to be on would mean that removing a
+         * firewall silently marks every arrangement anybody ever saved, in every
+         * area, for deletion.
+         */
+        $services->set('incident.widget_surface', IncidentWidgets::class)
+            ->tag(WidgetSurfaceInterface::TAG);
+
         if ($hasSecurity) {
             // The one token both the case file and the status board post with.
             // Registered under the security guard because without SecurityBundle
@@ -316,17 +344,19 @@ final class UhifadhiIncidentBundle extends AbstractBundle
          * bundle is not autoconfigured, so the host's registerForAutoconfiguration
          * never fires here.
          *
-         * The tag names are written as literal strings rather than read off the
-         * host's interface constants, exactly as 'uhifadhi.module' and
-         * 'uhifadhi.department_kpi' are: the host classes are a DEV dependency of
-         * this bundle (tests/Fixtures/Uhifadhi), so referencing a constant would
-         * compile against a copy rather than against the host, and the copy going
-         * stale would be invisible until an area's overview quietly lost this
-         * module's section.
+         * THE TAG NAMES ARE THE INTERFACES' OWN CONSTANTS. They were literals
+         * once, pinned to a copy of the seam kept under tests/Fixtures because
+         * the real classes were an application's and off this bundle's classpath
+         * at build time. They belong to uhifadhi/area-module now, which is a
+         * requirement of this package, so a rename over there is a compile error
+         * here rather than a module that silently stops contributing.
+         *
+         * 'uhifadhi.module' above stays a literal, because
+         * uhifadhi/module-contracts publishes no constant for it.
          *
          * A missing tag looks like a module nobody installed:
          *   widget_provider  the headed section and its five widgets vanish
-         *   now_tile         the two IN·N plates leave the right-now strip
+         *   now_tile         the two right-now plates leave the strip
          *   attention        late work stops asking for anybody
          *   map.layer        open incidents stop being drawn, legend and all
          *   pulse            the module's moves stop reaching the area's stream
@@ -334,30 +364,30 @@ final class UhifadhiIncidentBundle extends AbstractBundle
          */
         $services->set('incident.overview.contributor', IncidentOverviewContributor::class)
             ->args([service('incident.overview.figures')])
-            ->tag('uhifadhi.overview.widget_provider');
+            ->tag(OverviewContributorInterface::TAG);
 
         $services->set('incident.overview.now_tiles', IncidentNowTiles::class)
             ->args([service('incident.overview.figures')])
-            ->tag('uhifadhi.overview.now_tile');
+            ->tag(NowTileProviderInterface::TAG);
 
         $services->set('incident.overview.attention', IncidentAttention::class)
             ->args([service('incident.overview.figures'), service('router')])
-            ->tag('uhifadhi.overview.attention');
+            ->tag(AttentionProviderInterface::TAG);
 
         $services->set('incident.overview.map_layers', IncidentMapLayers::class)
             ->args([service(IncidentRepository::class)])
-            ->tag('uhifadhi.map.layer');
+            ->tag(MapLayerProviderInterface::TAG);
 
         // THE MODULE'S WORDS INSIDE THE HOST'S SENTENCES. Not a widget and not a
         // part of one: the phrase the host drops into its own copy about the
         // operational plate, so "open incidents" is said by the module that draws
         // them rather than written into the host.
         $services->set('incident.overview.copy', IncidentOverviewCopy::class)
-            ->tag('uhifadhi.overview.copy');
+            ->tag(OverviewCopyProviderInterface::TAG);
 
         $services->set('incident.overview.pulse', IncidentPulse::class)
             ->args([service(IncidentEventRepository::class), service('router')])
-            ->tag('uhifadhi.overview.pulse');
+            ->tag(PulseProviderInterface::TAG);
 
         $services->set('incident.department_kpi_provider', IncidentDepartmentKpiProvider::class)
             ->args([
@@ -366,6 +396,6 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 'Incidents',
                 $currency,
             ])
-            ->tag('uhifadhi.department_kpi');
+            ->tag(DepartmentKpiProviderInterface::TAG);
     }
 }

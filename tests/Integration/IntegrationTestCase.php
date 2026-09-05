@@ -16,14 +16,14 @@ namespace Uhifadhi\Incident\Tests\Integration;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\Department;
-use Uhifadhi\Entity\Position;
-use Uhifadhi\Entity\Zone;
+use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\Zone;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
-use Uhifadhi\Incident\Tests\Fixtures\Account\User;
+use Uhifadhi\Team\Entity\Department;
+use Uhifadhi\Team\Entity\Position;
+use Uhifadhi\Team\Entity\User;
 
 /**
  * Symfony-standard kernel testing: KernelTestCase + KERNEL_CLASS (phpunit.dist.xml)
@@ -72,6 +72,10 @@ abstract class IntegrationTestCase extends KernelTestCase
     {
         $area = new AreaOfInterest();
         $area->setName($name);
+        // NOT NULL in uhifadhi/area-module: an area is always something an
+        // installation got from somewhere, and the stub this suite used to map
+        // let it be null.
+        $area->setSource('test fixture');
         $area->setGeom('{"type":"MultiPolygon","coordinates":[[[[35.0,-3.6],[36.0,-3.6],[36.0,-2.8],[35.0,-2.8],[35.0,-3.6]]]]}');
         $this->em->persist($area);
         $this->em->flush();
@@ -85,7 +89,8 @@ abstract class IntegrationTestCase extends KernelTestCase
      */
     protected function aZone(AreaOfInterest $area, string $name, float $west = 35.0, float $east = 35.5): Zone
     {
-        $zone = new Zone($area, $name);
+        $zone = new Zone();
+        $zone->setArea($area)->setName($name);
         $zone->setGeom(\sprintf(
             '{"type":"MultiPolygon","coordinates":[[[[%1$F,-3.6],[%2$F,-3.6],[%2$F,-2.8],[%1$F,-2.8],[%1$F,-3.6]]]]}',
             $west,
@@ -101,6 +106,10 @@ abstract class IntegrationTestCase extends KernelTestCase
     {
         $user = new User();
         $user->setEmail($email)->setFirstName($first)->setLastName($last);
+        // NOT NULL in uhifadhi/team-module. Nothing here signs in with a
+        // password — the tests use loginUser() and a test header — but a person
+        // is a row and the row has to be storable.
+        $user->setPassword('not-used-by-these-tests');
 
         if (null !== $department) {
             $position = new Position();

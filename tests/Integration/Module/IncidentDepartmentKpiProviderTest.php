@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Integration\Module;
 
-use Uhifadhi\Entity\Department;
+use Uhifadhi\Area\Kpi\DepartmentKpi;
+use Uhifadhi\Area\Kpi\DepartmentRef;
 use Uhifadhi\Incident\Entity\IncidentMoney;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
@@ -21,7 +22,7 @@ use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
-use Uhifadhi\Module\DepartmentKpi;
+use Uhifadhi\Team\Entity\Department;
 
 /**
  * WHAT A DEPARTMENT'S PEOPLE DID WITH THIS MODULE — the host's performance seam,
@@ -50,11 +51,25 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
         return $transitions;
     }
 
+    /**
+     * THE SEAM HANDS OVER A REF, NOT AN ENTITY — nothing publishes a contract for
+     * a department, so uhifadhi/area-module names one by its id, its name and its
+     * uuid. The tests still build a real Department, because the SLICE walks a
+     * real org chart; only the handover is the ref.
+     */
+    private static function ref(Department $department): DepartmentRef
+    {
+        $id = $department->getId();
+        self::assertNotNull($id, 'A department has to be stored before a figure can be filed under it.');
+
+        return new DepartmentRef($id, (string) $department->getName());
+    }
+
     /** @return array<string, DepartmentKpi> */
     private function kpisFor(Department $department, \DateTimeImmutable $now): array
     {
         $byKey = [];
-        foreach ($this->provider()->kpisFor($department, $now) as $kpi) {
+        foreach ($this->provider()->kpisFor(self::ref($department), $now) as $kpi) {
             $byKey[$kpi->key] = $kpi;
         }
 
@@ -82,7 +97,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     {
         $department = $this->aDepartment();
 
-        self::assertSame([], $this->provider()->kpisFor($department, new \DateTimeImmutable('2026-08-22')));
+        self::assertSame([], $this->provider()->kpisFor(self::ref($department), new \DateTimeImmutable('2026-08-22')));
     }
 
     public function testItCountsWhatThisDepartmentsPeopleRecorded(): void

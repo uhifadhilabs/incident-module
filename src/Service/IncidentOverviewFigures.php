@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Service;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Model\IncidentOverview;

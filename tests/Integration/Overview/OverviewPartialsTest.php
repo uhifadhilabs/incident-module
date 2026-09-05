@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Integration\Overview;
 
 use Twig\Environment;
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Overview\IncidentOverviewContributor;
 use Uhifadhi\Incident\Tests\Integration\OverviewTestCase;

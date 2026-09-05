@@ -27,7 +27,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;

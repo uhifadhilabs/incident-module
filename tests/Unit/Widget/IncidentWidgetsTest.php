@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Incident\Tests\Unit\Model;
+namespace Uhifadhi\Incident\Tests\Unit\Widget;
 
 use PHPUnit\Framework\TestCase;
-use Uhifadhi\Incident\Model\IncidentWidgets;
-use Uhifadhi\Model\WidgetCatalog;
+use Uhifadhi\Incident\Widget\IncidentWidgets;
+use Uhifadhi\Widget\Model\WidgetCatalog;
 
 /**
  * THE CATALOGUE IS A TRANSCRIPTION of the design's surface declaration
@@ -27,13 +27,13 @@ final class IncidentWidgetsTest extends TestCase
 {
     public function testItIsTheIncidentsSurface(): void
     {
-        self::assertSame('incidents', IncidentWidgets::catalog()->surface);
+        self::assertSame('incidents', IncidentWidgets::declaration()->surface);
     }
 
     /** The five headed sections ARE the five directions incidents was drawn in. */
     public function testTheLibrarysSectionsAreTheFiveDirections(): void
     {
-        $groups = IncidentWidgets::catalog()->groups();
+        $groups = IncidentWidgets::declaration()->groups();
 
         self::assertSame(['a', 'b', 'c', 'd', 'e'], array_map(static fn ($g) => $g->id, $groups));
         self::assertSame(
@@ -54,7 +54,7 @@ final class IncidentWidgetsTest extends TestCase
             'spark', 'feed', 'evidence',
             'categories', 'matrix', 'money',
             'board', 'sla', 'funnel', 'rail',
-        ], IncidentWidgets::catalog()->ids());
+        ], IncidentWidgets::declaration()->ids());
     }
 
     /**
@@ -64,13 +64,13 @@ final class IncidentWidgetsTest extends TestCase
      */
     public function testTheReportEntryCardShipsOffAndUnderCaseFiles(): void
     {
-        $card = IncidentWidgets::catalog()->get('report');
+        $card = IncidentWidgets::declaration()->get('report');
 
         self::assertSame('File an incident', $card->label);
         self::assertSame('a', $card->group);
         self::assertFalse($card->on, 'The entry card is a second door; nobody gets it unasked.');
         self::assertSame(6, $card->cols);
-        self::assertSame([12, 9, 6], IncidentWidgets::catalog()->spans('report'));
+        self::assertSame([12, 9, 6], IncidentWidgets::declaration()->spans('report'));
     }
 
     /**
@@ -80,7 +80,7 @@ final class IncidentWidgetsTest extends TestCase
      */
     public function testNoDesignTheSurfaceShipsComposesTheEntryCard(): void
     {
-        $catalog = IncidentWidgets::catalog();
+        $catalog = IncidentWidgets::declaration();
 
         self::assertArrayNotHasKey('report', $catalog->defaultLayout());
         foreach ($catalog->presets() as $preset) {
@@ -96,7 +96,7 @@ final class IncidentWidgetsTest extends TestCase
      */
     public function testTheShippedCompositionIsItsOwnNamedDesign(): void
     {
-        $catalog = IncidentWidgets::catalog();
+        $catalog = IncidentWidgets::declaration();
 
         self::assertSame(['kpis' => 12, 'register' => 12, 'map' => 12, 'money' => 12], $catalog->defaultLayout());
         self::assertSame(WidgetCatalog::DEFAULT_PRESET_ID, $catalog->defaultPresetId());
@@ -109,7 +109,7 @@ final class IncidentWidgetsTest extends TestCase
     /** All five directions ship as presets, each described in the gallery's own words. */
     public function testEveryDirectionShipsAsAPresetAnyoneCanAdopt(): void
     {
-        $presets = IncidentWidgets::catalog()->presets();
+        $presets = IncidentWidgets::declaration()->presets();
 
         self::assertSame(['a', 'b', 'c', 'd', 'e'], array_map(static fn ($p) => $p->id, $presets));
         self::assertSame(['kpis' => 12, 'register' => 12, 'queue' => 12], $presets[0]->layout);
@@ -127,7 +127,7 @@ final class IncidentWidgetsTest extends TestCase
      */
     public function testASectionAndItsPresetNeverSayDifferentThings(): void
     {
-        $catalog = IncidentWidgets::catalog();
+        $catalog = IncidentWidgets::declaration();
 
         foreach ($catalog->groups() as $group) {
             $preset = $catalog->preset($group->id);
@@ -140,7 +140,7 @@ final class IncidentWidgetsTest extends TestCase
     /** Every widget carries the one line the add-widget picker prints. */
     public function testEveryWidgetSaysWhatItShows(): void
     {
-        $catalog = IncidentWidgets::catalog();
+        $catalog = IncidentWidgets::declaration();
 
         foreach ($catalog->ids() as $id) {
             self::assertNotNull($catalog->get($id)->note, \sprintf('Widget "%s" has no picker line.', $id));
@@ -150,6 +150,6 @@ final class IncidentWidgetsTest extends TestCase
     /** The board is a five-column drag surface and is never offered at a narrower width. */
     public function testTheStatusBoardIsOnlyEverFullWidth(): void
     {
-        self::assertSame([12], IncidentWidgets::catalog()->spans('board'));
+        self::assertSame([12], IncidentWidgets::declaration()->spans('board'));
     }
 }

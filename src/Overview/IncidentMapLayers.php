@@ -13,13 +13,13 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Overview;
 
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Area\Overview\MapLayer;
+use Uhifadhi\Area\Overview\MapLayerProviderInterface;
 use Uhifadhi\Incident\Model\IncidentHues;
 use Uhifadhi\Incident\Model\IncidentMapPayload;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Repository\IncidentRepository;
-use Uhifadhi\Overview\MapLayer;
-use Uhifadhi\Overview\MapLayerProviderInterface;
 
 /**
  * THIS MODULE'S TWO LAYERS ON THE HOST'S ONE OPERATIONAL PLATE.

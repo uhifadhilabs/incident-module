@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Module;
 
-use Uhifadhi\Entity\Department;
+use Uhifadhi\Area\Kpi\DepartmentKpi;
+use Uhifadhi\Area\Kpi\DepartmentKpiProviderInterface;
+use Uhifadhi\Area\Kpi\DepartmentRef;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Repository\IncidentRepository;
-use Uhifadhi\Module\DepartmentKpi;
-use Uhifadhi\Module\DepartmentKpiProviderInterface;
 
 /**
  * WHAT THIS DEPARTMENT'S PEOPLE DID WITH THE INCIDENTS MODULE, this month.
@@ -79,16 +79,23 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
     }
 
     /**
+     * THE DEPARTMENT ARRIVES AS A REF, NOT AS AN ENTITY. Nothing publishes a
+     * contract for a department — there is no `DepartmentInterface` in
+     * uhifadhi/module-contracts and none in uhifadhi/team-module — so a seam
+     * typed against team's class would make every module that reports a figure
+     * hard-require team. {@see DepartmentRef} carries the whole of what a figure
+     * needs: the id rows are filed under, the name a plate prints.
+     *
      * @return list<DepartmentKpi>
      */
-    public function kpisFor(Department $department, \DateTimeImmutable $now): array
+    public function kpisFor(DepartmentRef $department, \DateTimeImmutable $now): array
     {
         $monthStart = $now->modify('first day of this month')->setTime(0, 0);
         $nextMonth = $monthStart->modify('+1 month');
         $previousStart = $monthStart->modify('-1 month');
 
-        $month = $this->incidents->findForDepartment($department, $monthStart, $nextMonth);
-        $previous = $this->incidents->findForDepartment($department, $previousStart, $monthStart);
+        $month = $this->incidents->findForDepartment($department->id, $monthStart, $nextMonth);
+        $previous = $this->incidents->findForDepartment($department->id, $previousStart, $monthStart);
 
         // Nothing recorded by this department's people in either month: report
         // NOTHING rather than a row of zeros. The host draws a dashed labelled
@@ -107,7 +114,7 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
                 (float) \count($month),
                 '',
                 (float) \count($previous),
-                $this->spark($department, $monthStart, static fn (array $rows): float => (float) \count($rows)),
+                $this->spark($department->id, $monthStart, static fn (array $rows): float => (float) \count($rows)),
                 $caption,
             ),
             new DepartmentKpi(
@@ -118,7 +125,7 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
                 (float) self::resolvedCount($month),
                 '',
                 (float) self::resolvedCount($previous),
-                $this->spark($department, $monthStart, static fn (array $rows): float => (float) self::resolvedCount($rows)),
+                $this->spark($department->id, $monthStart, static fn (array $rows): float => (float) self::resolvedCount($rows)),
                 $caption,
             ),
             new DepartmentKpi(
@@ -129,7 +136,7 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
                 self::withinTermShare($month),
                 DepartmentKpi::SHARE,
                 self::withinTermShare($previous),
-                $this->spark($department, $monthStart, static fn (array $rows): ?float => self::withinTermShare($rows)),
+                $this->spark($department->id, $monthStart, static fn (array $rows): ?float => self::withinTermShare($rows)),
                 // Its own provenance line: the term is the CATEGORY's, not a
                 // global setting, and a share printed without saying what it was
                 // measured against is unreadable.
@@ -163,7 +170,7 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
                 null === $value ? null : (float) $value,
                 $this->currency,
                 null === $was ? null : (float) $was,
-                $this->spark($department, $monthStart, static fn (array $rows): ?float => null === ($m = self::money($rows, $direction)) ? null : (float) $m),
+                $this->spark($department->id, $monthStart, static fn (array $rows): ?float => null === ($m = self::money($rows, $direction)) ? null : (float) $m),
                 $caption,
             );
         }
@@ -180,12 +187,12 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
      *
      * @return list<float>
      */
-    private function spark(Department $department, \DateTimeImmutable $monthStart, callable $reading): array
+    private function spark(int $departmentId, \DateTimeImmutable $monthStart, callable $reading): array
     {
         $series = [];
         for ($back = self::SPARK_MONTHS - 1; $back >= 0; --$back) {
             $from = $monthStart->modify(\sprintf('-%d months', $back));
-            $value = $reading($this->incidents->findForDepartment($department, $from, $from->modify('+1 month')));
+            $value = $reading($this->incidents->findForDepartment($departmentId, $from, $from->modify('+1 month')));
             if (null !== $value) {
                 $series[] = $value;
             }

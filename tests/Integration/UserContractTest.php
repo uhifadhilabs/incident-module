@@ -20,8 +20,8 @@ use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Entity\IncidentLink;
 use Uhifadhi\Incident\Entity\IncidentParty;
-use Uhifadhi\Incident\Tests\Fixtures\Account\User;
 use Uhifadhi\ModuleContracts\Entity\UserInterface;
+use Uhifadhi\Team\Entity\User;
 
 /**
  * EVERY PERSON ON AN INCIDENT IS POINTED AT THROUGH THE CONTRACT.
@@ -82,14 +82,26 @@ final class UserContractTest extends IntegrationTestCase
      * keeps the person's NAME beside the relation. The guarantee is the
      * database's, so it holds for a DELETE written by hand.
      */
-    public function testRemovingAnAccountLeavesTheRecordsThatNamedIt(): void
+    #[DataProvider('personAssociations')]
+    public function testRemovingAnAccountLeavesTheRecordsThatNamedIt(string $entity, string $property): void
     {
-        $sql = implode("\n", new SchemaTool($this->em)->getCreateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
+        $metadata = $this->em->getClassMetadata($entity);
 
-        self::assertSame(
-            5,
-            substr_count($sql, 'REFERENCES "user" (id) ON DELETE SET NULL'),
-            'Every person column must survive the account being deleted.',
+        // THE ACCOUNT TABLE IS READ, NEVER NAMED. What an installation calls its
+        // people is its own business — this one resolves the contract to
+        // uhifadhi/team-module's class, which stores them in `team_user`, and an
+        // installation with its own account class stores them somewhere else
+        // again. This test named `"user"` while the suite mapped a stub of its
+        // own that chose that name; asking the mapping is the same reading the
+        // module's own SQL already does, and it is why the assertion survived
+        // the account class changing underneath it.
+        $account = $this->em->getClassMetadata(User::class)->getTableName();
+        $sql = implode("\n", new SchemaTool($this->em)->getCreateSchemaSql([$metadata]));
+
+        self::assertStringContainsString(
+            \sprintf('REFERENCES %s (id) ON DELETE SET NULL', $account),
+            $sql,
+            \sprintf('%s::$%s must survive the account being deleted.', $entity, $property),
         );
     }
 }

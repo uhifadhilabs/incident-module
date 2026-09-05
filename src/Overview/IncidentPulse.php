@@ -14,12 +14,12 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Overview;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Area\Overview\PulseEvent;
+use Uhifadhi\Area\Overview\PulseProviderInterface;
 use Uhifadhi\Incident\Model\IncidentHues;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
-use Uhifadhi\Overview\PulseEvent;
-use Uhifadhi\Overview\PulseProviderInterface;
 
 /**
  * THIS MODULE'S MOVES IN THE AREA PULSE.

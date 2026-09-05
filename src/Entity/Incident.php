@@ -17,9 +17,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\Department;
-use Uhifadhi\Entity\Zone;
+use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\Zone;
 use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
@@ -49,7 +48,7 @@ use Uhifadhi\ModuleContracts\Entity\UserInterface;
  * foreign key, because the patrols module is a separate bundle and a host may
  * install either without the other.
  *
- * DEPARTMENT IS RECORDED, NEVER RESTRICTING. {@see $filedForDepartment} is the
+ * DEPARTMENT IS RECORDED, NEVER RESTRICTING. {@see $filedForDepartmentId} is the
  * lens the filer was looking through, kept so a performance page can say who was
  * working. It is not consulted by any read: incidents belong to the AREA, and a
  * department view is a reading of them.
@@ -163,10 +162,21 @@ class Incident
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?UserInterface $assignedTo = null;
 
-    /** Recorded, never restricting — see the class docblock. */
-    #[ORM\ManyToOne(targetEntity: Department::class)]
-    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    private ?Department $filedForDepartment = null;
+    /**
+     * Recorded, never restricting — see the class docblock.
+     *
+     * AN ID AND NOT A RELATION, for the same reason the provenance seam above is
+     * a uuid and not a foreign key: NO PACKAGE PUBLISHES A CONTRACT FOR A
+     * DEPARTMENT. There is no `DepartmentInterface` in uhifadhi/module-contracts
+     * and none in uhifadhi/team-module, so a `ManyToOne` here would name
+     * somebody's class and make every installation that records an incident
+     * hard-require the module that owns it. The fleet's rule for a department is
+     * to walk the mapping and never the type — {@see \Uhifadhi\Area\Kpi\DepartmentRef}
+     * is the same decision made one layer up — and by the time the lens reaches
+     * a column it is one integer.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?int $filedForDepartmentId = null;
 
     /**
      * PROVENANCE — the record this incident was filed FROM, if any. Written once
@@ -501,14 +511,14 @@ class Incident
         return $this;
     }
 
-    public function getFiledForDepartment(): ?Department
+    public function getFiledForDepartmentId(): ?int
     {
-        return $this->filedForDepartment;
+        return $this->filedForDepartmentId;
     }
 
-    public function setFiledForDepartment(?Department $department): static
+    public function setFiledForDepartmentId(?int $departmentId): static
     {
-        $this->filedForDepartment = $department;
+        $this->filedForDepartmentId = $departmentId;
 
         return $this;
     }

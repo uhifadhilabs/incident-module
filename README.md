@@ -12,7 +12,7 @@ closed`. One record type serves every reader: Protection and Ecology read
 subsets of one taxonomy rather than each keeping their own copy.
 
 The module ships seven `incident*` tables, the report flow, the case file, a
-sixteen-widget dashboard surface composed on the host's widget framework, and a
+sixteen-widget dashboard surface composed on uhifadhi/widget-module, and a
 seeded, configurable taxonomy of four kinds and sixteen sub-categories.
 
 ## Installation
@@ -67,14 +67,20 @@ Then, in the host:
 4. **Enable the Stimulus controllers** in `assets/controllers.json` (the recipe
    does this): `incident-map`, `incident-board`, `incident-report`.
 
-The host must already provide what every uhifadhi module bundle binds to:
-`Uhifadhi\Entity\{AreaOfInterest,Zone,Position,Department}` and an account class
-answering the user contract above, the widget framework
-(`Uhifadhi\Service\{WidgetService,WidgetEndpoint}` and
-`templates/widgets/_library.html.twig`), `layout.html.twig`, and symfony/ux-icons
-with the `lucide` set imported. Leaflet and the map seam are no longer among the
-host's obligations: they come from `uhifadhi/map-module`, which this bundle
-requires directly.
+Everything this module binds to now arrives as a module of its own, and composer
+installs all of them: the area an incident happens in and its zones from
+`uhifadhi/area-module`, the dashboard framework from `uhifadhi/widget-module`,
+Leaflet and the map seam from `uhifadhi/map-module`, and the two seam contracts
+from `uhifadhi/module-contracts`. Three more are suggestions rather than
+requirements: `uhifadhi/shell-module` is the page frame every screen renders in,
+`uhifadhi/seam-module` is the per-area catalogue this module registers itself in,
+and `uhifadhi/storage-module` puts an incident's evidence on the Files hub.
+
+The one thing an installation still provides is the ACCOUNT CLASS behind the
+person contract — see the user contract above. `uhifadhi/team-module` answers it
+from its own bundle; an installation with an account class of its own names it in
+one line of `resolve_target_entities`. symfony/ux-icons with the `lucide` set
+imported is the other standing expectation.
 
 ## Learn more
 

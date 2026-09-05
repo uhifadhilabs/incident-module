@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Entity\IncidentParty;

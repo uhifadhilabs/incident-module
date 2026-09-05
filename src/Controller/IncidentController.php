@@ -20,15 +20,15 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Twig\Environment;
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Model\IncidentFilter;
-use Uhifadhi\Incident\Model\IncidentWidgets;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
+use Uhifadhi\Incident\Widget\IncidentWidgets;
 use Uhifadhi\ModuleContracts\Entity\UserInterface;
-use Uhifadhi\Service\WidgetService;
+use Uhifadhi\Widget\Service\WidgetService;
 
 /**
  * THE INCIDENTS DASHBOARD for one area — the widget surface.
@@ -40,8 +40,8 @@ use Uhifadhi\Service\WidgetService;
  * never called. FrameworkBundle's own TemplateController is written exactly this
  * way — see vendor/symfony/framework-bundle/Controller/TemplateController.php.
  *
- * It rides the HOST's widget framework: the catalogue is
- * {@see IncidentWidgets::catalog()} and the layout comes from the host's
+ * It rides uhifadhi/widget-module: the catalogue is
+ * {@see IncidentWidgets::declaration()} and the layout comes from the host's
  * {@see WidgetService}, so the incidents dashboard arranges itself exactly as
  * departments, team and zones do and this bundle ships no widget mechanics of
  * its own.
@@ -107,7 +107,7 @@ final class IncidentController
             'widgetScreens' => $this->widgetScreens,
             // Which widgets this person keeps, how wide, in what order — the
             // module's shipped composition until they adopt one of the five.
-            'widgets' => $this->widgets->resolve(IncidentWidgets::catalog(), $this->userId(), $area->getUuid()),
+            'widgets' => $this->widgets->resolve(IncidentWidgets::declaration(), $viewer, $area->getUuid()),
             'transitionCsrfToken' => $this->transitionToken?->forArea($area),
             'urls' => $this->widgetUrls->forArea($area),
         ]));
@@ -119,10 +119,5 @@ final class IncidentController
         $user = $this->tokenStorage?->getToken()?->getUser();
 
         return $user instanceof UserInterface ? $user : null;
-    }
-
-    private function userId(): ?int
-    {
-        return $this->viewer()?->getId();
     }
 }

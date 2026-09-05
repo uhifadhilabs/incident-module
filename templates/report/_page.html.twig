@@ -15,8 +15,9 @@
    Parameters: controller, area, categories, prefill, chosen, csrfToken, errors,
                createUrl, cancelUrl, sourceFiles
    ========================================================================== #}
-<div class="crumb"><a href="{{ path('dashboard_index') }}">uhifadhi</a> / <a href="{{ path('dashboard_area_show', {uuid: area.uuid}) }}">{{ area.name|lower }}</a> / <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / new</div>
-
+{# NO CRUMB HERE. The trail is the shell frame's socket and the page fills it
+   once (see @UhifadhiIncident/base.html.twig); a container typing its own would
+   print the trail twice. #}
 <div class="pghead">
     <div>
         <h1 class="pg">Report an incident</h1>

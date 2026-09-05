@@ -34,6 +34,11 @@
     {% endif %}
 {% endblock %}
 
+{% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / report{% endblock %}
+
+{# THE FLOW BRINGS ITS OWN HEADING, in both containers — the page's plate and the
+   drawer's panel each carry their own title, so filling the frame's head socket
+   would print the heading twice. #}
 {% block incident_page %}
     {% set container = prefill.hasProvenance ? '_drawer' : '_page' %}
     {{ include('@UhifadhiIncident/report/' ~ container ~ '.html.twig', {

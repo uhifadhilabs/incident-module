@@ -23,20 +23,17 @@
 
 {% block title %}{{ incident.reference }} — {{ incident.headline }}{% endblock %}
 
+{% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / {{ incident.reference|lower }}{% endblock %}
+
+{% block shell_page_title %}{{ incident.reference }} — {{ incident.title }}{% endblock %}
+
+{% block shell_page_subtitle %}{% set money = incident.money %}{{ incident.category.label }} · {{ incident.subcategory.label }} · <b>{{ incident.status.label }}</b>
+    · {{ incident.zoneLabel }} · filed {{ incident.reportedAt|date('D j M H:i')|lower }}{% if incident.events|first and incident.events|first.actorName %} by {{ incident.events|first.actorName }}{% endif %}
+    {%- if money and money.isAssessed %} · {{ incident.money.currency }} {{ money.payable|number_format(0, '.', ',') }} {{ money.direction.assessedWord }}, {{ money.settled|number_format(0, '.', ',') }} {{ money.direction.settledWord }}{% endif %}
+    · {{ incident.evidence|length }} pieces of evidence · {{ incident.parties|length }} parties.{% endblock %}
+
 {% block incident_page %}
     {% set money = incident.money %}
-    <div class="crumb"><a href="{{ path('dashboard_index') }}">uhifadhi</a> / <a href="{{ path('dashboard_area_show', {uuid: area.uuid}) }}">{{ area.name|lower }}</a> / <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / {{ incident.reference|lower }}</div>
-
-    <div class="pghead">
-        <div>
-            <h1 class="pg">{{ incident.reference }} — {{ incident.title }}</h1>
-            <p class="pgsub">{{ incident.category.label }} · {{ incident.subcategory.label }} · <b>{{ incident.status.label }}</b>
-                · {{ incident.zoneLabel }} · filed {{ incident.reportedAt|date('D j M H:i')|lower }}{% if incident.events|first and incident.events|first.actorName %} by {{ incident.events|first.actorName }}{% endif %}
-                {%- if money and money.isAssessed %} · {{ incident.money.currency }} {{ money.payable|number_format(0, '.', ',') }} {{ money.direction.assessedWord }}, {{ money.settled|number_format(0, '.', ',') }} {{ money.direction.settledWord }}{% endif %}
-                · {{ incident.evidence|length }} pieces of evidence · {{ incident.parties|length }} parties.</p>
-        </div>
-    </div>
-
     <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}" class="backbtn">{{ ux_icon('lucide:chevron-left') }}All incidents</a>
 
     <div class="i-headchips">

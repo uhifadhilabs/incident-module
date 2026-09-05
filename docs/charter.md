@@ -15,8 +15,8 @@ for this module, which is why there is deliberately **no `incidents.view`
 permission**: a view permission is exactly the tool somebody would eventually use
 to hide one department's rows from another.
 
-**Dashboard surfaces ride the host's widget framework.** The module's dashboard
-is composed on the HOST's `WidgetService` / `WidgetCatalog` preset component —
+**Dashboard surfaces ride the fleet's widget framework.** The module's dashboard
+is composed on uhifadhi/widget-module's `WidgetService` / `WidgetCatalog` preset component —
 the same technique behind the host's departments, team and zones surfaces —
 rather than a second widget implementation inside this bundle. This module ships
 a catalogue and sixteen Twig partials; it ships no widget mechanics at all.

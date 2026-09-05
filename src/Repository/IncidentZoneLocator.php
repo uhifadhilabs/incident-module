@@ -15,8 +15,8 @@ namespace Uhifadhi\Incident\Repository;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
-use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\Zone;
+use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\Zone;
 
 /**
  * WHICH ZONE IS THIS POINT IN? — the one spatial question this module asks of

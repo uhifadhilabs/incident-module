@@ -13,14 +13,14 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Overview;
 
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Area\Overview\ContributesStylesheetInterface;
+use Uhifadhi\Area\Overview\OverviewContributorInterface;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
 use Uhifadhi\Incident\UhifadhiIncidentBundle;
-use Uhifadhi\Model\WidgetGroup;
-use Uhifadhi\Overview\ContributesStylesheetInterface;
-use Uhifadhi\Overview\OverviewContributorInterface;
+use Uhifadhi\Widget\Model\WidgetGroup;
 
 /**
  * WHAT THIS MODULE PUTS ON `/areas/{uuid}` — four cards and a column, in the

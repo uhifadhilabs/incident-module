@@ -24,16 +24,16 @@ use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Model\IncidentFilter;
-use Uhifadhi\Incident\Model\IncidentWidgets;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
+use Uhifadhi\Incident\Widget\IncidentWidgets;
 use Uhifadhi\ModuleContracts\Entity\UserInterface;
-use Uhifadhi\Service\WidgetEndpoint;
-use Uhifadhi\Service\WidgetService;
+use Uhifadhi\Widget\Service\WidgetEndpoint;
+use Uhifadhi\Widget\Service\WidgetService;
 
 /**
  * THE WIDGET LIBRARY for the incidents surface — the one editing screen.
@@ -84,8 +84,8 @@ final class IncidentWidgetsController
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
-        $catalog = IncidentWidgets::catalog();
-        $userId = $this->endpoint->userId();
+        $catalog = IncidentWidgets::declaration();
+        $viewer = $this->endpoint->user();
         $areaUuid = $area->getUuid();
         $now = new \DateTimeImmutable();
         $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...IncidentController::monthRange($now));
@@ -96,9 +96,9 @@ final class IncidentWidgetsController
             // AREA's routes.
             'catalog' => $catalog,
             'builtins' => $catalog->builtins(),
-            'customPresets' => $this->widgets->customPresets($catalog, $userId, $areaUuid),
-            'active' => $this->widgets->activeRef($catalog, $userId, $areaUuid),
-            'widgets' => $this->widgets->resolve($catalog, $userId, $areaUuid),
+            'customPresets' => $this->widgets->customPresets($catalog, $viewer, $areaUuid),
+            'active' => $this->widgets->activeRef($catalog, $viewer, $areaUuid),
+            'widgets' => $this->widgets->resolve($catalog, $viewer, $areaUuid),
             'partial' => '@UhifadhiIncident/dashboard/_w_%s.html.twig',
             // EVERY widget partial renders the REAL widget on REAL data here, at
             // full size — the picture of a widget IS the widget, so what you
@@ -122,7 +122,7 @@ final class IncidentWidgetsController
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
-        return $this->endpoint->save($request, IncidentWidgets::catalog(), $area->getUuid());
+        return $this->endpoint->save($request, IncidentWidgets::declaration(), $area->getUuid());
     }
 
     #[Route('/areas/{uuid}/modules/incidents/widgets/reset', name: 'incident_widgets_reset', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 2)]
@@ -133,7 +133,7 @@ final class IncidentWidgetsController
         return $this->afterWrite(
             $request,
             $area,
-            $this->endpoint->reset($request, IncidentWidgets::catalog(), $area->getUuid()),
+            $this->endpoint->reset($request, IncidentWidgets::declaration(), $area->getUuid()),
             \sprintf('This area’s incidents dashboard is back to “%s”.', IncidentWidgets::DEFAULT_LABEL),
         );
     }
@@ -144,7 +144,7 @@ final class IncidentWidgetsController
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
         string $presetId,
     ): Response {
-        $catalog = IncidentWidgets::catalog();
+        $catalog = IncidentWidgets::declaration();
         // A design the surface does not ship is refused by the endpoint below;
         // naming it in the flash is only for the case where it IS shipped.
         $adopted = $catalog->preset($presetId);
@@ -166,7 +166,7 @@ final class IncidentWidgetsController
         return $this->afterWrite(
             $request,
             $area,
-            $this->endpoint->copyPreset($request, IncidentWidgets::catalog(), $presetId, $area->getUuid()),
+            $this->endpoint->copyPreset($request, IncidentWidgets::declaration(), $presetId, $area->getUuid()),
             'Copied — the copy is yours to edit, and the design it came from is untouched.',
         );
     }
@@ -179,7 +179,7 @@ final class IncidentWidgetsController
         return $this->afterWrite(
             $request,
             $area,
-            $this->endpoint->createCustomPreset($request, IncidentWidgets::catalog(), $area->getUuid()),
+            $this->endpoint->createCustomPreset($request, IncidentWidgets::declaration(), $area->getUuid()),
             'Saved — this arrangement is now one of your own designs.',
         );
     }
@@ -193,7 +193,7 @@ final class IncidentWidgetsController
         return $this->afterWrite(
             $request,
             $area,
-            $this->endpoint->applyCustomPreset($request, IncidentWidgets::catalog(), Uuid::fromString($presetUuid), $area->getUuid()),
+            $this->endpoint->applyCustomPreset($request, IncidentWidgets::declaration(), Uuid::fromString($presetUuid), $area->getUuid()),
             'Your design is on.',
         );
     }
@@ -207,7 +207,7 @@ final class IncidentWidgetsController
         return $this->afterWrite(
             $request,
             $area,
-            $this->endpoint->renameCustomPreset($request, IncidentWidgets::catalog(), Uuid::fromString($presetUuid), $area->getUuid()),
+            $this->endpoint->renameCustomPreset($request, IncidentWidgets::declaration(), Uuid::fromString($presetUuid), $area->getUuid()),
             'Renamed.',
         );
     }
@@ -221,7 +221,7 @@ final class IncidentWidgetsController
         return $this->afterWrite(
             $request,
             $area,
-            $this->endpoint->deleteCustomPreset($request, IncidentWidgets::catalog(), Uuid::fromString($presetUuid), $area->getUuid()),
+            $this->endpoint->deleteCustomPreset($request, IncidentWidgets::declaration(), Uuid::fromString($presetUuid), $area->getUuid()),
             'Design deleted. Your dashboard is back on the one this module ships with.',
         );
     }

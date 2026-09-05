@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Integration;
 
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentMoney;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;

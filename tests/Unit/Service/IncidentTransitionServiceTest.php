@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Unit\Service;
 
 use PHPUnit\Framework\TestCase;
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentCategory;
 use Uhifadhi\Incident\Entity\IncidentMoney;
@@ -56,7 +56,7 @@ final class IncidentTransitionServiceTest extends TestCase
         }
 
         return new Incident(
-            new AreaOfInterest(),
+            new AreaOfInterest()->setSource('test fixture'),
             $subcategory,
             'INC-0313',
             'Lion killed four goats at Osinoni',

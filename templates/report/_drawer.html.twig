@@ -30,8 +30,8 @@
    ========================================================================== #}
 <div {{ stimulus_controller(controller) }}>
     {# ── THE PAGE BEHIND ─────────────────────────────────────────────────── #}
-    <div class="crumb"><a href="{{ path('dashboard_index') }}">uhifadhi</a> / <a href="{{ path('dashboard_area_show', {uuid: area.uuid}) }}">{{ area.name|lower }}</a> / <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / new</div>
-
+    {# NO CRUMB HERE either — see the page container. The register drawn behind
+       this drawer is the body of a page the frame has already trailed. #}
     <div class="pghead">
         <div>
             <h1 class="pg">{{ area.name }} — Incidents</h1>

@@ -14,16 +14,16 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Overview;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Area\Overview\AttentionItem;
+use Uhifadhi\Area\Overview\AttentionProviderInterface;
+use Uhifadhi\Area\Overview\AttentionSeverity;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\IncidentAge;
 use Uhifadhi\Incident\Model\IncidentOverview;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
-use Uhifadhi\Overview\AttentionItem;
-use Uhifadhi\Overview\AttentionProviderInterface;
-use Uhifadhi\Overview\AttentionSeverity;
 
 /**
  * WHAT THIS MODULE PUTS IN THE HOST'S "NEEDS ATTENTION" LIST — two kinds of row,

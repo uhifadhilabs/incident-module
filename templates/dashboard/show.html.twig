@@ -6,42 +6,37 @@
    are PRESETS on this surface, not five screens: the library is where one is
    adopted, copied, and mixed with a widget from another.
 
-   Everything below the header is the host's widget framework
-   (Uhifadhi\Service\WidgetService), which is why arranging this dashboard works
-   exactly as it does on departments, team and zones.
+   Everything below the header is uhifadhi/widget-module
+   (Uhifadhi\Widget\Service\WidgetService), which is why arranging this dashboard
+   works exactly as it does on every other surface in the installation.
    ========================================================================== #}
 {% extends '@UhifadhiIncident/base.html.twig' %}
 
 {% block title %}{{ area.name }} — Incidents{% endblock %}
+
+{% block shell_page_title %}{{ area.name }} — Incidents{% endblock %}
+
+{% block shell_page_subtitle %}Poaching, human–wildlife conflict, compliance and wildlife mortality — every report
+    filed in this area, what state it is in, what it cost and who is on it. One filter drives the map, the register
+    and the charts together.{% endblock %}
+
+{% block shell_page_actions %}
+    {% if widgetScreens %}
+        <a class="tgl w-act" href="{{ path('incident_widgets', {uuid: area.uuid}) }}">{{ ux_icon('lucide:layout-grid') }} Widget library</a>
+    {% endif %}
+    {% if recordScreens %}
+        {# STANDALONE FILING — nothing on this page is the record being filed
+           about, so the flow gets the whole page and an address of its own. A
+           plain link: no trigger, nothing to dismiss. #}
+        <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('lucide:plus') }} Report incident</a>
+    {% endif %}
+{% endblock %}
 
 {% block incident_page %}
 {# NOTHING OPENS OVER THIS PAGE. The report flow lives on its own route, in the
    container its entry point earned — and this dashboard's Report button is not
    anchored to any record, so it is standalone filing and it navigates to the full
    page. See templates/report/show.html.twig. #}
-<div>
-    <div class="crumb"><a href="{{ path('dashboard_index') }}">uhifadhi</a> / <a href="{{ path('dashboard_area_show', {uuid: area.uuid}) }}">{{ area.name|lower }}</a> / <a href="{{ path('dashboard_area_modules_grid', {uuid: area.uuid}) }}">modules</a> / incidents</div>
-
-    <div class="pghead">
-        <div>
-            <h1 class="pg">{{ area.name }} — Incidents</h1>
-            <p class="pgsub">Poaching, human–wildlife conflict, compliance and wildlife mortality — every report filed in
-                this area, what state it is in, what it cost and who is on it. One filter drives the map, the register
-                and the charts together.</p>
-        </div>
-        <div class="pgact w-pgact">
-            {% if widgetScreens %}
-                <a class="tgl w-act" href="{{ path('incident_widgets', {uuid: area.uuid}) }}">{{ ux_icon('lucide:layout-grid') }} Widget library</a>
-            {% endif %}
-            {% if recordScreens %}
-                {# STANDALONE FILING — nothing on this page is the record being
-                   filed about, so the flow gets the whole page and an address of
-                   its own. A plain link: no trigger, nothing to dismiss. #}
-                <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('lucide:plus') }} Report incident</a>
-            {% endif %}
-        </div>
-    </div>
-
     {{ include('@UhifadhiIncident/dashboard/_lensbar.html.twig') }}
 
     {% set widgetContext = {
@@ -62,7 +57,7 @@
         {# A switched-off widget is simply absent — not hidden, not an empty cell. #}
         {% for widget in widgets|filter(w => w.on) %}
             {# w-span-N, never w-N: a bare `w-12` is Tailwind's width utility and
-               would render this cell 48px wide (see the host's widget framework). #}
+               would render this cell 48px wide (see uhifadhi/widget-module). #}
             <div class="w-cell w-span-{{ widget.cols }}" data-widget-id="{{ widget.id }}" data-widget-cols="{{ widget.cols }}">
                 <div class="w-inner">
                     {{ include('@UhifadhiIncident/dashboard/_w_' ~ widget.id ~ '.html.twig', widgetContext, with_context: false) }}
@@ -75,6 +70,4 @@
             </a>
         {% endif %}
     </div>
-
-</div>
 {% endblock %}

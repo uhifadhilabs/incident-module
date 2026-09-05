@@ -17,14 +17,14 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\Entity\Zone;
+use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\Zone;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
-use Uhifadhi\Incident\Tests\Fixtures\Account\User;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
+use Uhifadhi\Team\Entity\User;
 
 /**
  * THE SCREENS, THROUGH A REAL KERNEL. Every page below is fetched over HTTP
@@ -86,6 +86,10 @@ abstract class FunctionalTestCase extends WebTestCase
     {
         $area = new AreaOfInterest();
         $area->setName($name);
+        // NOT NULL in uhifadhi/area-module: an area is always something an
+        // installation got from somewhere, and the stub this suite used to map
+        // let it be null.
+        $area->setSource('test fixture');
         $area->setGeom('{"type":"MultiPolygon","coordinates":[[[[35.0,-3.6],[36.0,-3.6],[36.0,-2.8],[35.0,-2.8],[35.0,-3.6]]]]}');
         $this->em->persist($area);
         $this->em->flush();
@@ -95,7 +99,8 @@ abstract class FunctionalTestCase extends WebTestCase
 
     protected function aZone(AreaOfInterest $area, string $name): Zone
     {
-        $zone = new Zone($area, $name);
+        $zone = new Zone();
+        $zone->setArea($area)->setName($name);
         $zone->setGeom('{"type":"MultiPolygon","coordinates":[[[[35.0,-3.6],[35.5,-3.6],[35.5,-2.8],[35.0,-2.8],[35.0,-3.6]]]]}');
         $this->em->persist($zone);
         $this->em->flush();
@@ -124,6 +129,10 @@ abstract class FunctionalTestCase extends WebTestCase
 
         $user = new User();
         $user->setEmail($email)->setFirstName($first)->setLastName($last);
+        // NOT NULL in uhifadhi/team-module. Nothing here signs in with a
+        // password — the tests use loginUser() and a test header — but a person
+        // is a row and the row has to be storable.
+        $user->setPassword('not-used-by-these-tests');
         $this->em->persist($user);
         $this->em->flush();
 

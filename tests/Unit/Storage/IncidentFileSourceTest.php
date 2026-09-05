@@ -15,7 +15,7 @@ namespace Uhifadhi\Incident\Tests\Unit\Storage;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Uhifadhi\Entity\AreaOfInterest;
+use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentCategory;
 use Uhifadhi\Incident\Entity\IncidentEvidence;
@@ -207,7 +207,7 @@ final class IncidentFileSourceTest extends TestCase
 
     private function incident(IncidentStatusEnum $status = IncidentStatusEnum::Reported): Incident
     {
-        $area = new AreaOfInterest();
+        $area = new AreaOfInterest()->setSource('test fixture');
         $area->setName('Kifaru Sector');
 
         $category = new IncidentCategory('conflict', 'Human–wildlife conflict', 'hwc');
