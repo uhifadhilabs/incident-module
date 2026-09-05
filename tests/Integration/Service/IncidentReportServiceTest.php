@@ -74,14 +74,14 @@ final class IncidentReportServiceTest extends IntegrationTestCase
     public function testTheZoneIsResolvedFromTheRealGeometry(): void
     {
         $area = $this->anArea();
-        $west = $this->aZone($area, 'Endulen', 35.0, 35.5);
-        $this->aZone($area, 'Naabi', 35.5, 36.0);
+        $west = $this->aZone($area, 'North Gate', 35.0, 35.5);
+        $this->aZone($area, 'South Gate', 35.5, 36.0);
 
-        // 35.25 is inside Endulen and outside Naabi.
+        // 35.25 is inside North Gate and outside South Gate.
         $incident = $this->anIncident($area);
 
         self::assertSame($west->getId(), $incident->getZone()?->getId());
-        self::assertSame('Endulen', $incident->zoneLabel());
+        self::assertSame('North Gate', $incident->zoneLabel());
     }
 
     /** UNZONED IS A FIRST-CLASS ANSWER — an org with no zones is the normal state. */
@@ -138,7 +138,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
         $incident = $this->reports()->file(
             area: $this->anArea(),
             subcategory: $this->subcategory('livestock-depredation'),
-            title: 'Fresh lion tracks 400 m from Endulen bomas',
+            title: 'Fresh lion tracks 400 m from North Gate bomas',
             position: '{"type":"Point","coordinates":[35.25,-3.21]}',
             now: new \DateTimeImmutable('2026-08-22 08:15:00'),
             source: IncidentSourceEnum::PatrolObservation,
@@ -166,7 +166,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
         $incident = $this->reports()->file(
             area: $this->anArea(),
             subcategory: $this->subcategory('crop-raiding'),
-            title: 'Elephants in the gardens at Ngoitokitok',
+            title: 'Elephants in the gardens at Spring Basin',
             position: '{"type":"Point","coordinates":[35.25,-3.21]}',
             now: new \DateTimeImmutable('2026-08-22 06:00:00'),
             source: IncidentSourceEnum::Sms,

@@ -40,7 +40,7 @@ use Uhifadhi\Widget\Registry\WidgetSurfaceInterface;
  * library and the save endpoint all read this one object, so a widget can never
  * exist on one screen and not the other.
  *
- * AREA-SCOPED: the same person may lay Ngorongoro's incidents out one way and
+ * AREA-SCOPED: the same person may lay one area's incidents out one way and
  * another area's another, so every widget-framework call passes the area's UUID
  * and the stored preference rows are keyed by (surface, user, area).
  *

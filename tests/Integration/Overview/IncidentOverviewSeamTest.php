@@ -156,7 +156,7 @@ final class IncidentOverviewSeamTest extends OverviewTestCase
         // host only sorts by it.
         self::assertSame(AttentionSeverity::Now, $late[0]->severity);
         self::assertSame('17 d', $late[0]->ageLabel);
-        self::assertContains('Endulen', $late[0]->meta);
+        self::assertContains('North Gate', $late[0]->meta);
         self::assertStringContainsString('/incidents/INC-0008', $late[0]->url);
     }
 

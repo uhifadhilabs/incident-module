@@ -137,7 +137,7 @@ final class ReportFlowTest extends FunctionalTestCase
     public function testFilingFromARecordRendersTheSlideOverWithThePageBehindIt(): void
     {
         $area = $this->anArea();
-        $this->anIncident($area, title: 'Lion killed four goats at Osinoni');
+        $this->anIncident($area, title: 'Lion killed four goats at Riverside');
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
@@ -155,7 +155,7 @@ final class ReportFlowTest extends FunctionalTestCase
         // in it — not a picture of one.
         self::assertCount(1, $crawler->filter('.ro-behind'));
         self::assertStringContainsString(
-            'Lion killed four goats at Osinoni',
+            'Lion killed four goats at Riverside',
             $crawler->filter('.ro-behind')->text(),
         );
         // …and it is context for the filer, so it is not read out twice.
@@ -479,7 +479,7 @@ final class ReportFlowTest extends FunctionalTestCase
     public function testFilingCreatesAReportedIncidentAndOpensIt(): void
     {
         $area = $this->anArea();
-        $this->aZone($area, 'Endulen');
+        $this->aZone($area, 'North Gate');
         $reporter = $this->aReporter();
         $this->client->loginUser($reporter);
 
@@ -487,7 +487,7 @@ final class ReportFlowTest extends FunctionalTestCase
         $this->client->request('POST', $this->createUrl($this->uuidOf($area)), [
             '_token' => $this->tokenFrom($html),
             'subcategory' => 'livestock-depredation',
-            'title' => 'Lion killed four goats at Osinoni',
+            'title' => 'Lion killed four goats at Riverside',
             'lat' => '-3.21',
             'lng' => '35.25',
             'severity' => 'high',
@@ -499,14 +499,14 @@ final class ReportFlowTest extends FunctionalTestCase
         $this->client->followRedirect();
         self::assertResponseIsSuccessful();
 
-        $incident = $this->em->getRepository(Incident::class)->findOneBy(['title' => 'Lion killed four goats at Osinoni']);
+        $incident = $this->em->getRepository(Incident::class)->findOneBy(['title' => 'Lion killed four goats at Riverside']);
         self::assertNotNull($incident);
         self::assertSame(IncidentStatusEnum::Reported, $incident->getStatus());
         self::assertSame('high', $incident->getSeverity()->value);
         self::assertSame('They came in the night.', $incident->getNarrative());
         self::assertSame(['species' => 'Lion'], $incident->getDetails());
         // The point was resolved to a zone in PostGIS, once, at filing.
-        self::assertSame('Endulen', $incident->zoneLabel());
+        self::assertSame('North Gate', $incident->zoneLabel());
         self::assertSame($reporter->getId(), $incident->getReportedBy()?->getId());
     }
 
@@ -756,13 +756,13 @@ final class ReportFlowTest extends FunctionalTestCase
         $this->client->request('POST', $this->createUrl($this->uuidOf($area)).'?'.$query, [
             '_token' => $this->tokenFrom($crawler->html()),
             'subcategory' => 'livestock-depredation',
-            'title' => 'Fresh lion tracks 400 m from Endulen bomas',
+            'title' => 'Fresh lion tracks 400 m from North Gate bomas',
             'lat' => '-3.2014',
             'lng' => '35.4622',
         ]);
 
         self::assertResponseRedirects();
-        $incident = $this->em->getRepository(Incident::class)->findOneBy(['title' => 'Fresh lion tracks 400 m from Endulen bomas']);
+        $incident = $this->em->getRepository(Incident::class)->findOneBy(['title' => 'Fresh lion tracks 400 m from North Gate bomas']);
         self::assertNotNull($incident);
         self::assertTrue($incident->hasProvenance());
         self::assertSame($observation->toRfc4122(), $incident->getSourceRecordUuid()?->toRfc4122());
@@ -802,7 +802,7 @@ final class ReportFlowTest extends FunctionalTestCase
 
         $this->client->request('POST', $this->createUrl($this->uuidOf($area)), [
             'subcategory' => 'livestock-depredation',
-            'title' => 'Lion killed four goats at Osinoni',
+            'title' => 'Lion killed four goats at Riverside',
             'lat' => '-3.21',
             'lng' => '35.25',
         ]);

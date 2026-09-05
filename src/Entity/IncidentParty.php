@@ -58,7 +58,7 @@ class IncidentParty
     #[ORM\Column(length: 160)]
     private string $name;
 
-    /** The line under the name: "household head · Osinoni sub-village · +255 7…". */
+    /** The line under the name: "household head · Riverside sub-village · +255 7…". */
     #[ORM\Column(length: 200, nullable: true)]
     private ?string $describedAs = null;
 

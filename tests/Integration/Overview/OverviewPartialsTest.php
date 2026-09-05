@@ -94,7 +94,7 @@ final class OverviewPartialsTest extends OverviewTestCase
         // A kind nothing was filed under today says so, in the quiet tone — the
         // design draws the empty row rather than dropping it.
         self::assertStringContainsString('none today', $html);
-        self::assertStringContainsString('Endulen 2 · Kakesio 1', $html);
+        self::assertStringContainsString('North Gate 2 · West Plains 1', $html);
         // The month is not on this card, and the card says where it is.
         self::assertStringContainsString('This month’s totals live on the module’s own dashboard', $html);
     }
@@ -124,7 +124,7 @@ final class OverviewPartialsTest extends OverviewTestCase
         // Nowhere on the plate are they added: 7.05 would be a number about
         // nothing, since one is owed to the authority and one by it.
         self::assertStringNotContainsString('7.05', $html);
-        self::assertStringContainsString('27 d · INC-0007 · Endulen', $html);
+        self::assertStringContainsString('27 d · INC-0007 · North Gate', $html);
         self::assertStringContainsString('1 claim · 1 zone', $html);
     }
 

@@ -59,7 +59,7 @@ final class IncidentTransitionServiceTest extends TestCase
             new AreaOfInterest()->setSource('test fixture'),
             $subcategory,
             'INC-0313',
-            'Lion killed four goats at Osinoni',
+            'Lion killed four goats at Riverside',
             '{"type":"Point","coordinates":[35.45,-3.21]}',
             $this->now('2026-08-20 05:41:00'),
         );

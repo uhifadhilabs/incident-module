@@ -150,7 +150,7 @@ abstract class FunctionalTestCase extends WebTestCase
     protected function anIncident(
         AreaOfInterest $area,
         string $subcategory = 'livestock-depredation',
-        string $title = 'Lion killed four goats at Osinoni',
+        string $title = 'Lion killed four goats at Riverside',
         ?User $reportedBy = null,
     ): Incident {
         /** @var IncidentReportService $reports */

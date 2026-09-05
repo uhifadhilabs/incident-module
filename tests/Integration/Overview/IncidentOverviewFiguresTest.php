@@ -103,7 +103,7 @@ final class IncidentOverviewFiguresTest extends OverviewTestCase
             $byCategory,
         );
 
-        self::assertSame(['Endulen' => 2, 'Kakesio' => 1], $overview->todayZones());
+        self::assertSame(['North Gate' => 2, 'West Plains' => 1], $overview->todayZones());
     }
 
     public function testItCountsWhatWasClosedOutTodayRatherThanWhatWasFiled(): void

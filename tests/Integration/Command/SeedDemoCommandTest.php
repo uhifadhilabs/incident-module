@@ -169,12 +169,12 @@ final class SeedDemoCommandTest extends IntegrationTestCase
     public function testZonesAreAttachedWhereTheHostHasDrawnThem(): void
     {
         $area = $this->anArea();
-        $this->aZone($area, 'Endulen', 35.0, 35.5);
+        $this->aZone($area, 'North Gate', 35.0, 35.5);
         $this->seed();
         $this->em->clear();
 
         $zoned = $this->em->getRepository(Incident::class)->findBy(['zone' => null]);
-        self::assertLessThan(47, \count($zoned), 'At least the Endulen incidents should have found their zone.');
+        self::assertLessThan(47, \count($zoned), 'At least the North Gate incidents should have found their zone.');
     }
 
     /** An area with nothing drawn on it still seeds perfectly well. */

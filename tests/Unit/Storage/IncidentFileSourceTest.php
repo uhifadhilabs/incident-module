@@ -217,7 +217,7 @@ final class IncidentFileSourceTest extends TestCase
             $area,
             $subcategory,
             'INC-0313',
-            'Lion killed four goats at Osinoni',
+            'Lion killed four goats at Riverside',
             '{"type":"Point","coordinates":[35.45,-3.21]}',
             new \DateTimeImmutable('2026-08-19 07:10:00'),
         );

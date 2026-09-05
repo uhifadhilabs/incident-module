@@ -41,7 +41,7 @@ final class CaseFilePageTest extends FunctionalTestCase
     public function testTheWholeRecordIsOnOnePage(): void
     {
         $area = $this->anArea();
-        $this->aZone($area, 'Endulen');
+        $this->aZone($area, 'North Gate');
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
         $this->client->loginUser($this->aReporter());
 

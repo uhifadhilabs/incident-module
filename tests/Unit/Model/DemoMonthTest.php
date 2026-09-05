@@ -164,10 +164,10 @@ final class DemoMonthTest extends TestCase
         }
 
         self::assertNotNull($incident, 'The design app opens on INC-0313; the sample month has to hold it.');
-        self::assertSame('Lion killed four goats at Osinoni — compensation claim opened', $incident['title']);
+        self::assertSame('Lion killed four goats at Riverside — compensation claim opened', $incident['title']);
         self::assertSame('livestock-depredation', $incident['subcategory']);
         self::assertSame('in_progress', $incident['status']);
-        self::assertSame('Endulen', $incident['zone']);
+        self::assertSame('North Gate', $incident['zone']);
         self::assertNotNull($incident['money']);
         self::assertSame(1_600_000, $incident['money']['claimed']);
         self::assertSame(1_200_000, $incident['money']['approved']);

@@ -55,39 +55,39 @@ abstract class OverviewTestCase extends IntegrationTestCase
      */
     protected function aRegister(): AreaOfInterest
     {
-        $area = $this->anArea('Ngorongoro');
-        $this->aZone($area, 'Endulen', 35.0, 35.3);
-        $this->aZone($area, 'Kakesio', 35.3, 35.5);
+        $area = $this->anArea('one area');
+        $this->aZone($area, 'North Gate', 35.0, 35.3);
+        $this->aZone($area, 'West Plains', 35.3, 35.5);
         $this->installTaxonomy();
 
-        $endulen = '{"type":"Point","coordinates":[35.25,-3.21]}';
-        $kakesio = '{"type":"Point","coordinates":[35.40,-3.21]}';
+        $northGate = '{"type":"Point","coordinates":[35.25,-3.21]}';
+        $westPlains = '{"type":"Point","coordinates":[35.40,-3.21]}';
 
         // INC-0001 · filed today, verified this morning.
         $this->moved(
-            $this->filed($area, 'snaring', 'Snare line lifted at the Lerai forest edge', '2026-08-22 07:40:00', $endulen),
+            $this->filed($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', '2026-08-22 07:40:00', $northGate),
             ['2026-08-22 09:10:00' => IncidentTransitionEnum::Verify],
         );
 
         // INC-0002 · filed today, nobody has looked yet.
-        $this->filed($area, 'livestock-depredation', 'Fresh lion tracks 400 m from Endulen bomas', '2026-08-22 08:15:00', $endulen);
+        $this->filed($area, 'livestock-depredation', 'Fresh lion tracks 400 m from North Gate bomas', '2026-08-22 08:15:00', $northGate);
 
         // INC-0003 · the newest thing on the register.
         $this->moved(
-            $this->filed($area, 'natural-mortality', 'Wildebeest carcass, no injury pattern', '2026-08-22 10:52:00', $kakesio),
+            $this->filed($area, 'natural-mortality', 'Wildebeest carcass, no injury pattern', '2026-08-22 10:52:00', $westPlains),
             ['2026-08-22 11:20:00' => IncidentTransitionEnum::Verify],
         );
 
         // INC-0004 · yesterday, work started, well inside its 14-day term.
         $this->moved(
-            $this->filed($area, 'unauthorized-construction', 'Three new structures outside the agreed boma footprint', '2026-08-21 11:05:00', $kakesio),
+            $this->filed($area, 'unauthorized-construction', 'Three new structures outside the agreed boma footprint', '2026-08-21 11:05:00', $westPlains),
             ['2026-08-21 14:00:00' => IncidentTransitionEnum::Verify, '2026-08-21 15:30:00' => IncidentTransitionEnum::Respond],
         );
 
         // INC-0005 · filed the SAME WEEKDAY A WEEK AGO and closed out this
         // morning: what the "closed out" figure counts and the "filed" one does not.
         $this->moved(
-            $this->filed($area, 'crop-raiding', 'Elephants through the Kakesio gardens overnight', '2026-08-15 09:00:00', $kakesio),
+            $this->filed($area, 'crop-raiding', 'Elephants through the West Plains gardens overnight', '2026-08-15 09:00:00', $westPlains),
             [
                 '2026-08-15 13:00:00' => IncidentTransitionEnum::Verify,
                 '2026-08-16 08:00:00' => IncidentTransitionEnum::Respond,
@@ -97,14 +97,14 @@ abstract class OverviewTestCase extends IntegrationTestCase
 
         // INC-0006 · twelve days open against a 72-hour term.
         $this->moved(
-            $this->filed($area, 'crop-raiding', 'Maize lost along the Kakesio boundary', '2026-08-10 09:00:00', $kakesio),
+            $this->filed($area, 'crop-raiding', 'Maize lost along the West Plains boundary', '2026-08-10 09:00:00', $westPlains),
             ['2026-08-11 09:00:00' => IncidentTransitionEnum::Verify],
         );
 
         // INC-0007 · a compensation claim approved in july and still unpaid. Its
         // 30-day term has NOT run out, which one global SLA would have got wrong.
         $claim = $this->moved(
-            $this->filed($area, 'livestock-depredation', 'Lion killed four goats at Osinoni', '2026-07-26 09:00:00', $endulen),
+            $this->filed($area, 'livestock-depredation', 'Lion killed four goats at Riverside', '2026-07-26 09:00:00', $northGate),
             ['2026-07-26 15:00:00' => IncidentTransitionEnum::Verify, '2026-07-27 08:00:00' => IncidentTransitionEnum::Respond],
         );
         $this->money($claim, MoneyDirectionEnum::Compensation, approved: 4_500_000);
@@ -112,7 +112,7 @@ abstract class OverviewTestCase extends IntegrationTestCase
         // INC-0008 · a fine assessed and uncollected, seventeen days past a
         // 72-hour term: the worst thing on the register.
         $fine = $this->moved(
-            $this->filed($area, 'snaring', 'Wire snares recovered, offender identified', '2026-08-05 09:00:00', $endulen),
+            $this->filed($area, 'snaring', 'Wire snares recovered, offender identified', '2026-08-05 09:00:00', $northGate),
             ['2026-08-05 12:00:00' => IncidentTransitionEnum::Verify, '2026-08-06 08:00:00' => IncidentTransitionEnum::Respond],
         );
         $this->money($fine, MoneyDirectionEnum::Fine, approved: 2_550_000);

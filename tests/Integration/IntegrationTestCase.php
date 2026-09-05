@@ -157,7 +157,7 @@ abstract class IntegrationTestCase extends KernelTestCase
     protected function anIncident(
         AreaOfInterest $area,
         string $subcategory = 'livestock-depredation',
-        string $title = 'Lion killed four goats at Osinoni',
+        string $title = 'Lion killed four goats at Riverside',
         ?\DateTimeImmutable $at = null,
         ?User $reportedBy = null,
     ): Incident {

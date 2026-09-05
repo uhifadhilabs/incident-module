@@ -23,7 +23,7 @@ final class DashboardPageTest extends FunctionalTestCase
     public function testTheShippedCompositionRenders(): void
     {
         $area = $this->anArea();
-        $this->aZone($area, 'Endulen');
+        $this->aZone($area, 'North Gate');
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -63,7 +63,7 @@ final class DashboardPageTest extends FunctionalTestCase
     public function testEveryWidgetInTheCatalogueRenders(): void
     {
         $area = $this->anArea();
-        $this->aZone($area, 'Endulen');
+        $this->aZone($area, 'North Gate');
         $reporter = $this->aReporter();
         $this->anIncident($area, reportedBy: $reporter);
         $this->anIncident($area, 'roadkill', 'Zebra roadkill on the C-road, km 12', $reporter);
@@ -104,8 +104,8 @@ final class DashboardPageTest extends FunctionalTestCase
     {
         $area = $this->anArea();
         $reporter = $this->aReporter();
-        $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Osinoni', $reporter);
-        $this->anIncident($area, 'snaring', 'Snare line lifted at the Lerai forest edge', $reporter);
+        $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside', $reporter);
+        $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', $reporter);
         $this->client->loginUser($reporter);
 
         $all = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
