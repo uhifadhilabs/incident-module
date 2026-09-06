@@ -326,6 +326,15 @@ html.light{
    controller refuses a zero-height container. Nothing in the host's split
    covers a `.c[data-w=map]` standing on its own.                             */
 .c[data-w=map] .viewer{min-height:460px;display:grid}
+/* The case file's "Where" plate is sized to match the patrol SHOW track plate
+   exactly — the design's tall detail frame, min(58vh, 560px) (patrol.css:
+   `.patrol-plate .patrol-plate-viewer-tall`). It is scoped to the detail card
+   (.plate-fill, the Where card on incident/show), so the dashboard and overview
+   maps keep their own `.c[data-w=map] .viewer` min-height:460px sizing. Like
+   that rule, this is genuinely this module's plate sizing: the plate frame's
+   look (ground, border, overflow) and the .map-chrome* controls stay the
+   HOST's, never shipped twice. */
+.plate-fill .viewer{height:min(58vh,560px)}
 /* The Leaflet canvas the incident-map controller builds inside the host's
    .viewer plate — this module's own map CONTENT plumbing, the way patrol.css
    carries .patrol-canvas. It fills the plate; the plate (position, ground,
