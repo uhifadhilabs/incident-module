@@ -35,9 +35,22 @@ tree is what filed incidents currently point at; the new area-scoped
 incidents/taxonomy`, `incidents.manage`). They do not yet share storage — filing
 against the area-scoped taxonomy, and retiring the seeded one, is the convergence
 step that follows this slice. The admin's "copy from another area" gesture is
-deliberately deferred: it needs an area-directory contract (enumerate areas +
-read their names) that is not yet ruled, and the empty-state template marks the
+deliberately deferred: it needs to enumerate areas and read their names — which
+`Uhifadhi\ModuleContracts\Entity\AreaInterface` now exposes (`getName`,
+`getUuidString`, and enumeration through the ORM against the interface; see
+[module-contracts/docs/area-contract.md](https://github.com/uhifadhilabs/module-contracts/blob/main/docs/area-contract.md)) —
+but the gesture itself is not yet ruled, and the empty-state template marks the
 seam.
+
+**How this module references areas.** `Incident::$area` and the area-scoped
+`TaxonomyKind` are mapped to the concrete `Uhifadhi\Area\Entity\AreaOfInterest`,
+not to the `AreaInterface` contract. The contract lets a module point at an area
+*without* requiring area-module — the way team-module's `Department` does — but
+this module already hard-requires area-module for its PostGIS points, zones and
+overview seams, so the concrete class costs it nothing it was avoiding and keeps
+the area's own accessors in hand. Loose coupling through the interface is the
+right call for a module that has no other reason to depend on area-module; that is
+not this one.
 
 **Provenance is written once and never edited.** An incident filed from a patrol
 observation stays linked to that observation forever
