@@ -24,6 +24,7 @@ use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\IncidentFilter;
+use Uhifadhi\Incident\Workflow\IncidentWorkflow;
 use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
@@ -59,6 +60,37 @@ final class IncidentRepository extends ServiceEntityRepository
     public function findOneByReference(string $reference): ?Incident
     {
         return $this->findOneBy(['reference' => $reference]);
+    }
+
+    /**
+     * EVERY RESOLVED INCIDENT THE CLOCK IS NOW DUE TO CLOSE — deployment-wide,
+     * across every area, because the clock keeps nobody's hours and an area
+     * boundary is not a thing time respects.
+     *
+     * Due means resolved at least {@see IncidentWorkflow::CLOSE_AFTER_DAYS} ago:
+     * the same threshold {@see IncidentTransitionService::closesAt()} computes, said
+     * here in SQL so the sweep loads only the rows it will actually close rather
+     * than every resolved incident an installation has ever had. The service is
+     * still asked incident-by-incident afterwards — this query narrows the set, it
+     * does not replace the guard.
+     *
+     * @return list<Incident>
+     */
+    public function dueForClosure(\DateTimeImmutable $now): array
+    {
+        $threshold = $now->modify(\sprintf('-%d days', IncidentWorkflow::CLOSE_AFTER_DAYS));
+
+        /** @var list<Incident> $incidents */
+        $incidents = $this->createQueryBuilder('i')
+            ->andWhere('i.status = :resolved')->setParameter('resolved', IncidentStatusEnum::Resolved->value)
+            ->andWhere('i.resolvedAt IS NOT NULL')
+            ->andWhere('i.resolvedAt <= :threshold')->setParameter('threshold', $threshold)
+            ->orderBy('i.resolvedAt', 'ASC')
+            ->addOrderBy('i.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $incidents;
     }
 
     /**

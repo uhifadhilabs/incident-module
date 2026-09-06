@@ -815,11 +815,28 @@ body:has(.ro-slideover.open){overflow:hidden}
 
 /* The report sheet's own form controls. The design drew the fields as static
    text; these are the same rows with real inputs in them. */
-.i-fld input[type=text],.i-fld input[type=datetime-local],.i-fld select,.i-fld textarea{
+.i-fld input[type=text],.i-fld input[type=datetime-local],.i-fld input[type=number],.i-fld select,.i-fld textarea{
   width:100%;background:color-mix(in srgb,var(--fog) 5%,transparent);color:var(--tx);
   border:1px solid var(--ln2);border-radius:8px;padding:7px 9px;font:inherit;font-size:12px}
 .i-fld input:focus,.i-fld select:focus,.i-fld textarea:focus{outline:none;border-color:var(--acc)}
 .i-fld span{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── THE MONEY WRITE SURFACE ──────────────────────────────────────────────
+   The gated panel the read-only money card has always been waiting for. It
+   wears the same money hue as the card above it, and the direction rides as a
+   fixed, un-editable heading — a fine is owed one way and compensation the
+   other, and the panel never offers that as a choice.                        */
+.i-moneyedit .i-moneyedit-dir{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.i-moneyedit .i-moneyedit-dir svg{width:14px;height:14px;color:var(--i-money);flex:none}
+.i-moneyedit .i-moneyedit-dir b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;
+  font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--tx)}
+.i-moneyform{margin:0}
+.i-moneyform .i-fld{grid-template-columns:120px 1fr}
+.i-moneyform .i-fld input,.i-moneyform .i-fld textarea{flex:1 1 140px;min-width:0}
+.i-waiveform{margin-top:12px;padding-top:12px;border-top:1px solid var(--ln2)}
+.i-moneyact{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.i-moneyhint{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim);
+  flex:1 1 160px;line-height:1.5}
 .i-errors{border:1px solid color-mix(in srgb,var(--bad,#E05B41) 45%,transparent);border-radius:10px;
   padding:10px 12px;margin-bottom:14px;font-size:12px}
 .i-errors p{margin:0 0 4px}

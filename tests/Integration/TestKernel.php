@@ -211,6 +211,7 @@ final class TestKernel extends Kernel
             // integration test.
             'incident.taxonomy_admin',
             'incident.report',
+            'incident.money',
             'incident.dashboard',
             'incident.overview.figures',
             // The six area-overview providers. Tagged by hand in the extension

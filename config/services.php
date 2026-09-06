@@ -26,6 +26,7 @@ use Uhifadhi\Incident\Repository\IncidentZoneLocator;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
+use Uhifadhi\Incident\Service\IncidentMoneyService;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
@@ -98,6 +99,16 @@ return static function (ContainerConfigurator $container): void {
             service(IncidentRepository::class),
             service('incident.zone_locator'),
         ]);
+
+    /*
+     * THE MONEY WRITE SURFACE — the four amounts and the waiver, the row born
+     * lazily on the first save. Unconditional like the report service: it is pure
+     * domain logic (create the row, apply the amounts, leave a timeline event) and
+     * the CONTROLLER that fronts it is what the security guard registers, because
+     * recording money rides on "incidents.manage".
+     */
+    $services->set('incident.money', IncidentMoneyService::class)
+        ->args([service('doctrine.orm.entity_manager')]);
 
     /*
      * THE AREA-SCOPED TAXONOMY ADMIN's logic. Registered unconditionally — it is

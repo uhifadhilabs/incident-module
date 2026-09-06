@@ -188,6 +188,32 @@ final class CaseFilePageTest extends FunctionalTestCase
         self::assertCount(0, $crawler->filter('.i-trans form button'), 'Nobody may close an incident by hand.');
     }
 
+    /**
+     * A RESOLVED INCIDENT SAYS WHEN IT WILL CLOSE ITSELF — the computed date, on
+     * the rail, as a hint and not a control. Closing is the clock's move; the case
+     * file's job is to tell the reader when, so nobody goes hunting for a button.
+     */
+    public function testAResolvedIncidentShowsItsAutomaticCloseDate(): void
+    {
+        $area = $this->anArea();
+        $incident = $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass, no injury pattern');
+        $at = new \DateTimeImmutable('2026-08-21 10:00:00');
+        foreach ([IncidentTransitionEnum::Verify, IncidentTransitionEnum::Respond, IncidentTransitionEnum::Resolve] as $step) {
+            $this->transitions()->apply($incident, $step, $at = $at->modify('+1 hour'));
+        }
+        $this->em->flush();
+        $this->client->loginUser($this->aManager());
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $incident->getReference()));
+
+        // Resolved 21 aug 13:00, closes 30 days later — the rail prints that date.
+        $expected = $incident->getResolvedAt()?->modify('+30 days')->format('j M Y');
+        self::assertNotNull($expected);
+        $rail = $crawler->filter('.i-wf')->text();
+        self::assertStringContainsString('auto-closes '.$expected, $rail);
+        self::assertStringContainsString('closing is automatic', $rail);
+    }
+
     /** Somebody without "incidents.manage" sees the rail and is offered no move at all. */
     public function testAReporterSeesTheRailAndIsOfferedNoMoves(): void
     {

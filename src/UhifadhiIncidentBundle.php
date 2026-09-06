@@ -25,9 +25,11 @@ use Uhifadhi\Area\Overview\NowTileProviderInterface;
 use Uhifadhi\Area\Overview\OverviewContributorInterface;
 use Uhifadhi\Area\Overview\OverviewCopyProviderInterface;
 use Uhifadhi\Area\Overview\PulseProviderInterface;
+use Uhifadhi\Incident\Command\CloseDueCommand;
 use Uhifadhi\Incident\Command\SeedDemoCommand;
 use Uhifadhi\Incident\Command\SyncTaxonomyCommand;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
+use Uhifadhi\Incident\Controller\IncidentMoneyController;
 use Uhifadhi\Incident\Controller\IncidentReportController;
 use Uhifadhi\Incident\Controller\IncidentTaxonomyController;
 use Uhifadhi\Incident\Controller\IncidentWidgetsController;
@@ -293,6 +295,22 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 ->public();
             $services->alias(IncidentDetailController::class, 'incident.controller.detail')->public();
 
+            // The money write surface's door. Registered under the same guard as
+            // the transition endpoint and for the same reason: recording money
+            // rides on "incidents.manage", so without SecurityBundle there is
+            // nobody to grant it and the route must not exist.
+            $services->set('incident.controller.money', IncidentMoneyController::class)
+                ->args([
+                    service('router'),
+                    service(IncidentRepository::class),
+                    service('incident.money'),
+                    service('security.authorization_checker'),
+                    service('security.csrf.token_manager'),
+                    service('security.token_storage'),
+                ])
+                ->public();
+            $services->alias(IncidentMoneyController::class, 'incident.controller.money')->public();
+
             $services->set('incident.controller.report', IncidentReportController::class)
                 ->args([
                     service('twig'),
@@ -338,6 +356,19 @@ final class UhifadhiIncidentBundle extends AbstractBundle
         // on install — see the class docblock.
         $services->set('incident.command.sync_taxonomy', SyncTaxonomyCommand::class)
             ->args([service('incident.taxonomy_installer')])
+            ->tag('console.command');
+
+        // THE CLOCK'S HAND. `closed` is reached by time, and this is the process
+        // that turns the hand — a daily cron in production. Registered in every
+        // environment for the same reason the taxonomy sync is: a workflow whose
+        // last step never runs is not dev tooling, it is a broken workflow. See
+        // the class docblock for the cron line and the scheduler note.
+        $services->set('incident.command.close_due', CloseDueCommand::class)
+            ->args([
+                service('doctrine.orm.entity_manager'),
+                service(IncidentRepository::class),
+                service('incident.transitions'),
+            ])
             ->tag('console.command');
 
         // Dev tooling: the demo seeder exists only where incident.dev_tools is on

@@ -36,8 +36,8 @@
         "symfony/uid": "^7.3 || ^8.0",
         "symfony/ux-icons": "^3.4",
         "uhifadhi/area-module": "^0.3 || ^0.4 || ^0.5 || ^0.6",
-        "uhifadhi/map-module": "^0.1 || ^0.2",
-        "uhifadhi/module-contracts": "^0.3",
+        "uhifadhi/map-module": "^0.1 || ^0.2 || dev-main",
+        "uhifadhi/module-contracts": "^0.3 || dev-main",
         "uhifadhi/widget-module": "^0.1"
     },
     "autoload": {

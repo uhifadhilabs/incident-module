@@ -97,6 +97,41 @@
                     </div>
                 </div>
             {% endif %}
+
+            {# THE MONEY WRITE SURFACE — a GATED PANEL. It does not exist until the
+               incident reaches `in progress`, and only where the sub-category
+               carries money; the direction is FIXED (inherited from the category),
+               never a choice made here. The row is born on the first amount, which
+               is when the read-only card above appears. → POST incident_money /
+               incident_money/waive, guarded by "incidents.manage". #}
+            {% if canManage and incident.subcategory.carriesMoney
+                and incident.status.hasReached(constant('Uhifadhi\\Incident\\Enum\\IncidentStatusEnum::InProgress')) %}
+                {% set dir = incident.subcategory.moneyDirection %}
+                <div class="c i-moneyedit">
+                    <span class="tab">Record money<span class="src">· {{ dir.value }} · direction is fixed</span></span>
+                    <div class="i-moneyedit-dir">{{ ux_icon('lucide:circle-dollar-sign') }}<b>{{ dir.heading }}</b></div>
+                    <form method="post" class="i-moneyform" action="{{ path('incident_money', {uuid: area.uuid, reference: incident.reference}) }}">
+                        <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        <div class="i-fieldset">
+                            <div class="i-fld"><label for="money-claimed">Claimed</label><span><input type="number" min="0" step="1" inputmode="numeric" id="money-claimed" name="claimed" value="{{ money and money.claimed is not null ? money.claimed }}"></span></div>
+                            <div class="i-fld"><label for="money-assessed">Assessed</label><span><input type="number" min="0" step="1" inputmode="numeric" id="money-assessed" name="assessed" value="{{ money and money.assessed is not null ? money.assessed }}"></span></div>
+                            <div class="i-fld"><label for="money-approved">Approved</label><span><input type="number" min="0" step="1" inputmode="numeric" id="money-approved" name="approved" value="{{ money and money.approved is not null ? money.approved }}"></span></div>
+                            <div class="i-fld"><label for="money-settled">{{ dir.settledWord|capitalize }}</label><span><input type="number" min="0" step="1" inputmode="numeric" id="money-settled" name="settled" value="{{ money ? money.settled : '' }}"></span></div>
+                        </div>
+                        <div class="i-moneyact">
+                            <button type="submit" class="cta">Record →</button>
+                            <span class="i-moneyhint">Whole units, one save at a time. The incident cannot be marked resolved until the money is settled or waived.</span>
+                        </div>
+                    </form>
+                    {% if not (money and money.isWaived) %}
+                        <form method="post" class="i-moneyform i-waiveform" action="{{ path('incident_money_waive', {uuid: area.uuid, reference: incident.reference}) }}">
+                            <input type="hidden" name="_token" value="{{ csrfToken }}">
+                            <div class="i-fld"><label for="money-waive">Waive · reason</label><span><textarea id="money-waive" name="reason" rows="2" placeholder="Why the money is being given up on — a waiver without a reason is a deletion"></textarea></span></div>
+                            <div class="i-moneyact"><button type="submit" class="tgl">Waive with reason</button></div>
+                        </form>
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
     </div>
 
