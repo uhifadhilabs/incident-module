@@ -9,7 +9,7 @@ over.
 | Value | Name | Printed under it |
 |---|---|---|
 | `incidents.record` | Incidents · Record | File an incident: what happened, where, and the evidence for it. |
-| `incidents.manage` | Incidents · Manage | Move an incident through verification, response and closure, and settle the fines and compensation on it. |
+| `incidents.manage` | Incidents · Manage | Move an incident through verification, response and closure, settle the fines and compensation on it, and **manage the area's incident taxonomy** — its kinds, sub-categories and behaviour blocks. |
 
 The split is the design's own economics — *a report is cheap and a verification
 is expensive*. The design's IN·R1 card says filing should need no permission of

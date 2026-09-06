@@ -1,0 +1,84 @@
+{# ── THE EMPTY START ──────────────────────────────────────────────────────
+   The first-run data condition of THIS SAME route — what a brand-new area sees.
+   No seed, no starter pack, nothing to accept. What a first-time administrator
+   needs is not content, it is SHAPE: an inert ghost sketch of what a taxonomy IS,
+   and one honest way in — writing the first kind.
+
+   `area`, `colourKeys`, `csrfToken` are supplied by IncidentTaxonomyController.
+   ========================================================================== #}
+<div class="tx-empty">
+  <div class="top">
+    <div class="ic">{{ ux_icon('lucide:layers', {width: 38, height: 38}) }}</div>
+    <h3>{{ area.name }} has no kinds of incident yet</h3>
+    <p>Nobody can file an incident in this area until it says what kinds of incident there are. <b>The words are
+    this area&rsquo;s to choose</b> &mdash; the platform ships with none and will never suggest any. Write the first
+    kind from scratch below.</p>
+
+    {# → POST …/taxonomy/kinds {label, colour} — the "write the first kind" path. #}
+    <form class="tx-form" method="post" action="{{ path('incident_taxonomy_kind_create', {uuid: area.uuid}) }}" style="justify-content:center">
+      <input type="hidden" name="_token" value="{{ csrfToken }}">
+      <input class="tx-input" type="text" name="label" placeholder="e.g. Poaching &amp; wildlife crime" required style="min-width:280px">
+      <select class="tx-input" name="colour" aria-label="Colour">
+        {% for key in colourKeys %}<option value="{{ key }}">{{ key }}</option>{% endfor %}
+      </select>
+      <button class="tx-cta" type="submit">{{ ux_icon('lucide:plus', {width: 15, height: 15}) }} Write the first kind of incident</button>
+    </form>
+  </div>
+
+  {# ══════════════════════════════════════════════════════════════════════════
+     DEFERRED SEAM — "COPY FROM ANOTHER AREA".
+
+     RULED (taxonomy design): at first setup an area may copy ANOTHER real area's
+     incident taxonomy as an editable starting point, which then diverges and is
+     recorded as provenance. It is NOT a starter pack — every option is a named,
+     dated real area's own words.
+
+     It is DEFERRED here on purpose. Rendering the picker means ENUMERATING the
+     other areas that have a non-empty taxonomy and reading their NAMES, which
+     needs an area-directory contract (module-contracts: enumerate + getName) that
+     is NOT yet ruled. This module must not reach for area names/enumeration on its
+     own (the host supplies only the CURRENT area, in the breadcrumb).
+
+     WHEN THE CONTRACT LANDS, this socket takes:
+       · a `<div class="tx-copy">` panel with `.tx-area` buttons — one per source
+         area (name, a one-line summary, "N kinds · N subs"), styled in
+         taxonomy.css and drawn ABOVE the ghost;
+       · each button POSTs to a new `incident_taxonomy_copy_from`
+         ({source_area_uuid}) action on this controller, calling a
+         TaxonomyAdminService::copyFrom(...) that deep-copies kinds, sub-categories
+         and their behaviour blocks and stamps the source as provenance;
+       · a provenance line then renders under the page head on the populated
+         manager ("Started as a copy of <source> on <date>").
+     Nothing below or above depends on it — the core start is complete without it.
+     ══════════════════════════════════════════════════════════════════════════ #}
+
+  {# THE GHOST. Inert in every sense (pointer-events off on the frame): it teaches
+     the SHAPE of a taxonomy; there is nothing here to adopt or click into being. #}
+  <div class="tx-sketch">
+    <span class="tx-stamp">An illustration of the shape &mdash; not a template, nothing here can be added</span>
+    <div role="img" aria-label="An illustration of the shape of a taxonomy: one kind with two sub-categories beneath it, each switching on a few behaviour blocks. It shows the structure only and contains no real values.">
+      <div class="gk"><span class="dot"></span><b>A kind of thing that happens here</b>
+        <span class="tag">a kind &mdash; the top level</span></div>
+      <div class="arm first">
+        <div style="flex:1;min-width:0">
+          <div class="gs"><div class="ln"><b>One way it happens</b><span class="tx-code">sub-one</span></div><div class="bl"><span class="gb">Species</span><span class="gb">Counts</span><span class="gb">Parties</span></div></div>
+          <div class="gs"><div class="ln"><b>Another way it happens</b><span class="tx-code">sub-two</span></div><div class="bl"><span class="gb">Parties</span><span class="gb">Money &middot; fine</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="tx-note"><span class="k">The top level</span><div>One kind. It is what somebody
+      filing picks first, it carries a colour on the map, and it is the grouping every count and every filter
+      in this area uses.</div></div>
+    <div class="tx-note"><span class="k">Underneath</span><div>Its sub-categories &mdash; the further grouping,
+      as many or as few as you like. <b>A kind with none is perfectly normal.</b></div></div>
+    <div class="tx-note"><span class="k">The questions</span><div>Each sub-category switches on <b>behaviour
+      blocks</b> &mdash; coded things the platform already records, such as a species, a count or a fine. You compose
+      which blocks a sub-category asks for; you do not invent fields.</div></div>
+    <div class="tx-note"><span class="k">Forever</span><div>Every row keeps a wire-code that never changes, so
+      renaming is safe. And nothing is ever deleted: a row you stop using is <b>retired</b>, and the records
+      already filed under it keep it.</div></div>
+  </div>
+  <div class="tx-docs">{{ ux_icon('lucide:book-open', {width: 14, height: 14}) }}<span>Not sure where to start?
+    <a href="#">How other areas structure a taxonomy</a> &mdash; in the documentation, deliberately not in the
+    product.</span></div>
+</div>

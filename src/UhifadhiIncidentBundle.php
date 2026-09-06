@@ -29,6 +29,7 @@ use Uhifadhi\Incident\Command\SeedDemoCommand;
 use Uhifadhi\Incident\Command\SyncTaxonomyCommand;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
 use Uhifadhi\Incident\Controller\IncidentReportController;
+use Uhifadhi\Incident\Controller\IncidentTaxonomyController;
 use Uhifadhi\Incident\Controller\IncidentWidgetsController;
 use Uhifadhi\Incident\DependencyInjection\IncidentConfiguration;
 use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
@@ -44,6 +45,8 @@ use Uhifadhi\Incident\Repository\IncidentEventRepository;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
+use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
+use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Storage\IncidentFileSource;
 use Uhifadhi\Incident\Widget\IncidentWidgets;
@@ -81,6 +84,13 @@ final class UhifadhiIncidentBundle extends AbstractBundle
      * name is the bundle's own knowledge, and no host should have to derive it.
      */
     public const string STYLESHEET = 'bundles/uhifadhiincident/incidents.css';
+
+    /**
+     * The taxonomy admin's own component stylesheet, served the same way and
+     * linked ONLY by the taxonomy screen (see taxonomy/show.html.twig) — its
+     * `tx-` vocabulary has no reader anywhere else.
+     */
+    public const string TAXONOMY_STYLESHEET = 'bundles/uhifadhiincident/taxonomy.css';
 
     /** Config lives under "incident:", not the class-derived "uhifadhi_labs_incident:". */
     protected string $extensionAlias = 'incident';
@@ -302,6 +312,25 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 ])
                 ->public();
             $services->alias(IncidentReportController::class, 'incident.controller.report')->public();
+
+            /*
+             * THE AREA-SCOPED TAXONOMY ADMIN. A writing screen: every route on it
+             * rides on "incidents.manage", so like the report flow it exists only
+             * where SecurityBundle can enforce that. Its logic
+             * (incident.taxonomy_admin) is unconditional; only this door is guarded.
+             */
+            $services->set('incident.controller.taxonomy', IncidentTaxonomyController::class)
+                ->args([
+                    service('twig'),
+                    service('router'),
+                    service('incident.taxonomy_admin'),
+                    service(TaxonomyKindRepository::class),
+                    service(TaxonomySubcategoryRepository::class),
+                    service('security.authorization_checker'),
+                    service('security.csrf.token_manager'),
+                ])
+                ->public();
+            $services->alias(IncidentTaxonomyController::class, 'incident.controller.taxonomy')->public();
         }
 
         // THE TAXONOMY COMMAND IS NOT DEV TOOLING. Without a taxonomy there is

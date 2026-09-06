@@ -207,6 +207,9 @@ final class TestKernel extends Kernel
         // for readability (see IntegrationTestCase::service()).
         foreach ([
             'incident.taxonomy_installer',
+            // The area-scoped taxonomy admin's logic, reached directly by its
+            // integration test.
+            'incident.taxonomy_admin',
             'incident.report',
             'incident.dashboard',
             'incident.overview.figures',

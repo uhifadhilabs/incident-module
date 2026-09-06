@@ -23,12 +23,15 @@ use Uhifadhi\Incident\Repository\IncidentPartyRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
+use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
+use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
+use Uhifadhi\Incident\Service\TaxonomyAdminService;
 use Uhifadhi\Incident\Twig\IncidentTrailExtension;
 use Uhifadhi\Widget\Service\WidgetService;
 
@@ -96,6 +99,21 @@ return static function (ContainerConfigurator $container): void {
             service('incident.zone_locator'),
         ]);
 
+    /*
+     * THE AREA-SCOPED TAXONOMY ADMIN's logic. Registered unconditionally — it is
+     * pure domain logic (create/rename/retire kinds and sub-categories, compose
+     * behaviour blocks, keep wire-codes unique per area) with no security of its
+     * own; the CONTROLLER that fronts it is registered only under the security
+     * guard (see UhifadhiIncidentBundle), because the write rides on
+     * "incidents.manage" and there is nobody to grant it without a firewall.
+     */
+    $services->set('incident.taxonomy_admin', TaxonomyAdminService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(TaxonomyKindRepository::class),
+            service(TaxonomySubcategoryRepository::class),
+        ]);
+
     // The taxonomy the deployment records against. Registered unconditionally:
     // without it there is nothing to file an incident against, so it is not dev
     // tooling — see IncidentTaxonomyInstaller.
@@ -124,6 +142,8 @@ return static function (ContainerConfigurator $container): void {
         IncidentPartyRepository::class,
         IncidentMoneyRepository::class,
         IncidentLinkRepository::class,
+        TaxonomyKindRepository::class,
+        TaxonomySubcategoryRepository::class,
     ] as $repository) {
         $services->set($repository)
             ->args([service('doctrine')])

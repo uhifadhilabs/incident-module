@@ -73,7 +73,9 @@ final class BundleBootTest extends KernelTestCase
         self::assertInstanceOf(MappingDriverChain::class, $driver);
         self::assertArrayHasKey('Uhifadhi\Incident\Entity', $driver->getDrivers());
 
-        // The eight tables the module owns, mapped without a line of host config.
+        // The tables the module owns, mapped without a line of host config —
+        // the incident record and its taxonomy, plus the area-scoped taxonomy
+        // admin's own two tables.
         $mapped = [];
         foreach ($em->getMetadataFactory()->getAllMetadata() as $metadata) {
             if (str_starts_with($metadata->getName(), 'Uhifadhi\\Incident\\Entity\\')) {
@@ -91,6 +93,8 @@ final class BundleBootTest extends KernelTestCase
             'incident_money',
             'incident_party',
             'incident_subcategory',
+            'incident_taxonomy_kind',
+            'incident_taxonomy_subcategory',
         ], $mapped);
     }
 
