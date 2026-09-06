@@ -9,6 +9,11 @@
                 "fetch": "eager",
                 "enabled": true
             },
+            "incident-filters": {
+                "main": "controllers/incident_filters_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            },
             "incident-board": {
                 "main": "controllers/incident_board_controller.js",
                 "fetch": "eager",

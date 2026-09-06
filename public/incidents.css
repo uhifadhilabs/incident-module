@@ -147,6 +147,24 @@ html.light{
 .i-search input{border:0;background:none;font-family:"JetBrains Mono",ui-monospace,monospace;
   font-size:10.5px;color:var(--tx);width:150px;outline:none}
 .i-search input::placeholder{color:var(--dim)}
+/* CATEGORY DROPDOWN — the row of pills is one themed select now. Styled to sit
+   in the chip row the way the design's "status ▾" chips do: a rounded ghost
+   pill in the uppercase mono the chips use, with its own chevron (a native
+   select's arrow is un-themeable, so appearance is stripped and one is drawn). */
+.i-catselect{position:relative;display:inline-flex;align-items:center;color:var(--dim)}
+.i-catselect select{appearance:none;-webkit-appearance:none;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--fog);background:none;
+  border:1px solid var(--ln2);border-radius:99px;padding:6px 30px 5px 13px;cursor:pointer;line-height:1}
+.i-catselect select:hover{color:var(--tx);border-color:var(--fog)}
+.i-catselect select:focus{outline:none;border-color:var(--acc)}
+.i-catselect::after{content:"";position:absolute;right:14px;top:50%;pointer-events:none;
+  width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:5px solid currentColor;transform:translateY(-45%)}
+/* RESET — a ghost chip carrying the design's x glyph; only rendered when a filter
+   is actually narrowing the register. */
+.i-reset{display:inline-flex;align-items:center;gap:5px}
+.i-reset svg{width:12px;height:12px;flex:none}
 
 /* ── MONEY ────────────────────────────────────────────────────────────────
    Fines and compensation. The rule the design makes: an amount is never a
@@ -308,6 +326,12 @@ html.light{
    controller refuses a zero-height container. Nothing in the host's split
    covers a `.c[data-w=map]` standing on its own.                             */
 .c[data-w=map] .viewer{min-height:460px;display:grid}
+/* The Leaflet canvas the incident-map controller builds inside the host's
+   .viewer plate — this module's own map CONTENT plumbing, the way patrol.css
+   carries .patrol-canvas. It fills the plate; the plate (position, ground,
+   overflow) and the .map-chrome* controls are the HOST's, never shipped twice. */
+.viewer .i-mapcanvas{position:absolute;inset:0;isolation:isolate}
+.viewer .i-mapcanvas .leaflet-container{width:100%;height:100%;font:inherit;background:var(--z-imagery,#20241F)}
 
 /* ── DIRECTION C · FEED ───────────────────────────────────────────────────
    Reverse-chronological, grouped by day.

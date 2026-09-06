@@ -37,11 +37,14 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# Leaflet FIRST, so incidents.css can restyle its controls into the design's
-       pills. Both files come from uhifadhi/map-module, by its own constants —
-       never a CDN, and the same Leaflet the area map runs on, so an incident map
-       and an area map cannot disagree about how a layer draws. MapLibre is
-       deliberately NOT used. #}
+    {# Leaflet FIRST, so incidents.css can style the plate over it. Both files
+       come from uhifadhi/map-module, by its own constants — never a CDN, and the
+       same Leaflet the area and patrol maps run on, so an incident map cannot
+       disagree with them about how a layer draws. MapLibre is deliberately NOT
+       used. The chrome the platform's chrome.js builds (.map-chrome*) is styled
+       by the HOST's app.css, one definition for every map on the platform — a
+       module must never ship a second copy of it; incidents.css styles only its
+       own plate, canvas and marks, exactly as patrol.css does. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Map\\UhifadhiMapBundle::LEAFLET_CSS')) }}">
     {# The dashboard grid's own vocabulary, from the bundle that owns it. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Widget\\UhifadhiWidgetBundle::STYLESHEET')) }}">

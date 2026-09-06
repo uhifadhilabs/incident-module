@@ -1,13 +1,27 @@
 import { Controller } from '@hotwired/stimulus';
+import { satelliteLayer, streetLayer } from 'uhifadhi/basemaps';
+import { drawBoundary } from 'uhifadhi/boundary';
+import { mountMapChrome } from 'uhifadhi/map-chrome';
 
 /*
- * IN·03 / IN·04 — where every incident was filed.
+ * IN·03 / IN·04 / IN·01 — where every incident was filed, on the platform's one
+ * map plate. The overview maps and the detail "Where" card are the same plate.
  *
- * SELF-HOSTED LEAFLET, read off `window.L`. The host loads it as a classic
- * script in <head> (see @UhifadhiIncident/base.html.twig), so it is there
- * before this module runs. MapLibre is deliberately not used anywhere in this
- * deployment: raster tiles plus GeoJSON need no WebGL, and WebGL failed silently
- * — a blank map — in constrained environments.
+ * THE PLATE IS THE PLATFORM'S, NOT THIS MODULE'S. The two base layers come from
+ * uhifadhi/map-module's one basemap module (`uhifadhi/basemaps`, an importmap
+ * specifier): satellite is the platform's imagery, standard is OSM. The boundary
+ * comes from `uhifadhi/boundary` and the zoom column, layer menu, scale bar and
+ * fullscreen from `uhifadhi/map-chrome`, exactly as the patrols module draws
+ * them — so an incident map, a patrol map and the area map cannot disagree about
+ * what satellite, a boundary or a control looks like. The module holds no second
+ * opinion, and ships no second copy of the chrome CSS (that lives in map.css,
+ * which the base template links).
+ *
+ * SELF-HOSTED LEAFLET, read off `window.L`: the host loads it as a classic
+ * <script> in <head> (see @UhifadhiIncident/base.html.twig), so it is there
+ * before this module runs. MapLibre is deliberately not used — raster tiles plus
+ * GeoJSON need no WebGL, and WebGL failed silently (a blank map) in constrained
+ * environments.
  *
  * THE MARKS MEAN SOMETHING, and they mean exactly what the legend beside them
  * says: hue is the CATEGORY, filled means still OPEN, hollow means resolved or
@@ -26,8 +40,8 @@ export default class extends Controller {
     connect() {
         this.L = window.L;
         if (!this.L) {
-            // No Leaflet, no map — and no exception either. The legend and the
-            // rest of the widget are still perfectly readable.
+            console.error('[incident] window.L (Leaflet) is not loaded — the incident base template must include leaflet.js');
+
             return;
         }
 
@@ -72,33 +86,80 @@ export default class extends Controller {
     }
 
     build() {
-        this.map = this.L.map(this.element, { zoomControl: true, attributionControl: false });
+        const L = this.L;
+
+        // The Leaflet container is an inner canvas so the chrome (which mounts on
+        // the .viewer frame) sits over it, never inside its pane — the same split
+        // every host map draws (a canvas child of the plate). It carries
+        // .map-chrome-host, the class the HOST's app.css hangs the control,
+        // scale and tooltip styling on, so those read the platform way.
+        this.canvas = document.createElement('div');
+        this.canvas.className = 'i-mapcanvas map-chrome-host';
+        this.element.appendChild(this.canvas);
+
+        // Controls, the live scale bar, attribution and the Ctrl/⌘-scroll bargain
+        // all come from the platform chrome module, mounted after the overlay.
+        this.map = L.map(this.canvas, { zoomControl: false, attributionControl: true });
+
+        // The platform's basemaps, not the module's own: the same imagery a person
+        // sees on the area map, on every incident map. Satellite is the default.
+        this.bases = {
+            satellite: satelliteLayer(L, this.map),
+            osm: streetLayer(L),
+        };
+        this.bases.satellite.addTo(this.map);
+
         // The view must exist BEFORE any vector layer: on a view-less map every
         // addLayer is deferred until the first setView, and draining that queue
         // trips Leaflet 1.9.4 when a geoJSON group and a bare circleMarker share
-        // the renderer ("reading 'min'" in _clipPoints). Reproduced and bisected
-        // in-browser; setting the world view first is the verified fix, and
+        // the renderer. Setting a fallback view first is the verified fix, and
         // fitBounds below still wins whenever there is anything to frame.
-        this.map.setView([0, 0], 2);
-        this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(this.map);
+        this.map.setView([-3.2, 35.5], 8);
 
-        const bounds = this.L.latLngBounds([]);
-        const boundary = this.drawBoundary();
-        if (boundary) {
-            bounds.extend(boundary.getBounds());
-        }
+        const bounds = L.latLngBounds([]);
 
-        for (const feature of this.incidentsValue.features ?? []) {
-            const marker = this.drawIncident(feature);
-            if (marker) {
-                bounds.extend(marker.getLatLng());
+        // What is DRAWN must never be able to kill the map itself: a bad payload
+        // must still leave the tiles, the zoom pills, the layer menu and the
+        // scroll bargain alive. The overlay is wrapped; the chrome is not.
+        try {
+            const boundary = this.drawBoundary();
+            if (boundary) {
+                bounds.extend(boundary.getBounds());
             }
+
+            for (const feature of this.incidentsValue.features ?? []) {
+                const marker = this.drawIncident(feature);
+                if (marker) {
+                    bounds.extend(marker.getLatLng());
+                }
+            }
+        } catch (error) {
+            console.error('[incident] the map overlay failed to draw', error);
         }
 
         if (bounds.isValid()) {
-            this.map.fitBounds(bounds.pad(0.08));
+            this.lastFit = bounds.pad(0.08);
+            this.map.fitBounds(this.lastFit);
         }
-        // Nothing to show is not an error; the world view set above stands.
+        // Nothing to show is not an error; the fallback view set above stands.
+
+        // After the overlay, so the DIM pill has this plate's scrim to switch, and
+        // fullscreen takes the whole widget card (the filter chips and the legend
+        // are part of reading the map), not just the tiles.
+        this.chrome = mountMapChrome(L, this.map, this.element, {
+            bases: this.bases,
+            scrim: this.scrimLayer,
+            scrimOn: Boolean(this.scrimLayer) && this.map.hasLayer(this.scrimLayer),
+            fullscreenTarget: this.element.closest('.c') ?? this.element,
+            onResize: () => this.refit(),
+        });
+    }
+
+    /** Re-frame whatever the plate opened on when the viewport changes size. */
+    refit() {
+        if (this.lastFit && this.lastFit.isValid()) {
+            this.map?.fitBounds(this.lastFit);
+        }
     }
 
     disconnect() {
@@ -112,10 +173,11 @@ export default class extends Controller {
             document.removeEventListener('turbo:before-cache', this.beforeCache);
             this.beforeCache = null;
         }
+        this.chrome?.destroy();
+        this.chrome = null;
         // stop() before remove(): an animation still in flight fires on a pane
-        // remove() has already detached (same crash leaflet_plate documents in
-        // patrol-module). And when Turbo has already swapped the body away, the
-        // map's DOM is gone before remove() runs — that must not throw either.
+        // remove() has already detached. And when Turbo has already swapped the
+        // body away, the map's DOM is gone before remove() runs — neither must throw.
         try {
             this.map?.stop();
             this.map?.remove();
@@ -125,15 +187,22 @@ export default class extends Controller {
         this.map = null;
     }
 
+    /**
+     * The area outline in the platform's one boundary treatment (the white
+     * casing, the jade line and the outside-the-area scrim), so a boundary reads
+     * the same on the area map and on an incident map. The scrim rides on the
+     * returned layer and is switched by the DIM pill.
+     */
     drawBoundary() {
         const geometry = parse(this.boundaryValue);
         if (!geometry) {
             return null;
         }
 
-        return this.L.geoJSON(geometry, {
-            style: { color: cssVar('--acc', '#3ED9A8'), weight: 1.4, opacity: 0.7, fill: false, dashArray: '4 4' },
-        }).addTo(this.map);
+        const boundary = drawBoundary(this.L, this.map, geometry, { scrim: true });
+        this.scrimLayer = boundary?.scrimLayer ?? null;
+
+        return boundary;
     }
 
     drawIncident(feature) {

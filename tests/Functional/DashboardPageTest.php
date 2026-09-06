@@ -119,6 +119,73 @@ final class DashboardPageTest extends FunctionalTestCase
     }
 
     /**
+     * THE SEARCH BOX DRIVES THE SAME ONE QUERY. Typing a word narrows the
+     * register the way a category does — the box is server-side, wired through
+     * the filter, not a client-side hide.
+     */
+    public function testTheSearchBoxNarrowsTheWholePage(): void
+    {
+        $area = $this->anArea();
+        $reporter = $this->aReporter();
+        $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside', $reporter);
+        $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', $reporter);
+        $this->client->loginUser($reporter);
+
+        // The box itself is on the page, once per reading of the register.
+        $all = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+        self::assertGreaterThan(0, $all->filter('.i-filters input[name="q"]')->count());
+
+        $narrowed = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?q=goats', $this->uuidOf($area)));
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $narrowed->filter('[data-w="register"] .i-id'));
+        self::assertStringContainsString('goats', $narrowed->filter('[data-w="register"]')->text());
+        // The box keeps what was typed, so a person sees their own query.
+        self::assertSame('goats', $narrowed->filter('.i-filters input[name="q"]')->first()->attr('value'));
+    }
+
+    /**
+     * THE CATEGORY FILTER IS A DROPDOWN, not the old row of pills. The select
+     * carries one option per category plus the "all categories" default; the
+     * link-pills are gone from the filter row (the category cell in a table row
+     * still wears .i-cat — those are not filters).
+     */
+    public function testTheCategoryFilterIsAThemedDropdown(): void
+    {
+        $area = $this->anArea();
+        $this->anIncident($area);
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        self::assertGreaterThan(0, $crawler->filter('.i-filters select[name="category"]')->count());
+        // The old category pills were <a class="i-cat …"> in the filter row.
+        self::assertCount(0, $crawler->filter('.i-filters a.i-cat'));
+        // "all categories" plus the four shipped kinds.
+        self::assertGreaterThanOrEqual(5, $crawler->filter('.i-filters select[name="category"]')->first()->filter('option')->count());
+    }
+
+    /**
+     * RESET CLEARS THE FILTERS. It is offered only when something is narrowing
+     * the register, and it points back at the whole register.
+     */
+    public function testResetIsOfferedOnlyWhenNarrowedAndClearsEverything(): void
+    {
+        $area = $this->anArea();
+        $this->anIncident($area);
+        $this->client->loginUser($this->aReporter());
+
+        $whole = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+        self::assertCount(0, $whole->filter('.i-reset'));
+
+        $narrowed = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?q=lion', $this->uuidOf($area)));
+        self::assertGreaterThan(0, $narrowed->filter('.i-reset')->count());
+        $reset = $narrowed->filter('.i-reset')->first()->attr('href');
+        self::assertStringNotContainsString('q=', (string) $reset);
+        self::assertStringNotContainsString('category=', (string) $reset);
+    }
+
+    /**
      * THE LENS IS A LENS, NOT A FENCE. Whatever it selects, "Every category" is
      * always one click away and shows the whole register to anybody.
      */

@@ -633,7 +633,13 @@ final class IncidentRepository extends ServiceEntityRepository
             $qb->join('i.zone', 'fz')->andWhere('fz.name = :zoneName')->setParameter('zoneName', $filter->zoneName);
         }
         if (null !== $filter->search && '' !== $filter->search) {
-            $qb->andWhere('LOWER(i.reference) LIKE :search OR LOWER(i.title) LIKE :search')
+            // Matched against what a person can READ on a row — the reference (its
+            // id), the title (its name), the narrative (what was reported) and the
+            // category it was filed under — the same fields the patrols library
+            // searches. `c` is always joined (see filtered()/latestEvidence());
+            // the zone is not, so "place" is left to its own chip rather than a
+            // join that would break the callers that never join it.
+            $qb->andWhere('LOWER(i.reference) LIKE :search OR LOWER(i.title) LIKE :search OR LOWER(i.narrative) LIKE :search OR LOWER(c.label) LIKE :search')
                 ->setParameter('search', '%'.mb_strtolower($filter->search).'%');
         }
 

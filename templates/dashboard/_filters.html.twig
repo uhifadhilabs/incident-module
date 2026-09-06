@@ -1,24 +1,65 @@
 {# ============================================================================
    ONE FILTER DRIVES EVERYTHING on the page — the map, the register and the
    charts read the same query, exactly as the patrols module does. This row is
-   that query made visible, and every chip is a link that changes it.
+   that query made visible.
 
    It is included by the register, the map, the map+results plate and the feed:
    the same element in four places, because they are four readings of one answer.
 
+   THE ROW IS A GET FORM. The category is a themed dropdown (not a raw select,
+   not a wall of pills) and the search box is a free-text query; changing either
+   re-asks the one question. The status is still a set of chips beside them, and
+   a reset clears the lot back to the whole register. Every control preserves the
+   others: the form carries the status, zone and lens the person already chose,
+   and each status chip carries the category and search they already typed.
+
    → GET /areas/{uuid}/modules/incidents?category=&status=&zone=&q=&lens=
    ========================================================================== #}
-<div class="i-filters">
-    <a class="mchip{{ filter.categorySlugs is empty ? ' on' : ' ghost' }}"
-       href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.withoutCategories.toQuery)) }}">all · {{ dashboard.filedCount }}</a>
-    {% for category in dashboard.categories %}
-        <a class="i-cat {{ category.colourKey }}{{ category.slug in filter.categorySlugs ? '' : ' ghost' }}"
-           href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.onlyCategory(category.slug).toQuery)) }}"><i></i>{{ category.label|lower }} · {{ dashboard.categoryCount(category) }}</a>
-    {% endfor %}
+<form class="i-filters" method="get"
+      action="{{ path('incident_dashboard', {uuid: area.uuid}) }}"
+      {{ stimulus_controller('@uhifadhi/incident-module/incident-filters') }}>
+    {# The status, zone and lens the person already chose ride along, so choosing
+       a category or typing a search never silently drops them. #}
+    {% if filter.statuses is not empty %}
+        <input type="hidden" name="status" value="{{ filter.statuses|map(s => s.value)|join(',') }}">
+    {% endif %}
+    {% if filter.zoneName %}<input type="hidden" name="zone" value="{{ filter.zoneName }}">{% endif %}
+    {% if filter.lens != 'all' %}<input type="hidden" name="lens" value="{{ filter.lens }}">{% endif %}
+
+    {# CATEGORY — the row of pills is now one dropdown, themed to match the other
+       filter chips. It submits the form the moment it changes. #}
+    <label class="i-catselect">
+        <select name="category"
+                aria-label="Filter by category"
+                {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'submit', 'change') }}>
+            <option value=""{{ filter.categorySlugs is empty ? ' selected' : '' }}>all categories · {{ dashboard.filedCount }}</option>
+            {% for category in dashboard.categories %}
+                <option value="{{ category.slug }}"{{ category.slug in filter.categorySlugs ? ' selected' : '' }}>{{ category.label|lower }} · {{ dashboard.categoryCount(category) }}</option>
+            {% endfor %}
+        </select>
+    </label>
+
+    {# SEARCH — id, place or name; the same free-text query the patrols library
+       carries. Enter submits the form. #}
+    <span class="i-search">
+        {{ ux_icon('lucide:search') }}
+        <input type="text" name="q" value="{{ filter.search }}" placeholder="id, place, name"
+               autocomplete="off" aria-label="Search incidents">
+    </span>
+
     <span class="sep"></span>
+
+    {# STATUS — still chips: a set of places, not a single choice, so a dropdown
+       would misread them. Each carries the category and search already chosen. #}
     {% for place in dashboard.places %}
         <a class="mchip{{ place in filter.statuses ? ' on' : ' ghost' }}"
            href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.onlyStatus(place).toQuery)) }}">{{ place.label }} · {{ dashboard.statusCount(place) }}</a>
     {% endfor %}
     <span class="mchip ghost">{{ filter.from ? filter.from|date('F Y')|lower : 'all time' }}</span>
-</div>
+
+    {# RESET — clears search and category (and the rest) back to the whole
+       register. Shown only when something is actually narrowing it. #}
+    {% if filter.isNarrowed %}
+        <a class="mchip ghost i-reset" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('lucide:x') }} reset</a>
+    {% endif %}
+</form>
