@@ -56,7 +56,7 @@
             <div class="viewer"
                  {{ stimulus_controller('@uhifadhi/incident-module/incident-map', {
                      incidents: mapPayload,
-                     boundary: area.geom,
+                     boundary: area.hasBoundary ? area.geom : '',
                  }) }}></div>
             {# The SAME legend the dashboard maps draw — one macro, three places. #}
             {{ ui.mapLegend([incident.category]) }}
