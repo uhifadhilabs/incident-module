@@ -33,30 +33,17 @@
    — choose a natural mortality and there is no money row in the document at all.
    Not disabled. Absent.
 
-   ONE PARTIAL, TWO WIDTHS: the drawer writes the one line on a full-width field
-   of its own, the page writes it on a labelled row. Same name, same gate, same
-   POST.
+   The page writes the one line on a labelled row, in the same field set as where,
+   when and how bad — one column with room for a caption under each answer.
 
-   Parameters: controller, categories, chosen, prefill, compact
+   Parameters: controller, categories, chosen, prefill
    ========================================================================== #}
-{% if compact %}
-    <div class="ro-line">
-        <textarea class="ro-bigfield" name="title" maxlength="200" rows="2"
-                  placeholder="What happened — the register shows the first line"
-                  aria-label="What happened"
-                  {{ stimulus_target(controller, 'headline')|stimulus_action(controller, 'grow', 'input') }}>{{ prefill.note }}</textarea>
-        <span class="ro-req">needed to file</span>
-    </div>
-{% endif %}
-
 <div class="i-fieldset">
-    {% if not compact %}
-        <div class="i-fld"><label for="report-title">What happened</label>
-            <span><textarea id="report-title" name="title" maxlength="200" rows="2"
-                            placeholder="What happened — the register shows the first line"
-                            {{ stimulus_target(controller, 'headline')|stimulus_action(controller, 'grow', 'input') }}>{{ prefill.note }}</textarea>
-                <span class="ro-req">needed to file</span></span></div>
-    {% endif %}
+    <div class="i-fld"><label for="report-title">What happened</label>
+        <span><textarea id="report-title" name="title" maxlength="200" rows="2"
+                        placeholder="What happened — the register shows the first line"
+                        {{ stimulus_target(controller, 'headline')|stimulus_action(controller, 'grow', 'input') }}>{{ prefill.note }}</textarea>
+            <span class="ro-req">needed to file</span></span></div>
 
     {# THE PLACE — the one fact a report cannot be filed without and the one
        nobody can add reliably tomorrow. It arrives already answered when the

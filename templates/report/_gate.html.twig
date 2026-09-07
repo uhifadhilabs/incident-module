@@ -19,7 +19,7 @@
    the explicit close on the drawer. Nothing here can be dismissed by clicking
    beside it.
 
-   Parameters: controller, chosen, prefill, cancelUrl, compact
+   Parameters: controller, chosen, prefill, cancelUrl
    ========================================================================== #}
 {% set missing = [] %}
 {% if not chosen %}{% set missing = missing|merge(['choose a category']) %}{% endif %}
@@ -41,12 +41,11 @@
    they have done enough to file — and it is above the bar rather than inside it
    so it never competes with the gate's own list of what is still missing.
 
-   Both containers, one line, one wording: the discipline cannot drift between
-   the page and the drawer if there is only one of it. #}
+   One line, one wording, stated once beside the control it acts on. #}
 <p class="ro-promise">Only the kind, what happened and where are needed now. Severity, people, evidence and money are
     added on the record afterwards.</p>
 
-<div class="{{ compact ? 'ro-dfoot' : 'ro-filebar' }}">
+<div class="ro-filebar">
     {# The gate REPLACES the reassuring line rather than crowding in beside it:
        both are the same quiet mono note in the same place, and only one of them
        is worth reading at a time. #}
@@ -57,11 +56,11 @@
     <span class="sp"></span>
     <a class="tgl" href="{{ cancelUrl }}">Cancel</a>
     <button class="cta ro-file" type="submit" {{ stimulus_target(controller, 'file') }}{{ missing is empty ? '' : ' disabled' }}>
-        {{- compact ? 'File →' : 'File incident →' -}}
+        File incident →
     </button>
 </div>
 <noscript>
-    <div class="{{ compact ? 'ro-dfoot' : 'ro-filebar' }}">
+    <div class="ro-filebar">
         <span class="hint">Choose a kind above, say what happened and give the place — the report is refused without
             all three.</span>
         <span class="sp"></span>

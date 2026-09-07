@@ -318,8 +318,6 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('incident.report'),
                     service(IncidentCategoryRepository::class),
                     service(IncidentSubcategoryRepository::class),
-                    // The register that stays legible behind the report drawer.
-                    service(IncidentRepository::class),
                     service('security.authorization_checker'),
                     service('security.csrf.token_manager'),
                     service('security.token_storage'),

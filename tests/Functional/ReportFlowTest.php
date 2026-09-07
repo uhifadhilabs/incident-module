@@ -27,11 +27,14 @@ use Uhifadhi\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
  * saying what happened, and a place — and everything else is offered on the
  * record afterwards.
  *
- * THE CONTAINER FOLLOWS THE ENTRY POINT, and this file pins that rule:
- * a filing that arrives carrying a source record opens as the SLIDE-OVER DRAWER
- * over the register it came from; a filing that arrives from nowhere opens as
- * the FULL PAGE. Both render the same step partials, gate the same three
- * answers, and post to the same endpoint.
+ * ONE CONTAINER, WHATEVER THE ENTRY POINT — the ruled direction (A, the full
+ * page, with D's quick-file discipline inside it). A filing gets an ADDRESS: it
+ * survives a reload, a dropped connection, a second tab and a pasted link, it
+ * prints, and no click beside it can throw a half-written report away. The
+ * slide-over drawer the module used to open when a filing arrived from a record
+ * is retired; a filing FROM a record renders the same full page, with the source
+ * card riding at its head. Both entry points render the same step partials, gate
+ * the same three answers, and post to the same endpoint.
  */
 final class ReportFlowTest extends FunctionalTestCase
 {
@@ -128,102 +131,44 @@ final class ReportFlowTest extends FunctionalTestCase
         );
     }
 
-    // ── THE DRAWER — filing from a record ────────────────────────────────────
+    // ── FILING FROM A RECORD — the same full page ─────────────────────────────
 
     /**
-     * A FILING THAT ARRIVES FROM A RECORD IS A SLIDE-OVER, and the register it
-     * came from is still on screen behind it. That is the entire point of the
-     * container: filing about something you can still see never means having to
-     * remember it.
+     * A FILING THAT ARRIVES FROM A RECORD IS THE SAME FULL PAGE, never a
+     * slide-over. The drawer is retired: the filing gets an address it can be
+     * reloaded, deep-linked and printed from, and the source card rides at the
+     * head of the page rather than inside a panel that a click could dismiss.
      */
-    public function testFilingFromARecordRendersTheSlideOverWithThePageBehindIt(): void
+    public function testFilingFromARecordRendersTheSameFullPageAndNeverADrawer(): void
     {
         $area = $this->anArea();
-        $this->anIncident($area, title: 'Lion killed four goats at Riverside');
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
 
         self::assertResponseIsSuccessful();
-        // The panel, and the dimmed pane it sits in.
-        self::assertCount(1, $crawler->filter('.ro-slideover'));
-        self::assertCount(1, $crawler->filter('.ro-slideover .ro-slideback'));
-        self::assertCount(1, $crawler->filter('.ro-slideover aside.ro-drawer'));
-        // It is a dialog, and it is modal — the register behind it is to be read,
-        // not worked.
-        self::assertSame('dialog', $crawler->filter('aside.ro-drawer')->attr('role'));
-        self::assertSame('true', $crawler->filter('aside.ro-drawer')->attr('aria-modal'));
-        // The page behind is the REGISTER, in the page's own flow, with real rows
-        // in it — not a picture of one.
-        self::assertCount(1, $crawler->filter('.ro-behind'));
-        self::assertStringContainsString(
-            'Lion killed four goats at Riverside',
-            $crawler->filter('.ro-behind')->text(),
-        );
-        // …and it is context for the filer, so it is not read out twice.
-        self::assertSame('true', $crawler->filter('.ro-behind')->attr('aria-hidden'));
-        // The full page's container is not also on the screen.
-        self::assertCount(0, $crawler->filter('form.ro-form'));
+        // The one container: the full page's form, exactly as a standalone filing.
+        self::assertCount(1, $crawler->filter('form.ro-form'));
+        // Nothing of the retired drawer is left in the document.
+        self::assertCount(0, $crawler->filter('.ro-slideover'));
+        self::assertCount(0, $crawler->filter('.ro-drawer'));
+        self::assertCount(0, $crawler->filter('.ro-behind'));
+        self::assertCount(0, $crawler->filter('.ro-dhd'));
+        self::assertCount(0, $crawler->filter('.ro-dfoot'));
     }
 
-    /**
-     * CLOSING IS EXPLICIT, AND ONLY EXPLICIT. The X closes the panel and says
-     * where it goes — back to the record the filing came from. THE BACKDROP
-     * CLOSES NOTHING: a click that missed the panel may not discard a report in
-     * progress.
-     */
-    public function testTheSlideOverClosesByTheXAndNeverByTheBackdrop(): void
+    /** The source card rides at the head of the full page, above the questions. */
+    public function testTheSourceCardRidesAtTheHeadOfTheFullPage(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
 
-        $identifier = $crawler->filter('[data-controller*="incident-report"]')->attr('data-controller');
-        self::assertNotNull($identifier);
-
-        // The X: a real link, so it works with no JavaScript at all, taken over
-        // by the controller to play the panel out and to ask before discarding.
-        self::assertSame('/areas/x/modules/patrols/observation/2', $crawler->filter('.ro-dhd a.x')->attr('href'));
-        self::assertStringContainsString(
-            $identifier.'#close',
-            (string) $crawler->filter('.ro-dhd a.x')->attr('data-action'),
-        );
-        // Cancel goes to the same place.
-        self::assertSame('/areas/x/modules/patrols/observation/2', $crawler->filter('.ro-dfoot a.tgl')->attr('href'));
-
-        // THE BACKDROP IS INERT. Nothing is wired to it, in any form.
-        self::assertNull($crawler->filter('.ro-slideback')->attr('data-action'));
-        self::assertNull($crawler->filter('.ro-slideback')->attr('onclick'));
-    }
-
-    /** The source card rides INSIDE the panel, above the questions. */
-    public function testTheSourceCardRidesInsideTheSlideOver(): void
-    {
-        $area = $this->anArea();
-        $this->client->loginUser($this->aReporter());
-
-        $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
-
-        self::assertCount(1, $crawler->filter('.ro-drawer .ro-dbody .i-src'));
-    }
-
-    /**
-     * THE PANEL SHIPS OUT. Nothing in the markup hides it — the controller marks
-     * it animated and the stylesheet only then takes over the slide, so a filer
-     * with no JavaScript meets the form rather than an empty pane.
-     */
-    public function testTheSlideOverIsNotHiddenByTheMarkupItShipsWith(): void
-    {
-        $area = $this->anArea();
-        $this->client->loginUser($this->aReporter());
-
-        $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
-
-        $slideover = $crawler->filter('.ro-slideover');
-        self::assertNull($slideover->attr('hidden'));
-        self::assertNull($slideover->attr('data-ro-animated'));
-        self::assertStringNotContainsString('open', (string) $slideover->attr('class'));
+        // At the head of the page, above the form — exactly as design A draws it,
+        // and not tucked inside the form or any panel.
+        self::assertCount(1, $crawler->filter('.i-src'));
+        self::assertCount(0, $crawler->filter('form.ro-form .i-src'));
     }
 
     /**
@@ -272,7 +217,7 @@ final class ReportFlowTest extends FunctionalTestCase
 
         self::assertNull($crawler->filter('button.ro-file')->attr('disabled'));
         self::assertNotNull($crawler->filter('.ro-gate')->attr('hidden'));
-        self::assertNull($crawler->filter('.ro-dfoot .hint')->attr('hidden'));
+        self::assertNull($crawler->filter('.ro-filebar .hint')->attr('hidden'));
     }
 
     /**
@@ -301,18 +246,17 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * DEEP-LINKING THE DRAWER WITHOUT A RECORD FALLS BACK TO THE PAGE. A drawer
-     * needs something to be over; an address that opens one over nothing is a
-     * broken promise, so the same route renders the full page whenever no record
-     * arrived with it.
+     * A PARTIAL PREFILL STILL RENDERS THE FULL PAGE. A truncated link, a
+     * hand-typed URL, a bookmark from a deleted observation — anything that does
+     * not carry a whole record — renders the same page, with no source card
+     * claiming a provenance it does not have.
      */
-    public function testTheDrawerRouteWithoutARecordFallsBackToTheFullPage(): void
+    public function testAPartialPrefillRendersTheFullPageWithNoSourceCard(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
 
-        // Everything the seam sends EXCEPT the record — a truncated link, a
-        // hand-typed URL, a bookmark from a deleted observation.
+        // Everything the seam sends EXCEPT the record.
         $query = self::FROM_A_RECORD;
         unset($query['label']);
 
@@ -325,30 +269,32 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertCount(0, $crawler->filter('.i-src'));
     }
 
-    // ── ONE SET OF STEPS, TWO CONTAINERS ─────────────────────────────────────
+    // ── ONE SET OF STEPS, ONE CONTAINER ──────────────────────────────────────
 
     /**
-     * BOTH CONTAINERS GATE IDENTICALLY. The File control ships DEAD in each, the
-     * same quiet line names the same missing answers, and the same three targets
-     * are wired — because they are the same partials, rendered twice.
+     * EVERY ENTRY POINT GATES IDENTICALLY. The File control ships DEAD, the same
+     * quiet line names the same missing answers, and the same three targets are
+     * wired — because it is one page rendered by one set of partials, whether the
+     * filing came from a record or from nowhere.
      */
-    public function testBothContainersShipTheSameDeadFileControlAndTheSameGate(): void
+    public function testEveryEntryPointShipsTheSameDeadFileControlAndGate(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
 
-        // A record that carried nothing but its identity, so the two containers
-        // are asked for exactly the same three answers.
+        // A record that carried nothing but its identity, so it is asked for
+        // exactly the same three answers a standalone filing is.
         $bare = $this->reportUrl($this->uuidOf($area)).'?'.http_build_query([
             'source' => 'patrol_observation',
             'record' => Uuid::v7()->toRfc4122(),
             'label' => 'observation 2 of patrol P-0142',
         ]);
 
-        $page = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
-        $drawer = $this->client->request('GET', $bare);
+        $standalone = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+        $fromABareRecord = $this->client->request('GET', $bare);
 
-        foreach ([$page, $drawer] as $crawler) {
+        foreach ([$standalone, $fromABareRecord] as $crawler) {
+            self::assertCount(1, $crawler->filter('form.ro-form'));
             $file = $crawler->filter('button.ro-file[type="submit"]');
             self::assertCount(1, $file);
             self::assertNotNull($file->attr('disabled'));
@@ -366,19 +312,19 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * ONE SET OF STEP PARTIALS, NEVER TWO COPIES. Both containers render every
-     * sub-category's field set and every category chooser, wired to the same
-     * targets — a drift between them would show here first.
+     * ONE SET OF STEP PARTIALS, ONE CONTAINER. Whatever the entry point, the page
+     * renders every sub-category's field set and every category chooser, wired to
+     * the same targets, and drawn as the design's cards.
      */
-    public function testBothContainersRenderTheSameStepsWiredToTheSameController(): void
+    public function testTheFullPageRendersEveryStepWiredToTheController(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
 
-        $page = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
-        $drawer = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+        $standalone = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+        $fromARecord = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
 
-        foreach ([$page, $drawer] as $crawler) {
+        foreach ([$standalone, $fromARecord] as $crawler) {
             $identifier = $crawler->filter('[data-controller*="incident-report"]')->attr('data-controller');
             self::assertNotNull($identifier);
 
@@ -391,12 +337,11 @@ final class ReportFlowTest extends FunctionalTestCase
             // swapped field sets, so there is exactly one of each to answer.
             self::assertCount(1, $crawler->filter('form textarea[name="title"]'));
             self::assertCount(1, $crawler->filter('form input[name="lat"]'));
+            // The kind is drawn as the design's cards, and there are no drawer
+            // chips anywhere.
+            self::assertCount(4, $crawler->filter('.i-catpick .i-catopt'));
+            self::assertCount(0, $crawler->filter('.ro-chips'));
         }
-
-        // The kind is drawn as cards on the page and as chips in the drawer —
-        // the same partial, at two widths.
-        self::assertCount(4, $page->filter('.i-catpick .i-catopt'));
-        self::assertCount(4, $drawer->filter('.ro-chips .ro-chip'));
     }
 
     /**
@@ -410,19 +355,19 @@ final class ReportFlowTest extends FunctionalTestCase
      * not mean a question.
      *
      * The promise survives, because the promise was the point: one quiet line
-     * beside the File control, in both containers, saying what is needed now and
-     * what is added on the record afterwards. Two steps, two questions, and the
-     * discipline stated once where the decision to file is actually made.
+     * beside the File control, saying what is needed now and what is added on the
+     * record afterwards. Two steps, two questions, and the discipline stated once
+     * where the decision to file is actually made.
      */
     public function testTheQuickFileDisciplineIsOneLineAndNotASection(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
 
-        $page = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
-        $drawer = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+        $standalone = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+        $fromARecord = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
 
-        foreach ([$page, $drawer] as $crawler) {
+        foreach ([$standalone, $fromARecord] as $crawler) {
             // The section, its rows and its pills are gone from the document.
             self::assertCount(0, $crawler->filter('.ro-later'));
             self::assertStringNotContainsString('Then, on the record', $crawler->text());
@@ -572,12 +517,12 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * A REFUSED FILING COMES BACK IN THE CONTAINER IT WAS MADE IN. Entry point
-     * decides the container, and being refused is not a new entry point: a
-     * filing from a record is answered in the drawer, over the register, with
-     * everything that was typed still there.
+     * A REFUSED FILING FROM A RECORD COMES BACK ON THE SAME FULL PAGE, with the
+     * source card still at its head and everything that was typed still there.
+     * Being refused is not a new entry point, and there is one container either
+     * way — so it is answered where it was made.
      */
-    public function testARefusedFilingFromARecordComesBackInTheDrawer(): void
+    public function testARefusedFilingFromARecordComesBackOnTheFullPage(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
@@ -594,8 +539,10 @@ final class ReportFlowTest extends FunctionalTestCase
         ]);
 
         self::assertResponseStatusCodeSame(422);
-        self::assertCount(1, $crawler->filter('.ro-drawer'));
-        self::assertCount(0, $crawler->filter('form.ro-form'));
+        self::assertCount(1, $crawler->filter('form.ro-form'));
+        self::assertCount(0, $crawler->filter('.ro-drawer'));
+        // The source card is still there — the provenance survived the refusal.
+        self::assertCount(1, $crawler->filter('.i-src'));
         self::assertStringContainsString('One line saying what happened', $crawler->filter('.i-errors')->text());
     }
 

@@ -33,7 +33,6 @@ use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
 use Uhifadhi\Incident\Model\IncidentPrefill;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
-use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\ModuleContracts\Entity\UserInterface;
@@ -43,26 +42,21 @@ use Uhifadhi\Storage\Registry\FileRegistry;
 /**
  * REPORTING AN INCIDENT — three answers: what kind, what happened, and where.
  *
- * THE CONTAINER FOLLOWS THE ENTRY POINT, and this route serves both.
+ * ONE CONTAINER, THE FULL PAGE (the ruled direction A, with D's quick-file
+ * discipline inside it). Filing gets an ADDRESS of its own, whatever the entry
+ * point:
  *
  *   FILING FROM A RECORD — another module's "file as incident" button, or the
- *   register's report control carrying context — opens the SLIDE-OVER DRAWER,
- *   with the register legible behind it and the source card riding inside it.
- *   Context you never lost in the first place.
+ *   register's report control carrying context — renders the page with the source
+ *   card riding at its head, so the thing being filed about is right there.
  *
- *   STANDALONE FILING — a deep link, a fresh tab, the dashboard's Report button
- *   when it is not anchored to a record — opens the FULL PAGE. There is nothing
- *   to sit over, and a page reloads, deep-links, prints, and cannot be thrown
- *   away by a click beside it.
+ *   STANDALONE FILING — a deep link, a fresh tab, the dashboard's Report button —
+ *   renders the same page with no source card.
  *
- * The test is {@see IncidentPrefill::hasProvenance()} and nothing else, which is
- * why deep-linking this address with no record can never open a drawer over
- * nothing: it renders the page instead.
- *
- * ONE SET OF STEPS. Both containers render the SAME step partials at two widths —
- * filing must not feel like two different products just because two surfaces can
- * lead to it — and both post here, to one endpoint, refused for the same three
- * reasons.
+ * A page reloads, deep-links, prints, and cannot be thrown away by a click beside
+ * it — which is why the slide-over drawer this flow once opened for a
+ * record-borne filing is retired. There is one container and one POST, refused
+ * for the same three reasons.
  *
  * STEP 2 IS THE CATEGORY'S OWN. The fields are the sub-category's field set, and
  * the money row EXISTS ONLY where the sub-category carries money — choose a
@@ -86,13 +80,6 @@ final class IncidentReportController
     /** The token id the report form carries. */
     public const string CSRF_TOKEN_ID = 'incident_report';
 
-    /**
-     * How much of the register stays legible behind the drawer. Context, not a
-     * listing: enough rows to recognise where you are, and none of them
-     * reachable through a backdrop.
-     */
-    private const int ROWS_BEHIND = 8;
-
     /** What the register can print: {@see Incident::$title} is varchar(200). */
     private const int TITLE_LIMIT = 200;
 
@@ -102,7 +89,6 @@ final class IncidentReportController
         private readonly IncidentReportService $reports,
         private readonly IncidentCategoryRepository $categories,
         private readonly IncidentSubcategoryRepository $subcategories,
-        private readonly IncidentRepository $incidents,
         private readonly AuthorizationCheckerInterface $authorization,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly TokenStorageInterface $tokenStorage,
@@ -187,12 +173,9 @@ final class IncidentReportController
         if (null === $subcategory || null === $position || '' === $title) {
             // 422 and the form back: the request was understood and simply cannot
             // be stored, which is how every recording screen in this deployment
-            // answers a rejected form.
-            //
-            // IN THE CONTAINER IT WAS MADE IN. Being refused is not a new entry
-            // point, so a filing from a record is answered in the drawer over the
-            // register and a standalone one on its own page — which the prefill
-            // decides here exactly as it did on the way in.
+            // answers a rejected form. It comes back on the same page it was made
+            // on, with the source card and everything typed still there — being
+            // refused is not a new entry point.
             return new Response(
                 $this->render($area, $prefill, $subcategory, $errors),
                 Response::HTTP_UNPROCESSABLE_ENTITY,
@@ -226,8 +209,8 @@ final class IncidentReportController
     }
 
     /**
-     * THE FLOW, IN WHICHEVER CONTAINER ITS ENTRY POINT EARNED — rendered in one
-     * place so a fresh form and a refused one can never disagree about which.
+     * THE FLOW, ON ITS ONE PAGE — rendered in one place so a fresh form and a
+     * refused one can never disagree about anything.
      *
      * @param array<string, string> $errors
      */
@@ -255,10 +238,6 @@ final class IncidentReportController
             'cancelUrl' => $fromARecord && null !== $prefill->backUrl
                 ? $prefill->backUrl
                 : $this->router->generate('incident_dashboard', ['uuid' => $area->getUuidString()]),
-            // The register behind the drawer — real rows, because "the page you
-            // came from is still on screen" is the entire reason that container
-            // exists. The page needs none.
-            'behind' => $fromARecord ? $this->incidents->recentForArea($area, self::ROWS_BEHIND) : [],
             // THE SOURCE RECORD'S PHOTOGRAPHS, asked of the module that owns them.
             'sourceFiles' => $this->filesOf($prefill),
         ]);

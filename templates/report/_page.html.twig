@@ -1,16 +1,15 @@
 {# ============================================================================
-   CONTAINER A — THE FULL PAGE. Standalone filing: a deep link, a fresh tab, the
-   dashboard's Report button when it is not anchored to a record.
+   THE FULL PAGE — the one container the report flow lives in (ruled direction A).
 
    A PAGE, NOT AN OVERLAY. Filing an incident is the most consequential thing this
    product asks anybody to do, and it must not be something a click beside it can
    throw away. A route survives a reload, a dropped connection, a second tab and a
    pasted link; it prints; and it is the same address another module's "file as
-   incident" button already points at. The steps become plain headed sections down
+   incident" button already points at. The steps are plain headed sections down
    one column — there is room, so nothing has to hide.
 
-   The steps themselves are the SHARED partials — the drawer renders the very same
-   files at a narrower width.
+   THE SOURCE CARD RIDES AT THE HEAD when the filing came from a record; a
+   standalone filing has none. Same page either way.
 
    Parameters: controller, area, categories, prefill, chosen, csrfToken, errors,
                createUrl, cancelUrl, sourceFiles
@@ -43,15 +42,15 @@
 
         <div class="ro-sect">
             {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 1, heading: 'What kind of incident', mark: 'req', markLabel: 'needed to file'}, with_context: false) }}
-            {{ include('@UhifadhiIncident/report/_kind.html.twig', {controller: controller, categories: categories, chosen: chosen, compact: false}, with_context: false) }}
+            {{ include('@UhifadhiIncident/report/_kind.html.twig', {controller: controller, categories: categories, chosen: chosen}, with_context: false) }}
         </div>
 
         <div class="ro-sect">
             {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 2, heading: 'What happened', mark: null, markLabel: null}, with_context: false) }}
-            {{ include('@UhifadhiIncident/report/_what.html.twig', {controller: controller, categories: categories, chosen: chosen, prefill: prefill, compact: false}, with_context: false) }}
+            {{ include('@UhifadhiIncident/report/_what.html.twig', {controller: controller, categories: categories, chosen: chosen, prefill: prefill}, with_context: false) }}
         </div>
 
-        {{ include('@UhifadhiIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl, compact: false}, with_context: false) }}
+        {{ include('@UhifadhiIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl}, with_context: false) }}
     </form>
 </div>
 

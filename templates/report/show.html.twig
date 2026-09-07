@@ -1,22 +1,19 @@
 {# ============================================================================
-   THE REPORT FLOW. One route, one POST, one set of step partials — and TWO
-   CONTAINERS, chosen by where the filing came from.
+   THE REPORT FLOW — ONE CONTAINER, THE FULL PAGE (the ruled direction A, with
+   D's quick-file discipline inside it).
 
-   FILING FROM A RECORD IS A DRAWER. When the seam carried a record — another
-   module's "file as incident" button, the register's report control with context
-   — the flow opens as a slide-over panel with the register legible behind it and
-   the source card riding inside it. Context you never lost in the first place.
+   Filing an incident is the most consequential thing this product asks anybody to
+   do, and it gets an ADDRESS of its own: a route survives a reload, a dropped
+   connection, a second tab and a pasted link; it prints; and it is the same
+   address another module's "file as incident" button already points at. No click
+   beside it can throw a half-written report away.
 
-   FILING FROM NOWHERE IS A PAGE. A deep link, a fresh tab, the dashboard's Report
-   button: there is nothing to sit over, so the flow takes the whole page. It
-   reloads, it deep-links, it prints, and no click beside it can throw it away.
-
-   WHICH MEANS THE FALLBACK IS FREE. A drawer needs something to be over and a
-   record to be about; an address that has neither renders the page instead, so
-   this route can never open a drawer over nothing.
-
-   The two containers share every step: the kind, the questions and the gate are
-   ONE set of partials rendered at two widths.
+   THE SAME PAGE, WHATEVER THE ENTRY POINT. A filing that arrives carrying a
+   source record — another module's seam, the register's report control — renders
+   the very same page, with the source card riding at its head; a filing from
+   nowhere renders it without one. The slide-over drawer this flow used to open
+   for a record-borne filing is retired: one container, one set of partials, one
+   POST, refused for the same three reasons.
    ========================================================================== #}
 {% extends '@UhifadhiIncident/base.html.twig' %}
 
@@ -38,12 +35,10 @@
 
 {% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / report{% endblock %}
 
-{# THE FLOW BRINGS ITS OWN HEADING, in both containers — the page's plate and the
-   drawer's panel each carry their own title, so filling the frame's head socket
-   would print the heading twice. #}
+{# THE FLOW BRINGS ITS OWN HEADING — the page's plate carries its own title, so
+   filling the frame's head socket would print the heading twice. #}
 {% block incident_page %}
-    {% set container = prefill.hasProvenance ? '_drawer' : '_page' %}
-    {{ include('@UhifadhiIncident/report/' ~ container ~ '.html.twig', {
+    {{ include('@UhifadhiIncident/report/_page.html.twig', {
         controller: '@uhifadhi/incident-module/incident-report',
         area: area,
         categories: categories,
@@ -53,7 +48,6 @@
         errors: errors,
         createUrl: createUrl,
         cancelUrl: cancelUrl,
-        behind: behind,
         sourceFiles: sourceFiles,
     }, with_context: false) }}
 {% endblock %}
