@@ -4,7 +4,7 @@
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="queue">
     <span class="tab">My queue<span class="src">· oldest first</span></span>
-    <div class="use i-queuenote">Everything waiting on <b>you</b>. The clock is the category's own term, not one global SLA.</div>
+    <div class="use i-queuenote">Everything waiting on <b>you</b>: an incident you reported that nobody has verified, or one you are the responder on. The clock is the category's own term, not one global SLA.</div>
     {% for incident in dashboard.queue %}
         <div class="i-party i-queuerow">
             <span class="av">{{ incident.reference|slice(-3) }}</span>

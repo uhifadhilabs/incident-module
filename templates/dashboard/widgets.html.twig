@@ -28,10 +28,10 @@
 
 {% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / widget library{% endblock %}
 
-{% block shell_page_title %}{{ area.name }} · Incidents · widget library{% endblock %}
+{% block shell_page_title %}Incidents · widget library{% endblock %}
 
-{% block shell_page_subtitle %}Adopt one of the five designs this module ships, or compose your own. Every widget below
-    is the real thing at full size, exactly as the dashboard renders it — and the five headed sections are the five
+{% block shell_page_subtitle %}Adopt one of the five designs this module ships, or compose your own. Every widget
+    is the real thing at full size, exactly as the dashboard renders it — and the five headed sections below are the five
     directions incidents was drawn in.{% endblock %}
 
 {% block shell_page_actions %}
@@ -49,7 +49,7 @@
 
 {% block incident_page %}
 
-    <div class="i-lensnote">{{ ux_icon('lucide:info') }}<div><b>The directions are presets, not pages.</b> Incidents was
+    <div class="i-lensnote">{{ ux_icon('lucide:search') }}<div><b>The directions are presets, not pages.</b> Incidents was
         explored as case files, a map, a feed, a board of counts and a board of statuses. None of them became a separate
         screen: each is a headed section of this catalogue and a preset that composes it. Adopt one, copy it, then pull
         the map out of <b>Map first</b> into your copy of <b>Case files</b> — the directions are ingredients, not a

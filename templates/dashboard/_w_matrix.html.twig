@@ -10,13 +10,25 @@
         </tr>
         {% for category in dashboard.categories %}
             <tr>
-                <td class="rowhd"><span class="i-cat {{ category.colourKey }}"><i></i>{{ category.label }}</span></td>
+                {# The row header is the category and a way in: the caret names the
+                   sub-categories on hover rather than printing them all inline. #}
+                <td class="rowhd"><span class="i-mxrow"><span class="i-cat {{ category.colourKey }}"><i></i>{{ category.label }}</span><button class="i-mxexp" type="button" title="Sub-categories: {{ category.subcategories|map(s => s.label)|join(' · ') }}" aria-label="Show sub-categories of {{ category.label }}">{{ ux_icon('lucide:chevron-right', {width: 11, height: 11}) }}</button></span></td>
                 {% for place in dashboard.places %}
                     {% set count = dashboard.matrixCount(category, place) %}
-                    <td>{% if count > 0 %}<a href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyCategory(category.slug).onlyStatus(place).toQuery)) }}">{{ count }}</a>{% else %}<span class="nil">—</span>{% endif %}</td>
+                    <td>{% if count > 0 %}<a class="cell h{{ min(count, 4) }}" href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyCategory(category.slug).onlyStatus(place).toQuery)) }}" title="{{ category.label|lower }} · {{ place.label }}">{{ count }}<em>{{ place.label }}</em></a>{% else %}<span class="cell z">—</span>{% endif %}</td>
                 {% endfor %}
-                <td class="all"><a href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyCategory(category.slug).toQuery)) }}">{{ dashboard.categoryCount(category) }}</a></td>
+                <td class="tot"><a class="cell" href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyCategory(category.slug).toQuery)) }}">{{ dashboard.categoryCount(category) }}</a></td>
             </tr>
         {% endfor %}
+        {# The grand-total row: each column's whole-register count, and the register's
+           own total in the corner. #}
+        <tr class="tot">
+            <td class="rowhd"><span class="i-sub">every category</span></td>
+            {% for place in dashboard.places %}
+                <td><a class="cell" href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyStatus(place).toQuery)) }}">{{ dashboard.statusCount(place) }}</a></td>
+            {% endfor %}
+            <td class="tot"><a class="cell" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ dashboard.filedCount }}</a></td>
+        </tr>
     </table>
+    <div class="use">Counts only. What each category contains is spelled out once, in <b>What the categories are</b> — add it beside this if your team is still learning them.</div>
 </div>

@@ -61,12 +61,18 @@ final class CaseFilePageTest extends FunctionalTestCase
          * see. The heading IS what they see, and it is what has to be there.
          */
         $tabs = $crawler->filter('span.tab')->each(static fn ($tab) => $tab->text());
-        foreach (['Where', 'Incident meta', 'Timeline', 'Involved parties', 'Provenance & links', 'Evidence', 'Narrative'] as $section) {
+        foreach (['Where', 'Timeline', 'Involved parties', 'Provenance & links', 'Evidence', 'Narrative'] as $section) {
             self::assertNotEmpty(
                 array_filter($tabs, static fn (string $tab) => str_starts_with($tab, $section)),
                 \sprintf('Section “%s” is missing.', $section),
             );
         }
+
+        // The record's identity facts live on the shared .factband below the head
+        // (the settled page-chrome theme, as every other entity-detail screen wears),
+        // not in a sidebar "Incident meta" card.
+        self::assertSelectorExists('.factband');
+        self::assertSelectorTextContains('.factband', $incident->getReference());
     }
 
     /** An incident of another area is a 404 — the same answer as one that never existed. */

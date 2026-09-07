@@ -88,6 +88,42 @@ final class DashboardPageTest extends FunctionalTestCase
     }
 
     /**
+     * THE PORTED WIDGET MARKUP MATCHES THE DESIGN. Each of these is a design
+     * element the app had drifted from — the KPI strip's own grid, the matrix's
+     * heat cells / expander / grand-total row, the map+results docked .i-hit list,
+     * and the status board's card footer. Rendered through the library, which
+     * draws every widget at full size on real rows.
+     */
+    public function testThePortedWidgetMarkupMatchesTheDesign(): void
+    {
+        $area = $this->anArea();
+        $this->aZone($area, 'North Gate');
+        $reporter = $this->aReporter();
+        $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', $reporter);
+        $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside', $reporter);
+        $this->client->loginUser($reporter);
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/widgets', $this->uuidOf($area)));
+        self::assertResponseIsSuccessful();
+
+        // The KPI strip carries its own equal-columns grid class.
+        self::assertGreaterThan(0, $crawler->filter('[data-w="kpis"].kstrip')->count());
+
+        // The matrix draws heat cells with a status caption, a sub-category
+        // expander on each row header, and a grand-total row.
+        self::assertGreaterThan(0, $crawler->filter('[data-w="matrix"] a.cell em')->count());
+        self::assertGreaterThan(0, $crawler->filter('[data-w="matrix"] .i-mxrow .i-mxexp')->count());
+        self::assertGreaterThan(0, $crawler->filter('[data-w="matrix"] tr.tot .cell')->count());
+
+        // The map+results list is a docked .i-hit list under an "In this view" head.
+        self::assertGreaterThan(0, $crawler->filter('[data-w="maplist"] .i-listhd')->count());
+        self::assertGreaterThan(0, $crawler->filter('[data-w="maplist"] a.i-hit .r1 .id')->count());
+
+        // The status board's card footer is the .ft row with the zone chip.
+        self::assertGreaterThan(0, $crawler->filter('[data-w="board"] .i-card .ft .i-zone')->count());
+    }
+
+    /**
      * THE THREE MAP-FIRST CHARTS DRAW THEIR SVG FROM REAL ROWS. Each is data-
      * driven — the trend line plots a point, the category donut draws an arc, and
      * the severity bars draw a rectangle — so a widget that hard-coded the design's

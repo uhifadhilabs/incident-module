@@ -36,6 +36,24 @@
     {% set money = incident.money %}
     <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}" class="backbtn">{{ ux_icon('lucide:chevron-left') }}All incidents</a>
 
+    {# THE IDENTITY BAND — the record's own facts on the shared .factband every
+       entity-detail screen wears, below the head (the settled page-chrome theme:
+       the meta moved out of a sidebar card onto the band the area overview, a
+       patrol and an observation all use). A segment with no data is OMITTED,
+       never rendered empty. #}
+    <div class="factband">
+        <span class="f"><span class="k">Id</span><span class="v">{{ incident.reference }}</span></span>
+        <span class="f"><span class="k">Category</span><span class="v">{{ incident.category.label }}<em>{{ incident.subcategory.label }}</em></span></span>
+        <span class="f"><span class="k">Status</span><span class="v">{{ incident.status.label }}</span></span>
+        <span class="f"><span class="k">Severity</span><span class="v">{{ incident.severity.label }}</span></span>
+        <span class="f"><span class="k">Zone</span><span class="v">{{ incident.zoneLabel }}</span></span>
+        {% if incident.occurredAt %}<span class="f"><span class="k">Occurred</span><span class="v">{{ incident.occurredAt|date('D j M')|lower }}<em>{{ incident.occurredAt|date('H:i') }}</em></span></span>{% endif %}
+        <span class="f"><span class="k">Filed</span><span class="v">{{ incident.reportedAt|date('D j M')|lower }}<em>{{ incident.reportedAt|date('H:i') }}</em></span></span>
+        <span class="f"><span class="k">Verified in</span><span class="v">{% if incident.hoursToVerify is null %}—{% else %}{{ incident.hoursToVerify }} h{% endif %}<em>term {{ incident.subcategory.termLabel }}</em></span></span>
+        {% if incident.assignedTo %}<span class="f"><span class="k">Responder</span><span class="v">{{ incident.assignedTo.firstName|slice(0, 1) }}. {{ incident.assignedTo.lastName }}</span></span>{% endif %}
+        <span class="f"><span class="k">Source</span><span class="v">{{ incident.source.label }}<em>{{ incident.source.badge }}</em></span></span>
+    </div>
+
     <div class="i-headchips">
         <span class="i-path">{{ ui.cat(incident.category) }}<span class="sep">›</span><span class="i-sub">{{ incident.subcategory.label }}</span></span>
         {{ ui.status(incident.status) }}
@@ -63,20 +81,8 @@
         </div>
 
         <div class="side">
-            <div class="c">
-                <span class="tab">Incident meta</span>
-                <div class="i-meta"><span>id</span><b>{{ incident.reference }}</b></div>
-                <div class="i-meta"><span>category</span><b>{{ incident.subcategory.path }}</b></div>
-                <div class="i-meta"><span>status</span><b>{{ incident.status.label }}</b></div>
-                <div class="i-meta"><span>severity</span><b>{{ incident.severity.label }}</b></div>
-                <div class="i-meta"><span>zone</span><b>{{ incident.zoneLabel }}</b></div>
-                {% if incident.occurredAt %}<div class="i-meta"><span>occurred</span><b>{{ incident.occurredAt|date('D j M · H:i')|lower }}</b></div>{% endif %}
-                <div class="i-meta"><span>filed</span><b>{{ incident.reportedAt|date('D j M · H:i')|lower }}</b></div>
-                <div class="i-meta"><span>verified in</span><b>{% if incident.hoursToVerify is null %}— · term {{ incident.subcategory.termLabel }}{% else %}{{ incident.hoursToVerify }} h · term {{ incident.subcategory.termLabel }}{% endif %}</b></div>
-                {% if incident.assignedTo %}<div class="i-meta"><span>responder</span><b>{{ incident.assignedTo.firstName|slice(0,1) }}. {{ incident.assignedTo.lastName }}</b></div>{% endif %}
-                <div class="i-meta"><span>source</span><b>{{ incident.source.label }}</b></div>
-            </div>
-
+            {# The identity facts moved up to the .factband below the head; this
+               column now leads with the money card. #}
             {# THE MONEY CARD EXISTS ONLY WHERE THE CATEGORY CARRIES MONEY. On a
                natural mortality there is no card at all — absent, not empty. #}
             {% if money %}
@@ -196,7 +202,7 @@
             <span class="tab">Evidence<span class="src">· {{ incident.evidence|length }} attached</span></span>
             <div class="i-evgrid">
                 {% for item in incident.evidence %}
-                    <span class="i-ph {{ item.kind.cssClass }}">{{ ux_icon(item.kind.value == 'document' ? 'lucide:file-text' : 'lucide:image') }}
+                    <span class="i-ph {{ item.kind.cssClass }}">{{ ux_icon(item.kind.value == 'document' ? 'lucide:file-text' : 'lucide:camera') }}
                         <i>{{ item.filename }}{% if item.capturedAt %} · {{ item.capturedAt|date('H:i') }}{% endif %}</i></span>
                 {% else %}
                     <div class="use">Nothing attached yet.</div>

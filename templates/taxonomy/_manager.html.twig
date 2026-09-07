@@ -42,13 +42,13 @@
         <h3>{{ selected.label }}</h3>
         <div class="meta">
           <span class="tx-code locked">{{ selected.code }}</span>
-          <span class="tx-meta">colour: {{ selected.colourKey }}</span>
+          <span class="i-cat {{ selected.colourKey }}"><i></i>{{ selected.colourKey }}</span>
         </div>
         {# → PATCH …/kinds/{uuid} {label} — the wire-code never changes #}
         <form class="tx-form" method="post" action="{{ path('incident_taxonomy_kind_rename', {uuid: area.uuid, kind: selected.uuid}) }}" style="margin-top:10px">
           <input type="hidden" name="_token" value="{{ csrfToken }}">
           <input class="tx-input" type="text" name="label" value="{{ selected.label }}" aria-label="Rename this kind" required>
-          <button class="tx-act" type="submit">{{ ux_icon('lucide:file-pen', {width: 12, height: 12}) }} Rename</button>
+          <button class="tx-act" type="submit">{{ ux_icon('lucide:pencil', {width: 12, height: 12}) }} Rename</button>
         </form>
       </div>
       <div class="acts">
@@ -85,7 +85,7 @@
           </div>
           <div class="acts">
             {# → the block editor opens on the same route, ?blocks={uuid} #}
-            <a class="tx-act" href="{{ path('incident_taxonomy', {uuid: area.uuid, kind: selected.uuid, blocks: sub.uuid}) }}#blocks-{{ sub.uuid }}">{{ ux_icon('lucide:square-pen', {width: 12, height: 12}) }} Edit blocks</a>
+            <a class="tx-act" href="{{ path('incident_taxonomy', {uuid: area.uuid, kind: selected.uuid, blocks: sub.uuid}) }}#blocks-{{ sub.uuid }}">{{ ux_icon('lucide:pen-line', {width: 12, height: 12}) }} Edit blocks</a>
             {% if sub.active %}
               <form class="tx-actform" method="post" action="{{ path('incident_taxonomy_sub_deactivate', {uuid: area.uuid, sub: sub.uuid}) }}">
                 <input type="hidden" name="_token" value="{{ csrfToken }}">

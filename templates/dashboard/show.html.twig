@@ -40,7 +40,7 @@
         {# STANDALONE FILING — nothing on this page is the record being filed
            about, so the flow gets the whole page and an address of its own. A
            plain link: no trigger, nothing to dismiss. #}
-        <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('lucide:plus') }} Report incident</a>
+        <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('lucide:pencil') }} Report incident</a>
     {% endif %}
 {% endblock %}
 

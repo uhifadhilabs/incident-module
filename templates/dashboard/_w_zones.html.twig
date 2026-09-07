@@ -16,7 +16,9 @@
             {% for zone, count in rows %}
                 {% set y = 12 + loop.index0 * 24 %}
                 <text x="112" y="{{ y + 12 }}" text-anchor="end">{{ zone is empty ? 'unzoned' : zone }}</text>
-                <rect x="118" y="{{ y }}" width="{{ (count / most * 322)|round }}" height="15" rx="3" fill="var(--acc)" opacity="0.85"><title>{{ count }} in {{ zone is empty ? 'no zone' : zone }}</title></rect>
+                {# The design ramps bar opacity by rank — the busiest zone is the most
+                   solid, fading down the list — rather than one flat tone. #}
+                <rect x="118" y="{{ y }}" width="{{ (count / most * 322)|round }}" height="15" rx="3" fill="var(--acc)" opacity="{{ max(0.41, 0.95 - loop.index0 * 0.09)|number_format(2) }}"><title>{{ count }} in {{ zone is empty ? 'no zone' : zone }}</title></rect>
                 <text class="anno" x="{{ 124 + (count / most * 322)|round }}" y="{{ y + 12 }}">{{ count }}</text>
             {% endfor %}
         </svg>

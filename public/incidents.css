@@ -178,7 +178,13 @@ html.light{
    drawn.
    → GET …/modules/incidents?lens=protection|ecology|all (a query parameter,
      never a permission)                                                      */
-.i-lensbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+/* Bottom margin is 22px, not the design's 14px: the design sets the lens bar's
+   14px and then floats the ".w-galnote" note between it and the widget grid, so
+   the lens bar never sits directly above the KPI strip there. The app drops that
+   note (it is scaffolding), which left the lens bar too tight against the KPI
+   strip below — owner-flagged. The extra 8px restores the design's breathing
+   room between the lens control and the first widget. */
+.i-lensbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 22px}
 .i-lensbar .lbl{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:600;
   letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-right:2px}
 .i-lens{display:inline-flex;align-items:center;gap:7px;font-family:"JetBrains Mono",ui-monospace,monospace;
@@ -229,6 +235,14 @@ html.light{
    is actually narrowing the register. */
 .i-reset{display:inline-flex;align-items:center;gap:5px}
 .i-reset svg{width:12px;height:12px;flex:none}
+
+/* ── KPI STRIP ────────────────────────────────────────────────────────────
+   The four figures the dashboard leads with, laid out the way the design's
+   dp-kstrip does: as many equal columns as fit, each at least 168px, wrapping
+   below that. Named .kstrip here (the design's own class name is dp-kstrip in
+   its widgets.css). Without this the strip inherits the generic widget grid and
+   the four KPIs do not size as a row. */
+.kstrip{grid-template-columns:repeat(auto-fit,minmax(168px,1fr))}
 
 /* ── MONEY ────────────────────────────────────────────────────────────────
    Fines and compensation. The rule the design makes: an amount is never a
@@ -282,7 +296,10 @@ html.light{
 .i-tl-b{font-size:12.5px;line-height:1.6;color:var(--tx)}
 .i-tl-b em{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;
   font-style:normal;color:var(--dim);margin-top:3px}
-.i-tl-b .who{color:var(--fog);font-weight:600}
+/* display:inline is explicit: the widget framework ships a bare `.who{display:flex}`
+   that otherwise cascades onto this element and breaks the actor's name onto its
+   own line, splitting the timeline sentence. The design guards it the same way. */
+.i-tl-b .who{display:inline;color:var(--fog);font-weight:600}
 
 /* ── EVIDENCE ─────────────────────────────────────────────────────────────
    Photo tiles. Theme-independent on purpose, like the map plate: a photograph
@@ -560,6 +577,28 @@ html.light{
 .i-blocked{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim);
   display:inline-flex;align-items:center;gap:7px}
 .i-blocked svg{width:12px;height:12px;flex:none}
+
+/* ── THE IDENTITY BAND ────────────────────────────────────────────────────
+   THE PLATFORM'S SHARED .factband — the identity band every entity-detail
+   screen wears (the area overview, a patrol, an observation, a station), and
+   now the incident case file: the record's own facts in a wrapping row below
+   the head, a segment with no data OMITTED rather than rendered empty.
+
+   Carried here the same way and for the same reason as the map plate and the
+   .rln row: two-plus surfaces depend on it, so it belongs in the host's shell
+   stylesheet — until that lands, each module ships its own marked copy (see
+   patrol.css's identical block), and an incidents page never depends on
+   patrol.css being loaded. Ported to this module's token bridge.               */
+.factband{display:flex;align-items:center;flex-wrap:wrap;gap:0 26px;padding:13px 16px;margin-bottom:18px;
+  border:1px solid var(--ln);border-radius:12px;background:var(--raised)}
+.factband .f{display:flex;flex-direction:column;gap:3px}
+.factband .k{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
+.factband .v{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--tx)}
+.factband .v em{font-style:normal;font-size:10px;font-weight:500;color:var(--fog);margin-left:3px}
+.factband .sp{flex:1}
+.factband .more{font-size:11px;color:var(--acc);text-decoration:none;white-space:nowrap}
+.factband .more:hover{text-decoration:underline}
 
 /* ── KEY / VALUE ROW ──────────────────────────────────────────────────────
    The meta card's row: a mono label on the left, the fact on the right. The

@@ -96,6 +96,12 @@
 .tx-code::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--dim);flex:none}
 .tx-code.locked::before{background:var(--acc)}
 
+/* A neutral meta line — same size and weight as .i-sub, but module-independent
+   (it does not depend on incidents.css being loaded). Ported from the design's
+   taxonomy.css; used by the block-editor's "Money runs as" savebar label. */
+.tx-meta{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:var(--fog);
+  letter-spacing:.03em}
+
 /* ── a sub-category row ─────────────────────────────────────────────────── */
 .tx-subs{padding:6px 0 0}
 .tx-sub{display:flex;align-items:flex-start;gap:11px;padding:12px 18px;

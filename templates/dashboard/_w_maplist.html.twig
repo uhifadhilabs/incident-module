@@ -17,19 +17,22 @@
             {{ ui.mapLegend(dashboard.categories) }}
         </div>
         <div class="i-listcol">
-            {% for incident in dashboard.recent|slice(0, 14) %}
-                <a class="i-feed" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
-                    <span class="mark"><i class="i-hue-{{ incident.category.colourKey }}"></i></span>
-                    <span class="bd">
-                        <span class="hl">{{ ui.id(incident.reference) }}{{ ui.status(incident.status) }}</span>
-                        <span class="tt">{{ incident.headline }}</span>
-                        <span class="mt">{{ ui.zone(incident) }}<span>{{ incident.subcategory.label }}</span></span>
-                    </span>
-                    <span class="rt"><span class="open-btn">Open →</span></span>
-                </a>
-            {% else %}
-                <div class="use">Nothing matches this filter.</div>
-            {% endfor %}
+            {# The docked results are .i-hit rows (host vocabulary, shared with the
+               area overview's split): a header naming how many are in view, then a
+               scrolling body of three-line hits — id + kind + status, the headline,
+               then zone + when. #}
+            <div class="i-listhd">In this view<span class="n">{{ dashboard.recent|slice(0, 14)|length }} of {{ dashboard.recentTotal }}</span></div>
+            <div class="i-listbody">
+                {% for incident in dashboard.recent|slice(0, 14) %}
+                    <a class="i-hit" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
+                        <span class="r1"><span class="id">{{ incident.reference }}</span>{{ ui.cat(incident.category, incident.subcategory.label) }}{{ ui.status(incident.status) }}</span>
+                        <span class="r2">{{ incident.headline }}</span>
+                        <span class="r3">{{ ui.zone(incident) }}{{ ui.when(incident.reportedAt, dashboard.now) }}</span>
+                    </a>
+                {% else %}
+                    <div class="use">Nothing matches this filter.</div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>

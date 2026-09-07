@@ -22,9 +22,11 @@
                     <a class="i-card {{ incident.category.colourKey }}" draggable="true"
                        data-reference="{{ incident.reference }}"
                        href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
-                        <span class="id">{{ incident.reference }}<span class="age">{{ incident.ageInHours(dashboard.now) < 48 ? incident.ageInHours(dashboard.now) ~ ' h' : (incident.ageInHours(dashboard.now) // 24) ~ ' d' }}</span></span>
+                        {# The age goes red (.old) once the card is past its category's own term. #}
+                        <span class="id">{{ incident.reference }}<span class="age{{ incident.ageInHours(dashboard.now) > incident.subcategory.termHours ? ' old' }}">{{ incident.ageInHours(dashboard.now) < 48 ? incident.ageInHours(dashboard.now) ~ ' h' : (incident.ageInHours(dashboard.now) // 24) ~ ' d' }}</span></span>
                         <span class="tt">{{ incident.headline }}</span>
-                        <span class="mt">{{ incident.subcategory.label }} · {{ incident.zoneLabel }}</span>
+                        {# The footer: responder initials, the sub-category, and the zone chip. #}
+                        <span class="ft">{% if incident.assignedTo %}<span class="av">{{ (incident.assignedTo.firstName|slice(0, 1) ~ incident.assignedTo.lastName|slice(0, 1))|upper }}</span>{% endif %}<span>{{ incident.subcategory.label }}</span>{{ ui.zone(incident) }}</span>
                     </a>
                 {% endfor %}
             </div>

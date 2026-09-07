@@ -16,7 +16,10 @@
                     {% if not isFine %}<div class="i-mrow"><span>claimed</span>{{ ui.amount(dashboard.currency, totals.claimed) }}</div>{% endif %}
                     <div class="i-mrow"><span>{{ isFine ? 'assessed' : 'approved' }}</span>{{ ui.amount(dashboard.currency, totals.approved) }}</div>
                     <div class="i-mrow"><span>{{ isFine ? 'collected' : 'paid' }}</span>{{ ui.amount(dashboard.currency, totals.settled, 'paid') }}</div>
-                    <div class="i-mrow"><span>outstanding</span>{{ ui.amount(dashboard.currency, totals.outstanding, 'due') }}</div>
+                    {# The design carries an "outstanding" row for FINES only — the concern
+                       with a fine is collection. Compensation reads claimed → approved →
+                       paid, and its unpaid balance is headlined in the KPI strip instead. #}
+                    {% if isFine %}<div class="i-mrow"><span>outstanding</span>{{ ui.amount(dashboard.currency, totals.outstanding, 'due') }}</div>{% endif %}
                     {% set moved = totals.approved > 0 ? (totals.settled / totals.approved * 100)|round : 0 %}
                     <div class="i-moneybar"><i style="width:{{ moved }}%"></i></div>
                     <div class="i-kpi-note i-moneypct">{{ moved }}% {{ isFine ? 'collected' : 'of approved value paid' }}</div>
