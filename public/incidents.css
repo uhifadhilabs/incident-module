@@ -74,6 +74,61 @@ html.light{
 .i-cat.mort i{background:var(--i-mort)}
 .i-cat.ghost{border-style:dashed;color:var(--dim);background:none;cursor:pointer}
 .i-cat.ghost i{background:var(--dim)}
+
+/* ── CHARTS ────────────────────────────────────────────────────────────────
+   The chart vocabulary the map-first widgets draw in — the line, the donut and
+   the bars — ported byte-faithfully from the design's uhifadhi.css.
+
+   THIS IS HOST VOCABULARY the shell does not yet ship, kept here the same way and
+   for the same reason as the map plate at the foot of this file: a widget cannot
+   render unstyled while the question of where these rules belong is open, and the
+   duplication is deliberate and marked, not accidental. There is a standing
+   ruling that the incident charts move whole into a future shared charts-module
+   (it will behave like the map-module); when that lands, this block and the chart
+   macros go with it. The ONLY module-specific rules are the four arc/legend hues
+   at the end, which name this taxonomy's colours — everything above is generic.  */
+.ch{width:100%;height:auto;display:block}
+.ch text{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:7.5px;fill:var(--fog)}
+.ch text.anno{fill:var(--tx);font-size:7.5px}
+.ch text.annoS{fill:var(--fog);font-size:6.9px}
+.ch text.big{font-size:20px;fill:var(--tx);font-weight:700}
+.ch line.grid{stroke:color-mix(in srgb,var(--fog) 22%,transparent);stroke-width:.6}
+.ch line.ax{stroke:color-mix(in srgb,var(--fog) 55%,transparent);stroke-width:.8}
+.ch .ln{fill:none;stroke:var(--acc);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.ch .lnfill{fill:color-mix(in srgb,var(--acc) 14%,transparent);stroke:none}
+.ch .dot{fill:var(--acc)}
+.ch .arc{fill:none;stroke-width:20;stroke-linecap:butt}
+.ch .track{fill:none;stroke-width:20;stroke:color-mix(in srgb,var(--fog) 18%,transparent)}
+/* A CHART CARD IS A FIXED HEIGHT so a grid of them lines up — the card and its
+   plotted content both. The tab and the footnote hold their size; the chart
+   itself takes the rest, and a donut centres in it. */
+.chartcard{display:flex;flex-direction:column;height:320px}
+.chartcard>.tab{flex:none}
+.chartcard>.use{flex:none;margin-top:10px}
+.chartcard>.ch{flex:1 1 auto;min-height:0;height:auto}
+.chartcard .ch-donut{flex:1 1 auto;min-height:0;justify-content:center}
+.ch-donut{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.ch-donut .ch{flex:none}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:8.5px;color:var(--fog);margin-top:8px;align-items:center}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+/* A vertical legend for a donut: one row per segment, count and share pushed
+   apart from the label. */
+.legend.legend-v{flex-direction:column;gap:8px;margin-top:0;align-items:stretch;min-width:118px}
+.legend.legend-v span{display:flex;align-items:center;gap:0;color:var(--fog)}
+.legend.legend-v b{color:var(--tx);font-weight:700;margin-left:auto}
+.legend.legend-v em{font-style:normal;color:var(--dim);min-width:34px;text-align:right}
+/* THE ONLY MODULE-SPECIFIC CHART RULES: the donut's arcs and the legend's
+   swatches read from the SAME four hues the map paints an incident with, so the
+   donut, the legend and the map are one palette. */
+.ch .arc.poach{stroke:var(--i-poach)}
+.ch .arc.hwc{stroke:var(--i-hwc)}
+.ch .arc.comp{stroke:var(--i-comp)}
+.ch .arc.mort{stroke:var(--i-mort)}
+.legend i.poach{background:var(--i-poach)}
+.legend i.hwc{background:var(--i-hwc)}
+.legend i.comp{background:var(--i-comp)}
+.legend i.mort{background:var(--i-mort)}
 /* The sub-category, when a page shows the full path. Never bolder than its parent. */
 .i-sub{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:var(--fog);
   letter-spacing:.02em;white-space:nowrap}

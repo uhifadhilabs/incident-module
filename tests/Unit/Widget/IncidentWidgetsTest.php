@@ -43,18 +43,42 @@ final class IncidentWidgetsTest extends TestCase
     }
 
     /**
-     * Seventeen widgets, including the rail the design added to the status board
-     * and the report entry card it added to case files.
+     * Twenty widgets, including the three charts the design added to Map first —
+     * the trend line, the category donut and the severity bars — beside the zone
+     * chart they share a two-by-two grid with.
      */
-    public function testItShipsTheSeventeenWidgetsTheDesignDeclares(): void
+    public function testItShipsTheTwentyWidgetsTheDesignDeclares(): void
     {
         self::assertSame([
             'kpis', 'register', 'queue', 'report',
-            'maplist', 'map', 'zones',
+            'maplist', 'map', 'zones', 'trend', 'bycat', 'severity',
             'spark', 'feed', 'evidence',
             'categories', 'matrix', 'money',
             'board', 'sla', 'funnel', 'rail',
         ], IncidentWidgets::declaration()->ids());
+    }
+
+    /**
+     * THE THREE MAP-FIRST CHARTS the design added: each under Map first, drawn at
+     * half width with the same width-chips, and OFF — the shipped composition
+     * leads with the map, not a rail of graphs, so nobody gets them unasked.
+     */
+    public function testTheThreeChartsShipUnderMapFirstOffAtHalfWidth(): void
+    {
+        $catalog = IncidentWidgets::declaration();
+
+        foreach (['trend', 'bycat', 'severity'] as $id) {
+            $widget = $catalog->get($id);
+            self::assertSame('b', $widget->group, \sprintf('"%s" is a Map first chart.', $id));
+            self::assertSame(6, $widget->cols, \sprintf('"%s" is drawn at half width.', $id));
+            self::assertSame([12, 9, 6], $catalog->spans($id), \sprintf('"%s" offers the same three widths.', $id));
+            self::assertFalse($widget->on, \sprintf('"%s" is not in any shipped composition.', $id));
+            self::assertNotNull($widget->note, \sprintf('"%s" has no picker line.', $id));
+        }
+
+        self::assertSame('Incidents over time', $catalog->get('trend')->label);
+        self::assertSame('By category', $catalog->get('bycat')->label);
+        self::assertSame('By severity', $catalog->get('severity')->label);
     }
 
     /**
@@ -113,6 +137,12 @@ final class IncidentWidgetsTest extends TestCase
 
         self::assertSame(['a', 'b', 'c', 'd', 'e'], array_map(static fn ($p) => $p->id, $presets));
         self::assertSame(['kpis' => 12, 'register' => 12, 'queue' => 12], $presets[0]->layout);
+        // B is the one that gained the charts — the map leads, then a two-column
+        // rail of graphs: when, what mix, how serious and which zones.
+        self::assertSame(
+            ['kpis' => 12, 'maplist' => 12, 'trend' => 6, 'bycat' => 6, 'severity' => 6, 'zones' => 6],
+            $presets[1]->layout,
+        );
         // E is the one that gained the rail — "where things stand" sits between
         // the numbers and the board.
         self::assertSame(

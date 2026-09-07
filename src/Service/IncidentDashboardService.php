@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Service;
 
 use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\IncidentDashboard;
@@ -73,6 +74,8 @@ final readonly class IncidentDashboardService
             filedCount: \count($incidents),
             categoryCounts: self::byCategory($incidents),
             statusCounts: self::byStatus($incidents),
+            severityCounts: self::bySeverity($incidents),
+            monthlyCounts: $this->incidents->monthlyFiledCounts($filter, $now),
             matrix: self::byCategoryAndStatus($incidents),
             zoneCounts: self::byZone($incidents),
             dailyCounts: self::byDay($incidents, $filter),
@@ -159,6 +162,28 @@ final readonly class IncidentDashboardService
             $counts[$place->value] = \count(array_filter(
                 $incidents,
                 static fn (Incident $incident) => $incident->getStatus() === $place,
+            ));
+        }
+
+        return $counts;
+    }
+
+    /**
+     * The month by severity — one count per level the model has, every level
+     * present at zero. The severity bars draw a bar per level, and a level that
+     * dropped out on a calm month would make the chart redraw itself.
+     *
+     * @param list<Incident> $incidents
+     *
+     * @return array<string, int>
+     */
+    private static function bySeverity(array $incidents): array
+    {
+        $counts = [];
+        foreach (IncidentSeverityEnum::ordered() as $level) {
+            $counts[$level->value] = \count(array_filter(
+                $incidents,
+                static fn (Incident $incident) => $incident->getSeverity() === $level,
             ));
         }
 

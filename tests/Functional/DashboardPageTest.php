@@ -73,8 +73,9 @@ final class DashboardPageTest extends FunctionalTestCase
 
         self::assertResponseIsSuccessful();
         foreach ([
-            'kpis', 'register', 'queue', 'report', 'maplist', 'map', 'zones', 'spark', 'feed',
-            'evidence', 'categories', 'matrix', 'money', 'board', 'sla', 'funnel', 'rail',
+            'kpis', 'register', 'queue', 'report', 'maplist', 'map', 'zones', 'trend', 'bycat',
+            'severity', 'spark', 'feed', 'evidence', 'categories', 'matrix', 'money', 'board',
+            'sla', 'funnel', 'rail',
         ] as $widget) {
             self::assertGreaterThan(
                 0,
@@ -82,6 +83,36 @@ final class DashboardPageTest extends FunctionalTestCase
                 \sprintf('The "%s" widget did not render in the library.', $widget),
             );
         }
+    }
+
+    /**
+     * THE THREE MAP-FIRST CHARTS DRAW THEIR SVG FROM REAL ROWS. Each is data-
+     * driven — the trend line plots a point, the category donut draws an arc, and
+     * the severity bars draw a rectangle — so a widget that hard-coded the design's
+     * numbers, or referenced a figure the model does not carry, fails here.
+     */
+    public function testTheMapFirstChartsDrawFromData(): void
+    {
+        $area = $this->anArea();
+        $reporter = $this->aReporter();
+        $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', $reporter);
+        $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside', $reporter);
+        $this->client->loginUser($reporter);
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/widgets', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        // The trend line is a chart card holding a line path.
+        self::assertGreaterThan(0, $crawler->filter('[data-w="trend"] svg.ch path.ln')->count());
+        // The category donut draws one arc per kind filed this month, over a total.
+        self::assertGreaterThan(0, $crawler->filter('[data-w="bycat"] svg.ch circle.arc')->count());
+        self::assertStringContainsString('2', $crawler->filter('[data-w="bycat"] text.big')->text());
+        // The severity bars draw a rectangle per level present.
+        self::assertGreaterThan(0, $crawler->filter('[data-w="severity"] svg.ch rect')->count());
+        // Every chart is an equal-height card in the Map first grid.
+        self::assertGreaterThan(0, $crawler->filter('[data-w="trend"].chartcard')->count());
+        self::assertGreaterThan(0, $crawler->filter('[data-w="bycat"].chartcard')->count());
+        self::assertGreaterThan(0, $crawler->filter('[data-w="severity"].chartcard')->count());
     }
 
     /** An area with nothing filed still gets a whole dashboard, not an error. */

@@ -16,6 +16,7 @@ namespace Uhifadhi\Incident\Model;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentCategory;
 use Uhifadhi\Incident\Entity\IncidentEvidence;
+use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 
@@ -42,6 +43,8 @@ final readonly class IncidentDashboard
      * @param list<IncidentCategory>                                                                           $categories     the taxonomy, in its own order
      * @param array<string, int>                                                                               $categoryCounts category slug => count in the window
      * @param array<string, int>                                                                               $statusCounts   status value => count, every place present
+     * @param array<string, int>                                                                               $severityCounts severity value => count this window, every level present
+     * @param array<string, int>                                                                               $monthlyCounts  'Y-m' => filings that month, six months, oldest first
      * @param array<string, array<string, int>>                                                                $matrix         category slug => status value => count
      * @param array<string, int>                                                                               $zoneCounts     zone name ('' = unzoned) => count
      * @param array<string, int>                                                                               $dailyCounts    Y-m-d => count, every day of the window present
@@ -60,6 +63,8 @@ final readonly class IncidentDashboard
         public int $filedCount,
         public array $categoryCounts,
         public array $statusCounts,
+        public array $severityCounts,
+        public array $monthlyCounts,
         public array $matrix,
         public array $zoneCounts,
         public array $dailyCounts,
@@ -210,5 +215,47 @@ final readonly class IncidentDashboard
     public function categoryCount(IncidentCategory $category): int
     {
         return $this->categoryCounts[$category->getSlug()] ?? 0;
+    }
+
+    /**
+     * THE MONTH'S MIX BY KIND, biggest share first — what the donut draws an arc
+     * per, and its legend a row per. A kind with nothing filed this month is left
+     * out: a zero-length arc is not an arc, and a legend row reading "0 · 0%" is
+     * noise. Each share carries its own category, so the arc and the swatch read
+     * the same four hues the map paints.
+     *
+     * @return list<array{category: IncidentCategory, count: int}>
+     */
+    public function categoryShares(): array
+    {
+        $shares = [];
+        foreach ($this->categories as $category) {
+            $count = $this->categoryCount($category);
+            if ($count > 0) {
+                $shares[] = ['category' => $category, 'count' => $count];
+            }
+        }
+
+        usort($shares, static fn (array $a, array $b) => $b['count'] <=> $a['count']);
+
+        return $shares;
+    }
+
+    /** How many of this window's incidents sit at one severity — the bars' heights. */
+    public function severityCount(IncidentSeverityEnum $severity): int
+    {
+        return $this->severityCounts[$severity->value] ?? 0;
+    }
+
+    /**
+     * The severity levels most serious first — the order the bars read in, so the
+     * eye lands on the worst of the month first. The enum orders them least-first,
+     * which is right for a chip and wrong for a bar chart.
+     *
+     * @return list<IncidentSeverityEnum>
+     */
+    public function severitiesWorstFirst(): array
+    {
+        return array_reverse(IncidentSeverityEnum::ordered());
     }
 }

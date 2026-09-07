@@ -1,0 +1,24 @@
+{# IN·09 — how serious this month's incidents are, the dimension a map pin cannot
+   show.
+
+   Severity is set when a ranger VERIFIES the report, not when it is filed — a
+   raised alarm can be stood down once somebody has seen it — which is why the tab
+   says "set at verification". One bar per level the model carries, most serious
+   first so the eye lands on the worst of the month
+   ({@see IncidentDashboard::severitiesWorstFirst}).
+
+   The drawing is the chart layer's ({@see _charts.html.twig}); this partial reads
+   the count at each level and hands over labelled bars. #}
+{% import '@UhifadhiIncident/dashboard/_charts.html.twig' as charts %}
+<div class="c chartcard" data-w="severity">
+    <span class="tab">By severity<span class="src">{% if dashboard.filter.from %}· {{ dashboard.filter.from|date('F Y')|lower }} {% endif %}· set at verification</span></span>
+    {% set bars = [] %}
+    {% for level in dashboard.severitiesWorstFirst %}
+        {% set bars = bars|merge([{
+            label: level.label,
+            value: dashboard.severityCount(level),
+            title: level.label ~ ': ' ~ dashboard.severityCount(level),
+        }]) %}
+    {% endfor %}
+    {{ charts.bars(bars) }}
+</div>

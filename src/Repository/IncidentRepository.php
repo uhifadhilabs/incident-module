@@ -141,6 +141,53 @@ final class IncidentRepository extends ServiceEntityRepository
     }
 
     /**
+     * FILINGS PER CALENDAR MONTH across the last {@see $months} months up to and
+     * including the month {@see $now} falls in — the trend line's series, oldest
+     * month first, every month in the span present at zero.
+     *
+     * THE ONE FIGURE WHOSE WINDOW IS NOT THE PAGE'S. Every other reading on the
+     * dashboard is of the one month the surface loaded; a line needs more than one
+     * month, so this aggregate carries its own six and overrides the filter's
+     * window with them. Everything else about the filter still applies — the
+     * category chips, the lens, the zone and the search narrow the trend exactly
+     * as they narrow the register, because one filter drives everything.
+     *
+     * The set is one area's filings over six months, the same order of magnitude
+     * as the register the surface already draws, so it is loaded and bucketed in
+     * PHP rather than grouped in SQL — the month keys a portable query cannot
+     * form are formed here, once, from the timestamps.
+     *
+     * @return array<string, int> 'Y-m' => count, every month in the span present
+     */
+    public function monthlyFiledCounts(IncidentFilter $filter, \DateTimeImmutable $now, int $months = 6): array
+    {
+        $end = $now->modify('first day of next month')->setTime(0, 0);
+        $start = $end->modify(\sprintf('-%d months', $months));
+
+        $qb = $this->createQueryBuilder('i')
+            ->join('i.subcategory', 's')
+            ->join('s.category', 'c')
+            ->select('i.reportedAt AS reportedAt');
+        $this->applyFilter($qb, $filter->inWindow($start, $end));
+
+        /** @var list<array{reportedAt: \DateTimeImmutable}> $rows */
+        $rows = $qb->getQuery()->getResult();
+
+        $counts = [];
+        for ($month = $start; $month < $end; $month = $month->modify('+1 month')) {
+            $counts[$month->format('Y-m')] = 0;
+        }
+        foreach ($rows as $row) {
+            $key = $row['reportedAt']->format('Y-m');
+            if (isset($counts[$key])) {
+                ++$counts[$key];
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
      * THE REGISTER BEHIND THE REPORT DRAWER — this area's newest filings, capped.
      *
      * Deliberately NOT {@see findFiltered()}: the drawer's backdrop answers "what

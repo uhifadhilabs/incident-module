@@ -129,6 +129,13 @@ final class IncidentWidgets implements WidgetSurfaceInterface
             new Widget('maplist', 'Map + results', 'b', 12, [12, 9], on: false, note: 'The map at full height with the matching incidents docked beside it.'),
             new Widget('map', 'Incident map', 'b', 12, [12, 9, 6], on: true, note: 'Where every incident was filed; hue is the category, hollow means closed.'),
             new Widget('zones', 'By zone', 'b', 6, [12, 9, 6, 3], on: false, note: 'Incidents by the zone they fall in, this month.'),
+            // THE TWO-BY-TWO RAIL OF GRAPHS the design added under the map: when
+            // it happened, what kind, how serious — the three dimensions a map pin
+            // cannot draw, beside the zone chart they share the grid with. All OFF:
+            // the shipped composition leads with the map, not a rail of graphs.
+            new Widget('trend', 'Incidents over time', 'b', 6, [12, 9, 6], on: false, note: 'Six months of filings — the line the map cannot draw. Answers "is it getting worse".'),
+            new Widget('bycat', 'By category', 'b', 6, [12, 9, 6], on: false, note: 'The month\'s mix by kind of incident — the same four hues the map paints, read as a share of the whole.'),
+            new Widget('severity', 'By severity', 'b', 6, [12, 9, 6], on: false, note: 'How serious this month\'s incidents are — the dimension a map pin cannot show.'),
             new Widget('spark', 'Thirty-day load', 'c', 12, [12, 9, 6, 3], on: false, note: 'One bar per day — how much came in, and when it spiked.'),
             new Widget('feed', 'Incident feed', 'c', 12, [12, 9, 6], on: false, note: 'Newest first, grouped by day, with each day\'s own count.'),
             new Widget('evidence', 'Latest evidence', 'c', 12, [12, 9, 6], on: false, note: 'The most recent photographs and documents attached to any incident.'),
@@ -163,8 +170,8 @@ final class IncidentWidgets implements WidgetSurfaceInterface
             ],
             'b' => [
                 'Map first',
-                'The map is the dashboard and the results dock beside it, so "where" is answered before "what". Unbeatable for spotting a cluster or a hotspot forming; weakest for money, paperwork and anything without good coordinates.',
-                ['maplist' => 12, 'kpis' => 12, 'zones' => 12],
+                'The map is the dashboard and the results dock beside it, so "where" is answered before "what"; below it a two-column rail of graphs answers when, what mix, how serious and which zones. Unbeatable for spotting a cluster or a hotspot forming; weakest for money, paperwork and anything without good coordinates.',
+                ['kpis' => 12, 'maplist' => 12, 'trend' => 6, 'bycat' => 6, 'severity' => 6, 'zones' => 6],
             ],
             'c' => [
                 'Live feed',
