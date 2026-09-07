@@ -14,14 +14,17 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Controller;
 
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Environment;
 use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
@@ -55,6 +58,29 @@ use Uhifadhi\Widget\Service\WidgetService;
 final class IncidentController
 {
     /**
+     * THE EXPORT'S HEADER ROW — the register's own meaningful columns, in the
+     * order the register reads left to right, with the assignee the screen carries
+     * in its rail added at the end.
+     *
+     * @var list<string>
+     */
+    private const array EXPORT_COLUMNS = [
+        'reference',
+        'reported',
+        'category',
+        'sub-category',
+        'what happened',
+        'zone',
+        'status',
+        'severity',
+        'money direction',
+        'money currency',
+        'money payable',
+        'money outstanding',
+        'assignee',
+    ];
+
+    /**
      * The window every incidents surface opens on: the calendar month containing
      * "now" — the design's "august 2026", stated once.
      *
@@ -65,6 +91,38 @@ final class IncidentController
         $from = $now->modify('first day of this month')->setTime(0, 0);
 
         return [$from, $from->modify('+1 month')];
+    }
+
+    /**
+     * ONE INCIDENT AS A CSV ROW, in the order {@see self::EXPORT_COLUMNS} names.
+     *
+     * The money is written as the register shows it — direction, currency, what is
+     * payable and what is still outstanding — and is FOUR blank cells where no
+     * money row exists, so a "natural mortality" reads as no money rather than
+     * zero money. The two amounts are never summed here, exactly as the dashboard
+     * refuses to sum a fine owed to the authority with a claim owed by it.
+     *
+     * @return list<string>
+     */
+    private static function exportRow(Incident $incident): array
+    {
+        $money = $incident->getMoney();
+
+        return [
+            $incident->getReference(),
+            $incident->getReportedAt()->format('Y-m-d'),
+            $incident->getCategory()->getLabel(),
+            $incident->getSubcategory()->getLabel(),
+            $incident->headline(),
+            $incident->getZone()?->getName() ?? '',
+            $incident->getStatus()->label(),
+            $incident->getSeverity()->label(),
+            $money?->getDirection()->value ?? '',
+            $money?->getCurrency() ?? '',
+            null === $money ? '' : (string) $money->payable(),
+            null === $money ? '' : (string) $money->outstanding(),
+            $incident->getAssignedTo()?->getFullName() ?? '',
+        ];
     }
 
     public function __construct(
@@ -111,6 +169,7 @@ final class IncidentController
             'dashboard' => $this->dashboard->build($filter, $now, $viewer),
             'filter' => $filter,
             'recordScreens' => $this->mayRecord(),
+            'manageScreens' => $this->mayManage(),
             'widgetScreens' => $this->widgetScreens,
             // Which widgets this person keeps, how wide, in what order — the
             // module's shipped composition until they adopt one of the five.
@@ -118,6 +177,68 @@ final class IncidentController
             'transitionCsrfToken' => $this->transitionToken?->forArea($area),
             'urls' => $this->widgetUrls->forArea($area),
         ]));
+    }
+
+    /**
+     * THE REGISTER AS A FILE — the same rows the dashboard lists, streamed as CSV.
+     *
+     * ONE FILTER, ONE READING. The export reads the request through the SAME
+     * {@see IncidentFilter} the dashboard does — lens, category, status, zone,
+     * search and the month window — so the file a person downloads is exactly the
+     * register they were looking at, never a wider or a different set. Change a
+     * chip and the export changes with it, because both ask the one query.
+     *
+     * NO PERMISSION OF ITS OWN, and deliberately so. Reading incidents is reading
+     * the module — the module declares no "view" permission, because a view gate is
+     * exactly the tool one department would use to hide a row from another (see
+     * {@see \Uhifadhi\Incident\Module\IncidentModuleProvider::permissions()}). A CSV
+     * of the register is the same read as the register on screen, so it is offered
+     * on the same terms: whoever can reach the dashboard can download it, and the
+     * host's firewall is what stands between the wider world and either one.
+     */
+    #[Route(
+        '/areas/{uuid}/modules/incidents/export.csv',
+        name: 'incident_export',
+        requirements: ['uuid' => Requirement::UUID],
+        methods: ['GET'],
+        // Ahead of the case file's "/incidents/{reference}" so the literal
+        // export.csv is never read as a reference — belt-and-braces, since the
+        // reference pattern would not match it anyway.
+        priority: 2,
+    )]
+    public function export(
+        Request $request,
+        #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
+    ): Response {
+        $now = new \DateTimeImmutable();
+        $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...self::monthRange($now));
+        // The SAME rows the register lists — findFiltered, read through the one
+        // filter — so the file and the screen can never disagree.
+        $incidents = $this->dashboard->build($filter, $now, $this->viewer())->recent;
+
+        $response = new StreamedResponse(static function () use ($incidents): void {
+            $handle = fopen('php://output', 'w');
+            \assert(false !== $handle);
+
+            // The escape argument is given explicitly: PHP 8.4 deprecates relying
+            // on its default, and an empty escape is the modern, round-trippable
+            // choice (a value is quoted, never backslash-escaped).
+            fputcsv($handle, self::EXPORT_COLUMNS, ',', '"', '');
+            foreach ($incidents as $incident) {
+                fputcsv($handle, self::exportRow($incident), ',', '"', '');
+            }
+
+            fclose($handle);
+        });
+
+        $filename = \sprintf('incidents-%s.csv', $filter->from?->format('Y-m') ?? $now->format('Y-m'));
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set(
+            'Content-Disposition',
+            HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $filename),
+        );
+
+        return $response;
     }
 
     /**
@@ -147,6 +268,24 @@ final class IncidentController
         return $this->recordScreens
             && null !== $this->authorization
             && $this->authorization->isGranted(IncidentReportController::RECORD_PERMISSION);
+    }
+
+    /**
+     * WHETHER TO OFFER THE TAXONOMY ADMIN — the same two questions as {@see
+     * self::mayRecord()}, asked of the other tier.
+     *
+     * The taxonomy screen is a WRITING screen: it exists only where SecurityBundle
+     * does (so `$this->recordScreens`, which is that compile-time fact for every
+     * writing screen this bundle ships), and it enforces `incidents.manage` in
+     * code. Handing somebody the link who cannot open it would fail them at the
+     * click, so the header asks both questions before drawing the door — the
+     * fleet's rule that a control the viewer may not use is ABSENT, never greyed.
+     */
+    private function mayManage(): bool
+    {
+        return $this->recordScreens
+            && null !== $this->authorization
+            && $this->authorization->isGranted(IncidentTaxonomyController::MANAGE_PERMISSION);
     }
 
     /** Null where the installation runs no security, or nobody is signed in: the shipped composition. */

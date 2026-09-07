@@ -252,4 +252,85 @@ final class DashboardPageTest extends FunctionalTestCase
         self::assertResponseIsSuccessful();
         self::assertCount(0, $crawler->filter('a[href$="/incidents/new"]'));
     }
+
+    /**
+     * THE GRADUATED HEADER — four actions, in the design's order: Kinds &
+     * sub-categories · Widget library · Export · Report incident.
+     *
+     * A manager holds both tiers, so every door is drawn; the test pins the ORDER,
+     * because the design reads left to right and a header that had them all but
+     * shuffled would not be this design.
+     */
+    public function testTheHeaderRendersAllFourGraduatedActionsInOrder(): void
+    {
+        $area = $this->anArea();
+        $this->anIncident($area);
+        $this->client->loginUser($this->aManager());
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        $actions = $crawler->filter('.pgact');
+        self::assertCount(1, $actions->filter('a[href$="/incidents/taxonomy"]'));
+        self::assertCount(1, $actions->filter('a[href$="/incidents/widgets"]'));
+        self::assertGreaterThan(0, $actions->filter('a[href*="/incidents/export.csv"]')->count());
+        self::assertCount(1, $actions->filter('a[href$="/incidents/new"]'));
+
+        $html = $actions->html();
+        $order = [
+            strpos($html, '/incidents/taxonomy'),
+            strpos($html, '/incidents/widgets'),
+            strpos($html, '/incidents/export.csv'),
+            strpos($html, '/incidents/new'),
+        ];
+        self::assertSame($order, array_values(array_filter($order, static fn ($p) => false !== $p)));
+        $sorted = $order;
+        sort($sorted);
+        self::assertSame($sorted, $order, 'The four header actions are not in the design order.');
+    }
+
+    /**
+     * THE TAXONOMY DOOR IS THE MANAGE TIER'S. It rides on incidents.manage, so a
+     * reporter — who may file but not manage — is handed no link into it, exactly
+     * as the Report door is absent for somebody who may not file. The Export and
+     * Widget-library doors stay, because neither is the manage tier's.
+     */
+    public function testTheTaxonomyLinkIsOfferedOnlyToSomebodyWhoMayManage(): void
+    {
+        $area = $this->anArea();
+        $this->anIncident($area);
+
+        $this->client->loginUser($this->aReporter());
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('.pgact a[href$="/incidents/taxonomy"]'));
+        // …but the ungated doors are still there.
+        self::assertGreaterThan(0, $crawler->filter('.pgact a[href*="/incidents/export.csv"]')->count());
+        self::assertCount(1, $crawler->filter('.pgact a[href$="/incidents/widgets"]'));
+
+        // …and the manager, who may, is handed it.
+        $this->client->loginUser($this->aManager());
+        $offered = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+        self::assertCount(1, $offered->filter('.pgact a[href$="/incidents/taxonomy"]'));
+    }
+
+    /**
+     * THE EXPORT DOOR CARRIES THE CURRENT FILTER. Narrow the register and the
+     * download link narrows with it, so the file a person gets is the register they
+     * were looking at — one filter, on the page and in the file alike.
+     */
+    public function testTheExportLinkCarriesTheCurrentFilter(): void
+    {
+        $area = $this->anArea();
+        $this->anIncident($area);
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?category=poaching&q=snare', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        $href = (string) $crawler->filter('.pgact a[href*="/incidents/export.csv"]')->first()->attr('href');
+        self::assertStringContainsString('category=poaching', $href);
+        self::assertStringContainsString('q=snare', $href);
+    }
 }
