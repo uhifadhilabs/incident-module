@@ -252,8 +252,9 @@ final class DashboardPageTest extends FunctionalTestCase
         $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?lens=ecology', $this->uuidOf($area)));
 
         self::assertResponseIsSuccessful();
+        // "Every category" is present whatever the lens, so nothing is fenced off.
         self::assertGreaterThan(0, $crawler->filter('.i-lensbar a[data-lens="all"]')->count());
-        self::assertStringContainsString('A lens, not a fence', $crawler->filter('.i-lensnote')->text());
+        self::assertSame('Every category', $crawler->filter('.i-lensbar a[data-lens="all"]')->text());
     }
 
     /**
