@@ -28,15 +28,22 @@ use Uhifadhi\Incident\Enum\PartyRoleEnum;
  */
 final class IncidentVocabularyTest extends TestCase
 {
-    public function testSeverityIsThreeStepsWithTheStylesheetsClasses(): void
+    public function testSeverityIsFourStepsWorstFirstWithTheStylesheetsClasses(): void
     {
-        self::assertSame(['low', 'medium', 'high'], array_map(
+        // Worst-first: critical > high > moderate > low. `ordered()` reads
+        // gentlest-first (the bars reverse it), so low precedes critical here.
+        self::assertSame(['low', 'moderate', 'high', 'critical'], array_map(
             static fn (IncidentSeverityEnum $s) => $s->value,
             IncidentSeverityEnum::ordered(),
         ));
         self::assertSame('lo', IncidentSeverityEnum::Low->cssClass());
-        self::assertSame('md', IncidentSeverityEnum::Medium->cssClass());
+        self::assertSame('mod', IncidentSeverityEnum::Moderate->cssClass());
         self::assertSame('hi', IncidentSeverityEnum::High->cssClass());
+        self::assertSame('crit', IncidentSeverityEnum::Critical->cssClass());
+
+        // label() is the backing value verbatim — no separate display map to drift.
+        self::assertSame('moderate', IncidentSeverityEnum::Moderate->label());
+        self::assertSame('critical', IncidentSeverityEnum::Critical->label());
     }
 
     /**

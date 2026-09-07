@@ -21,6 +21,7 @@ use Uhifadhi\Area\Entity\AreaOfInterest;
 use Uhifadhi\Area\Entity\Zone;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
@@ -152,6 +153,7 @@ abstract class FunctionalTestCase extends WebTestCase
         string $subcategory = 'livestock-depredation',
         string $title = 'Lion killed four goats at Riverside',
         ?User $reportedBy = null,
+        ?IncidentSeverityEnum $severity = null,
     ): Incident {
         /** @var IncidentReportService $reports */
         $reports = static::getContainer()->get('test_public.incident.report');
@@ -162,6 +164,7 @@ abstract class FunctionalTestCase extends WebTestCase
             title: $title,
             position: '{"type":"Point","coordinates":[35.25,-3.21]}',
             now: new \DateTimeImmutable(),
+            severity: $severity ?? IncidentSeverityEnum::Moderate,
             reportedBy: $reportedBy,
         );
     }

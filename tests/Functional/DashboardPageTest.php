@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Functional;
 
+use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
+
 /**
  * THE DASHBOARD, rendered. Every widget the module ships is drawn against real
  * rows here — a template that referenced a variable the model does not carry
@@ -107,12 +109,33 @@ final class DashboardPageTest extends FunctionalTestCase
         // The category donut draws one arc per kind filed this month, over a total.
         self::assertGreaterThan(0, $crawler->filter('[data-w="bycat"] svg.ch circle.arc')->count());
         self::assertStringContainsString('2', $crawler->filter('[data-w="bycat"] text.big')->text());
-        // The severity bars draw a rectangle per level present.
-        self::assertGreaterThan(0, $crawler->filter('[data-w="severity"] svg.ch rect')->count());
+        // The severity bars draw one rectangle per level, and the model now has
+        // four — every level present even at zero, so the bars never collapse.
+        // (The widgets page renders the widget twice: library preview + grid.)
+        self::assertCount(4, $crawler->filter('[data-w="severity"]')->first()->filter('svg.ch rect'));
         // Every chart is an equal-height card in the Map first grid.
         self::assertGreaterThan(0, $crawler->filter('[data-w="trend"].chartcard')->count());
         self::assertGreaterThan(0, $crawler->filter('[data-w="bycat"].chartcard')->count());
         self::assertGreaterThan(0, $crawler->filter('[data-w="severity"].chartcard')->count());
+    }
+
+    /**
+     * THE SEVERITY CHIP WEARS ITS LEVEL'S CLASS. A critical incident renders the
+     * new top step — `.i-sev.crit` labelled "critical" — proving the register
+     * reads all four levels, not the old three.
+     */
+    public function testTheRegisterChipShowsTheCriticalLevel(): void
+    {
+        $area = $this->anArea();
+        $reporter = $this->aReporter();
+        $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', $reporter, IncidentSeverityEnum::Critical);
+        $this->client->loginUser($reporter);
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter('[data-w="register"] .i-sev.crit'));
+        self::assertSame('critical', $crawler->filter('[data-w="register"] .i-sev.crit')->text());
     }
 
     /** An area with nothing filed still gets a whole dashboard, not an error. */

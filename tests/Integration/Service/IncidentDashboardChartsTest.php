@@ -83,14 +83,20 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
         self::assertSame([2, 1], array_map(static fn (array $s) => $s['count'], $shares));
     }
 
-    /** The severity bars read the month, one count per level the model has. */
-    public function testSeverityCountsCoverTheModelsLevels(): void
+    /**
+     * The severity bars read the month, one count per level the model has —
+     * now four, worst-first, every level present even at zero so the bars never
+     * collapse to three.
+     */
+    public function testSeverityCountsCoverTheModelsFourLevels(): void
     {
         $area = $this->anArea();
         $august = new \DateTimeImmutable('2026-08-10 08:00:00');
-        $this->fileWithSeverity($area, 'snaring', 'A', IncidentSeverityEnum::High, $august);
+        $this->fileWithSeverity($area, 'snaring', 'A', IncidentSeverityEnum::Critical, $august);
         $this->fileWithSeverity($area, 'snaring', 'B', IncidentSeverityEnum::High, $august);
-        $this->fileWithSeverity($area, 'roadkill', 'C', IncidentSeverityEnum::Low, $august);
+        $this->fileWithSeverity($area, 'snaring', 'C', IncidentSeverityEnum::High, $august);
+        $this->fileWithSeverity($area, 'crop-raiding', 'D', IncidentSeverityEnum::Moderate, $august);
+        $this->fileWithSeverity($area, 'roadkill', 'E', IncidentSeverityEnum::Low, $august);
 
         $window = new IncidentFilter(
             area: $area,
@@ -99,9 +105,16 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
         );
         $built = $this->dashboard()->build($window, new \DateTimeImmutable(self::ANCHOR));
 
+        self::assertSame(1, $built->severityCount(IncidentSeverityEnum::Critical));
         self::assertSame(2, $built->severityCount(IncidentSeverityEnum::High));
-        self::assertSame(0, $built->severityCount(IncidentSeverityEnum::Medium));
+        self::assertSame(1, $built->severityCount(IncidentSeverityEnum::Moderate));
         self::assertSame(1, $built->severityCount(IncidentSeverityEnum::Low));
+
+        // Worst-first is the order the bars draw in: critical then down to low.
+        self::assertSame(
+            ['critical', 'high', 'moderate', 'low'],
+            array_map(static fn (IncidentSeverityEnum $s) => $s->value, $built->severitiesWorstFirst()),
+        );
     }
 
     /** The trend carries its own six months, not the page's one. */

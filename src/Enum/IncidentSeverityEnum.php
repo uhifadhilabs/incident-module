@@ -14,22 +14,28 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Enum;
 
 /**
- * HOW BAD — three steps, chosen at filing and revisable until verification.
+ * HOW BAD — four steps, chosen at filing and revisable until verification.
  *
  * Severity is deliberately not a number: a scale of ten invites an argument
- * about the difference between a six and a seven, and the design's map legend
- * only ever draws one distinction (a dashed ring marks HIGH).
+ * about the difference between a six and a seven. The design's map legend draws
+ * one distinction — the ring marks the serious end: HIGH or CRITICAL.
  */
 enum IncidentSeverityEnum: string
 {
     case Low = 'low';
-    case Medium = 'medium';
+    case Moderate = 'moderate';
     case High = 'high';
+    case Critical = 'critical';
 
-    /** @return list<self> */
+    /**
+     * Gentlest first — the order the bars are built in before being reversed to
+     * read worst-first ({@see IncidentDashboard::severitiesWorstFirst}).
+     *
+     * @return list<self>
+     */
     public static function ordered(): array
     {
-        return [self::Low, self::Medium, self::High];
+        return [self::Low, self::Moderate, self::High, self::Critical];
     }
 
     public function label(): string
@@ -42,8 +48,9 @@ enum IncidentSeverityEnum: string
     {
         return match ($this) {
             self::Low => 'lo',
-            self::Medium => 'md',
+            self::Moderate => 'mod',
             self::High => 'hi',
+            self::Critical => 'crit',
         };
     }
 }

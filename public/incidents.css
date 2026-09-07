@@ -50,9 +50,13 @@
   --i-comp:#8E7BE0;    /* compliance & encroachment      — Protection        */
   --i-mort:#5FA8E0;    /* wildlife mortality & roadkill  — Ecology           */
   --i-money:#3ED9A8;   /* anything denominated in money                      */
+  /* The deepest step of the severity alarm ramp, above the host's --fail; the
+     other three severity chips reuse --fail/--warn/--dim from the host. */
+  --crit:#FF4A38;
 }
 html.light{
   --i-poach:#BA4227; --i-hwc:#9A6B14; --i-comp:#5A44B8; --i-mort:#2C6FA8; --i-money:#0F8A68;
+  --crit:#8F1D0E;
 }
 
 /* ── CATEGORY CHIP ────────────────────────────────────────────────────────
@@ -155,11 +159,16 @@ html.light{
 .i-st.res{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 42%,transparent);
   background:color-mix(in srgb,var(--ok) 9%,transparent)}
 .i-st.cls{color:var(--dim);border:1px dashed color-mix(in srgb,var(--fog) 45%,transparent);font-weight:600}
-/* Severity — a separate axis from status, and deliberately quieter than it. */
+/* Severity — a separate axis from status, and deliberately quieter than it.
+   Four steps worst-first: critical > high > moderate > low. The ramp climbs in
+   alarm, not in a rainbow — critical is the deepest red (--crit), high the
+   red (--fail), moderate amber (--warn), low a plain grey (--dim). The same
+   four read on the register chip, the detail chip and the "by severity" bars. */
 .i-sev{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:700;
   letter-spacing:.12em;text-transform:uppercase;color:var(--fog);white-space:nowrap}
+.i-sev.crit{color:var(--crit)}
 .i-sev.hi{color:var(--fail)}
-.i-sev.md{color:var(--warn)}
+.i-sev.mod{color:var(--warn)}
 .i-sev.lo{color:var(--dim)}
 
 /* ── THE LENS BAR ─────────────────────────────────────────────────────────

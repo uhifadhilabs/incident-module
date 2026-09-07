@@ -122,8 +122,8 @@ class Incident
     #[ORM\Column(enumType: IncidentStatusEnum::class, options: ['default' => 'reported'])]
     private IncidentStatusEnum $status = IncidentStatusEnum::Reported;
 
-    #[ORM\Column(enumType: IncidentSeverityEnum::class, options: ['default' => 'medium'])]
-    private IncidentSeverityEnum $severity = IncidentSeverityEnum::Medium;
+    #[ORM\Column(enumType: IncidentSeverityEnum::class, options: ['default' => 'moderate'])]
+    private IncidentSeverityEnum $severity = IncidentSeverityEnum::Moderate;
 
     /** The badge, never a state — see {@see IncidentSourceEnum}. */
     #[ORM\Column(enumType: IncidentSourceEnum::class, options: ['default' => 'direct'])]

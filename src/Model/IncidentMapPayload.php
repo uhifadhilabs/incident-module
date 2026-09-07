@@ -27,7 +27,7 @@ use Uhifadhi\Incident\Entity\Incident;
  *
  *   hue          = the category
  *   filled       = still open · hollow = resolved or closed
- *   dashed ring  = high severity
+ *   dashed ring  = the serious end (high or critical)
  *
  * A JSON-able array rather than rendered markup: the map is Leaflet
  * (`window.L`), fed by a Stimulus controller — never MapLibre, and never an SVG

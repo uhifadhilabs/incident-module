@@ -69,7 +69,7 @@ final readonly class IncidentReportService
         string $title,
         string $position,
         \DateTimeImmutable $now,
-        IncidentSeverityEnum $severity = IncidentSeverityEnum::Medium,
+        IncidentSeverityEnum $severity = IncidentSeverityEnum::Moderate,
         IncidentSourceEnum $source = IncidentSourceEnum::Direct,
         ?\DateTimeImmutable $occurredAt = null,
         ?string $narrative = null,

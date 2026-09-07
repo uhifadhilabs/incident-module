@@ -188,7 +188,7 @@ final class IncidentReportController
             title: $title,
             position: $position,
             now: new \DateTimeImmutable(),
-            severity: IncidentSeverityEnum::tryFrom($request->request->getString('severity')) ?? IncidentSeverityEnum::Medium,
+            severity: IncidentSeverityEnum::tryFrom($request->request->getString('severity')) ?? IncidentSeverityEnum::Moderate,
             // The wire token, mapped once and deliberately — never a fallback
             // that happens to land on the right case.
             source: IncidentSourceEnum::forToken($request->request->getString('source'))

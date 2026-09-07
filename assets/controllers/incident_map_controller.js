@@ -25,7 +25,7 @@ import { mountMapChrome } from 'uhifadhi/map-chrome';
  *
  * THE MARKS MEAN SOMETHING, and they mean exactly what the legend beside them
  * says: hue is the CATEGORY, filled means still OPEN, hollow means resolved or
- * closed, and a dashed ring means HIGH severity. The colours are read from the
+ * closed, and a dashed ring marks the SERIOUS END (high or critical). The colours are read from the
  * same CSS custom properties the chips use (--i-poach and friends), so a marker
  * and a chip for one category can never drift apart.
  *
@@ -214,16 +214,18 @@ export default class extends Controller {
         const props = feature.properties ?? {};
         const colour = cssVar(`--i-${props.colour}`, cssVar('--acc', '#3ED9A8'));
         const open = true === props.open;
+        // The ring marks the SERIOUS END — high or critical — not high alone.
+        const serious = 'high' === props.severity || 'critical' === props.severity;
 
         const marker = this.L.circleMarker([coordinates[1], coordinates[0]], {
-            radius: 'high' === props.severity ? 7 : 5.5,
+            radius: serious ? 7 : 5.5,
             color: colour,
-            weight: 'high' === props.severity ? 2.4 : 1.6,
+            weight: serious ? 2.4 : 1.6,
             // FILLED means open, HOLLOW means finished — exactly what the legend
             // promises, and the only difference between the two marks.
             fillColor: colour,
             fillOpacity: open ? 0.85 : 0,
-            dashArray: 'high' === props.severity ? '3 3' : null,
+            dashArray: serious ? '3 3' : null,
         }).addTo(this.map);
 
         marker.bindTooltip(
