@@ -38,16 +38,17 @@ use Uhifadhi\Storage\Service\EvidenceKey;
  * done to it.
  *
  * WHAT IS HONEST HERE, AND WHAT IS NOT YET TRUE. Incidents has not adopted
- * uhifadhi/storage-module's upload path: {@see IncidentEvidence::getPath()}
- * is nullable, the demo seeder writes rows with NO path at all, and no row has a
- * recorded byte size, a detected mime type or a generated preview. Three
- * consequences run through the mapping below, each chosen so the hub is told
- * something true rather than something convenient:
+ * uhifadhi/storage-module's full upload path: {@see IncidentEvidence::getPath()}
+ * is nullable and no row carries a recorded byte size, a detected mime type or a
+ * generated preview. (The demo seeder now assigns each piece of evidence a KEY,
+ * so the sample month appears on the hub — but it still records no size, type or
+ * preview.) Three consequences run through the mapping below, each chosen so the
+ * hub is told something true rather than something convenient:
  *
  *   - A row with NO path is not yielded. A file is its key, and a tile for a key
- *     that names nothing would link at a 404. Incidents therefore appears on the
- *     hub holding nothing until evidence is genuinely stored — and "we have that
- *     and it is empty" is exactly the fact the hub is designed to show.
+ *     that names nothing would link at a 404. Un-stored evidence therefore does
+ *     not appear until it is genuinely keyed — and "we have that and it is empty"
+ *     is exactly the fact the hub is designed to show.
  *   - The size is 0, because nobody measured it. The hub's space bars must not
  *     add up bytes that were never counted.
  *   - The small picture is Waiting, not Failed. Failed says this machine tried

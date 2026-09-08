@@ -198,9 +198,27 @@ final class SeedDemoCommand extends Command
         for ($photo = 1; $photo <= $row['evidence']; ++$photo) {
             // Evidence keeps the moment the handset recorded, never the moment it
             // was uploaded — which here means the site visit, not the seed run.
-            new IncidentEvidence($incident, EvidenceKindEnum::Photo, \sprintf('IMG_%04d.jpg', 1200 + $index * 4 + $photo))
+            $filename = \sprintf('IMG_%04d.jpg', 1200 + $index * 4 + $photo);
+            new IncidentEvidence($incident, EvidenceKindEnum::Photo, $filename)
+                // A STORAGE KEY, so the sample month's evidence actually appears on
+                // the /files hub. Files are never standalone — each carries the case
+                // it belongs to, and IncidentFileSource yields exactly the rows that
+                // have a key. Without one the module shows on the hub holding nothing.
+                ->setPath(self::evidenceKey($row['reference'], $filename))
                 ->setCapturedAt($reportedAt->modify(\sprintf('+%d hours', 5 + $photo)))
                 ->setPosition($position);
+        }
+
+        // A SIGNED DOCUMENT wherever the category carries money — the claim form or
+        // the penalty notice a money case always generates, the design's "1 document"
+        // beside the photographs. A document has no handset moment, so on the hub it
+        // sits under the day it was filed rather than a capture time.
+        if (null !== $row['money'] && $subcategory->carriesMoney()) {
+            $isFine = MoneyDirectionEnum::Fine === ($subcategory->getMoneyDirection() ?? MoneyDirectionEnum::Fine);
+            $document = $isFine ? 'penalty_notice_signed.pdf' : 'claim_form_signed.pdf';
+            new IncidentEvidence($incident, EvidenceKindEnum::Document, $document)
+                ->setPath(self::evidenceKey($row['reference'], $document))
+                ->setCaption($isFine ? 'Served penalty notice' : 'Signed compensation claim form');
         }
 
         // The money BEFORE the transitions, because the resolve guard reads it:
@@ -305,6 +323,19 @@ final class SeedDemoCommand extends Command
         $users = $this->entityManager->getRepository(UserInterface::class)->findBy([], ['id' => 'ASC'], 6);
 
         return $users;
+    }
+
+    /**
+     * The storage key the Files hub lists a piece of evidence under. Its ROOT
+     * SEGMENT is "incident" — the prefix {@see \Uhifadhi\Incident\Storage\IncidentFileSource::PREFIX}
+     * claims — which is what makes the incidents file source pick this row up. It
+     * is written as a literal here rather than read off that class so the dev-only
+     * seeder never has to load storage-module (an optional dependency) to name one
+     * of its own keys.
+     */
+    private static function evidenceKey(string $reference, string $filename): string
+    {
+        return 'incident/'.$reference.'/'.$filename;
     }
 
     private static function nameOf(?UserInterface $user): ?string

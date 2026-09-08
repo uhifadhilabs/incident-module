@@ -16,11 +16,14 @@ namespace Uhifadhi\Incident\Tests\Integration\Command;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentEvidence;
+use Uhifadhi\Incident\Enum\EvidenceKindEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\DemoMonth;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
+use Uhifadhi\Incident\Storage\IncidentFileSource;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
@@ -175,6 +178,47 @@ final class SeedDemoCommandTest extends IntegrationTestCase
 
         $zoned = $this->em->getRepository(Incident::class)->findBy(['zone' => null]);
         self::assertLessThan(47, \count($zoned), 'At least the North Gate incidents should have found their zone.');
+    }
+
+    /**
+     * SEEDED EVIDENCE APPEARS ON THE FILES HUB. Files are never standalone — each
+     * comes from a record — so the seeder now gives every photograph AND a signed
+     * document per money case a storage key rooted at "incident/…". The incidents
+     * file source claims those keys and lists each under its own case file, so
+     * /files shows a realistic spread of incident-linked evidence rather than the
+     * module holding nothing.
+     */
+    public function testSeededIncidentsCarryEvidenceFilesForTheHub(): void
+    {
+        $this->anArea('Sample Area');
+        $this->seed();
+        $this->em->clear();
+
+        $evidence = $this->em->getRepository(IncidentEvidence::class)->findAll();
+
+        // Every seeded row now carries a key — none is left off the hub — and there
+        // are more rows than incidents, because money cases add a document.
+        self::assertNotEmpty($evidence);
+        $keyed = array_filter($evidence, static fn (IncidentEvidence $e): bool => null !== $e->getPath());
+        self::assertCount(\count($evidence), $keyed, 'Every seeded piece of evidence carries a storage key.');
+        self::assertGreaterThan(47, \count($evidence), 'The 47 incidents bring photographs plus documents.');
+
+        // BOTH kinds are present: photographs and signed documents.
+        $documents = array_filter($evidence, static fn (IncidentEvidence $e): bool => EvidenceKindEnum::Document === $e->getKind());
+        $photos = array_filter($evidence, static fn (IncidentEvidence $e): bool => EvidenceKindEnum::Photo === $e->getKind());
+        self::assertNotEmpty($photos, 'Photographs are seeded.');
+        self::assertNotEmpty($documents, 'Money incidents bring a signed document.');
+
+        // Every key is one the incidents file source claims, and maps to a hub entry
+        // that names its own case file — the seam that puts it on /files.
+        foreach ($evidence as $e) {
+            $key = (string) $e->getPath();
+            self::assertStringStartsWith('incident/', $key);
+            self::assertTrue(IncidentFileSource::claims($key), $key.' is not claimed by the incidents file source.');
+            $entry = IncidentFileSource::entryFor($e, null);
+            self::assertSame($key, $entry->key);
+            self::assertSame($e->getIncident()->getReference(), $entry->ownerLabel);
+        }
     }
 
     /** An area with nothing drawn on it still seeds perfectly well. */
