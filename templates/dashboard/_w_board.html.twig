@@ -8,6 +8,11 @@
 
    → POST /areas/{uuid}/modules/incidents/{reference}/transition/{name} #}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
+{# An overview card never grows with the data: each column shows only its newest
+   {{ colCap }} cards and closes with a "… and N more this month" ghost when a
+   column is deeper — the design's own overflow mark. The count in the column
+   header stays the true total. #}
+{% set colCap = 6 %}
 <div class="c" data-w="board">
     <span class="tab">Status board<span class="src">· {{ transitionCsrfToken ? 'drag a card to move an incident on' : 'read-only — moving needs the manage permission' }}</span></span>
     <div class="i-board"
@@ -18,7 +23,7 @@
         {% for place in dashboard.places %}
             <div class="i-col" data-place="{{ place.value }}">
                 <div class="i-colhd">{{ ui.status(place) }}<span class="n">{{ dashboard.statusCount(place) }}</span></div>
-                {% for incident in dashboard.column(place) %}
+                {% for incident in dashboard.column(place)|slice(0, colCap) %}
                     <a class="i-card {{ incident.category.colourKey }}" draggable="true"
                        data-reference="{{ incident.reference }}"
                        href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
@@ -29,6 +34,9 @@
                         <span class="ft">{% if incident.assignedTo %}<span class="av">{{ (incident.assignedTo.firstName|slice(0, 1) ~ incident.assignedTo.lastName|slice(0, 1))|upper }}</span>{% endif %}<span>{{ incident.subcategory.label }}</span>{{ ui.zone(incident) }}</span>
                     </a>
                 {% endfor %}
+                {% if dashboard.statusCount(place) > colCap %}
+                    <span class="i-card ghost"><span class="tt i-cardmore">… and {{ dashboard.statusCount(place) - colCap }} more this month</span></span>
+                {% endif %}
             </div>
         {% endfor %}
     </div>

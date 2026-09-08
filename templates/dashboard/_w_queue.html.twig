@@ -2,10 +2,14 @@
    nobody has verified, or one you are the responder on. The clock against each
    one is its own category's term, never a global SLA. #}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
+{# An overview card never grows with the data: the queue lists only the oldest
+   {{ queueCap }} waiting on you and states "N of M" when there are more — the rest
+   are reached by narrowing the register, never by this card stretching. #}
+{% set queueCap = 8 %}
 <div class="c" data-w="queue">
-    <span class="tab">My queue<span class="src">· oldest first</span></span>
+    <span class="tab">My queue<span class="src">· oldest first{% if dashboard.queue|length > queueCap %} · {{ queueCap }} of {{ dashboard.queue|length }}{% endif %}</span></span>
     <div class="use i-queuenote">Everything waiting on <b>you</b>: an incident you reported that nobody has verified, or one you are the responder on. The clock is the category's own term, not one global SLA.</div>
-    {% for incident in dashboard.queue %}
+    {% for incident in dashboard.queue|slice(0, queueCap) %}
         <div class="i-party i-queuerow">
             <span class="av">{{ incident.reference|slice(-3) }}</span>
             <span class="nm">{{ incident.headline }}<em>{{ incident.reference }} · {{ incident.subcategory.label }}</em></span>

@@ -124,6 +124,44 @@ final class DashboardPageTest extends FunctionalTestCase
     }
 
     /**
+     * AN OVERVIEW CARD NEVER GROWS WITH THE DATA. The list widgets cap to the
+     * latest that fits and say "N of M" — the feed at 14, the queue at 8 — and the
+     * status board closes a deep column with a "… and N more" ghost rather than
+     * running down the page. (Register and map+results already cap at 14; evidence
+     * and SLA are capped in the service.).
+     */
+    public function testOverviewListWidgetsDoNotGrowWithTheData(): void
+    {
+        $area = $this->anArea();
+        $reporter = $this->aReporter();
+        // Sixteen reported-by-me incidents: past every cap (feed 14, queue 8,
+        // board column 6) and all in the one "reported" column.
+        for ($i = 0; $i < 16; ++$i) {
+            $this->anIncident($area, 'snaring', \sprintf('Snare line %d lifted at the forest edge', $i), $reporter);
+        }
+        $this->client->loginUser($reporter);
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/widgets', $this->uuidOf($area)));
+        self::assertResponseIsSuccessful();
+
+        // Feed: the latest 14, grouped by day, and it says "latest 14 of 16".
+        $feed = $crawler->filter('[data-w="feed"]')->first();
+        self::assertCount(14, $feed->filter('a.i-feed'));
+        self::assertStringContainsString('latest 14 of 16', $feed->filter('.tab')->text());
+
+        // Queue: the oldest 8, and it says "8 of 16".
+        $queue = $crawler->filter('[data-w="queue"]')->first();
+        self::assertCount(8, $queue->filter('.i-queuerow'));
+        self::assertStringContainsString('8 of 16', $queue->filter('.tab')->text());
+
+        // Board: the reported column shows 6 cards and a "… and 10 more" ghost;
+        // the header count stays the true total.
+        $board = $crawler->filter('[data-w="board"]')->first();
+        self::assertGreaterThan(0, $board->filter('.i-card.ghost')->count());
+        self::assertStringContainsString('and 10 more', $board->text());
+    }
+
+    /**
      * THE MAP SHIPS ITS CHROME AND ITS LEGEND. The zoom column, layer menu and
      * fullscreen control are built by map-module's chrome.js and styled by its
      * map.css — which the incident base template must LINK, or the controls render

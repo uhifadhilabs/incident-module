@@ -1,10 +1,14 @@
 {# IN·07 — newest first, grouped by day, with each day's own count. Reads like a
    radio log, which is what a duty officer on shift actually wants. #}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
+{# An overview card never grows with the data: the feed shows only the latest
+   {{ feedCap }} incidents, grouped by day, and states "latest N of M" beside its
+   title — the same cap idiom the register carries. #}
+{% set feedCap = 14 %}
 <div class="c" data-w="feed">
-    <span class="tab">Incident feed<span class="src">· newest first · grouped by day</span></span>
+    <span class="tab">Incident feed<span class="src">· newest first · grouped by day{% if dashboard.recentTotal > feedCap %} · latest {{ feedCap }} of {{ dashboard.recentTotal }}{% endif %}</span></span>
     {{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}
-    {% for day in dashboard.recentByDay %}
+    {% for day in dashboard.recentByDay(feedCap) %}
         {% set stillOpen = day.incidents|filter(i => i.status.isOpen)|length %}
         <div class="i-day"><b>{{ day.day|date('j M')|lower }}</b><span class="cnt">{{ day.incidents|length }} filed · {{ stillOpen }} still open</span></div>
         {% for incident in day.incidents %}

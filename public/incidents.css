@@ -624,6 +624,8 @@ html.light{
 .i-card .ft .av{width:19px;height:19px;border-radius:6px;background:var(--raised);display:grid;
   place-items:center;font-size:8px;font-weight:700;color:var(--fog);flex:none}
 .i-card.ghost{opacity:.5;border-style:dashed;cursor:default}
+/* The overflow ghost's "… and N more this month" line (the design set it inline). */
+.i-card.ghost .i-cardmore{margin:0;color:var(--dim)}
 /* the state-machine rail on E's detail page */
 .i-wf{display:flex;align-items:stretch;gap:0;border:1px solid var(--ln2);border-radius:13px;overflow:hidden;
   background:linear-gradient(180deg,var(--p1),var(--p2))}

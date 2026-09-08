@@ -182,12 +182,20 @@ final readonly class IncidentDashboard
      * The feed's days, newest first, each with its own count — the design groups
      * the feed by day and prints the day's total beside the heading.
      *
+     * An OVERVIEW CARD NEVER GROWS WITH THE DATA: pass a $limit and only the
+     * latest that many incidents are grouped, so a busy month does not stretch the
+     * feed widget down the page. The widget states "latest N of {recentTotal}"
+     * beside its title, the same cap idiom the register uses. Null means the whole
+     * window (the widget-library preview, where the card is the surface).
+     *
      * @return list<array{day: \DateTimeImmutable, incidents: list<Incident>}>
      */
-    public function recentByDay(): array
+    public function recentByDay(?int $limit = null): array
     {
+        $recent = null === $limit ? $this->recent : \array_slice($this->recent, 0, $limit);
+
         $days = [];
-        foreach ($this->recent as $incident) {
+        foreach ($recent as $incident) {
             $days[$incident->getReportedAt()->format('Y-m-d')][] = $incident;
         }
 
