@@ -110,6 +110,13 @@ final class IncidentWidgets implements WidgetSurfaceInterface
     {
         return [
             new Widget('kpis', 'KPI strip', 'a', 12, [12, 9, 6, 3], on: true, note: 'Open incidents, this month\'s filings, money outstanding and time-to-verify.'),
+            // MAPS LEAD, just below the KPIs: the shipped composition answers
+            // "where" before "what", so the map sits second in declaration order
+            // even though it is filed under Map first (group 'b') in the library.
+            // Listed here rather than with its group-'b' siblings BECAUSE
+            // declaration order IS the shipped composition's order — the counts,
+            // then where, then what, then the money ({@see DEFAULT_DESCRIPTION}).
+            new Widget('map', 'Incident map', 'b', 12, [12, 9, 6], on: true, note: 'Where every incident was filed; hue is the category, hollow means closed.'),
             new Widget('register', 'Incident register', 'a', 12, [12, 9, 6], on: true, note: 'Every incident as a row: id, category, what happened, zone, status, severity, money.'),
             new Widget('queue', 'My queue', 'a', 12, [12, 9, 6], on: false, note: 'Only what is waiting on you, oldest first, with the clock against each one.'),
             // THE WAY IN TO THE REPORT FLOW, filed under Case files: that is the
@@ -127,7 +134,6 @@ final class IncidentWidgets implements WidgetSurfaceInterface
             // container ruling rather than from a preference.
             new Widget('report', 'File an incident', 'a', 6, [12, 9, 6], on: false, note: 'The three answers a report cannot be without, and the button that opens the filing page.'),
             new Widget('maplist', 'Map + results', 'b', 12, [12, 9], on: false, note: 'The map at full height with the matching incidents docked beside it.'),
-            new Widget('map', 'Incident map', 'b', 12, [12, 9, 6], on: true, note: 'Where every incident was filed; hue is the category, hollow means closed.'),
             new Widget('zones', 'By zone', 'b', 6, [12, 9, 6, 3], on: false, note: 'Incidents by the zone they fall in, this month.'),
             // THE TWO-BY-TWO RAIL OF GRAPHS the design added under the map: when
             // it happened, what kind, how serious — the three dimensions a map pin

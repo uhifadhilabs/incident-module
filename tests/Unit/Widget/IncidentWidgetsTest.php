@@ -49,9 +49,12 @@ final class IncidentWidgetsTest extends TestCase
      */
     public function testItShipsTheTwentyWidgetsTheDesignDeclares(): void
     {
+        // Declaration order IS the shipped composition's order, so the map leads
+        // just below the KPIs — second, before the register — even though it is
+        // filed under Map first (group 'b') in the library.
         self::assertSame([
-            'kpis', 'register', 'queue', 'report',
-            'maplist', 'map', 'zones', 'trend', 'bycat', 'severity',
+            'kpis', 'map', 'register', 'queue', 'report',
+            'maplist', 'zones', 'trend', 'bycat', 'severity',
             'spark', 'feed', 'evidence',
             'categories', 'matrix', 'money',
             'board', 'sla', 'funnel', 'rail',
@@ -122,7 +125,7 @@ final class IncidentWidgetsTest extends TestCase
     {
         $catalog = IncidentWidgets::declaration();
 
-        self::assertSame(['kpis' => 12, 'register' => 12, 'map' => 12, 'money' => 12], $catalog->defaultLayout());
+        self::assertSame(['kpis' => 12, 'map' => 12, 'register' => 12, 'money' => 12], $catalog->defaultLayout());
         self::assertSame(WidgetCatalog::DEFAULT_PRESET_ID, $catalog->defaultPresetId());
 
         $shipped = $catalog->preset(WidgetCatalog::DEFAULT_PRESET_ID);
