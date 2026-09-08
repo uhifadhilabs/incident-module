@@ -299,49 +299,69 @@ final class DashboardPageTest extends FunctionalTestCase
     }
 
     /**
-     * THE CATEGORY FILTER IS THE DESIGN'S CHIP ROW, not a bare select. An "all · N"
-     * .mchip pill leads (accent when nothing is narrowed), then one .i-cat hue chip
-     * per kind — each a working link, each carrying its count — and the whole bar
-     * is chips, never raw underlined links (the .mchip class must be styled by the
-     * module's own stylesheet, not left to the host).
+     * THE FILTER BAR IS FOUR DROPDOWNS — category, status, zone and month — plus
+     * the search box. The category dropdown collapses the all/kind chips (with hue
+     * dots and counts) into one; each option is a REAL link driving the one query.
      */
-    public function testTheCategoryFilterIsAChipRow(): void
+    public function testTheFilterBarIsFourDropdowns(): void
     {
         $area = $this->anArea();
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
-
         self::assertResponseIsSuccessful();
-        // No bare select — the row is chips now.
+
+        // No bare select — the bar is dropdowns. Four of them (register instance).
         self::assertCount(0, $crawler->filter('.i-filters select[name="category"]'));
-        // The "all · N" pill leads, as a working link.
-        self::assertGreaterThan(0, $crawler->filter('.i-filters a.mchip')->count());
-        // One hue chip per shipped kind (the four), each a link carrying its count.
-        self::assertGreaterThanOrEqual(4, $crawler->filter('.i-filters a.i-cat')->count());
-        // The status counts are chips too, never bare links.
-        self::assertGreaterThan(0, $crawler->filter('.i-filters a.mchip[href*="status="]')->count());
+        $register = $crawler->filter('[data-w="register"] .i-filters')->first();
+        self::assertCount(4, $register->filter('.i-dd'));
+
+        // Category dropdown: an "all" option plus one hue-dot option per kind, each
+        // a real link carrying its count.
+        self::assertGreaterThan(0, $register->filter('.i-dd .i-ddmenu a.i-ddopt .i-dot.poach')->count());
+        self::assertGreaterThan(0, $register->filter('.i-dd a.i-ddopt[href*="category=poaching"]')->count());
+        // Status and month options drive their own params.
+        self::assertGreaterThan(0, $register->filter('.i-dd a.i-ddopt[href*="status="]')->count());
+        self::assertGreaterThan(0, $register->filter('.i-dd a.i-ddopt[href*="month="]')->count());
+        // A zone dropdown is present (its options are the zones that have incidents).
+        self::assertCount(1, $register->filter('.i-ddmenu[aria-label="Filter by zone"]'));
+        // The search box is preserved.
+        self::assertGreaterThan(0, $register->filter('.i-search input[name="q"]')->count());
     }
 
     /**
-     * RESET CLEARS THE FILTERS. It is offered only when something is narrowing
-     * the register, and it points back at the whole register.
+     * THE DROPDOWNS DRIVE REAL FILTERING. Selecting a status, a zone or a month is
+     * an ordinary link to the one query — the register re-queries server-side, the
+     * same as the category dropdown, and the trigger then shows the active choice.
      */
-    public function testResetIsOfferedOnlyWhenNarrowedAndClearsEverything(): void
+    public function testTheDropdownsFilterForReal(): void
     {
         $area = $this->anArea();
-        $this->anIncident($area);
-        $this->client->loginUser($this->aReporter());
+        $reporter = $this->aReporter();
+        $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside', $reporter);
+        $this->client->loginUser($reporter);
 
-        $whole = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
-        self::assertCount(0, $whole->filter('.i-reset'));
+        // The "reported" status option's own link narrows the register — the seeded
+        // incident is reported, so it stays; the trigger then reads "reported".
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+        $statusHref = $crawler->filter('[data-w="register"] .i-dd a.i-ddopt[href*="status=reported"]')->first()->attr('href');
+        $byStatus = $this->client->request('GET', (string) $statusHref);
+        self::assertResponseIsSuccessful();
+        self::assertGreaterThan(0, $byStatus->filter('[data-w="register"] .i-id')->count());
+        self::assertStringContainsString('reported', $byStatus->filter('[data-w="register"] .i-filters')->first()->text());
 
-        $narrowed = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?q=lion', $this->uuidOf($area)));
-        self::assertGreaterThan(0, $narrowed->filter('.i-reset')->count());
-        $reset = $narrowed->filter('.i-reset')->first()->attr('href');
-        self::assertStringNotContainsString('q=', (string) $reset);
-        self::assertStringNotContainsString('category=', (string) $reset);
+        // A month with nothing filed shows an empty register — the month param is real.
+        $empty = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?month=2020-01', $this->uuidOf($area)));
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $empty->filter('[data-w="register"] .i-id'));
+        self::assertStringContainsString('january 2020', $empty->filter('[data-w="register"] .i-filters')->first()->text());
+
+        // The zone param is wired: the trigger reflects it even where geometry left
+        // the register empty, proving the dropdown drives ?zone=.
+        $byZone = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?zone=%s', $this->uuidOf($area), rawurlencode('Highland Ward')));
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Highland Ward', $byZone->filter('[data-w="register"] .i-filters')->first()->text());
     }
 
     /**

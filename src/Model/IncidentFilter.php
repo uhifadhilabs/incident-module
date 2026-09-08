@@ -82,6 +82,24 @@ final readonly class IncidentFilter
         return new self($this->area, $this->from, $this->to, $this->categorySlugs, [$status], $this->zoneName, $this->search, $this->lens);
     }
 
+    /** The same filter with the status cleared — what the status dropdown's "All statuses" links to. */
+    public function withoutStatuses(): self
+    {
+        return new self($this->area, $this->from, $this->to, $this->categorySlugs, [], $this->zoneName, $this->search, $this->lens);
+    }
+
+    /** The same filter narrowed to one zone — what a zone dropdown option links to. */
+    public function onlyZone(string $name): self
+    {
+        return new self($this->area, $this->from, $this->to, $this->categorySlugs, $this->statuses, $name, $this->search, $this->lens);
+    }
+
+    /** The same filter with the zone cleared — what the zone dropdown's "All zones" links to. */
+    public function withoutZone(): self
+    {
+        return new self($this->area, $this->from, $this->to, $this->categorySlugs, $this->statuses, null, $this->search, $this->lens);
+    }
+
     /** Whether anything at all is narrowing the register beyond its window. */
     public function isNarrowed(): bool
     {
@@ -116,6 +134,13 @@ final readonly class IncidentFilter
         }
         if (self::LENS_ALL !== $this->lens) {
             $query['lens'] = $this->lens;
+        }
+        // THE WINDOW RIDES ALONG as `month=YYYY-MM`, so choosing a category, status
+        // or zone keeps the month the person is looking at, and the month dropdown
+        // can switch it while keeping everything else. This is the one exception to
+        // "the window is the page's, not the chip's": now the month IS a chip.
+        if (null !== $this->from) {
+            $query['month'] = $this->from->format('Y-m');
         }
 
         return $query;

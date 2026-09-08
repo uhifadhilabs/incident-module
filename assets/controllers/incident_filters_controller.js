@@ -1,23 +1,61 @@
 import { Controller } from '@hotwired/stimulus';
 
 /*
- * The filter row is a GET form (see dashboard/_filters.html.twig). The category
- * dropdown has no submit button of its own — choosing a category IS the request,
- * the way a filter chip's click was — so this controller submits the form the
- * moment the select changes. The search box needs nothing here: pressing Enter
- * submits the form natively, and the status chips are ordinary links.
+ * THE FILTER BAR'S DROPDOWNS. Category, status, zone and month are each a
+ * .i-dd holding a trigger (.i-ddt) and a floating panel (.i-ddmenu); the panel is
+ * hidden by CSS until its .i-dd carries `.open`. This controller does only the
+ * chrome — opening one panel at a time and closing on an outside click or Escape.
  *
- * requestSubmit(), not submit(): it fires the form's submit event and honours
- * validation, and (unlike the bare property) it is a real user submit that Turbo
- * picks up as a navigation rather than a full reload.
+ * Each option is an ordinary LINK driving the one IncidentFilter query, so once a
+ * panel is open, filtering is a normal server-side navigation — the controller
+ * never touches the query. Opening the panel is all it does, matching the approved
+ * design (the menu is display:none until its .i-dd carries .open). The search box
+ * is a GET form that submits on Enter, and direct ?category/?status/?zone/?month
+ * URLs work with scripting off; the dropdown panels are the one part that needs it.
  */
 export default class extends Controller {
-    submit() {
-        if (typeof this.element.requestSubmit === 'function') {
-            this.element.requestSubmit();
+    connect() {
+        this.onDocumentClick = (event) => {
+            if (!this.element.contains(event.target)) {
+                this.closeAll();
+            }
+        };
+        this.onKeydown = (event) => {
+            if ('Escape' === event.key) {
+                this.closeAll();
+            }
+        };
+        document.addEventListener('click', this.onDocumentClick);
+        document.addEventListener('keydown', this.onKeydown);
+    }
 
+    disconnect() {
+        document.removeEventListener('click', this.onDocumentClick);
+        document.removeEventListener('keydown', this.onKeydown);
+    }
+
+    /** Open the clicked dropdown, closing any other — one panel at a time. */
+    toggle(event) {
+        event.preventDefault();
+        const dropdown = event.currentTarget.closest('[data-dd]');
+        if (!dropdown) {
             return;
         }
-        this.element.submit();
+        const wasOpen = dropdown.classList.contains('open');
+        this.closeAll();
+        if (!wasOpen) {
+            dropdown.classList.add('open');
+            event.currentTarget.setAttribute('aria-expanded', 'true');
+        }
+    }
+
+    closeAll() {
+        this.element.querySelectorAll('[data-dd].open').forEach((dropdown) => {
+            dropdown.classList.remove('open');
+            const trigger = dropdown.querySelector('[data-dd-trigger]');
+            if (trigger) {
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+        });
     }
 }

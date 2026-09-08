@@ -94,6 +94,30 @@ final class IncidentController
     }
 
     /**
+     * THE WINDOW A REQUEST OPENS ON — the `month=YYYY-MM` query the month dropdown
+     * drives, or the month containing "now" when it is absent or unreadable.
+     *
+     * Untrusted like every other query field: a hand-edited month that does not
+     * parse degrades to the current month rather than throwing.
+     *
+     * @return array{\DateTimeImmutable, \DateTimeImmutable} half-open: from is included, to is not
+     */
+    public static function windowFor(Request $request, \DateTimeImmutable $now): array
+    {
+        $month = trim($request->query->getString('month'));
+        if ('' !== $month) {
+            $parsed = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $month.'-01 00:00:00');
+            if (false !== $parsed) {
+                $from = $parsed->setTime(0, 0);
+
+                return [$from, $from->modify('+1 month')];
+            }
+        }
+
+        return self::monthRange($now);
+    }
+
+    /**
      * ONE INCIDENT AS A CSV ROW, in the order {@see self::EXPORT_COLUMNS} names.
      *
      * The money is written as the register shows it — direction, currency, what is
@@ -161,7 +185,7 @@ final class IncidentController
         // every figure on the page is stated relative to the SAME instant.
         $now = new \DateTimeImmutable();
         $viewer = $this->viewer();
-        $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...self::monthRange($now));
+        $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...self::windowFor($request, $now));
 
         return new Response($this->twig->render('@UhifadhiIncident/dashboard/show.html.twig', [
             'area' => $area,
@@ -211,7 +235,7 @@ final class IncidentController
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
         $now = new \DateTimeImmutable();
-        $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...self::monthRange($now));
+        $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...self::windowFor($request, $now));
         // The SAME rows the register lists — findFiltered, read through the one
         // filter — so the file and the screen can never disagree.
         $incidents = $this->dashboard->build($filter, $now, $this->viewer())->recent;
