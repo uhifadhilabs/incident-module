@@ -124,6 +124,33 @@ final class DashboardPageTest extends FunctionalTestCase
     }
 
     /**
+     * THE MAP SHIPS ITS CHROME AND ITS LEGEND. The zoom column, layer menu and
+     * fullscreen control are built by map-module's chrome.js and styled by its
+     * map.css — which the incident base template must LINK, or the controls render
+     * invisible (the flaw the pass caught). And every map plate carries the legend
+     * row beneath it: the category hue chips plus the "open / closed / serious"
+     * meaning chips.
+     */
+    public function testTheMapShipsItsChromeStylesheetAndLegend(): void
+    {
+        $area = $this->anArea();
+        $this->aZone($area, 'North Gate');
+        $this->anIncident($area);
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+        self::assertResponseIsSuccessful();
+
+        // map-module's one chrome stylesheet is linked, so the JS-built controls
+        // (zoom / layer / fullscreen, .map-chrome*) are styled rather than invisible.
+        self::assertGreaterThan(0, $crawler->filter('link[href*="uhifadhimap/map.css"]')->count());
+
+        // The legend row under the map: the category hue chips and the meaning chips.
+        self::assertGreaterThan(0, $crawler->filter('[data-w="map"] .i-legend .i-cat')->count());
+        self::assertGreaterThan(0, $crawler->filter('[data-w="map"] .i-legend .chip.idle')->count());
+    }
+
+    /**
      * THE THREE MAP-FIRST CHARTS DRAW THEIR SVG FROM REAL ROWS. Each is data-
      * driven — the trend line plots a point, the category donut draws an arc, and
      * the severity bars draw a rectangle — so a widget that hard-coded the design's
@@ -234,12 +261,13 @@ final class DashboardPageTest extends FunctionalTestCase
     }
 
     /**
-     * THE CATEGORY FILTER IS A DROPDOWN, not the old row of pills. The select
-     * carries one option per category plus the "all categories" default; the
-     * link-pills are gone from the filter row (the category cell in a table row
-     * still wears .i-cat — those are not filters).
+     * THE CATEGORY FILTER IS THE DESIGN'S CHIP ROW, not a bare select. An "all · N"
+     * .mchip pill leads (accent when nothing is narrowed), then one .i-cat hue chip
+     * per kind — each a working link, each carrying its count — and the whole bar
+     * is chips, never raw underlined links (the .mchip class must be styled by the
+     * module's own stylesheet, not left to the host).
      */
-    public function testTheCategoryFilterIsAThemedDropdown(): void
+    public function testTheCategoryFilterIsAChipRow(): void
     {
         $area = $this->anArea();
         $this->anIncident($area);
@@ -248,11 +276,14 @@ final class DashboardPageTest extends FunctionalTestCase
         $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
 
         self::assertResponseIsSuccessful();
-        self::assertGreaterThan(0, $crawler->filter('.i-filters select[name="category"]')->count());
-        // The old category pills were <a class="i-cat …"> in the filter row.
-        self::assertCount(0, $crawler->filter('.i-filters a.i-cat'));
-        // "all categories" plus the four shipped kinds.
-        self::assertGreaterThanOrEqual(5, $crawler->filter('.i-filters select[name="category"]')->first()->filter('option')->count());
+        // No bare select — the row is chips now.
+        self::assertCount(0, $crawler->filter('.i-filters select[name="category"]'));
+        // The "all · N" pill leads, as a working link.
+        self::assertGreaterThan(0, $crawler->filter('.i-filters a.mchip')->count());
+        // One hue chip per shipped kind (the four), each a link carrying its count.
+        self::assertGreaterThanOrEqual(4, $crawler->filter('.i-filters a.i-cat')->count());
+        // The status counts are chips too, never bare links.
+        self::assertGreaterThan(0, $crawler->filter('.i-filters a.mchip[href*="status="]')->count());
     }
 
     /**

@@ -209,6 +209,26 @@ html.light{
 /* ── FILTER BAR ───────────────────────────────────────────────────────────
    One filter drives everything on the page — the map, the list, the charts —
    exactly as the patrols module's does.                                      */
+
+/* THE FILTER CHIP — .mchip. This is the platform's shared filter/pill chip
+   (uhifadhi.css owns it, and the area overview + patrols draw it too). It is
+   NOT in this bundle's stylesheet by default, so on an incidents page the
+   status counts and the month chip fell back to bare underlined links — the
+   most visible styling miss on the register. Ported here the same way and for
+   the same reason as .factband and the map plate: a two-plus-surface vocabulary
+   that belongs in the shell, carried as a marked module copy until it lands
+   there, so an incidents page never depends on the host stylesheet being loaded.
+   Byte-faithful to the design's rule, on this module's token bridge.          */
+.mchip{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--fog);
+  border:1px solid var(--ln2);border-radius:99px;padding:7px 14px 6px;text-decoration:none;line-height:1;
+  background:none;white-space:nowrap}
+.mchip:hover{color:var(--tx);border-color:var(--fog);text-decoration:none}
+.mchip.on{color:var(--accT);background:var(--acc);border-color:var(--acc)}
+.mchip.on:hover{color:var(--accT)}
+.mchip.ghost{border-style:dashed;color:var(--fog);cursor:pointer}
+.mchip.add{border-style:dashed;border-color:var(--acc);color:var(--acc);cursor:pointer}
+
 .i-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:2px 0 14px}
 .i-filters .sep{width:1px;height:18px;background:var(--ln2);margin:0 3px}
 .i-search{display:inline-flex;align-items:center;gap:7px;background:color-mix(in srgb,var(--fog) 7%,transparent);
@@ -407,6 +427,60 @@ html.light{
    controller refuses a zero-height container. Nothing in the host's split
    covers a `.c[data-w=map]` standing on its own.                             */
 .c[data-w=map] .viewer{min-height:460px;display:grid}
+
+/* THE DOCKED SPLIT AND THE DAY-GROUPED FEED, carried by the module after all.
+   The blocks above say these vocabularies "now live in the host" — but the park
+   host's stylesheet does not actually carry them, so on an incidents page the
+   map+results split and the feed widget rendered UNSTYLED (the split collapsed,
+   the .i-hit rows and .i-feed rows fell back to bare text). Ported byte-faithful
+   from the design's uhifadhi.css onto this module's token bridge, the same
+   self-sufficiency rule as .mchip, .chip, .factband and the map-chrome stylesheet:
+   an incidents page styles everything it renders, without depending on the host.
+   (The .i-pincard map overlay is omitted — the app uses Leaflet popups, not that
+   markup, so it renders nothing that would need it.) */
+.i-split{display:grid;grid-template-columns:minmax(0,1fr) 388px;gap:18px;align-items:stretch}
+@media(max-width:1100px){.i-split{grid-template-columns:1fr}}
+.i-split>.i-mapcol{min-width:0;display:flex;flex-direction:column}
+.i-split>.i-mapcol .viewer{flex:1;min-height:460px;display:grid}
+.i-listcol{display:flex;flex-direction:column;min-height:0;border:1px solid var(--ln);border-radius:14px;
+  background:linear-gradient(180deg,var(--p1),var(--p2));box-shadow:var(--shadow);overflow:hidden}
+.i-listhd{padding:12px 15px;border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:9px;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--fog)}
+.i-listhd .n{margin-left:auto;color:var(--acc);letter-spacing:.04em}
+.i-listbody{overflow-y:auto;max-height:min(64vh,620px);padding:4px 8px 8px}
+.i-hit{display:block;padding:11px 8px;border-bottom:1px dashed color-mix(in srgb,var(--fog) 16%,transparent);
+  text-decoration:none;color:var(--tx);border-left:2px solid transparent;cursor:pointer}
+.i-hit:last-child{border-bottom:0}
+.i-hit:hover{background:color-mix(in srgb,var(--acc) 5%,transparent);text-decoration:none}
+.i-hit.on{background:color-mix(in srgb,var(--acc) 9%,transparent);border-left-color:var(--acc)}
+.i-hit .r1{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.i-hit .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--acc)}
+.i-hit .r2{font-size:12.5px;line-height:1.5;color:var(--tx)}
+.i-hit .r3{display:flex;align-items:center;gap:9px;margin-top:6px;flex-wrap:wrap;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
+.i-day{position:sticky;top:56px;z-index:4;display:flex;align-items:center;gap:12px;
+  padding:9px 2px;margin:22px 0 4px;
+  background:color-mix(in srgb,var(--cv) 92%,transparent);backdrop-filter:blur(8px)}
+.i-day b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--tx)}
+.i-day .cnt{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
+.i-day::after{content:"";flex:1;height:1px;background:var(--ln2)}
+.i-feed{display:flex;gap:14px;padding:14px 2px;border-bottom:1px dashed color-mix(in srgb,var(--fog) 18%,transparent);
+  align-items:flex-start;text-decoration:none;color:var(--tx)}
+.i-feed:hover{background:color-mix(in srgb,var(--acc) 4%,transparent);text-decoration:none}
+.i-feed .gut{width:56px;flex:none;text-align:right;padding-top:2px}
+.i-feed .gut .hm{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:700;color:var(--tx);display:block}
+.i-feed .gut .ago{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;color:var(--dim);display:block;margin-top:3px}
+.i-feed .mark{width:11px;flex:none;position:relative;align-self:stretch}
+.i-feed .mark i{position:absolute;left:1px;top:5px;width:9px;height:9px;border-radius:2px;font-style:normal}
+.i-feed .bd{flex:1;min-width:0}
+.i-feed .bd .hl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.i-feed .bd .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--acc)}
+.i-feed .bd .tt{font-size:13px;line-height:1.55}
+.i-feed .bd .mt{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:7px;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
+.i-feed .rt{flex:none;align-self:center}
 /* The case file's "Where" plate is sized to match the patrol SHOW track plate
    exactly — the design's tall detail frame, min(58vh, 560px) (patrol.css:
    `.patrol-plate .patrol-plate-viewer-tall`). It is scoped to the detail card
@@ -768,6 +842,14 @@ html.light{
 
 /* The map legend row, under every map plate and on the case file. */
 .i-legend{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+/* The legend's meaning chips — "● open  ○ closed" and "◎ high or critical". These
+   are the platform's shared .chip (uhifadhi.css owns it); ported here so the map
+   legend reads correctly on an incidents page without the host stylesheet, the
+   same reason .mchip and .factband are carried. Only the base + the idle (dashed,
+   quiet) variant the legend actually uses. */
+.chip{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
+  border-radius:6px;padding:2.5px 9px;border:1px solid;white-space:nowrap}
+.chip.idle{color:var(--dim);border:1px dashed color-mix(in srgb,var(--fog) 45%,transparent);font-weight:600}
 
 /* A saved-something notice, rendered the way the host's own pages render one. */
 .i-flash{display:flex;align-items:center;gap:9px;margin-bottom:16px}

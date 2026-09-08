@@ -18,39 +18,32 @@
 <form class="i-filters" method="get"
       action="{{ path('incident_dashboard', {uuid: area.uuid}) }}"
       {{ stimulus_controller('@uhifadhi/incident-module/incident-filters') }}>
-    {# The status, zone and lens the person already chose ride along, so choosing
-       a category or typing a search never silently drops them. #}
+    {# The category, status, zone and lens the person already chose ride along in
+       the search form, so typing a query never silently drops them (the chips
+       themselves are links that carry the others through toQuery). #}
+    {% if filter.categorySlugs is not empty %}
+        <input type="hidden" name="category" value="{{ filter.categorySlugs|join(',') }}">
+    {% endif %}
     {% if filter.statuses is not empty %}
         <input type="hidden" name="status" value="{{ filter.statuses|map(s => s.value)|join(',') }}">
     {% endif %}
     {% if filter.zoneName %}<input type="hidden" name="zone" value="{{ filter.zoneName }}">{% endif %}
     {% if filter.lens != 'all' %}<input type="hidden" name="lens" value="{{ filter.lens }}">{% endif %}
 
-    {# CATEGORY — the row of pills is now one dropdown, themed to match the other
-       filter chips. It submits the form the moment it changes. #}
-    <label class="i-catselect">
-        <select name="category"
-                aria-label="Filter by category"
-                {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'submit', 'change') }}>
-            <option value=""{{ filter.categorySlugs is empty ? ' selected' : '' }}>all categories · {{ dashboard.filedCount }}</option>
-            {% for category in dashboard.categories %}
-                <option value="{{ category.slug }}"{{ category.slug in filter.categorySlugs ? ' selected' : '' }}>{{ category.label|lower }} · {{ dashboard.categoryCount(category) }}</option>
-            {% endfor %}
-        </select>
-    </label>
-
-    {# SEARCH — id, place or name; the same free-text query the patrols library
-       carries. Enter submits the form. #}
-    <span class="i-search">
-        {{ ux_icon('lucide:search') }}
-        <input type="text" name="q" value="{{ filter.search }}" placeholder="id, place, name"
-               autocomplete="off" aria-label="Search incidents">
-    </span>
+    {# CATEGORY — the design's chip row: an "all · N" pill (accent when nothing is
+       narrowed) then one hue chip per kind, each a working link that narrows the
+       whole page and carries the status and search already chosen. #}
+    <a class="mchip{{ filter.categorySlugs is empty ? ' on' : ' ghost' }}"
+       href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.withoutCategories.toQuery)) }}">all · {{ dashboard.filedCount }}</a>
+    {% for category in dashboard.categories %}
+        <a class="i-cat {{ category.colourKey }}{{ category.slug in filter.categorySlugs ? '' : ' ghost' }}"
+           href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.onlyCategory(category.slug).toQuery)) }}"><i></i>{{ category.label|lower }} · {{ dashboard.categoryCount(category) }}</a>
+    {% endfor %}
 
     <span class="sep"></span>
 
-    {# STATUS — still chips: a set of places, not a single choice, so a dropdown
-       would misread them. Each carries the category and search already chosen. #}
+    {# STATUS — chips: a set of places, not a single choice, so a dropdown would
+       misread them. Each carries the category and search already chosen. #}
     {% for place in dashboard.places %}
         <a class="mchip{{ place in filter.statuses ? ' on' : ' ghost' }}"
            href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.onlyStatus(place).toQuery)) }}">{{ place.label }} · {{ dashboard.statusCount(place) }}</a>
@@ -62,4 +55,12 @@
     {% if filter.isNarrowed %}
         <a class="mchip ghost i-reset" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('lucide:x') }} reset</a>
     {% endif %}
+
+    {# SEARCH — id, place or name; the same free-text query the patrols library
+       carries. Enter submits the form, which carries the chips above. #}
+    <span class="i-search">
+        {{ ux_icon('lucide:search') }}
+        <input type="text" name="q" value="{{ filter.search }}" placeholder="id, place, name"
+               autocomplete="off" aria-label="Search incidents">
+    </span>
 </form>

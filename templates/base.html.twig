@@ -41,11 +41,17 @@
        come from uhifadhi/map-module, by its own constants — never a CDN, and the
        same Leaflet the area and patrol maps run on, so an incident map cannot
        disagree with them about how a layer draws. MapLibre is deliberately NOT
-       used. The chrome the platform's chrome.js builds (.map-chrome*) is styled
-       by the HOST's app.css, one definition for every map on the platform — a
-       module must never ship a second copy of it; incidents.css styles only its
-       own plate, canvas and marks, exactly as patrol.css does. #}
+       used. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Map\\UhifadhiMapBundle::LEAFLET_CSS')) }}">
+    {# THE MAP CHROME STYLESHEET — map-module's ONE map.css, the single definition
+       of the plate, the zoom column, the layer menu, the scale bar and the
+       fullscreen control that chrome.js builds (.map-chrome*, .leaflet-control-*).
+       It is map-module's own asset, not a copy: linking it here is the same self-
+       sufficiency this base already applies to Leaflet and the widget grid — an
+       incident map renders its full chrome without depending on the host having
+       wired map.css. Loaded BEFORE incidents.css so the module's own plate rules
+       (the .viewer heights, the .i-mapcanvas) still win. #}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Map\\UhifadhiMapBundle::STYLESHEET')) }}">
     {# The dashboard grid's own vocabulary, from the bundle that owns it. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Widget\\UhifadhiWidgetBundle::STYLESHEET')) }}">
     {# The path is the bundle's own constant, not a literal: the area overview is
