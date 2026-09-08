@@ -49,6 +49,7 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
+use Uhifadhi\Incident\Security\IncidentEvidenceVoter;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Storage\IncidentFileSource;
 use Uhifadhi\Incident\Widget\IncidentWidgets;
@@ -230,6 +231,14 @@ final class UhifadhiIncidentBundle extends AbstractBundle
             $services->set('incident.file_source', IncidentFileSource::class)
                 ->args([service(IncidentEvidenceRepository::class), service('router')])
                 ->tag(FileSourceInterface::TAG);
+
+            // The permission half of the seam: without a voter claiming
+            // `incident/…` keys, storage-module denies them by default and every
+            // photograph, document and preview 404s on the hub. Registered here
+            // (only where storage is installed) beside the source that writes them.
+            $services->set('incident.evidence_voter', IncidentEvidenceVoter::class)
+                ->args([service(IncidentEvidenceRepository::class)])
+                ->tag('uhifadhi.evidence_access_voter');
         }
 
         /*
