@@ -25,6 +25,7 @@ use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Storage\IncidentFileSource;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Storage\Enum\ThumbStateEnum;
 
 /**
  * THE DESIGN'S SAMPLE MONTH, SEEDED — and then read back through the DASHBOARD.
@@ -39,7 +40,7 @@ use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
  */
 final class SeedDemoCommandTest extends IntegrationTestCase
 {
-    /** @param array<string, string> $input */
+    /** @param array<string, string|bool> $input */
     private function seed(array $input = []): CommandTester
     {
         $tester = $this->tester();
@@ -219,6 +220,75 @@ final class SeedDemoCommandTest extends IntegrationTestCase
             self::assertSame($key, $entry->key);
             self::assertSame($e->getIncident()->getReference(), $entry->ownerLabel);
         }
+    }
+
+    /**
+     * THE BYTES ARE REAL, so the hub shows a size and a thumbnail rather than a
+     * 0 B tile still "making the small one". The seeder writes each document
+     * straight to the evidence storage and each photograph through the platform's
+     * EvidenceStorage — this kernel wires a real (temporary) storage, so the blobs
+     * genuinely land and the file source reads their size and preview back.
+     */
+    public function testSeededEvidenceCarriesRealBytesSizesAndPreviews(): void
+    {
+        $this->anArea('Sample Area');
+        $this->seed();
+        $this->em->clear();
+
+        $documents = array_filter(
+            $this->em->getRepository(IncidentEvidence::class)->findAll(),
+            static fn (IncidentEvidence $e): bool => EvidenceKindEnum::Document === $e->getKind(),
+        );
+        self::assertNotEmpty($documents, 'Money incidents bring a signed document.');
+
+        // A signed document is a real PDF with a real weight — no image support
+        // needed, so this holds on every machine.
+        foreach ($documents as $document) {
+            self::assertSame('application/pdf', $document->getMimeType());
+            self::assertGreaterThan(0, (int) $document->getByteSize(), $document->getFilename().' has no stored bytes.');
+            self::assertNull($document->getThumbKey(), 'A document has nothing to shrink.');
+            $entry = IncidentFileSource::entryFor($document, null);
+            self::assertGreaterThan(0, $entry->byteSize);
+            self::assertSame(ThumbStateEnum::Nothing, $entry->thumbState);
+        }
+
+        // Photographs need GD to be drawn and shrunk; where it is present the
+        // seeder stores a real JPEG and a preview, and the hub reports both.
+        if (!\function_exists('imagecreatetruecolor') || !\function_exists('imagejpeg')) {
+            self::markTestSkipped('GD is unavailable — photographs are keyed without bytes on this machine.');
+        }
+
+        $photos = array_filter(
+            $this->em->getRepository(IncidentEvidence::class)->findAll(),
+            static fn (IncidentEvidence $e): bool => EvidenceKindEnum::Photo === $e->getKind(),
+        );
+        self::assertNotEmpty($photos, 'Photographs are seeded.');
+
+        foreach ($photos as $photo) {
+            self::assertSame('image/jpeg', $photo->getMimeType(), $photo->getFilename().' was not stored as a JPEG.');
+            self::assertGreaterThan(0, (int) $photo->getByteSize(), $photo->getFilename().' has no stored bytes.');
+            self::assertNotNull($photo->getThumbKey(), $photo->getFilename().' has no preview.');
+            $entry = IncidentFileSource::entryFor($photo, null);
+            self::assertGreaterThan(0, $entry->byteSize);
+            self::assertSame(ThumbStateEnum::Made, $entry->thumbState, $photo->getFilename().' is not showing a made thumbnail.');
+        }
+    }
+
+    /**
+     * --fresh clears the area's incidents and reseeds them, so a park already
+     * holding the sample month can be given real evidence bytes without a second
+     * run leaving the old, blob-less rows in place. The count stays 47.
+     */
+    public function testFreshReseedsTheAreaFromScratch(): void
+    {
+        $this->anArea('Sample Area');
+        $this->seed();
+        $this->em->clear();
+
+        $tester = $this->seed(['--fresh' => true]);
+
+        self::assertSame(47, $this->em->getRepository(Incident::class)->count([]));
+        self::assertStringContainsString('reseeded fresh', $tester->getDisplay());
     }
 
     /** An area with nothing drawn on it still seeds perfectly well. */

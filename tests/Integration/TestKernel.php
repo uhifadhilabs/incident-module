@@ -246,10 +246,11 @@ final class TestKernel extends Kernel
             $services->alias('test_public.'.$alias, $id)->public();
         }
 
-        // A throwaway evidence store. Incidents writes no bytes through it yet
-        // (see IncidentFileSource); it exists so the bundle boots as it does in
-        // an installation, and so the hub's registry has a real storage behind
-        // it.
+        // A throwaway evidence store, under the system temp dir. The demo seeder
+        // writes real bytes through it — photographs through EvidenceStorage and
+        // signed documents straight to the storage — so the Files-hub assertions
+        // read a genuine size and preview back. It also lets the bundle boot as it
+        // does in an installation, with a real storage behind the hub's registry.
         $container->extension('storage', [
             'evidence' => [
                 'adapter' => 'local',

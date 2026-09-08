@@ -60,6 +60,23 @@ class IncidentEvidence
     #[ORM\Column(length: 512, nullable: true)]
     private ?string $path = null;
 
+    /**
+     * The DETECTED type recorded when the blob was written — never what a
+     * filename claimed. Null on a row that carries only a key and no stored
+     * bytes (evidence keyed before the blob was written, or a host with no
+     * storage), where the hub falls back to reading the type off the filename.
+     */
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $mimeType = null;
+
+    /** Size of the stored original, in bytes. Null where no blob was written — the hub then weighs it nothing rather than an invented figure. */
+    #[ORM\Column(nullable: true)]
+    private ?int $byteSize = null;
+
+    /** Key of the ~400px preview beside the original, or null where none was made (a document, or a photograph nothing here could decode). */
+    #[ORM\Column(length: 512, nullable: true)]
+    private ?string $thumbKey = null;
+
     /** The handset's own moment — see the class docblock. */
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $capturedAt = null;
@@ -114,6 +131,42 @@ class IncidentEvidence
     public function setPath(?string $path): static
     {
         $this->path = $path;
+
+        return $this;
+    }
+
+    public function getMimeType(): ?string
+    {
+        return $this->mimeType;
+    }
+
+    public function setMimeType(?string $mimeType): static
+    {
+        $this->mimeType = $mimeType;
+
+        return $this;
+    }
+
+    public function getByteSize(): ?int
+    {
+        return $this->byteSize;
+    }
+
+    public function setByteSize(?int $byteSize): static
+    {
+        $this->byteSize = $byteSize;
+
+        return $this;
+    }
+
+    public function getThumbKey(): ?string
+    {
+        return $this->thumbKey;
+    }
+
+    public function setThumbKey(?string $thumbKey): static
+    {
+        $this->thumbKey = $thumbKey;
 
         return $this;
     }

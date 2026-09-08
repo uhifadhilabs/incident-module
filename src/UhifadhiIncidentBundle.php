@@ -382,6 +382,14 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('incident.transitions'),
                     service('incident.zone_locator'),
                     param('incident.currency'),
+                    // The evidence storage, so the sample month's photographs are
+                    // stored with a real size and a preview — and the storage
+                    // itself, for the one thing store() will not do, a PDF document.
+                    // Both nullOnInvalid: a host that seeds a demo without ever
+                    // installing storage still gets its incidents, evidence keyed
+                    // without bytes, exactly as before.
+                    service('storage.evidence_storage')->nullOnInvalid(),
+                    service('storage.evidence')->nullOnInvalid(),
                 ])
                 ->tag('console.command');
         }

@@ -140,6 +140,22 @@ final class IncidentFileSourceTest extends TestCase
     }
 
     /**
+     * A photograph WHOSE BYTES WERE WRITTEN carries its recorded facts onto the
+     * hub: the measured size, the detected type, the preview beside it, and — with
+     * a preview present — a thumbnail state of Made rather than Waiting.
+     */
+    public function testAStoredPhotographReportsItsSizeTypeAndPreview(): void
+    {
+        $entry = IncidentFileSource::entryFor($this->storedPhoto(), null);
+
+        self::assertSame(48_128, $entry->byteSize);
+        self::assertSame('image/jpeg', $entry->mimeType);
+        self::assertSame('incident/0199a/e77c.jpg.thumb.jpg', $entry->thumbKey);
+        self::assertSame(ThumbStateEnum::Made, $entry->thumbState);
+        self::assertTrue($entry->hasThumbnail());
+    }
+
+    /**
      * AN INCIDENT STILL IN PROGRESS WILL NOT LET GO OF EVIDENCE A CLAIM RESTS ON.
      */
     #[DataProvider('openStatuses')]
@@ -233,6 +249,14 @@ final class IncidentFileSourceTest extends TestCase
             ->setPath('incident/0199a/e77c.jpg')
             ->setCapturedAt(new \DateTimeImmutable('2026-08-19 12:10:00'))
             ->setCaption('The broken fence line, looking north.');
+    }
+
+    private function storedPhoto(): IncidentEvidence
+    {
+        return $this->photo()
+            ->setByteSize(48_128)
+            ->setMimeType('image/jpeg')
+            ->setThumbKey('incident/0199a/e77c.jpg.thumb.jpg');
     }
 
     private function document(): IncidentEvidence

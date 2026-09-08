@@ -37,27 +37,30 @@ use Uhifadhi\Storage\Service\EvidenceKey;
  * answers the one question the hub must never answer for itself — what may be
  * done to it.
  *
- * WHAT IS HONEST HERE, AND WHAT IS NOT YET TRUE. Incidents has not adopted
- * uhifadhi/storage-module's full upload path: {@see IncidentEvidence::getPath()}
- * is nullable and no row carries a recorded byte size, a detected mime type or a
- * generated preview. (The demo seeder now assigns each piece of evidence a KEY,
- * so the sample month appears on the hub — but it still records no size, type or
- * preview.) Three consequences run through the mapping below, each chosen so the
- * hub is told something true rather than something convenient:
+ * WHAT IS HONEST HERE. A piece of evidence carries what was recorded when its
+ * blob was written — a detected mime type, a measured byte size and, for a
+ * photograph, a generated preview. The demo seeder writes those bytes through
+ * the platform's own EvidenceStorage (photographs) and its evidence storage
+ * (signed documents), so the sample month appears on the hub with real sizes and
+ * thumbnails. A row that carries only a KEY and no stored bytes — evidence keyed
+ * before a blob was written, or a host running no storage — is still described
+ * truthfully rather than conveniently, and three rules in the mapping below make
+ * that so:
  *
  *   - A row with NO path is not yielded. A file is its key, and a tile for a key
  *     that names nothing would link at a 404. Un-stored evidence therefore does
  *     not appear until it is genuinely keyed — and "we have that and it is empty"
  *     is exactly the fact the hub is designed to show.
- *   - The size is 0, because nobody measured it. The hub's space bars must not
- *     add up bytes that were never counted.
- *   - The small picture is Waiting, not Failed. Failed says this machine tried
- *     and could not decode the file; nothing ever tried.
+ *   - Where no size was recorded the figure is 0, because nobody measured it —
+ *     the hub's space bars must not add up bytes that were never counted — and
+ *     the type is read off the filename, the only fact such a row carries.
+ *   - A photograph with no preview is Waiting, not Failed. Failed says this
+ *     machine tried and could not decode the file; a key-only row never tried.
  *
- * When incidents does adopt the upload path — a key, a thumb key, a detected
- * type and a size on the row, and an IncidentEvidenceVoter claiming the same
- * prefix {@see PREFIX} names here — those three fall away and nothing else in
- * this class changes.
+ * Still not modelled, and deliberately: an IncidentEvidenceVoter claiming the
+ * same prefix {@see PREFIX} names here, so the guard can answer Denied for
+ * evidence another department uploaded. IncidentEvidence records no uploader, so
+ * that column arrives before the voter does — and nothing else here changes.
  */
 final class IncidentFileSource implements FileSourceInterface
 {
@@ -199,8 +202,14 @@ final class IncidentFileSource implements FileSourceInterface
             // uploaded it under — unlike a patrol photograph, which is only ever
             // known by the key it was filed at.
             name: $evidence->getFilename(),
-            mimeType: self::mimeTypeOf($evidence->getFilename()),
-            byteSize: 0,
+            // The DETECTED type where the blob was written and one was recorded;
+            // the filename's extension otherwise, which is the only fact a
+            // key-only row carries.
+            mimeType: $evidence->getMimeType() ?? self::mimeTypeOf($evidence->getFilename()),
+            // The measured size where a blob was written, and an honest zero
+            // where none was: the hub's space bars must not add up bytes nobody
+            // counted.
+            byteSize: $evidence->getByteSize() ?? 0,
             // The RECORD's reference alone: the hub's own template prints
             // "{moduleLabel} · {ownerLabel}", so naming the module here would
             // print it twice.
@@ -214,8 +223,13 @@ final class IncidentFileSource implements FileSourceInterface
             // such clock and sits under the day it was filed.
             takenAt: $evidence->getCapturedAt(),
             arrivedAt: $evidence->getCreatedAt(),
-            thumbKey: null,
-            thumbState: FileKindEnum::Photo === $kind ? ThumbStateEnum::Waiting : null,
+            // The preview beside the original where one was made; null otherwise.
+            thumbKey: $evidence->getThumbKey(),
+            // A photograph with a preview is Made (derived from the thumb key); a
+            // photograph still without one is Waiting, not Failed — a key-only row
+            // never went through the thumbnailer, so nothing on this machine tried
+            // and could not. A document has nothing to shrink and derives Nothing.
+            thumbState: FileKindEnum::Photo === $kind && null === $evidence->getThumbKey() ? ThumbStateEnum::Waiting : null,
             // The caption belongs to the record. The hub shows it; it is edited
             // on the case file and nowhere else.
             caption: $evidence->getCaption(),
@@ -239,13 +253,12 @@ final class IncidentFileSource implements FileSourceInterface
     }
 
     /**
-     * The type, as far as this module can honestly say.
-     *
-     * No detected type is recorded on the row, and the extension is the only
-     * fact there is — so it is read, and anything unrecognised says so rather
-     * than picking a plausible type. The kind never depends on this (see
-     * {@see kindOf()}), which is what keeps a misleading extension from moving a
-     * file into the wrong chip on the hub.
+     * The type read off the filename — the fallback for a row that carries no
+     * detected type ({@see entryFor()} prefers the recorded one where a blob was
+     * written). The extension is the only fact a key-only row has, so it is read,
+     * and anything unrecognised says so rather than picking a plausible type. The
+     * kind never depends on this (see {@see kindOf()}), which is what keeps a
+     * misleading extension from moving a file into the wrong chip on the hub.
      */
     private static function mimeTypeOf(string $filename): string
     {
