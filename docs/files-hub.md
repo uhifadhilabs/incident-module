@@ -3,6 +3,7 @@
 ## Contents
 
 - [How an incident's evidence reaches the hub](#how-an-incidents-evidence-reaches-the-hub)
+- [Which keys are ours, asked in one place](#which-keys-are-ours-asked-in-one-place)
 - [What the hub is told is only what this module knows](#what-the-hub-is-told-is-only-what-this-module-knows)
 - [The guard is the case file's own answer](#the-guard-is-the-case-files-own-answer)
 
@@ -16,6 +17,19 @@ area, the handset's `capturedAt` for a photograph, and the record's caption.
 There is no registration step and no guard — an incident filed by hand carries
 photographs, and a deployment that could not store one would not be running this
 module.
+
+## Which keys are ours, asked in one place
+
+Every evidence key this module writes begins `incident/`, and that first segment
+is the whole of the contract between three collaborators:
+`IncidentEvidenceService` writes under it, `IncidentEvidenceVoter` claims it back
+so storage-module's deny-by-default rule does not swallow it, and
+`IncidentFileSource` lists it here. So the prefix is named once, in
+`src/Service/IncidentEvidenceKey.php` — `PREFIX`, `prefixFor()` for a case file's
+own namespace (`incident/<uuid>`, the uuid and never the reference), and
+`claims()` for the question a voter asks. A prefix remembered in three places is
+a prefix that eventually differs in one, and the failure there is silent: a
+photograph nobody is allowed to look at, on a page the reader is entitled to.
 
 ## What the hub is told is only what this module knows
 

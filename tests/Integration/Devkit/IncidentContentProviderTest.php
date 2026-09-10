@@ -25,7 +25,7 @@ use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Enum\PartyRoleEnum;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
-use Uhifadhi\Incident\Storage\IncidentFileSource;
+use Uhifadhi\Incident\Service\IncidentEvidenceKey;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 use Uhifadhi\Storage\Registry\FileRegistry;
 
@@ -141,7 +141,7 @@ final class IncidentContentProviderTest extends IntegrationTestCase
         $this->provider()->load();
 
         foreach ($this->em->getRepository(IncidentEvidence::class)->findAll() as $item) {
-            self::assertTrue(IncidentFileSource::claims((string) $item->getPath()));
+            self::assertTrue(IncidentEvidenceKey::claims((string) $item->getPath()));
         }
     }
 

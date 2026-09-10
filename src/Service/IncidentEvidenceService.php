@@ -23,7 +23,6 @@ use Uhifadhi\Incident\Entity\IncidentEvidence;
 use Uhifadhi\Incident\Enum\EvidenceKindEnum;
 use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
 use Uhifadhi\Incident\Exception\IncidentEvidenceException;
-use Uhifadhi\Incident\Storage\IncidentFileSource;
 use Uhifadhi\Storage\Exception\EvidenceRejectedException;
 use Uhifadhi\Storage\Service\EvidenceStorage;
 
@@ -44,13 +43,14 @@ use Uhifadhi\Storage\Service\EvidenceStorage;
  * recorded — knowing that is what makes a module a module, and the hub is
  * designed never to know it.
  *
- * THE KEY PREFIX IS THE CONTRACT, and it is {@see IncidentFileSource::PREFIX},
- * named there and nowhere else. Three collaborators read it: this writer,
+ * THE KEY PREFIX IS THE CONTRACT, and it is {@see IncidentEvidenceKey}, named
+ * there and nowhere else. Three collaborators read it: this writer,
  * {@see \Uhifadhi\Incident\Security\IncidentEvidenceVoter}, which claims those
- * keys so storage does not deny them by default, and the file source that lists
- * them on the hub. A key written under any other prefix is a photograph nobody
- * is allowed to look at, on a page they are entitled to read — which fails
- * silently, as a broken image.
+ * keys so storage does not deny them by default, and
+ * {@see \Uhifadhi\Incident\Storage\IncidentFileSource}, which lists them on the
+ * hub. A key written under any other prefix is a photograph nobody is allowed to
+ * look at, on a page they are entitled to read — which fails silently, as a
+ * broken image.
  *
  * TIME AND PLACE ARE THE HANDSET'S. `capturedAt` is when the photograph was
  * taken, never when it was uploaded; uploading is bookkeeping and the row's own
@@ -96,7 +96,7 @@ final readonly class IncidentEvidenceService
             // record of one either.
             $stored = $this->storage->store(
                 $file,
-                self::prefixFor($incident),
+                IncidentEvidenceKey::prefixFor($incident),
                 self::clientKey(),
             );
         } catch (EvidenceRejectedException $refused) {
@@ -128,16 +128,6 @@ final readonly class IncidentEvidenceService
         $this->entityManager->flush();
 
         return $evidence;
-    }
-
-    /**
-     * The namespace this incident's files live under — the module's prefix and
-     * the case file's uuid, so every key names the record it belongs to and the
-     * voter's lookup is a lookup rather than a scan.
-     */
-    public static function prefixFor(Incident $incident): string
-    {
-        return IncidentFileSource::PREFIX.'/'.$incident->getUuid()->toRfc4122();
     }
 
     /**

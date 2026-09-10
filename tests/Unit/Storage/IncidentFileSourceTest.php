@@ -205,22 +205,6 @@ final class IncidentFileSourceTest extends TestCase
         self::assertFalse($guard->offersRemoval());
     }
 
-    #[DataProvider('keys')]
-    public function testWhichKeysAreIncidents(string $key, bool $claimed): void
-    {
-        self::assertSame($claimed, IncidentFileSource::claims($key));
-    }
-
-    /** @return iterable<string, array{string, bool}> */
-    public static function keys(): iterable
-    {
-        yield 'ours' => ['incident/0199a/e77c.jpg', true];
-        yield 'a preview of ours' => ['incident/0199a/e77c.jpg.thumb.jpg', true];
-        yield 'patrol' => ['patrol/0199a/e77c.jpg', false];
-        yield 'a lookalike' => ['incidents/0199a/e77c.jpg', false];
-        yield 'nothing at all' => ['', false];
-    }
-
     private function incident(IncidentStatusEnum $status = IncidentStatusEnum::Reported): Incident
     {
         $area = new AreaOfInterest()->setSource('test fixture');

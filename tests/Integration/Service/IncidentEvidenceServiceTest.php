@@ -19,8 +19,8 @@ use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvidence;
 use Uhifadhi\Incident\Enum\EvidenceKindEnum;
 use Uhifadhi\Incident\Exception\IncidentEvidenceException;
+use Uhifadhi\Incident\Service\IncidentEvidenceKey;
 use Uhifadhi\Incident\Service\IncidentEvidenceService;
-use Uhifadhi\Incident\Storage\IncidentFileSource;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 use Uhifadhi\Storage\Service\EvidenceKey;
 use Uhifadhi\Storage\Service\EvidenceStorage;
@@ -56,9 +56,10 @@ final class IncidentEvidenceServiceTest extends IntegrationTestCase
     /**
      * THE KEY IS THE MODULE'S OWN PREFIX, which is the whole of the contract
      * between the writer, {@see \Uhifadhi\Incident\Security\IncidentEvidenceVoter}
-     * and {@see IncidentFileSource}. A key under somebody else's prefix is a key
-     * this module's voter never claims, and storage denies by default: an
-     * invisible photograph on a page the reader is entitled to.
+     * and {@see \Uhifadhi\Incident\Storage\IncidentFileSource}. A key under
+     * somebody else's prefix is a key this module's voter never claims, and
+     * storage denies by default: an invisible photograph on a page the reader
+     * is entitled to.
      */
     public function testTheKeyIsClaimedByThisModule(): void
     {
@@ -67,8 +68,8 @@ final class IncidentEvidenceServiceTest extends IntegrationTestCase
         $evidence = $this->evidenceService()->attach($incident, $this->aPhotograph(), 'IMG_1204.jpg');
 
         $key = (string) $evidence->getPath();
-        self::assertTrue(IncidentFileSource::claims($key));
-        self::assertSame(IncidentFileSource::PREFIX, EvidenceKey::rootSegment($key));
+        self::assertTrue(IncidentEvidenceKey::claims($key));
+        self::assertSame(IncidentEvidenceKey::PREFIX, EvidenceKey::rootSegment($key));
         self::assertStringContainsString($incident->getUuid()->toRfc4122(), $key);
     }
 

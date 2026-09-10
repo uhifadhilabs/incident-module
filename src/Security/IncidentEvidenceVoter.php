@@ -15,7 +15,7 @@ namespace Uhifadhi\Incident\Security;
 
 use Symfony\Component\Security\Core\User\UserInterface;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
-use Uhifadhi\Incident\Storage\IncidentFileSource;
+use Uhifadhi\Incident\Service\IncidentEvidenceKey;
 use Uhifadhi\Storage\Security\EvidenceAccessVoterInterface;
 
 /**
@@ -24,7 +24,7 @@ use Uhifadhi\Storage\Security\EvidenceAccessVoterInterface;
  *
  * The storage bundle stores bytes and refuses to guess: a key that NO module
  * claims is denied. Until this class existed no voter claimed the `incident/…`
- * keys IncidentFileSource writes, so every incident photograph and signed
+ * keys this module writes, so every incident photograph and signed
  * document — and every generated preview of one — was (correctly, by the contract's
  * deny-by-default rule) invisible on the Files hub, even where the case was
  * freely readable. It claims those keys and answers for them.
@@ -35,7 +35,8 @@ use Uhifadhi\Storage\Security\EvidenceAccessVoterInterface;
  * is a signed-in user and a key this module actually holds; a stricter rule for
  * the bytes than for the page they appear on would only be a broken image on a
  * page the reader is entitled to. The OPEN-vs-resolved question is about removing
- * evidence, not reading it, and lives in {@see IncidentFileSource::guardFor}.
+ * evidence, not reading it, and lives in
+ * {@see \Uhifadhi\Incident\Storage\IncidentFileSource::guardFor}.
  *
  * REVISIT WHEN the host grows per-area permissions: this becomes "may the user
  * view the incident's area", resolved through the evidence → incident → area
@@ -56,7 +57,7 @@ final class IncidentEvidenceVoter implements EvidenceAccessVoterInterface
 
     public function claimsKey(string $key): bool
     {
-        return IncidentFileSource::claims($key);
+        return IncidentEvidenceKey::claims($key);
     }
 
     public function mayRead(string $key, ?UserInterface $user): bool

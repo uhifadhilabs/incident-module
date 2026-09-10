@@ -19,6 +19,7 @@ use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvidence;
 use Uhifadhi\Incident\Enum\EvidenceKindEnum;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
+use Uhifadhi\Incident\Service\IncidentEvidenceKey;
 use Uhifadhi\Storage\Enum\FileKindEnum;
 use Uhifadhi\Storage\Enum\GuardStateEnum;
 use Uhifadhi\Storage\Enum\ThumbStateEnum;
@@ -26,7 +27,6 @@ use Uhifadhi\Storage\Model\FileEntry;
 use Uhifadhi\Storage\Model\FileGuard;
 use Uhifadhi\Storage\Registry\FileSourceInterface;
 use Uhifadhi\Storage\Registry\HoldsNoRecordFilesTrait;
-use Uhifadhi\Storage\Service\EvidenceKey;
 
 /**
  * AN INCIDENT'S EVIDENCE, ON THE PLATFORM'S FILES HUB.
@@ -57,10 +57,9 @@ use Uhifadhi\Storage\Service\EvidenceKey;
  *   - A photograph with no preview is Waiting, not Failed. Failed says this
  *     machine tried and could not decode the file; a key-only row never tried.
  *
- * Still not modelled, and deliberately: an IncidentEvidenceVoter claiming the
- * same prefix {@see PREFIX} names here, so the guard can answer Denied for
- * evidence another department uploaded. IncidentEvidence records no uploader, so
- * that column arrives before the voter does — and nothing else here changes.
+ * Still not modelled, and deliberately: a guard that answers Denied for evidence
+ * another department uploaded. IncidentEvidence records no uploader, so that
+ * column arrives before the answer does — and nothing else here changes.
  */
 final class IncidentFileSource implements FileSourceInterface
 {
@@ -77,16 +76,6 @@ final class IncidentFileSource implements FileSourceInterface
     public const string SLUG = 'incidents';
 
     public const string LABEL = 'Incidents';
-
-    /**
-     * The first segment of every evidence key this module owns.
-     *
-     * One place, because the moment a second collaborator needs the same answer
-     * — the IncidentEvidenceVoter that storage-module's permission contract still
-     * wants — a prefix remembered twice is a prefix that eventually differs in
-     * one, and the failure mode is silent: evidence nobody is allowed to look at.
-     */
-    public const string PREFIX = 'incident';
 
     public function __construct(
         private readonly IncidentEvidenceRepository $evidence,
@@ -111,13 +100,7 @@ final class IncidentFileSource implements FileSourceInterface
 
     public function claimsKey(string $key): bool
     {
-        return self::claims($key);
-    }
-
-    /** The claim, as a function of the key alone. */
-    public static function claims(string $key): bool
-    {
-        return self::PREFIX === EvidenceKey::rootSegment($key);
+        return IncidentEvidenceKey::claims($key);
     }
 
     /**
