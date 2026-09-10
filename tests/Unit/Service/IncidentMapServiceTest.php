@@ -14,9 +14,15 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Unit\Service;
 
 use PHPUnit\Framework\TestCase;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentCategory;
+use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
+use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Model\IncidentHues;
 use Uhifadhi\Incident\Service\IncidentMapService;
 
@@ -240,6 +246,70 @@ final class IncidentMapServiceTest extends TestCase
     }
 
     /**
+     * WHAT A MARK CARRIES — the properties the atlas reads to decide the hue, the
+     * fill, the ring, the hover line and where a click goes. Every one of them is
+     * a PROPERTY: the atlas writes the markup, so nothing here is a rendered
+     * string.
+     */
+    public function testAMarkCarriesWhatTheLegendPromises(): void
+    {
+        $incident = self::anIncident();
+
+        $collection = IncidentMapService::featuresFor([$incident], ['INC-0313' => '/areas/a/modules/incidents/INC-0313']);
+
+        self::assertSame('FeatureCollection', $collection['type']);
+        self::assertCount(1, $collection['features']);
+        $properties = $collection['features'][0]['properties'];
+
+        // Hue is the CATEGORY: the layer is split on this key and drawn in that
+        // category's own colour.
+        self::assertSame('conflict', $properties['slug']);
+        self::assertSame('hwc', $properties['colour']);
+        // Filled is open; hollow is resolved or closed.
+        self::assertTrue($properties['open']);
+        // The dashed ring is read off the severity.
+        self::assertSame('critical', $properties['severity']);
+        // One line on hover, one url on click.
+        self::assertSame('INC-0313 · livestock depredation · verified', $properties['summary']);
+        self::assertSame('/areas/a/modules/incidents/INC-0313', $properties['href']);
+    }
+
+    /** An incident nobody handed a case-file url is drawn without a way onward. */
+    public function testAMarkWithNoCaseFileUrlIsStillDrawn(): void
+    {
+        $collection = IncidentMapService::featuresFor([self::anIncident()]);
+
+        self::assertCount(1, $collection['features']);
+        self::assertNull($collection['features'][0]['properties']['href']);
+    }
+
+    /** A position that will not parse is one mark missing, never a page that fails. */
+    public function testAPositionThatWillNotParseIsSimplyNotDrawn(): void
+    {
+        self::assertSame([], IncidentMapService::featuresFor([self::anIncident('not json')])['features']);
+    }
+
+    private static function anIncident(string $position = '{"type":"Point","coordinates":[-29.55,-3.21]}'): Incident
+    {
+        $area = new AreaOfInterest()->setSource('test fixture');
+        $area->setName('Kifaru Sector');
+
+        $category = new IncidentCategory('conflict', 'Human–wildlife conflict', 'hwc');
+        $subcategory = new IncidentSubcategory($category, 'livestock-depredation', 'livestock depredation');
+
+        return new Incident(
+            $area,
+            $subcategory,
+            'INC-0313',
+            'Lion killed four goats at Riverside',
+            $position,
+            new \DateTimeImmutable('2026-08-19 07:10:00'),
+        )
+            ->setStatus(IncidentStatusEnum::Verified)
+            ->setSeverity(IncidentSeverityEnum::Critical);
+    }
+
+    /**
      * @param list<array{slug: string, label: string, colourKey: string}>|null $categories
      * @param list<array{name: string, geom: string|null}>|null                $zones
      */
@@ -258,7 +328,7 @@ final class IncidentMapServiceTest extends TestCase
     }
 
     /**
-     * The shape {@see \Uhifadhi\Incident\Model\IncidentMapPayload} hands over.
+     * The shape {@see IncidentMapService::featuresFor()} hands over.
      *
      * @return array<string, mixed>
      */

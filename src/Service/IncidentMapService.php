@@ -28,7 +28,6 @@ use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentCategory;
 use Uhifadhi\Incident\Model\IncidentHues;
-use Uhifadhi\Incident\Model\IncidentMapPayload;
 
 /**
  * WHERE EVERY INCIDENT WAS FILED, STATED IN PHP.
@@ -127,7 +126,7 @@ final readonly class IncidentMapService
         return self::compose(
             $this->maps,
             $area->hasBoundary() ? $area->getGeom() : null,
-            IncidentMapPayload::of($incidents, $this->caseFiles($area, $incidents)),
+            self::featuresFor($incidents, $this->caseFiles($area, $incidents)),
             array_map(static fn (IncidentCategory $category): array => [
                 'slug' => $category->getSlug(),
                 'label' => $category->getLabel(),
@@ -149,7 +148,7 @@ final readonly class IncidentMapService
      * hue, which legend row — is unit-tested without a database behind it.
      *
      * @param string|null                                                 $boundary   the area's geom as GeoJSON text
-     * @param array<string, mixed>                                        $collection the FeatureCollection {@see IncidentMapPayload::of()} builds
+     * @param array<string, mixed>                                        $collection the FeatureCollection {@see featuresFor()} builds
      * @param list<array{slug: string, label: string, colourKey: string}> $categories
      * @param list<array{name: string, geom: string|null}>                $zones
      */
@@ -239,9 +238,79 @@ final readonly class IncidentMapService
     }
 
     /**
-     * WHERE EACH MARK LEADS. Generated here rather than in the payload because
-     * this is the only layer that knows the router, and a model that generated
-     * urls would be a model that could not be unit-tested without one.
+     * WHAT THE MARKS ARE, as a GeoJSON FeatureCollection — every incidents map
+     * there is comes through here, so a mark cannot mean two things on two
+     * screens.
+     *
+     * Everything a mark needs is a PROPERTY, and the atlas reads properties and
+     * writes the markup; nothing here is ever a rendered string. The meaning is
+     * exactly what the legend beside it promises:
+     *
+     *   hue          = the category
+     *   filled       = still open · hollow = resolved or closed
+     *   dashed ring  = the serious end (high or critical)
+     *
+     * Static and given the urls rather than generating them, so the shape of a
+     * mark is pinned against real incidents with no router behind it.
+     *
+     * @param list<Incident>        $incidents
+     * @param array<string, string> $caseFiles reference → the url of that incident's case file; an
+     *                                         incident with none is drawn without a way onward
+     *
+     * @return array{type: string, features: list<array{type: string, geometry: array<string, mixed>, properties: array<string, mixed>}>}
+     */
+    public static function featuresFor(array $incidents, array $caseFiles = []): array
+    {
+        $features = [];
+        foreach ($incidents as $incident) {
+            /** @var array<string, mixed>|null $geometry */
+            $geometry = json_decode($incident->getPosition(), true);
+            if (!\is_array($geometry)) {
+                continue;
+            }
+
+            $features[] = [
+                'type' => 'Feature',
+                'geometry' => $geometry,
+                'properties' => [
+                    'reference' => $incident->getReference(),
+                    // A map pin's label is a row, so it prints the first line —
+                    // the same line the register does.
+                    'title' => $incident->headline(),
+                    // The key the plate's layers are split by: one layer per
+                    // category, so a legend row switches a category on and off.
+                    'slug' => $incident->getCategory()->getSlug(),
+                    'colour' => $incident->getCategory()->getColourKey(),
+                    'category' => $incident->getCategory()->getLabel(),
+                    'subcategory' => $incident->getSubcategory()->getLabel(),
+                    'status' => $incident->getStatus()->value,
+                    'statusLabel' => $incident->getStatus()->label(),
+                    'open' => $incident->getStatus()->isOpen(),
+                    'severity' => $incident->getSeverity()->value,
+                    'zone' => $incident->zoneLabel(),
+                    // The one line a hover prints: which case, what kind, where
+                    // it stands — the register's own three facts, composed here
+                    // because a tooltip reads ONE property.
+                    'summary' => \sprintf(
+                        '%s · %s · %s',
+                        $incident->getReference(),
+                        $incident->getSubcategory()->getLabel(),
+                        $incident->getStatus()->label(),
+                    ),
+                    // Where the mark goes when it is clicked. Generated by the
+                    // caller, which is the only place that knows the router.
+                    'href' => $caseFiles[$incident->getReference()] ?? null,
+                ],
+            ];
+        }
+
+        return ['type' => 'FeatureCollection', 'features' => $features];
+    }
+
+    /**
+     * WHERE EACH MARK LEADS. Generated in the instance method rather than in
+     * {@see featuresFor()} because this is the only layer that knows the router,
+     * and a builder that generated urls could not be unit-tested without one.
      *
      * @param list<Incident> $incidents
      *

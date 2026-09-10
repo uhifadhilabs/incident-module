@@ -90,10 +90,17 @@ file's **Where** card. All three are the atlas's plate, stated by
 | the legend, one switching row per layer | the layers' own rows, under one group |
 | filled = open · hollow = resolved or closed | `StyleRule::when('open', false)->fillOpacity(0.0)` |
 | a dashed ring at the serious end | `StyleRule::when('severity', ['high', 'critical'])->…->dashArray('3 3')` |
-| what a mark says on hover | the layer's `tooltip: 'summary'`, a property the payload composes |
+| what a mark says on hover | the layer's `tooltip: 'summary'`, a property `IncidentMapService::featuresFor()` composes |
 | what a click opens | `FeaturePopup(title: 'title', lines: [...], href: 'href', linkLabel: 'Open the case file →')` |
 | a hit in the docked list spotlighting its own mark | `data-atlas-highlight="<layer>:<reference>"` on the row, `featureId: 'reference'` on the layer |
 | how tall the map is on each screen | `--map-plate-height`, set on the card in `incidents.css` |
+
+**One service builds every mark.** The dashboard's plate, the map+results plate,
+the case file's Where card and the two layers this module puts on the area
+overview all get their features from `IncidentMapService::featuresFor()`. There
+is no second builder, because the map-legend contract says the same layer renders
+identically everywhere it is drawn, and the only way to guarantee that is for
+there to be one place a mark is described.
 
 **What a mark means is stated, not drawn.** Hue is the category, filled is still
 open, hollow is resolved or closed, and a dashed ring is the serious end — high

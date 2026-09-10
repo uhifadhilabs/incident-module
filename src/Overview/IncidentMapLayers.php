@@ -17,9 +17,9 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayer;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayerProviderInterface;
 use Uhifadhi\Incident\Model\IncidentHues;
-use Uhifadhi\Incident\Model\IncidentMapPayload;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Service\IncidentMapService;
 
 /**
  * THIS MODULE'S TWO LAYERS ON THE HOST'S ONE OPERATIONAL PLATE.
@@ -27,9 +27,9 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
  * One plate, many owners. The host draws the map — self-hosted Leaflet, the same
  * instrument every map in the product wears — and each layer on it belongs to the
  * module that owns the data. The geometry is built by
- * {@see IncidentMapPayload}, which is the SAME builder the module's own dashboard
- * map and case-file map use, because the map-legend contract says the same layer
- * renders identically everywhere it is drawn.
+ * {@see IncidentMapService::featuresFor()}, which is the SAME builder the
+ * module's own dashboard map and case-file map use, because the map-legend
+ * contract says the same layer renders identically everywhere it is drawn.
  *
  * OPEN IS ON; FINISHED IS OFF. The overview is about the morning: an open
  * incident is somewhere a person may have to go today and a closed one is a
@@ -73,7 +73,7 @@ final readonly class IncidentMapLayers implements MapLayerProviderInterface
                 // A LAYER'S COLOUR IS DATA, so it is stated once and is the same
                 // in light and dark. Open work wears the register's leading hue.
                 swatch: IncidentHues::of('poach'),
-                features: IncidentMapPayload::of($open),
+                features: IncidentMapService::featuresFor($open),
                 count: \count($open),
             ),
             new MapLayer(
@@ -82,7 +82,7 @@ final readonly class IncidentMapLayers implements MapLayerProviderInterface
                 groupLabel: 'Incidents',
                 label: 'Resolved & closed · 30 days',
                 swatch: IncidentHues::of('mort'),
-                features: IncidentMapPayload::of($done),
+                features: IncidentMapService::featuresFor($done),
                 count: \count($done),
                 // Off before anybody touches the legend, and its entry is drawn
                 // all the same: a legend is a statement about the plate, not
