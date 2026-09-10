@@ -48,7 +48,7 @@ final class IncidentFileSourceRegistrationTest extends IntegrationTestCase
         self::assertSame([], $this->registry()->all());
 
         // The test kernel also registers a stub standing for ANOTHER module on
-        // the far side of the cross-module file seam, so this asks about
+        // the far side of the cross-module file contract, so this asks about
         // incidents' own row rather than about the only row.
         $modules = array_values(array_filter(
             $this->registry()->modules(),

@@ -26,7 +26,7 @@ use Uhifadhi\Incident\Service\IncidentTransitionService;
  *
  * The area-overview cards, the right-now tiles, the attention items, the map
  * layers and the pulse are five readings of the SAME eight incidents, and the
- * whole claim of the seam is that they agree. So they are built once, here, and
+ * whole claim of the contribution points is that they agree. So they are built once, here, and
  * every test in tests/Integration/Overview asserts against the same morning.
  *
  * THE MORNING IS SATURDAY 22 AUGUST 2026, 11:42 — the design's own sample
@@ -56,12 +56,12 @@ abstract class OverviewTestCase extends IntegrationTestCase
     protected function aRegister(): AreaOfInterest
     {
         $area = $this->anArea('one area');
-        $this->aZone($area, 'North Gate', 35.0, 35.3);
-        $this->aZone($area, 'West Plains', 35.3, 35.5);
+        $this->aZone($area, 'North Gate', -30.0, -29.7);
+        $this->aZone($area, 'West Plains', -29.7, -29.5);
         $this->installTaxonomy();
 
-        $northGate = '{"type":"Point","coordinates":[35.25,-3.21]}';
-        $westPlains = '{"type":"Point","coordinates":[35.40,-3.21]}';
+        $northGate = '{"type":"Point","coordinates":[-29.75,-3.21]}';
+        $westPlains = '{"type":"Point","coordinates":[-29.60,-3.21]}';
 
         // INC-0001 · filed today, verified this morning.
         $this->moved(

@@ -83,13 +83,12 @@ html.light{
    The chart vocabulary the map-first widgets draw in — the line, the donut and
    the bars — ported byte-faithfully from the design's uhifadhi.css.
 
-   THIS IS HOST VOCABULARY the shell does not yet ship, kept here the same way and
-   for the same reason as the map plate at the foot of this file: a widget cannot
-   render unstyled while the question of where these rules belong is open, and the
-   duplication is deliberate and marked, not accidental. There is a standing
-   ruling that the incident charts move whole into a future shared charts-module
-   (it will behave like the map-module); when that lands, this block and the chart
-   macros go with it. The ONLY module-specific rules are the four arc/legend hues
+   THIS IS SHARED VOCABULARY THE CHAIN DOES NOT YET SHIP, kept here the same way
+   and for the same reason as the map plate at the foot of this file: a widget
+   cannot render unstyled while the question of where these rules belong is open,
+   and it is marked rather than accidental. There is a standing ruling that the
+   incident charts move whole into the atlas; when that lands, this block and the
+   chart macros go with it. The ONLY module-specific rules are the four arc/legend hues
    at the end, which name this taxonomy's colours — everything above is generic.  */
 .ch{width:100%;height:auto;display:block}
 .ch text{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:7.5px;fill:var(--fog)}
@@ -805,7 +804,7 @@ html.light{
   border:1px solid var(--ln2);background:color-mix(in srgb,var(--fog) 12%,transparent)}
 .i-src .shots a:hover,.i-src .shots button:hover{border-color:var(--acc)}
 .i-src .shots img{width:100%;height:100%;object-fit:cover;display:block}
-.i-src .seam{margin:11px 0 0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;
+.i-src .i-srcnote{margin:11px 0 0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;
   letter-spacing:.06em;color:var(--dim)}
 
 
@@ -908,7 +907,7 @@ html.light{
    slot on /areas/{uuid} — the tag on a plate, the dot beside an attention row,
    the column heading, the legend group, the duty board — is painted the quiet
    fog by default, and the module that filled the slot paints its own. That is
-   the same seam the widgets ride: the host holds the shape, a module holds
+   the same contract the widgets ride: the shell holds the shape, a module holds
    everything about itself, and uninstalling the module takes its colour with
    it rather than leaving an orphaned rule in the host's stylesheet.
 

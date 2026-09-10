@@ -65,7 +65,7 @@ use Uhifadhi\Storage\Service\EvidenceKey;
 final class IncidentFileSource implements FileSourceInterface
 {
     /*
-     * INCIDENTS DOES NOT PUBLISH ITS EVIDENCE BY RECORD — yet. The seam exists so
+     * INCIDENTS DOES NOT PUBLISH ITS EVIDENCE BY RECORD — yet. The contract allows it so
      * one module can draw another's record; nothing today shows an incident's
      * evidence from outside incidents, and a source that answered would be
      * guessing at a consumer that does not exist. When one does, this trait comes
@@ -82,7 +82,7 @@ final class IncidentFileSource implements FileSourceInterface
      * The first segment of every evidence key this module owns.
      *
      * One place, because the moment a second collaborator needs the same answer
-     * — the IncidentEvidenceVoter that storage-module's permission seam still
+     * — the IncidentEvidenceVoter that storage-module's permission contract still
      * wants — a prefix remembered twice is a prefix that eventually differs in
      * one, and the failure mode is silent: evidence nobody is allowed to look at.
      */

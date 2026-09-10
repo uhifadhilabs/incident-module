@@ -62,7 +62,7 @@ use Uhifadhi\Storage\Registry\FileRegistry;
  * the money row EXISTS ONLY where the sub-category carries money — choose a
  * natural mortality and the row is not rendered at all. Not disabled. Absent.
  *
- * ARRIVING FROM AN OBSERVATION: {@see IncidentPrefill} reads the seam's query
+ * ARRIVING FROM AN OBSERVATION: {@see IncidentPrefill} reads the hand-off's query
  * string. Everything it carries is a guess the filer may overrule, except the
  * provenance link, which is written once and never again.
  *
@@ -96,7 +96,7 @@ final class IncidentReportController
          * THE PLATFORM'S FILE REGISTRY, and null where the host runs no Files
          * hub. It is how the source card shows the observation's photographs
          * without this bundle knowing anything about observations: it hands the
-         * registry the source token and the record uuid the seam arrived with,
+         * registry the source token and the record uuid the hand-off arrived with,
          * and the module that OWNS that record answers.
          *
          * Optional on purpose. A deployment with incidents and no storage bundle
@@ -227,7 +227,7 @@ final class IncidentReportController
             'chosen' => $chosen,
             'csrfToken' => $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue(),
             'errors' => $errors,
-            // THE FORM POSTS BACK TO ITS OWN ENTRY POINT. Without the seam on the
+            // THE FORM POSTS BACK TO ITS OWN ENTRY POINT. Without the hand-off on the
             // action, pressing File would drop the provenance, the source card and
             // the container all at once.
             'createUrl' => $this->router->generate('incident_create', ['uuid' => $area->getUuidString()])
@@ -249,7 +249,7 @@ final class IncidentReportController
      * Asked of the platform's registry, which asks the module that owns the
      * record — this bundle never names the patrols module, its routes or its key
      * prefix, because a host may install either without the other. All it has is
-     * the token and the uuid the seam's query string carried, and that is exactly
+     * the token and the uuid the hand-off's query string carried, and that is exactly
      * what {@see FileRegistry::forRecord()} takes.
      *
      * EVERY WAY OF HAVING NONE ANSWERS THE SAME. No storage bundle, no

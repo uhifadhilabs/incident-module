@@ -21,7 +21,7 @@ use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
  * "which place follows which".
  *
  * ══════════════════════════════════════════════════════════════════════════════
- * THIS CLASS IS THE SEAM.
+ * THIS CLASS IS THE DEFINITION.
  * ══════════════════════════════════════════════════════════════════════════════
  * A platform WORKFLOW MODULE is on the roadmap: state machines and an audit trail
  * for jobs, areas, alerts — and incidents. When it lands, THIS class is what it

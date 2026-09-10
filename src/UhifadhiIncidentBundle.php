@@ -68,7 +68,7 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
  *
  * Zero-config: registering the bundle maps its own entities (no host doctrine
  * block needed), registers the dashboard and reaches the host's module catalogue
- * and department-KPI seam. Spatial columns ride on fundistadi/postgis-bundle.
+ * and its department-KPI contribution point. Spatial columns ride on fundistadi/postgis-bundle.
  *
  * ONE HOST STEP IS NOT AUTOMATIC, and cannot honestly be: run
  * `incidents:taxonomy:sync` once, so the deployment has kinds of incident to file
@@ -257,7 +257,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 ->args([service(IncidentEvidenceRepository::class), service('router')])
                 ->tag(FileSourceInterface::TAG);
 
-            // The permission half of the seam: without a voter claiming
+            // The permission half of it: without a voter claiming
             // `incident/…` keys, storage-module denies them by default and every
             // photograph, document and preview 404s on the hub. Registered here
             // (only where storage is installed) beside the source that writes them.
@@ -428,7 +428,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
             ->tag('uhifadhi.devkit.content_provider');
 
         /*
-         * The department KPI seam. Tagged EXPLICITLY, exactly like
+         * The department KPI contribution point. Tagged EXPLICITLY, exactly like
          * 'uhifadhi.module' above and for the same reason: a reusable bundle is not
          * autoconfigured, so the host's autoconfiguration never fires for it.
          *
@@ -438,20 +438,20 @@ final class UhifadhiIncidentBundle extends AbstractBundle
          * the plates with that name.
          */
         /*
-         * THE AREA-OVERVIEW SEAM — five contracts, five tags, and every one of
+         * THE AREA-OVERVIEW CONTRIBUTION POINTS — five contracts, five tags, and every one of
          * them applied BY HAND for the reason spelled out above: a reusable
          * bundle is not autoconfigured, so the host's registerForAutoconfiguration
          * never fires here.
          *
          * THE TAG NAMES ARE THE INTERFACES' OWN CONSTANTS. They were literals
-         * once, pinned to a copy of the seam kept under tests/Fixtures because
+         * once, pinned to a copy of the interfaces kept under tests/Fixtures because
          * the real classes were an application's and off this bundle's classpath
-         * at build time. They belong to uhifadhi/area-module now, which is a
+         * at build time. They belong to AreaBundle now, which is a
          * requirement of this package, so a rename over there is a compile error
          * here rather than a module that silently stops contributing.
          *
          * 'uhifadhi.module' above stays a literal, because
-         * uhifadhi/module-contracts publishes no constant for it.
+         * uhifadhi/contracts publishes no constant for it.
          *
          * A missing tag looks like a module nobody installed:
          *   widget_provider  the headed section and its five widgets vanish
@@ -459,7 +459,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
          *   attention        late work stops asking for anybody
          *   map.layer        open incidents stop being drawn, legend and all
          *   pulse            the module's moves stop reaching the area's stream
-         * Every one of them is covered by IncidentOverviewSeamTest.
+         * Every one of them is covered by IncidentOverviewContributionTest.
          */
         $services->set('incident.overview.contributor', IncidentOverviewContributor::class)
             ->args([service('incident.overview.figures')])

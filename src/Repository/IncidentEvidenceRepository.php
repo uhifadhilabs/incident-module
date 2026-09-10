@@ -43,7 +43,7 @@ final class IncidentEvidenceRepository extends ServiceEntityRepository
      * photograph.
      *
      * Rows with no stored path are NOT filtered out in SQL, deliberately: what
-     * counts as a usable key is the storage seam's rule, and it is applied where
+     * counts as a usable key is the storage contract's rule, and it is applied where
      * that rule lives ({@see \Uhifadhi\Incident\Storage\IncidentFileSource}),
      * not spread into a query nothing else reads.
      *

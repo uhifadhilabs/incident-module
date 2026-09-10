@@ -21,8 +21,8 @@ use Uhifadhi\Incident\Widget\IncidentWidgets;
 /**
  * THE SUITE DECLARES THIS MODULE'S SURFACES AND NOBODY ELSE'S.
  *
- * {@see TestKernel} boots uhifadhi/team-module for the account class every
- * stored layout is keyed by, and uhifadhi/area-module for the place an incident
+ * {@see TestKernel} boots TeamBundle for the account class every
+ * stored layout is keyed by, and AreaBundle for the place an incident
  * happens in. Both are modules with dashboards of their own, so booting them
  * tags their surfaces into the widget registry — and every surface either adds
  * or renames would otherwise rewrite the expected value of a test about THIS
@@ -35,7 +35,7 @@ use Uhifadhi\Incident\Widget\IncidentWidgets;
  * that the registry holds the incidents dashboard stays an assertion about
  * incidents rather than about a version number.
  *
- * Copied in discipline from uhifadhi/widget-module's own suite, which needs the
+ * Copied in discipline from ShellBundle's own suite, which needs the
  * same isolation for the same reason and names it OnlyThisSuitesSurfacesPass.
  */
 final class OnlyThisModulesSurfacesPass implements CompilerPassInterface

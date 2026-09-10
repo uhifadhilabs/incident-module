@@ -44,7 +44,7 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
  *
  * PROVENANCE IS WRITTEN ONCE AND NEVER EDITED. {@see recordProvenance()} refuses
  * a second call. An incident filed from a patrol observation stays linked to that
- * observation forever; the seam is deliberately a UUID and a label rather than a
+ * observation forever; the hand-off is deliberately a UUID and a label rather than a
  * foreign key, because the patrols module is a separate bundle and a host may
  * install either without the other.
  *
@@ -149,7 +149,7 @@ class Incident
     private ?\DateTimeImmutable $closedAt = null;
 
     /**
-     * WHO RECORDED IT. The department KPI seam slices by the position this person
+     * WHO RECORDED IT. The department KPI contribution point slices by the position this person
      * holds, so a null here is a row no department can claim — which is the honest
      * answer for a seeded or imported incident.
      */
@@ -165,10 +165,10 @@ class Incident
     /**
      * Recorded, never restricting — see the class docblock.
      *
-     * AN ID AND NOT A RELATION, for the same reason the provenance seam above is
+     * AN ID AND NOT A RELATION, for the same reason the provenance hand-off above is
      * a uuid and not a foreign key: NO PACKAGE PUBLISHES A CONTRACT FOR A
-     * DEPARTMENT. There is no `DepartmentInterface` in uhifadhi/module-contracts
-     * and none in uhifadhi/team-module, so a `ManyToOne` here would name
+     * DEPARTMENT. There is no `DepartmentInterface` in uhifadhi/contracts
+     * and none in TeamBundle, so a `ManyToOne` here would name
      * somebody's class and make every installation that records an incident
      * hard-require the module that owns it. The fleet's rule for a department is
      * to walk the mapping and never the type — {@see \Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentRef}

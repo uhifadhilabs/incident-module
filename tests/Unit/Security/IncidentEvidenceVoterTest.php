@@ -18,7 +18,7 @@ use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 use Uhifadhi\Incident\Security\IncidentEvidenceVoter;
 
 /**
- * The permission half of storage-module's seam for incident evidence. Until this
+ * The permission half of storage-module's contract for incident evidence. Until this
  * voter existed no module claimed `incident/…` keys, so storage denied them by
  * default and every incident photograph, document and preview 404'd on the hub.
  *

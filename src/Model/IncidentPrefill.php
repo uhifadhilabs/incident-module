@@ -18,10 +18,10 @@ use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
 
 /**
- * A REPORT ARRIVING FROM SOMEWHERE ELSE — the seam behind the patrols module's
+ * A REPORT ARRIVING FROM SOMEWHERE ELSE — the hand-off behind the patrols module's
  * "File as incident" button.
  *
- * THE SEAM IS A QUERY STRING, deliberately. The patrols module and this one are
+ * THE HAND-OFF IS A QUERY STRING, deliberately. The patrols module and this one are
  * separate bundles and a host may install either without the other, so neither
  * may name the other's classes or routes. A module that has something worth
  * filing sends a person to `incident_new` carrying what it knows:
@@ -32,7 +32,7 @@ use Uhifadhi\Incident\Enum\IncidentSourceEnum;
  *       &label=observation 2 of patrol P-0142
  *       &back=<url of that observation's page>
  *       &at=2026-08-22T08:15:00+03:00
- *       &lat=-3.2014&lng=35.4622
+ *       &lat=-3.2014&lng=-29.5378
  *       &category=<sub-category slug it guesses>
  *       &note=<the field note, verbatim>
  *
@@ -99,7 +99,7 @@ final readonly class IncidentPrefill
     }
 
     /**
-     * THE POSITION AS A PERSON READS IT — "3°12'05"S 35°27'44"E", the same
+     * THE POSITION AS A PERSON READS IT — "3°12'05"S 29°32'16"W", the same
      * degrees-minutes-seconds the observation page prints.
      *
      * The source card exists so the filer can recognise the thing they are
@@ -117,7 +117,7 @@ final readonly class IncidentPrefill
     }
 
     /**
-     * WHERE THIS CAME FROM, IN WORDS. The seam is a query string and the module
+     * WHERE THIS CAME FROM, IN WORDS. The hand-off is a query string and the module
      * on the other side chooses the token, so one this module knows is named
      * properly and one it does not is printed as it arrived — the card must say
      * where a report came from even when the source is a kind nobody here has
@@ -136,7 +136,7 @@ final readonly class IncidentPrefill
     }
 
     /**
-     * THE SEAM, BACK OUT AGAIN — what the form must POST to so the filing it
+     * THE HAND-OFF, BACK OUT AGAIN — what the form must POST to so the filing it
      * submits still knows where it came from.
      *
      * The form's action carries this, because the container the flow opens in,

@@ -25,7 +25,7 @@ use Uhifadhi\Incident\Service\IncidentTransitionService;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
- * WHAT A DEPARTMENT'S PEOPLE DID WITH THIS MODULE — the host's performance seam,
+ * WHAT A DEPARTMENT'S PEOPLE DID WITH THIS MODULE — the platform's performance contract,
  * against real rows.
  *
  * THE SLICE IS THE THING UNDER TEST. An incident is a department's because the
@@ -52,8 +52,8 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     }
 
     /**
-     * THE SEAM HANDS OVER A REF, NOT AN ENTITY — nothing publishes a contract for
-     * a department, so uhifadhi/area-module names one by its id, its name and its
+     * THE CONTRACT HANDS OVER A REF, NOT AN ENTITY — nothing publishes a contract for
+     * a department, so AreaBundle names one by its id, its name and its
      * uuid. The tests still build a real Department, because the SLICE walks a
      * real org chart; only the handover is the ref.
      */
@@ -156,7 +156,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
 
     /**
      * "RESOLVED WITHIN TERM" IS THE HONEST READING OF BREACHES: the same fact,
-     * pointing the way the host's seam requires (bigger is better), and NULL —
+     * pointing the way the contract requires (bigger is better), and NULL —
      * never 0% — while nothing has been resolved.
      */
     public function testTheWithinTermShareIsNullUntilSomethingIsResolved(): void

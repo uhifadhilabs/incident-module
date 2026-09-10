@@ -1070,7 +1070,7 @@ final class DemoMonth
     public static function positionFor(int $index): string
     {
         $latitude = -3.40 + 0.055 * ($index % 9);
-        $longitude = 35.20 + 0.062 * intdiv($index, 9) + 0.011 * ($index % 5);
+        $longitude = -29.80 + 0.062 * intdiv($index, 9) + 0.011 * ($index % 5);
 
         return \sprintf('{"type":"Point","coordinates":[%.6F,%.6F]}', $longitude, $latitude);
     }

@@ -4,13 +4,10 @@
    module's vocabulary loads only where the module renders and the crumb's shared
    prefix is written exactly once.
 
-   THE FRAME IS THE SHELL'S (uhifadhi/shell-module), not this module's. Before the
-   fleet had a shell, these pages extended a `layout.html.twig` an application was
-   expected to provide, and typed their own `<div class="page">`, their own crumb
-   and their own flash loop inside it — which is why all three are gone from here:
-   the trail, the page head, the area's tab strip and the flashes are the frame's
-   sockets now, and a module that types its own copies is a module that drifts
-   from every other screen in the installation.
+   THE FRAME IS THE SHELL'S (ShellBundle, in the core), not this module's. The
+   trail, the page head, the area's tab strip and the flashes are the frame's
+   sockets, and a module that types its own copies is a module that drifts from
+   every other screen in the installation.
 
    THE TAB STRIP IS LEFT AT ITS DEFAULT, deliberately. Incidents is an AREA-SCOPED
    module — every route under this base sits at /areas/{uuid}/modules/incidents —
@@ -18,10 +15,10 @@
    (which an org-wide hub like the files hub does) would be this module claiming
    to be nowhere in particular.
 
-   THE WIDGET MODULE'S SHEET IS NOT OPTIONAL. The dashboard IS a widget dashboard,
+   THE SHELL'S WIDGET SHEET IS NOT OPTIONAL. The dashboard IS a widget dashboard,
    so `.w-grid`, `.w-cell`, `.w-span-*` and the whole library chrome are drawn by
-   uhifadhi/widget-module's stylesheet, which its own header says must be linked
-   by the page rendering it. Without it the grid has nothing declaring a span and
+   the shell's widget stylesheet, which its own header says must be linked by the
+   page rendering it. Without it the grid has nothing declaring a span and
    every widget draws one column wide.
 
    Ordered leaflet → widget → incidents, weakest to strongest: this module's own
@@ -38,18 +35,18 @@
 {% block stylesheets %}
     {{ parent() }}
     {# Leaflet FIRST, so incidents.css can style the plate over it. Both files
-       come from uhifadhi/map-module, by its own constants — never a CDN, and the
+       come from AtlasBundle, by its own constants — never a CDN, and the
        same Leaflet the area and patrol maps run on, so an incident map cannot
        disagree with them about how a layer draws. MapLibre is deliberately NOT
        used. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_CSS')) }}">
-    {# THE MAP CHROME STYLESHEET — map-module's ONE map.css, the single definition
+    {# THE MAP CHROME STYLESHEET — the atlas's ONE map.css, the single definition
        of the plate, the zoom column, the layer menu, the scale bar and the
        fullscreen control that chrome.js builds (.map-chrome*, .leaflet-control-*).
-       It is map-module's own asset, not a copy: linking it here is the same self-
+       It is the atlas's own asset, not a copy: linking it here is the same self-
        sufficiency this base already applies to Leaflet and the widget grid — an
-       incident map renders its full chrome without depending on the host having
-       wired map.css. Loaded BEFORE incidents.css so the module's own plate rules
+       incident map renders its full chrome without depending on the
+       application having wired map.css. Loaded BEFORE incidents.css so the module's own plate rules
        (the .viewer heights, the .i-mapcanvas) still win. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
     {# The dashboard grid's own vocabulary, from the bundle that owns it. #}

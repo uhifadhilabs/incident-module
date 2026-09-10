@@ -1,5 +1,16 @@
 # The model
 
+## Contents
+
+- [The seven tables](#the-seven-tables)
+- [Money runs in two directions](#money-runs-in-two-directions)
+- [No money record is opened at filing](#no-money-record-is-opened-at-filing)
+- [Two taxonomies coexist, for now](#two-taxonomies-coexist-for-now)
+- [How this module references areas](#how-this-module-references-areas)
+- [Provenance is written once](#provenance-is-written-once)
+
+## The seven tables
+
 An **incident** is one event, in one area, at one place, in one category, at one
 point in a five-state workflow.
 
@@ -17,10 +28,14 @@ point in a five-state workflow.
 Three rules are worth stating in prose, because each is a decision somebody will
 otherwise re-argue:
 
+## Money runs in two directions
+
 **Money runs in two directions and is never added together.** A *fine* is owed
 TO the authority; a *compensation claim* is owed BY it. Which direction — if any
 — an incident can carry is the **sub-category's** business, which is how roadkill
 carries a fine while natural mortality beside it carries nothing.
+
+## No money record is opened at filing
 
 **No money record is opened at filing.** A sub-category that *carries* money is
 one whose form offers the fields; that is not a claim that this incident involves
@@ -28,6 +43,8 @@ any. The row appears when somebody records an amount — which is also when the
 case file's money card appears, and why a roadkill where no driver was ever
 identified can still be resolved rather than waiting forever for a payment nobody
 is making.
+
+## Two taxonomies coexist, for now
 
 **Two taxonomies coexist, for now.** The seeded org-wide `IncidentCategory`
 tree is what filed incidents currently point at; the new area-scoped
@@ -38,23 +55,27 @@ step that follows this slice. The admin's "copy from another area" gesture is
 deliberately deferred: it needs to enumerate areas and read their names — which
 `Uhifadhi\Contracts\Entity\AreaInterface` now exposes (`getName`,
 `getUuidString`, and enumeration through the ORM against the interface; see
-[module-contracts/docs/area-contract.md](https://github.com/uhifadhilabs/module-contracts/blob/main/docs/area-contract.md)) —
+[the core's `area-contract.md`](https://github.com/uhifadhilabs/uhifadhi/blob/main/src/Uhifadhi/Contracts/docs/area-contract.md)) —
 but the gesture itself is not yet ruled, and the empty-state template marks the
-seam.
+contract.
+
+## How this module references areas
 
 **How this module references areas.** `Incident::$area` and the area-scoped
 `TaxonomyKind` are mapped to the concrete `Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest`,
 not to the `AreaInterface` contract. The contract lets a module point at an area
-*without* requiring area-module — the way team-module's `Department` does — but
-this module already hard-requires area-module for its PostGIS points, zones and
-overview seams, so the concrete class costs it nothing it was avoiding and keeps
+*without* requiring AreaBundle — the way TeamBundle's `Department` does — but
+this module already hard-requires AreaBundle for its PostGIS points, zones and
+overview contributions, so the concrete class costs it nothing it was avoiding and keeps
 the area's own accessors in hand. Loose coupling through the interface is the
-right call for a module that has no other reason to depend on area-module; that is
+right call for a module that has no other reason to depend on AreaBundle; that is
 not this one.
+
+## Provenance is written once
 
 **Provenance is written once and never edited.** An incident filed from a patrol
 observation stays linked to that observation forever
-(`Incident::recordProvenance()` refuses a second call). The seam is a UUID, a
+(`Incident::recordProvenance()` refuses a second call). The hand-off is a UUID, a
 label and a URL rather than a foreign key, because the patrols module is a
 separate bundle and a host may install either without the other — see
 [the report flow](screens.md).

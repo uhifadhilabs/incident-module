@@ -36,13 +36,13 @@ use Uhifadhi\Incident\UhifadhiIncidentBundle;
  * WHAT THIS MODULE PUTS ON THE HOST'S AREA OVERVIEW — the five contracts, each
  * answered against the same real register.
  *
- * The seam's whole claim is that a module contributes PARTS and the host draws
+ * The contract's whole claim is that a module contributes PARTS and the area draws
  * them without knowing what they are. So these assertions are about the parts:
  * a tile with an index and a subline, an item with a severity and an age, a
  * layer with a legend, a move with a state. Whether the host lays them out
  * correctly is the host's own test.
  */
-final class IncidentOverviewSeamTest extends OverviewTestCase
+final class IncidentOverviewContributionTest extends OverviewTestCase
 {
     public function testEveryProviderAnswersForTheModulesOwnSlug(): void
     {

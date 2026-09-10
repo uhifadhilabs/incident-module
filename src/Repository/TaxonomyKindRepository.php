@@ -21,7 +21,7 @@ use Uhifadhi\Incident\Entity\TaxonomyKind;
 
 /**
  * The area-scoped taxonomy's top level. EVERY read here is confined to one area:
- * the taxonomy is Ngorongoro's own, and a query that forgot the area filter would
+ * the taxonomy is Northern Reserve's own, and a query that forgot the area filter would
  * be the one bug the whole area-scoping rules against.
  *
  * @extends ServiceEntityRepository<TaxonomyKind>

@@ -1,11 +1,21 @@
 # Charter
 
+## Contents
+
+- [One record type, many readers](#one-record-type-many-readers)
+- [Departments are a lens, never a fence](#departments-are-a-lens-never-a-fence)
+- [Dashboard surfaces ride the shell's widget framework](#dashboard-surfaces-ride-the-shells-widget-framework)
+
+## One record type, many readers
+
 **One record type, many readers.** An incident is a thing that happened in an
 area. The same record serves **Protection** (poaching, compliance) and
 **Ecology** (mortality, roadkill, human–wildlife conflict outcomes) — not by
 copying the data into two modules, but by reading **subsets of one taxonomy**. A
 poaching incident and a roadkill incident are the same kind of record with
 different classifications.
+
+## Departments are a lens, never a fence
 
 **Departments are a lens, never a fence.** A department attaching this module
 changes what a team *sees first* — it never gates what data exists or who may
@@ -15,8 +25,10 @@ for this module, which is why there is deliberately **no `incidents.view`
 permission**: a view permission is exactly the tool somebody would eventually use
 to hide one department's rows from another.
 
-**Dashboard surfaces ride the fleet's widget framework.** The module's dashboard
-is composed on uhifadhi/widget-module's `WidgetService` / `WidgetCatalog` preset component —
-the same technique behind the host's departments, team and zones surfaces —
+## Dashboard surfaces ride the shell's widget framework
+
+**Dashboard surfaces ride the shell's widget framework.** The module's dashboard
+is composed on ShellBundle's `WidgetService` / `WidgetCatalog` preset component —
+the same technique behind the core's own departments, team and zones surfaces —
 rather than a second widget implementation inside this bundle. This module ships
 a catalogue and sixteen Twig partials; it ships no widget mechanics at all.

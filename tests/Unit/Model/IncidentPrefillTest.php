@@ -28,12 +28,12 @@ use Uhifadhi\Incident\Model\IncidentPrefill;
  */
 final class IncidentPrefillTest extends TestCase
 {
-    /** The design's own example: the observation at 3°12'05"S 35°27'44"E. */
+    /** The design's own example: the observation at 3°12'05"S 29°32'16"W. */
     public function testThePositionReadsAsDegreesMinutesSecondsLikeTheObservationPage(): void
     {
-        $prefill = new IncidentPrefill(latitude: -3.2014, longitude: 35.4622);
+        $prefill = new IncidentPrefill(latitude: -3.2014, longitude: -29.5378);
 
-        self::assertSame('3°12\'05"S 35°27\'44"E', $prefill->positionLabel());
+        self::assertSame('3°12\'05"S 29°32\'16"W', $prefill->positionLabel());
     }
 
     /** North and east are the other half of the compass, and are not assumed. */
@@ -65,7 +65,7 @@ final class IncidentPrefillTest extends TestCase
     }
 
     /**
-     * THE SOURCE, NAMED IN WORDS. The seam is a query string and the module on
+     * THE SOURCE, NAMED IN WORDS. The hand-off is a query string and the module on
      * the other side of it chooses the token, so an unrecognised one is printed
      * as-is rather than swallowed: the card says where the report came from even
      * when this module has never heard of that kind of source.
@@ -73,7 +73,7 @@ final class IncidentPrefillTest extends TestCase
     public function testAKnownSourceIsNamedAndAnUnknownOneIsStillPrinted(): void
     {
         // ONE TOKEN ON THE WIRE, and it is the one patrol actually sends: the
-        // seam's `source` names the SENDING MODULE, singular. The enum names
+        // query string's `source` names the SENDING MODULE, singular. The enum names
         // WHERE A REPORT CAME FROM, which is a stored vocabulary that does not
         // get renamed to tidy a query string — so the two are mapped, and both
         // spellings print the same badge rather than one of them printing raw.
@@ -95,7 +95,7 @@ final class IncidentPrefillTest extends TestCase
     }
 
     /**
-     * THE SEAM SURVIVES THE POST. The form's action carries the prefill back to
+     * THE HAND-OFF SURVIVES THE POST. The form's action carries the prefill back to
      * the server, because the container the flow re-opens in, the source card a
      * refused filing comes back with and the provenance written onto the incident
      * are all read from the query.
@@ -111,7 +111,7 @@ final class IncidentPrefillTest extends TestCase
             source: 'patrol_observation',
             occurredAt: new \DateTimeImmutable('2026-08-22T08:15:00+03:00'),
             latitude: -3.2014,
-            longitude: 35.4622,
+            longitude: -29.5378,
             subcategorySlug: 'livestock-depredation',
             note: 'Fresh lion tracks 400 m from the bomas.',
         )->toQuery();
@@ -124,7 +124,7 @@ final class IncidentPrefillTest extends TestCase
         // field observation in UTC.
         self::assertSame('2026-08-22T08:15:00+03:00', $query['at']);
         self::assertSame('-3.2014', $query['lat']);
-        self::assertSame('35.4622', $query['lng']);
+        self::assertSame('-29.5378', $query['lng']);
         self::assertSame('livestock-depredation', $query['category']);
         self::assertSame('Fresh lion tracks 400 m from the bomas.', $query['note']);
     }

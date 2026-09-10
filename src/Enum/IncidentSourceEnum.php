@@ -45,7 +45,7 @@ enum IncidentSourceEnum: string
      * THE BADGE A WIRE TOKEN EARNS, and null where the token names nothing this
      * module has heard of.
      *
-     * The seam's `source` names the SENDING MODULE, singular, as that module puts
+     * The query string's `source` names the SENDING MODULE, singular, as that module puts
      * it on the wire — patrol sends `patrol`. This enum names WHERE A REPORT CAME
      * FROM, which is a different vocabulary and a STORED one: `patrol_observation`
      * is on rows in the database and does not get renamed to tidy a query string.

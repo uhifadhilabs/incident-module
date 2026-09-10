@@ -56,7 +56,7 @@ use Uhifadhi\Incident\Service\TaxonomyAdminService;
  * write here rides on `incidents.manage` and there is nobody to grant it without
  * a firewall.
  *
- * THE COPY-FROM-ANOTHER-AREA PICKER IS DEFERRED, and the seam is marked in the
+ * THE COPY-FROM-ANOTHER-AREA PICKER IS DEFERRED, and the socket is marked in the
  * empty-state template. It needs to enumerate areas and read their NAMES, which
  * requires an area-directory contract that is not yet ruled; this admin ships the
  * "write the first kind" start and leaves the picker's socket open. See

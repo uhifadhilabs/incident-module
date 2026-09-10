@@ -72,11 +72,11 @@ abstract class IntegrationTestCase extends KernelTestCase
     {
         $area = new AreaOfInterest();
         $area->setName($name);
-        // NOT NULL in uhifadhi/area-module: an area is always something an
+        // NOT NULL in AreaBundle: an area is always something an
         // installation got from somewhere, and the stub this suite used to map
         // let it be null.
         $area->setSource('test fixture');
-        $area->setGeom('{"type":"MultiPolygon","coordinates":[[[[35.0,-3.6],[36.0,-3.6],[36.0,-2.8],[35.0,-2.8],[35.0,-3.6]]]]}');
+        $area->setGeom('{"type":"MultiPolygon","coordinates":[[[[-30.0,-3.6],[-29.0,-3.6],[-29.0,-2.8],[-30.0,-2.8],[-30.0,-3.6]]]]}');
         $this->em->persist($area);
         $this->em->flush();
 
@@ -87,7 +87,7 @@ abstract class IntegrationTestCase extends KernelTestCase
      * A zone inside that area — a real polygon, so the point-in-polygon lookup is
      * exercised against PostGIS rather than assumed.
      */
-    protected function aZone(AreaOfInterest $area, string $name, float $west = 35.0, float $east = 35.5): Zone
+    protected function aZone(AreaOfInterest $area, string $name, float $west = -30.0, float $east = -29.5): Zone
     {
         $zone = new Zone();
         $zone->setArea($area)->setName($name);
@@ -106,7 +106,7 @@ abstract class IntegrationTestCase extends KernelTestCase
     {
         $user = new User();
         $user->setEmail($email)->setFirstName($first)->setLastName($last);
-        // NOT NULL in uhifadhi/team-module. Nothing here signs in with a
+        // NOT NULL in TeamBundle. Nothing here signs in with a
         // password — the tests use loginUser() and a test header — but a person
         // is a row and the row has to be storable.
         $user->setPassword('not-used-by-these-tests');
@@ -168,7 +168,7 @@ abstract class IntegrationTestCase extends KernelTestCase
             area: $area,
             subcategory: $this->subcategory($subcategory),
             title: $title,
-            position: '{"type":"Point","coordinates":[35.25,-3.21]}',
+            position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: $at ?? new \DateTimeImmutable('2026-08-20 05:41:00'),
             reportedBy: $reportedBy,
         );

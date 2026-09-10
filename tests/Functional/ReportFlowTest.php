@@ -45,7 +45,7 @@ final class ReportFlowTest extends FunctionalTestCase
         'back' => '/areas/x/modules/patrols/observation/2',
         'at' => '2026-08-22T08:15:00+03:00',
         'lat' => '-3.2014',
-        'lng' => '35.4622',
+        'lng' => '-29.5378',
         'note' => 'Fresh lion tracks 400 m from the bomas.',
     ];
 
@@ -236,7 +236,7 @@ final class ReportFlowTest extends FunctionalTestCase
             'subcategory' => 'livestock-depredation',
             'title' => str_repeat('a', 260),
             'lat' => '-3.21',
-            'lng' => '35.25',
+            'lng' => '-29.75',
         ]);
 
         self::assertResponseRedirects();
@@ -256,7 +256,7 @@ final class ReportFlowTest extends FunctionalTestCase
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
 
-        // Everything the seam sends EXCEPT the record.
+        // Everything the hand-off sends EXCEPT the record.
         $query = self::FROM_A_RECORD;
         unset($query['label']);
 
@@ -448,7 +448,7 @@ final class ReportFlowTest extends FunctionalTestCase
             'subcategory' => 'livestock-depredation',
             'title' => 'Lion killed four goats at Riverside',
             'lat' => '-3.21',
-            'lng' => '35.25',
+            'lng' => '-29.75',
             'severity' => 'high',
             'narrative' => 'They came in the night.',
             'details_species' => 'Lion',
@@ -508,7 +508,7 @@ final class ReportFlowTest extends FunctionalTestCase
             'subcategory' => 'livestock-depredation',
             'title' => '   ',
             'lat' => '-3.21',
-            'lng' => '35.25',
+            'lng' => '-29.75',
         ]);
 
         self::assertResponseStatusCodeSame(422);
@@ -535,7 +535,7 @@ final class ReportFlowTest extends FunctionalTestCase
             'subcategory' => 'livestock-depredation',
             'title' => '',
             'lat' => '-3.2014',
-            'lng' => '35.4622',
+            'lng' => '-29.5378',
         ]);
 
         self::assertResponseStatusCodeSame(422);
@@ -566,7 +566,7 @@ final class ReportFlowTest extends FunctionalTestCase
             // was made.
             'at' => '2026-08-22T08:15:00+03:00',
             'lat' => '-3.2014',
-            'lng' => '35.4622',
+            'lng' => '-29.5378',
             'note' => 'Fresh lion tracks 400 m from the bomas.',
         ]);
 
@@ -577,7 +577,7 @@ final class ReportFlowTest extends FunctionalTestCase
         // The note, verbatim.
         self::assertStringContainsString('Fresh lion tracks 400 m from the bomas.', $card->filter('.note')->text());
         // The position, in the observation page's own notation.
-        self::assertStringContainsString('3°12\'05"S 35°27\'44"E', $card->filter('.facts')->text());
+        self::assertStringContainsString('3°12\'05"S 29°32\'16"W', $card->filter('.facts')->text());
         self::assertStringContainsString('patrol observation', $card->filter('.facts')->text());
         // THE TIME AS THE OBSERVER WROTE IT — 08:15 in the field, not 05:15 in
         // UTC. A card meant to be recognised must not restate the moment in a
@@ -589,7 +589,7 @@ final class ReportFlowTest extends FunctionalTestCase
 
     /**
      * THE SOURCE CARD SHOWS THE RECORD'S PHOTOGRAPHS — through the cross-module
-     * seam, and without this bundle knowing what an observation is.
+     * hand-off, and without this bundle knowing what an observation is.
      *
      * It has a record uuid and a source token from a query string, and it hands
      * both straight to the platform's file registry, which asks the module that
@@ -619,7 +619,7 @@ final class ReportFlowTest extends FunctionalTestCase
         );
         self::assertCount(2, $crawler->filter('.i-src .shots img'));
         // …and the strip says so in the card's own words.
-        self::assertStringContainsString('2 photographs', $crawler->filter('.i-src .seam')->text());
+        self::assertStringContainsString('2 photographs', $crawler->filter('.i-src .i-srcnote')->text());
     }
 
     /**
@@ -667,7 +667,7 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertResponseIsSuccessful();
         self::assertCount(1, $crawler->filter('.i-src'));
         self::assertCount(0, $crawler->filter('.i-src .shots'));
-        self::assertStringNotContainsString('photograph', $crawler->filter('.i-src .seam')->text());
+        self::assertStringNotContainsString('photograph', $crawler->filter('.i-src .i-srcnote')->text());
         // Nothing to open, so the overlay's stylesheet is not asked for either.
         self::assertStringNotContainsString('uhifadhistorage/preview', $crawler->html());
     }
@@ -684,7 +684,7 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * ARRIVING FROM A PATROL OBSERVATION. The seam is a query string, because the
+     * ARRIVING FROM A PATROL OBSERVATION. The hand-off is a query string, because the
      * two modules are separate bundles and neither may name the other's classes.
      * Everything it carries is a guess the filer may overrule — except the link,
      * which is written once and never again.
@@ -702,7 +702,7 @@ final class ReportFlowTest extends FunctionalTestCase
             'back' => '/areas/x/modules/patrols/observation/2',
             'at' => '2026-08-22T08:15:00+00:00',
             'lat' => '-3.2014',
-            'lng' => '35.4622',
+            'lng' => '-29.5378',
             'category' => 'livestock-depredation',
             'note' => 'Fresh lion tracks 400 m from the bomas.',
         ]);
@@ -719,7 +719,7 @@ final class ReportFlowTest extends FunctionalTestCase
             'subcategory' => 'livestock-depredation',
             'title' => 'Fresh lion tracks 400 m from North Gate bomas',
             'lat' => '-3.2014',
-            'lng' => '35.4622',
+            'lng' => '-29.5378',
         ]);
 
         self::assertResponseRedirects();
@@ -765,7 +765,7 @@ final class ReportFlowTest extends FunctionalTestCase
             'subcategory' => 'livestock-depredation',
             'title' => 'Lion killed four goats at Riverside',
             'lat' => '-3.21',
-            'lng' => '35.25',
+            'lng' => '-29.75',
         ]);
 
         self::assertResponseStatusCodeSame(403);

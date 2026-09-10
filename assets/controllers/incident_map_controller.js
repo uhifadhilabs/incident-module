@@ -8,7 +8,7 @@ import { mountMapChrome } from 'uhifadhi/map-chrome';
  * map plate. The overview maps and the detail "Where" card are the same plate.
  *
  * THE PLATE IS THE PLATFORM'S, NOT THIS MODULE'S. The two base layers come from
- * uhifadhi/map-module's one basemap module (`uhifadhi/basemaps`, an importmap
+ * the atlas's one basemap module (`uhifadhi/basemaps`, an importmap
  * specifier): satellite is the platform's imagery, standard is OSM. The boundary
  * comes from `uhifadhi/boundary` and the zoom column, layer menu, scale bar and
  * fullscreen from `uhifadhi/map-chrome`, exactly as the patrols module draws
@@ -114,7 +114,7 @@ export default class extends Controller {
         // trips Leaflet 1.9.4 when a geoJSON group and a bare circleMarker share
         // the renderer. Setting a fallback view first is the verified fix, and
         // fitBounds below still wins whenever there is anything to frame.
-        this.map.setView([-3.2, 35.5], 8);
+        this.map.setView([-3.2, -29.5], 8);
 
         const bounds = L.latLngBounds([]);
 

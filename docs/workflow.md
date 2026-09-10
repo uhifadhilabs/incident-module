@@ -1,4 +1,11 @@
-# The workflow, and the seam under it
+# The workflow, and the definition under it
+
+## Contents
+
+- [The five places](#the-five-places)
+- [The definition](#the-definition)
+
+## The five places
 
 ```
 reported → verified → in progress → resolved → closed
@@ -17,9 +24,9 @@ reported → verified → in progress → resolved → closed
   stage of *work*, and "we have not met this reporter" is a property of the
   *report*.
 
-## The seam
+## The definition
 
-`src/Workflow/IncidentWorkflow.php` **is** the seam for a future platform
+`src/Workflow/IncidentWorkflow.php` **is** the definition for a future platform
 workflow module. When one lands, that class is what it replaces, and nothing else
 in the bundle has to move — which is only true because of three constraints:
 

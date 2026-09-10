@@ -39,7 +39,7 @@ final class IncidentEventRepository extends ServiceEntityRepository
      * pulse merges with every other module's moves.
      *
      * The one question a screen asks of events rather than of incidents, and the
-     * reason is the seam: the pulse is a log of MOVES, not of records, so the
+     * reason is the contribution point: the pulse is a log of MOVES, not of records, so the
      * event IS the row and the incident is what it happened to. Newest first,
      * because that is the order the pulse draws and sorting it twice would be
      * the host re-deciding something the query already knows.

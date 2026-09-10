@@ -36,7 +36,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
  * ({@see DEFAULT_LABEL}) rather than left as a generic "Default layout" — the
  * host's {@see WidgetCatalog::builtins()} leads the strip with it.
  *
- * It rides uhifadhi/widget-module rather than a copy of it: the dashboard, the
+ * It rides the shell's widget machinery rather than a copy of it: the dashboard, the
  * library and the save endpoint all read this one object, so a widget can never
  * exist on one screen and not the other.
  *

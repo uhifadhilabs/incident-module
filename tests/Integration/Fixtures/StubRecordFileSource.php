@@ -21,7 +21,7 @@ use Uhifadhi\Storage\Model\FileGuard;
 use Uhifadhi\Storage\Registry\FileSourceInterface;
 
 /**
- * THE MODULE ON THE OTHER SIDE OF THE SEAM, played by a fixture.
+ * THE MODULE ON THE OTHER SIDE OF THE CONTRACT, played by a fixture.
  *
  * It stands where patrol-module stands in a real deployment: it owns records this
  * bundle knows nothing about, and it alone can say which photographs belong to
@@ -30,7 +30,7 @@ use Uhifadhi\Storage\Registry\FileSourceInterface;
  * route and no key prefix of the module that holds them.
  *
  * It answers to the SINGULAR wire token and to its own module slug, because that
- * is the pair a real seam carries: patrol sends `source=patrol` and calls itself
+ * is the pair a real hand-off carries: patrol sends `source=patrol` and calls itself
  * "patrols" on the hub.
  *
  * Everything it publishes is synthetic and deliberately NOT a client's words.
@@ -60,7 +60,7 @@ final class StubRecordFileSource implements FileSourceInterface
     }
 
     /**
-     * NOTHING ON THE HUB. This fixture speaks for exactly one seam — "give me
+     * NOTHING ON THE HUB. This fixture speaks for exactly one hand-off — "give me
      * that record's photographs" — and publishing to /files as well would make
      * every hub-wide assertion in this suite about a module that exists only to
      * stand on the other side of a query string.

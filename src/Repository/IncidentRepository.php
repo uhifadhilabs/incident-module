@@ -38,7 +38,7 @@ use Uhifadhi\Incident\Workflow\IncidentWorkflow;
  *
  * THE DEPARTMENT SLICE IS REPORTING, NEVER PERMISSION. {@see findForDepartment()}
  * slices by the DEPARTMENT THE RECORDING PERSON'S POSITION IS FILED UNDER,
- * exactly as the host's KPI seam specifies. Two departments reading the same area
+ * exactly as the KPI contract specifies. Two departments reading the same area
  * get two different numbers from the same rows — and neither is fenced out of the
  * other's rows, because nothing here ever filters what a screen may SEE by
  * department.
@@ -575,7 +575,7 @@ final class IncidentRepository extends ServiceEntityRepository
      * draws.
      *
      * The slice is by the position the RECORDER holds, per the area module's
-     * seam. It is reporting and not permission: nothing else in this class
+     * contribution point. It is reporting and not permission: nothing else in this class
      * filters by department, and no screen may.
      *
      * THE DEPARTMENT ARRIVES AS AN ID, because no package publishes a contract

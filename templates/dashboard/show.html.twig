@@ -6,7 +6,7 @@
    are PRESETS on this surface, not five screens: the library is where one is
    adopted, copied, and mixed with a widget from another.
 
-   Everything below the header is uhifadhi/widget-module
+   Everything below the header is the shell's widget machinery
    (Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService), which is why arranging this dashboard
    works exactly as it does on every other surface in the installation.
    ========================================================================== #}
@@ -69,7 +69,7 @@
         {# A switched-off widget is simply absent — not hidden, not an empty cell. #}
         {% for widget in widgets|filter(w => w.on) %}
             {# w-span-N, never w-N: a bare `w-12` is Tailwind's width utility and
-               would render this cell 48px wide (see uhifadhi/widget-module). #}
+               would render this cell 48px wide (see the shell's widget.css). #}
             <div class="w-cell w-span-{{ widget.cols }}" data-widget-id="{{ widget.id }}" data-widget-cols="{{ widget.cols }}">
                 <div class="w-inner">
                     {{ include('@UhifadhiIncident/dashboard/_w_' ~ widget.id ~ '.html.twig', widgetContext, with_context: false) }}

@@ -95,7 +95,7 @@ final class IncidentSearchTest extends IntegrationTestCase
             area: $area,
             subcategory: $this->subcategory('snaring'),
             title: 'Report with detail',
-            position: '{"type":"Point","coordinates":[35.25,-3.21]}',
+            position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable('2026-08-20 05:41:00'),
             narrative: 'Fresh footprints found near the eastern fence line.',
         );

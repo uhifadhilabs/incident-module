@@ -50,14 +50,14 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     /** Each area owns its own list; the two never merge, even with the same words. */
     public function testKindsAreScopedToTheirArea(): void
     {
-        $ngorongoro = $this->anArea('Ngorongoro');
-        $pololeti = $this->anArea('Pololeti');
+        $northern = $this->anArea('Northern Reserve');
+        $southern = $this->anArea('Southern Reserve');
 
-        $this->admin()->createKind($ngorongoro, 'Poaching & wildlife crime', 'poach');
-        $this->admin()->createKind($pololeti, 'Fire', 'mort');
+        $this->admin()->createKind($northern, 'Poaching & wildlife crime', 'poach');
+        $this->admin()->createKind($southern, 'Fire', 'mort');
 
-        $here = $this->kinds()->forArea($ngorongoro);
-        $there = $this->kinds()->forArea($pololeti);
+        $here = $this->kinds()->forArea($northern);
+        $there = $this->kinds()->forArea($southern);
 
         self::assertCount(1, $here);
         self::assertCount(1, $there);

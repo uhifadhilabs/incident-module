@@ -24,8 +24,8 @@ use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 /**
  * ONE KIND OF INCIDENT IN ONE AREA — the top level of the area-scoped taxonomy
  * the design rules out (option B): the taxonomy is keyed to the CURRENT area, and
- * every area owns its own. Ngorongoro's kinds are a different list from
- * Pololeti's; the two never merge, and nothing here is shared with another area.
+ * every area owns its own. Northern Reserve's kinds are a different list from
+ * Southern Reserve's; the two never merge, and nothing here is shared with another area.
  *
  * THIS IS THE ADMIN'S MODEL, distinct from {@see IncidentCategory} — which is the
  * bundle's older organisation-wide seeded taxonomy. The two coexist while the
@@ -60,7 +60,7 @@ class TaxonomyKind
 
     /**
      * The area this kind belongs to. Mapped to the concrete AreaOfInterest, as
-     * {@see Incident::$area} is: this bundle already requires uhifadhi/area-module
+     * {@see Incident::$area} is: this bundle already requires AreaBundle
      * and its entity is the one identity ({@see AreaOfInterest::getId()}) an area
      * is told apart by. onDelete CASCADE, so removing an area takes its taxonomy.
      */

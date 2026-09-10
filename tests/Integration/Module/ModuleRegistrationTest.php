@@ -24,9 +24,9 @@ use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
  * A reusable bundle is not autoconfigured, so the "uhifadhi.module" tag is
  * applied by hand in the extension — this test is what proves it stuck.
  */
-final class ModuleSeamRegistrationTest extends KernelTestCase
+final class ModuleRegistrationTest extends KernelTestCase
 {
-    public function testTheIncidentsModuleReachesTheHostsCatalogueSeam(): void
+    public function testTheIncidentsModuleReachesTheRegistrysCatalogue(): void
     {
         self::bootKernel();
 
@@ -63,12 +63,12 @@ final class ModuleSeamRegistrationTest extends KernelTestCase
     }
 
     /**
-     * THE DEPARTMENT KPI SEAM. The tag is applied BY HAND in the extension (a
+     * THE DEPARTMENT KPI CONTRIBUTION POINT. The tag is applied BY HAND in the extension (a
      * reusable bundle is not autoconfigured), and a provider that failed to
      * register would show up only as every incidents plate quietly vanishing from
      * every performance page. This test is what makes that loud.
      */
-    public function testItReachesTheHostsDepartmentPerformanceSeam(): void
+    public function testItReachesTheDepartmentPerformanceContract(): void
     {
         self::bootKernel();
 

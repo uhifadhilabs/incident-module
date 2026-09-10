@@ -22,7 +22,7 @@
         {% if prefill.positionLabel %}<span><em>where</em><b>{{ prefill.positionLabel }}</b></span>{% endif %}
         <span><em>source</em><b>{{ prefill.sourceLabel }}</b></span>
     </div>
-    {# THE SOURCE RECORD'S PHOTOGRAPHS, through the cross-module seam.
+    {# THE SOURCE RECORD'S PHOTOGRAPHS, through the cross-module file contract.
 
        This bundle knows a record UUID and a source token and nothing else — it
        may not name the patrols module's classes, its routes or its key prefix,
@@ -58,7 +58,7 @@
         {{ include('@UhifadhiStorage/overlay/_preview.html.twig') }}
     {% endif %}
 
-    <p class="seam">
+    <p class="i-srcnote">
         {%- if files is not empty -%}
             its {{ files|length }} photograph{{ 1 == files|length ? '' : 's' }}, category guess, coordinates, time and
             note are already in the form below · the link is kept forever

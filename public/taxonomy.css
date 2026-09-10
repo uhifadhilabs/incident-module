@@ -276,7 +276,7 @@
 
 /* ── the copy-from-an-existing-area panel, in the empty start ──────────────
    RULED but DEFERRED in the app until the area-directory contract is ruled;
-   the template marks the seam. Styles kept so the socket renders as designed. */
+   the template marks the socket. Styles kept so it renders as designed. */
 .tx-copy{border:1px solid var(--ln2);border-radius:14px;padding:16px 18px 14px;margin:0 auto 22px;
   max-width:660px;background:color-mix(in srgb,var(--acc) 4%,transparent);text-align:left}
 .tx-copy .hd{display:flex;align-items:baseline;gap:9px;margin:0 0 4px}

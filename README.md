@@ -4,6 +4,14 @@ What happened in an area, recorded once: poaching, human–wildlife conflict
 (with the fines and compensation that follow), compliance and encroachment, and
 wildlife mortality. A [uhifadhi](https://github.com/uhifadhilabs) module bundle.
 
+## Contents
+
+- [What it is](#what-it-is)
+- [Installation](#installation)
+- [Getting started](#getting-started)
+- [Learn more](#learn-more)
+- [License](#license)
+
 ## What it is
 
 An **incident** is one event, in one area, at one place, in one category, at one
@@ -12,7 +20,7 @@ closed`. One record type serves every reader: Protection and Ecology read
 subsets of one taxonomy rather than each keeping their own copy.
 
 The module ships seven `incident*` tables, the report flow, the case file, a
-sixteen-widget dashboard surface composed on uhifadhi/widget-module, and a
+sixteen-widget dashboard surface composed on the shell's widget machinery, and a
 seeded, configurable taxonomy of four kinds and sixteen sub-categories.
 
 ## Installation
@@ -20,6 +28,22 @@ seeded, configurable taxonomy of four kinds and sixteen sub-categories.
 ```bash
 composer require uhifadhi/incident-module
 ```
+
+Neither this package nor the core it requires is on Packagist yet, and neither
+carries a stable tag, so an installation names where both come from. Composer
+reads `repositories` from the ROOT package only — an entry in a dependency's own
+`composer.json` is ignored — so these lines belong in the application's:
+
+```json
+"repositories": [
+    { "type": "vcs", "url": "https://github.com/uhifadhilabs/uhifadhi" },
+    { "type": "vcs", "url": "https://github.com/uhifadhilabs/incident-module" },
+    { "type": "vcs", "url": "https://github.com/uhifadhilabs/storage-module" }
+]
+```
+
+The third line is needed only where the installation also wants incident
+evidence on the Files hub; the second can go once this package is published.
 
 The bundle registers via Flex (`"type": "symfony-bundle"`), which adds
 `Uhifadhi\Incident\UhifadhiIncidentBundle` to `config/bundles.php`.
@@ -34,9 +58,10 @@ Then, in the host:
    account class. They are mapped to
    `Uhifadhi\Contracts\Entity\UserInterface`, and the installation resolves
    that interface to whatever it calls its people. Install
-   `uhifadhi/team-module` and the answer arrives with it (0.3.2 and later states
-   the resolution from its own bundle); otherwise write one line naming your own
-   class, under the `orm:` key already in `config/packages/doctrine.yaml`:
+   the core (`uhifadhi/uhifadhi`) and the answer arrives with it — TeamBundle
+   states the resolution from its own bundle; otherwise write one line naming
+   your own class, under the `orm:` key already in
+   `config/packages/doctrine.yaml`:
 
    ```yaml
    doctrine:
@@ -70,40 +95,48 @@ The three Stimulus controllers — `incident-map`, `incident-board`,
 `composer require`/`update`, because the package declares the `symfony-ux`
 keyword.
 
-Everything this module binds to now arrives as a module of its own, and composer
-installs all of them: the area an incident happens in and its zones from
-`uhifadhi/area-module`, the dashboard framework from `uhifadhi/widget-module`,
-Leaflet and the map seam from `uhifadhi/map-module`, and the two seam contracts
-from `uhifadhi/module-contracts`. Three more are suggestions rather than
-requirements: `uhifadhi/shell-module` is the page frame every screen renders in,
-`uhifadhi/seam-module` is the per-area catalogue this module registers itself in,
-and `uhifadhi/storage-module` puts an incident's evidence on the Files hub.
+Everything this module binds to arrives in ONE package, `uhifadhi/uhifadhi` —
+the core, whose five bundles are what these screens stand on: AreaBundle for the
+area an incident happens in and its zones, ShellBundle for the page frame and
+the widget machinery the dashboard is, AtlasBundle for Leaflet and the map
+chrome, RegistryBundle for the per-area catalogue this module registers itself
+in, and TeamBundle for the account class. The contracts it implements ship
+inside it. One package is a suggestion rather than a requirement:
+`uhifadhi/storage-module` puts an incident's evidence on the Files hub, and
+without it every incident screen still works and simply has no `/files` to
+appear on.
 
 The one thing an installation still provides is the ACCOUNT CLASS behind the
-person contract — see the user contract above. `uhifadhi/team-module` answers it
-from its own bundle; an installation with an account class of its own names it in
-one line of `resolve_target_entities`. symfony/ux-icons with the `lucide` set
-imported is the other standing expectation.
+person contract — see the user contract above. TeamBundle answers it from its
+own bundle; an installation with an account class of its own names it in one
+line of `resolve_target_entities`.
+
+**Icons need nothing imported.** This module registers its own set and draws
+under two prefixes only: `incident:`, answered by the glyphs it ships in
+`assets/icons/incident`, and `shell:`, answered by the core. No `lucide:` name is
+drawn from here, so a deployment with on-demand fetching off — which is what a
+deployment configures — renders every mark on these pages.
 
 ## Learn more
 
 - [Charter](docs/charter.md) — one record type and many readers, why departments
-  are a lens and never a fence, and why the dashboard rides the host's framework.
+  are a lens and never a fence, and why the dashboard rides the shell's framework.
 - [The model](docs/the-model.md) — the seven tables, and the three rules about
   money, filing and provenance that somebody will otherwise re-argue.
-- [The workflow, and the seam under it](docs/workflow.md) — the five places,
+- [The workflow, and the definition under it](docs/workflow.md) — the five places,
   their guards, and how `IncidentWorkflow` maps one-to-one onto a Symfony
   `state_machine`.
 - [Screens](docs/screens.md) — the routes, why the five design directions are
   presets rather than pages, and the query string another module files with.
 - [Permissions](docs/permissions.md) — the two declared permissions and the
-  sentences the host's matrix prints under them.
+  sentences the permission matrix prints under them.
 - [Configuration](docs/configuration.md) — `config/packages/incident.yaml`, the
   taxonomy tree, and what `leads` does and does not decide.
 - [Evidence on the Files hub](docs/files-hub.md) — the optional
-  `uhifadhi/storage-module` seam, and what this module honestly knows about a file.
-- [Dev tooling](docs/dev-tooling.md) — `incidents:seed:demo`, the design's sample
-  month, and why it is registered only where `incident.dev_tools` is on.
+  `uhifadhi/storage-module` contract, and what this module honestly knows about a file.
+- [Dev tooling](docs/dev-tooling.md) — the demo month this module declares for
+  devkit to seed, the two commands that stay, and what the declaration cannot
+  write yet.
 - [Development](docs/development.md) — `composer check`, the tooling levels, and
   the real-PostGIS test suites.
 

@@ -39,7 +39,7 @@ use PHPUnit\Framework\TestCase;
  * screen. Only markup is scanned.
  *
  * Ported from uhifadhi/patrol-module, uhifadhi/storage-module and
- * uhifadhi/team-module, which learned this the same way: by rendering them.
+ * TeamBundle, which learned this the same way: by rendering them.
  */
 final class NoWorkshopLabelsTest extends TestCase
 {

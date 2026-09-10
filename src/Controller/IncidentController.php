@@ -44,7 +44,7 @@ use Uhifadhi\Incident\Widget\IncidentWidgets;
  * never called. FrameworkBundle's own TemplateController is written exactly this
  * way — see vendor/symfony/framework-bundle/Controller/TemplateController.php.
  *
- * It rides uhifadhi/widget-module: the catalogue is
+ * It rides the shell's widget machinery: the catalogue is
  * {@see IncidentWidgets::declaration()} and the layout comes from the host's
  * {@see WidgetService}, so the incidents dashboard arranges itself exactly as
  * departments, team and zones do and this bundle ships no widget mechanics of

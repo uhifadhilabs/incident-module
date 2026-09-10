@@ -190,7 +190,7 @@ final class IncidentContentProviderTest extends IntegrationTestCase
     public function testZonesAreAttachedWhereTheAreaHasThemDrawn(): void
     {
         $area = $this->anArea();
-        $this->aZone($area, 'North Gate', 35.0, 35.5);
+        $this->aZone($area, 'North Gate', -30.0, -29.5);
         $this->provider()->load();
         $this->em->clear();
 

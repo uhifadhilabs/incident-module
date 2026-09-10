@@ -60,7 +60,7 @@ final class IncidentTransitionServiceTest extends TestCase
             $subcategory,
             'INC-0313',
             'Lion killed four goats at Riverside',
-            '{"type":"Point","coordinates":[35.45,-3.21]}',
+            '{"type":"Point","coordinates":[-29.55,-3.21]}',
             $this->now('2026-08-20 05:41:00'),
         );
     }

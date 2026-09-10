@@ -56,7 +56,7 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
             area: $area,
             subcategory: $this->subcategory($subcategory),
             title: $title,
-            position: '{"type":"Point","coordinates":[35.25,-3.21]}',
+            position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: $at,
             severity: $severity,
         );

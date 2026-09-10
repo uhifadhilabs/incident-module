@@ -26,7 +26,7 @@ use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
  * flow bar, today's card, the latest list and the money card share a reading of
  * the morning, and computing them per widget would let two cards on one page
  * disagree because each asked at a slightly different second. The host's
- * contributor seam is explicit about it — one `context()` per area, per render.
+ * contributor contract is explicit about it — one `context()` per area, per render.
  *
  * IT IS NOT THE DASHBOARD IN MINIATURE. The dashboard loads ONE month and reads
  * it nine ways; this holds four unrelated sets, because the four questions have

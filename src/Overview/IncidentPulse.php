@@ -27,7 +27,7 @@ use Uhifadhi\Incident\Repository\IncidentEventRepository;
  * The pulse is a log of MOVES, not of records: an incident verified, a note
  * written, evidence attached, a figure changed. This module has kept exactly
  * that log since it shipped — the append-only timeline that is the spine of a
- * case file — so the seam is answered by reading it, not by writing a second
+ * case file — so the contribution is answered by reading it, not by writing a second
  * one.
  *
  * WHEN THE PLATFORM'S WORKFLOW MODULE LANDS, THIS IS WHAT IT FILLS. The

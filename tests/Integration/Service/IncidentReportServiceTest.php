@@ -74,10 +74,10 @@ final class IncidentReportServiceTest extends IntegrationTestCase
     public function testTheZoneIsResolvedFromTheRealGeometry(): void
     {
         $area = $this->anArea();
-        $west = $this->aZone($area, 'North Gate', 35.0, 35.5);
-        $this->aZone($area, 'South Gate', 35.5, 36.0);
+        $west = $this->aZone($area, 'North Gate', -30.0, -29.5);
+        $this->aZone($area, 'South Gate', -29.5, -29.0);
 
-        // 35.25 is inside North Gate and outside South Gate.
+        // -29.75 is inside North Gate and outside South Gate.
         $incident = $this->anIncident($area);
 
         self::assertSame($west->getId(), $incident->getZone()?->getId());
@@ -139,7 +139,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
             area: $this->anArea(),
             subcategory: $this->subcategory('livestock-depredation'),
             title: 'Fresh lion tracks 400 m from North Gate bomas',
-            position: '{"type":"Point","coordinates":[35.25,-3.21]}',
+            position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable('2026-08-22 08:15:00'),
             source: IncidentSourceEnum::PatrolObservation,
             prefill: new IncidentPrefill(
@@ -167,7 +167,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
             area: $this->anArea(),
             subcategory: $this->subcategory('crop-raiding'),
             title: 'Elephants in the gardens at Spring Basin',
-            position: '{"type":"Point","coordinates":[35.25,-3.21]}',
+            position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable('2026-08-22 06:00:00'),
             source: IncidentSourceEnum::Sms,
         );
@@ -188,7 +188,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
             area: $this->anArea(),
             subcategory: $this->subcategory('roadkill'),
             title: 'Zebra roadkill on the C-road',
-            position: '{"type":"Point","coordinates":[35.25,-3.21]}',
+            position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable('2026-08-21 16:20:00'),
             details: ['species' => 'Zebra', 'enclosure' => 'thorn boma', 'road_segment' => 'C-road, km 12'],
         );

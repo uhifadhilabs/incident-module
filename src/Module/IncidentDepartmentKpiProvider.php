@@ -35,7 +35,7 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
  * absent from all of them rather than being shared out.
  *
  * ── WHICH FIGURES, AND WHY THESE ─────────────────────────────────────────────
- * The host's seam states a rule that decides this list: EVERY KPI IT CARRIES IS
+ * The contract states a rule that decides this list: EVERY KPI IT CARRIES IS
  * BETTER WHEN LARGER, and a module with a less-is-better figure must invert it
  * before handing it over. "Open incidents" and "breaches" are both less-is-better
  * and neither inverts honestly — an area with more open incidents may simply be
@@ -81,7 +81,7 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
     /**
      * THE DEPARTMENT ARRIVES AS A REF, NOT AS AN ENTITY. Nothing publishes a
      * contract for a department — there is no `DepartmentInterface` in
-     * uhifadhi/module-contracts and none in uhifadhi/team-module — so a seam
+     * uhifadhi/contracts and none in TeamBundle — so a contract
      * typed against team's class would make every module that reports a figure
      * hard-require team. {@see DepartmentRef} carries the whole of what a figure
      * needs: the id rows are filed under, the name a plate prints.

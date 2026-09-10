@@ -190,7 +190,7 @@ final class TestKernel extends Kernel
         $container->services()->set(FixedPermissionVoter::class)->tag('security.voter');
 
         // ANOTHER MODULE, holding the photographs of a record this bundle knows
-        // nothing about — the far side of the cross-module file seam the report
+        // nothing about — the far side of the cross-module file contract the report
         // flow's source card draws through. Tagged by hand, for the same reason.
         $container->services()->set(StubRecordFileSource::class)
             ->tag(FileSourceInterface::TAG);
@@ -205,8 +205,8 @@ final class TestKernel extends Kernel
                 // NO 'mappings' AND NO 'resolve_target_entities' HERE, both
                 // deliberately. Every entity this module points at now arrives
                 // with the module that owns it — the area and its zones from
-                // uhifadhi/area-module, the person and the org chart from
-                // uhifadhi/team-module — and each maps its own; team prepends the
+                // AreaBundle, the person and the org chart from
+                // TeamBundle — and each maps its own; team prepends the
                 // contract's resolution from its own bundle, which is the one
                 // line an installation used to have to write. If either ever
                 // stopped happening the schema would not build and this whole
@@ -235,7 +235,7 @@ final class TestKernel extends Kernel
 
         $services = $container->services();
 
-        // Stands in for the SEAM's module catalogue collector and the area
+        // Stands in for the REGISTRY's module catalogue collector and the area
         // module's department-KPI service: both collect tagged services, and
         // tagged services are private, so these collectors are what make the
         // bundle's contributions observable.
@@ -257,7 +257,7 @@ final class TestKernel extends Kernel
             'incident.overview.figures',
             // The six area-overview providers. Tagged by hand in the extension
             // (a reusable bundle does not autoconfigure), and public here so the
-            // seam test can ask each one what it contributes.
+            // contribution test can ask each one what it contributes.
             'incident.overview.contributor',
             'incident.overview.now_tiles',
             'incident.overview.attention',
@@ -270,7 +270,7 @@ final class TestKernel extends Kernel
             // reached directly and asked to do the one thing it does.
             'incident.devkit.content',
             'incident.zone_locator',
-            // The storage seam: the source itself, and the registry the hub
+            // The storage contract: the source itself, and the registry the hub
             // reads it through.
             'incident.file_source',
             'storage.file_registry',

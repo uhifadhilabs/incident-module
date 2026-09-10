@@ -18,7 +18,7 @@ use Uhifadhi\Contracts\ModuleProviderInterface;
 /**
  * The HOST's module catalogue, played by a fixture: it receives every service
  * tagged "uhifadhi.module" exactly as the host's own registry does, so a test
- * can see what this bundle actually contributed to the seam.
+ * can see what this bundle actually contributed to the registry.
  */
 final readonly class CollectedModules
 {
