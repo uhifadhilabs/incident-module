@@ -434,7 +434,8 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 service(IncidentSubcategoryRepository::class),
                 service('incident.report'),
                 service('incident.money'),
-                service('incident.transitions'),
+                service('incident.case'),
+                service('incident.evidence'),
             ])
             ->tag('uhifadhi.devkit.content_provider');
 

@@ -16,12 +16,17 @@ namespace Uhifadhi\Incident\Tests\Integration\Devkit;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 use Uhifadhi\Incident\Devkit\IncidentContentProvider;
 use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentEvidence;
+use Uhifadhi\Incident\Entity\IncidentParty;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Enum\PartyRoleEnum;
 use Uhifadhi\Incident\Model\DemoMonth;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
+use Uhifadhi\Incident\Storage\IncidentFileSource;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
+use Uhifadhi\Storage\Registry\FileRegistry;
 
 /**
  * THE DESIGN'S SAMPLE MONTH, SEEDED THROUGH THE MODULE'S OWN SERVICES — and then
@@ -78,6 +83,133 @@ final class IncidentContentProviderTest extends IntegrationTestCase
         $this->provider()->load();
 
         self::assertSame('livestock depredation', $this->subcategory('livestock-depredation')->getLabel());
+    }
+
+    /**
+     * THE PARTIES THE SAMPLE MONTH NAMES, seeded through the service that now
+     * exists. Six of them across four case files — the claimant, the witness and
+     * the animal the design's worked example draws.
+     */
+    public function testItSeedsThePartiesTheSampleMonthNames(): void
+    {
+        $this->anArea('Sample Area');
+        $this->provider()->load();
+
+        self::assertSame(DemoMonth::partyCount(), $this->em->getRepository(IncidentParty::class)->count([]));
+    }
+
+    /** An animal is a party too, and the design's worked example is where it appears. */
+    public function testTheWorkedExampleCarriesItsAnimal(): void
+    {
+        $this->anArea('Sample Area');
+        $this->provider()->load();
+
+        $roles = array_map(
+            static fn (IncidentParty $party): string => $party->getRole()->value,
+            $this->em->getRepository(IncidentParty::class)->findAll(),
+        );
+
+        self::assertContains(PartyRoleEnum::Animal->value, $roles);
+    }
+
+    /**
+     * EVIDENCE WITH REAL BYTES BEHIND IT. The point of seeding it through the
+     * service rather than writing rows is that the hub then reads a genuine size
+     * and a genuine preview back — a row with a key and no blob would link at a
+     * 404 and be listed nowhere.
+     */
+    public function testItSeedsEvidenceWithBytesBehindIt(): void
+    {
+        $this->anArea('Sample Area');
+        $this->provider()->load();
+
+        $evidence = $this->em->getRepository(IncidentEvidence::class)->findAll();
+        self::assertSame(DemoMonth::evidenceCount(), \count($evidence));
+
+        foreach ($evidence as $item) {
+            self::assertNotNull($item->getPath(), 'Seeded evidence must be keyed, not merely recorded.');
+            self::assertGreaterThan(0, (int) $item->getByteSize());
+            self::assertNotNull($item->getThumbKey(), 'A photograph the machine can decode gets its preview.');
+        }
+    }
+
+    /** Every seeded key is one this module's own voter claims, or nobody may look at it. */
+    public function testEverySeededEvidenceKeyIsClaimedByThisModule(): void
+    {
+        $this->anArea('Sample Area');
+        $this->provider()->load();
+
+        foreach ($this->em->getRepository(IncidentEvidence::class)->findAll() as $item) {
+            self::assertTrue(IncidentFileSource::claims((string) $item->getPath()));
+        }
+    }
+
+    /** So the module appears on the hub holding what it actually holds. */
+    public function testTheSeededEvidenceReachesTheFilesHub(): void
+    {
+        $this->anArea('Sample Area');
+        $this->provider()->load();
+
+        /** @var FileRegistry $registry */
+        $registry = $this->service('storage.file_registry');
+
+        self::assertCount(DemoMonth::evidenceCount(), $registry->all());
+    }
+
+    /**
+     * THE ASSIGNEE, WHICH NOTHING USED TO WRITE. Response is somebody's work, so
+     * an incident that has reached `in progress` is carrying somebody's name —
+     * and one that has not is carrying nobody's, which is the honest drawing of
+     * "not started".
+     */
+    public function testResponseIsAssignedAndNothingElseIs(): void
+    {
+        $this->anArea('Sample Area');
+        $this->aUser('j.mollel@example.test', 'Joseph', 'Mollel');
+        $this->provider()->load();
+
+        foreach ($this->em->getRepository(Incident::class)->findAll() as $incident) {
+            $reached = $incident->getStatus()->hasReached(IncidentStatusEnum::InProgress);
+            self::assertSame(
+                $reached,
+                null !== $incident->getAssignedTo(),
+                \sprintf('%s is %s and %s assigned.', (string) $incident->getReference(), $incident->getStatus()->value, null === $incident->getAssignedTo() ? 'not' : ''),
+            );
+        }
+    }
+
+    /**
+     * THE DEMO OPENS ON A POPULATED DASHBOARD, which is the only reason to seed
+     * one. The dashboard's default window is the CURRENT month; a sample month
+     * pinned to a date in the past put all forty-seven incidents just out of view
+     * and a freshly seeded installation opened on "0 filed" and an empty register.
+     */
+    public function testMostOfTheSampleMonthLandsInsideTheCurrentMonth(): void
+    {
+        $this->anArea('Sample Area');
+        $this->provider()->load();
+
+        $monthStart = new \DateTimeImmutable()->modify('first day of this month')->setTime(0, 0);
+        $inThisMonth = 0;
+        foreach ($this->em->getRepository(Incident::class)->findAll() as $incident) {
+            if ($incident->getReportedAt() >= $monthStart) {
+                ++$inThisMonth;
+            }
+        }
+
+        self::assertSame(DemoMonth::RECENT_COUNT, $inThisMonth);
+    }
+
+    /** And nothing is filed in the future, whatever day of the month it is run on. */
+    public function testNothingIsReportedAfterToday(): void
+    {
+        $this->anArea('Sample Area');
+        $this->provider()->load();
+
+        $endOfToday = new \DateTimeImmutable()->setTime(23, 59, 59);
+        foreach ($this->em->getRepository(Incident::class)->findAll() as $incident) {
+            self::assertLessThanOrEqual($endOfToday, $incident->getReportedAt(), (string) $incident->getReference());
+        }
     }
 
     /**
@@ -151,10 +283,12 @@ final class IncidentContentProviderTest extends IntegrationTestCase
         $area = $this->em->getRepository($area::class)->find($area->getId());
         self::assertNotNull($area);
 
-        $from = new \DateTimeImmutable(DemoMonth::MONTH.'-01 00:00:00');
+        // THE WHOLE SPAN, because the sample month is now measured back from
+        // today rather than pinned to a date — see DemoMonth::reportedAt().
+        $today = new \DateTimeImmutable()->setTime(23, 59, 59);
         $dashboard = $service->build(
-            new IncidentFilter($area, $from, $from->modify('+1 month')),
-            $from->modify('+21 days'),
+            new IncidentFilter($area, $today->modify(\sprintf('-%d days', DemoMonth::SPAN_DAYS + 1)), $today),
+            $today,
         );
 
         self::assertSame(47, $dashboard->filedCount, 'The gallery says 47 filed.');

@@ -47,8 +47,29 @@ use Uhifadhi\Incident\Entity\IncidentSubcategory;
  */
 final class DemoMonth
 {
-    /** The month the design's sample is set in. */
-    public const string MONTH = '2026-08';
+    /**
+     * HOW FAR BACK THE SAMPLE REACHES, in days, ending TODAY.
+     *
+     * The month is a SHAPE, not a date. Seeded at a fixed 2026-08 it landed
+     * entirely outside the dashboard's default window — the current month — so a
+     * freshly seeded installation opened on "0 filed" and an empty register, with
+     * forty-seven incidents sitting just out of view. A demo whose first screen is
+     * empty is worse than no demo.
+     */
+    public const int SPAN_DAYS = 42;
+
+    /**
+     * How many of the forty-seven land inside the CURRENT calendar month.
+     *
+     * Most of them, deliberately: the dashboard opens on this month, and a demo
+     * that put its weight in the weeks before it would be showing the product
+     * looking quiet. The rest fill the run-up so the trend charts have a slope to
+     * draw and the ageing widget has something old in it.
+     */
+    public const int RECENT_COUNT = 28;
+
+    /** How far back the recent group may start when the month is already long. */
+    private const int RECENT_MAX_DAYS = 21;
 
     /** The seven zones the gallery names. Attached only where the host has drawn them. */
     public const array ZONES = ['North Gate', 'Acacia Wood', 'South Gate', 'Highland Ward', 'Salt Pan', 'Spring Basin', 'West Plains'];
@@ -1067,6 +1088,68 @@ final class DemoMonth
      * surroundings; it is sample geography, not survey data, and nothing in the
      * module treats it as more than a location.
      */
+    /**
+     * WHEN A ROW WAS REPORTED, RELATIVE TO TODAY — monotonic in index, so the
+     * reference order the register reads is still the order things happened.
+     *
+     * The newest {@see RECENT_COUNT} land between the start of the current month
+     * (or three weeks back, whichever is later) and today; the rest fill the
+     * weeks before that, back to {@see SPAN_DAYS}. The row's own hour and minute
+     * are kept — they are what make a register look like a register rather than a
+     * list of midnights.
+     */
+    public static function reportedAt(int $index, \DateTimeImmutable $today): \DateTimeImmutable
+    {
+        $rows = self::incidents();
+        $row = $rows[$index] ?? throw new \InvalidArgumentException(\sprintf('The sample month has no row %d.', $index));
+
+        $today = $today->setTime(0, 0);
+        $recentFrom = max(
+            $today->modify('first day of this month'),
+            $today->modify(\sprintf('-%d days', self::RECENT_MAX_DAYS)),
+        );
+
+        $recentFirst = \count($rows) - self::RECENT_COUNT;
+        $day = $index >= $recentFirst
+            ? self::spread($recentFrom, $today, $index - $recentFirst, self::RECENT_COUNT)
+            : self::spread(
+                $today->modify(\sprintf('-%d days', self::SPAN_DAYS)),
+                $recentFrom->modify('-1 day'),
+                $index,
+                $recentFirst,
+            );
+
+        return $day->setTime($row['hour'], $row['minute']);
+    }
+
+    /**
+     * The $position-th of $count points laid evenly across [$from, $to],
+     * inclusive of both ends. A single point sits at the start, and a window that
+     * has collapsed to nothing — the first of the month, when the run-up has
+     * nowhere to go — puts them all on the same day rather than before it.
+     */
+    private static function spread(\DateTimeImmutable $from, \DateTimeImmutable $to, int $position, int $count): \DateTimeImmutable
+    {
+        $span = (int) $from->diff($to)->format('%r%a');
+        if ($span <= 0 || $count <= 1) {
+            return $from;
+        }
+
+        return $from->modify(\sprintf('+%d days', intdiv($position * $span, $count - 1)));
+    }
+
+    /** How many parties the table names, across every row. */
+    public static function partyCount(): int
+    {
+        return array_sum(array_map(static fn (array $row): int => \count($row['parties']), self::incidents()));
+    }
+
+    /** How many pieces of evidence the table names, across every row. */
+    public static function evidenceCount(): int
+    {
+        return array_sum(array_column(self::incidents(), 'evidence'));
+    }
+
     public static function positionFor(int $index): string
     {
         $latitude = -3.40 + 0.055 * ($index % 9);

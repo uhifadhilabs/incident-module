@@ -23,33 +23,47 @@ it is an ordinary service nobody ever asks anything of. There is no environment
 check and no config flag, because there is nothing left for one to gate.
 
 The declaration seeds the design's sample month — 47 incidents across four
-categories, walked to the states the register shows — into the first area the
-installation has, and it declares `dependsOn(['team'])`, so it is seeded after
-the people who record its incidents. An installation with no area files nothing
-and does not fail: devkit seeds every module in one run, and one with nothing to
-hang its records on must not stop the others.
+categories, walked to the states the register shows, with their parties, their
+responders and their photographs — into the first area the installation has, and
+it declares `dependsOn(['team'])`, so it is seeded after the people who record
+its incidents. An installation with no area files nothing and does not fail:
+devkit seeds every module in one run, and one with nothing to hang its records on
+must not stop the others.
 
 Everything it writes goes through the doors a person uses — the filing service,
-the money service and the transition service, one legal move at a time. Demo
-content written straight to the tables is demo content that can be shaped in ways
-the product cannot produce, and every such row is a bug report about a screen
-that is working correctly.
+the case service, the money service and the evidence service, one legal move at a
+time. Demo content written straight to the tables is demo content that can be
+shaped in ways the product cannot produce, and every such row is a bug report
+about a screen that is working correctly.
+
+**The sample month ends today.** It is a shape, not a date: pinned to a fixed
+month it landed entirely outside the dashboard's default window — the current
+month — so a freshly seeded installation opened on "0 filed" and an empty
+register with forty-seven incidents just out of view. `DemoMonth::reportedAt()`
+spreads the rows back over six weeks ending today, with 28 of the 47 inside the
+current calendar month, keeping the order, the funnel, the states and the money
+distribution the table declares.
 
 ## What the declaration cannot write yet
 
-The discipline above has a price, and the price is the finding. The sample month
-describes four things this module has no service for, so none of them is seeded:
+Three of the four have their door now, and are seeded through it:
 
-| Not seeded | Why | What would have to exist |
-|---|---|---|
-| Parties beyond the reporter — the claimant, the witness, the suspect | Filing names the filer; nothing names anybody else | a service that adds a party to an incident |
-| Evidence — photographs, and the signed document a money case carries | Nothing in this module attaches evidence; the case file only reads it | an evidence-attachment service, and the screen behind it |
-| The assignee | No service assigns an incident to anybody | assignment on the transition, or a service of its own |
-| Money on an incident below `in progress` | The money service records money once response has started, which is the product's rule | nothing — the sample month is what disagrees with the rule |
+| Was not seeded | Seeded through |
+|---|---|
+| Parties beyond the reporter — the claimant, the witness, the suspect, the animal | `IncidentCaseService::addParty()` |
+| Evidence — photographs, with real bytes through the platform's `EvidenceStorage` | `IncidentEvidenceService::attach()` |
+| The assignee | `IncidentCaseService::assign()`, on the `respond` transition |
 
-Each of the first three is a screen this product does not have. The retired
-command wrote all four straight to the entity manager, which kept the demo
-looking complete and kept that fact invisible for as long as it kept working.
+Two things are still not written, and both are findings rather than omissions:
+
+| Not seeded | Why |
+|---|---|
+| Money on an incident below `in progress` | The money service records money once response has started, which is the product's rule. Sixteen rows of the table disagree with it — and so, on one row, does the design: its register draws INC-0312 at `verified` carrying TZS 900,000, "claim open". Which of the two is wrong is a ruling nobody has made, so nothing is written past the rule and nothing is moved to suit it. |
+| The signed document a money case carries | The platform's default accepted types are images, so a PDF is refused before a key is built. Photographs are seeded with real bytes; the signed form waits on a deployment that accepts one. |
+
+The retired command wrote all of it straight to the entity manager, which kept
+the demo looking complete and kept those facts invisible for as long as it kept
+working.
 
 The reference is likewise the register's rather than the month's: filing mints
 the next one, exactly as it does for a person at the form.
