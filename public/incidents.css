@@ -486,15 +486,24 @@ html.light{
 .i-feed .bd .mt{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:7px;
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
 .i-feed .rt{flex:none;align-self:center}
-/* The case file's "Where" plate is sized to match the patrol SHOW track plate
-   exactly — the design's tall detail frame, min(58vh, 560px) (patrol.css:
-   `.patrol-plate .patrol-plate-viewer-tall`). It is scoped to the detail card
-   (.plate-fill, the Where card on incident/show), so the dashboard and overview
-   maps keep their own `.c[data-w=map] .viewer` min-height:460px sizing. Like
-   that rule, this is genuinely this module's plate sizing: the plate frame's
-   look (ground, border, overflow) and the .map-chrome* controls stay the
-   HOST's, never shipped twice. */
-.plate-fill .viewer{height:min(58vh,560px)}
+/* The case file's "Where" plate, sized by THIS screen's design: the map on
+   incidents/detail.html states height:min(46vh,440px). It was previously sized
+   to patrol's detail plate instead — a sibling module's screen — which is how a
+   port drifts while every test stays green.
+
+   The height is a FLOOR, not a fixed size, and the plate takes whatever else
+   the card has. The row (.i-cols) is a stretch row, as it is in the design, so
+   the card is as tall as the column beside it needs; a plate pinned to one
+   height left the difference as dead space under the legend chips. Nothing
+   drawn changes — only where the spare space goes.
+
+   Scoped to the detail card, so the dashboard and overview maps keep their own
+   `.c[data-w=map] .viewer` min-height:460px sizing. Like that rule, this is
+   genuinely this module's plate SIZING: the plate frame's look (ground, border,
+   overflow) and the .map-chrome* controls stay the HOST's, never shipped
+   twice. */
+.c.plate-fill{display:flex;flex-direction:column}
+.plate-fill .viewer{flex:1;min-height:min(46vh,440px)}
 /* The Leaflet canvas the incident-map controller builds inside the host's
    .viewer plate — this module's own map CONTENT plumbing, the way patrol.css
    carries .patrol-canvas. It fills the plate; the plate (position, ground,

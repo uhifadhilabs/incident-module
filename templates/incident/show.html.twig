@@ -34,7 +34,11 @@
 
 {% block incident_page %}
     {% set money = incident.money %}
-    <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('shell:chevron-left') }}All incidents</a>
+    {# THE WAY BACK, on the shell's own quiet secondary control. Not a bare <a>,
+       which the document styles render as a purple underlined hyperlink, and not
+       patrol's .backbtn, which is a private class in patrol's sheet and would
+       reach this page as browser defaults. #}
+    <a class="tgl" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('shell:chevron-left') }}All incidents</a>
 
     {# THE IDENTITY BAND — the record's own facts on the shared .factband every
        entity-detail screen wears, below the head (the settled page-chrome theme:
