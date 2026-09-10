@@ -48,8 +48,27 @@ abstract class FunctionalTestCase extends WebTestCase
         $em = static::getContainer()->get('doctrine.orm.entity_manager');
         $this->em = $em;
 
+        // POSTGIS FIRST, because SchemaTool cannot create a `geometry` column in
+        // a database that has no such type, and a database with no PostGIS in it
+        // is a state this suite produces itself: the migrations lock tests drop
+        // the whole `public` schema, extension included, and a run that ends
+        // inside them leaves it that way for the next one. The statement is the
+        // core's own first version, so what SchemaTool builds on here is what an
+        // installation migrates into.
+        //
+        // @see vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/AreaBundle/migrations/Version20260101000000.php
+        $this->em->getConnection()->executeStatement('CREATE EXTENSION IF NOT EXISTS postgis');
+
         $schemaTool = new SchemaTool($this->em);
         $metadata = $this->em->getMetadataFactory()->getAllMetadata();
+        // Only the mapped tables, and only the ones actually deployed: dropSchema
+        // reconciles its statements against the introspected schema and swallows
+        // what still fails, so a database with none of them is not an error.
+        // dropDatabase() is the wrong neighbour — it drops everything the
+        // connection sees, and what it sees includes PostGIS's own
+        // `spatial_ref_sys`.
+        //
+        // @see vendor/doctrine/orm/src/Tools/SchemaTool.php — getDropSchemaSQL(), dropSchema()
         $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
 
