@@ -9,12 +9,9 @@
     {{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}
     <div class="i-split">
         <div class="i-mapcol">
-            <div class="viewer"
-                 {{ stimulus_controller('@uhifadhi/incident-module/incident-map', {
-                     incidents: dashboard.mapPayload,
-                     boundary: area.hasBoundary ? area.geom : '',
-                 }) }}></div>
-            {{ ui.mapLegend(dashboard.categories) }}
+            {# The atlas's plate, exactly as the map widget wires it: the layers,
+               their hues and the legend are stated in PHP. #}
+            {{ render_map(dashboard.map, {'role': 'img', 'aria-label': 'Where every incident in this view was filed'}) }}
         </div>
         <div class="i-listcol">
             {# The docked results are .i-hit rows (host vocabulary, shared with the

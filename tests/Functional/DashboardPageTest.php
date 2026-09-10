@@ -162,13 +162,14 @@ final class DashboardPageTest extends FunctionalTestCase
     }
 
     /**
-     * THE MAP SHIPS ITS CHROME AND ITS LEGEND. The zoom column, layer menu and
-     * fullscreen control are built by the atlas's chrome.js and styled by its
-     * map.css — which the incident base template must LINK, or the controls render
-     * invisible. And every map plate carries the legend row beneath it: the
-     * category hue chips plus the "open / closed / serious" meaning chips.
+     * THE MAP IS THE ATLAS'S PLATE, AND ITS LEGEND SWITCHES ITS LAYERS.
+     *
+     * The plate — the control stack, the floating legend, fullscreen — is drawn
+     * by the atlas and styled by its map.css, which this module's base template
+     * must LINK or the controls render invisible. This module states the layers:
+     * one per category, plus the area's zones, each row naming what it switches.
      */
-    public function testTheMapShipsItsChromeStylesheetAndLegend(): void
+    public function testTheMapIsThePlatesAndItsLegendSwitchesItsLayers(): void
     {
         $area = $this->anArea();
         $this->aZone($area, 'North Gate');
@@ -178,15 +179,20 @@ final class DashboardPageTest extends FunctionalTestCase
         $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
         self::assertResponseIsSuccessful();
 
-        // The atlas's one chrome stylesheet is linked, so the JS-built controls
-        // (zoom / layer / fullscreen, .map-chrome*) are styled rather than invisible.
-        // The stem, not the filename: AssetMapper content-digests what a bundle's
-        // public/ dir serves, exactly as it does in an installation.
+        // The atlas's one map stylesheet is linked, so the plate, its chrome and
+        // its legend are styled rather than invisible. The stem, not the
+        // filename: AssetMapper content-digests what a bundle's public/ dir
+        // serves, exactly as it does in an installation.
         self::assertGreaterThan(0, $crawler->filter('link[href*="atlas/map"]')->count());
 
-        // The legend row under the map: the category hue chips and the meaning chips.
-        self::assertGreaterThan(0, $crawler->filter('[data-w="map"] .i-legend .i-cat')->count());
-        self::assertGreaterThan(0, $crawler->filter('[data-w="map"] .i-legend .chip.idle')->count());
+        // The plate itself, wearing the atlas's one map controller.
+        $plate = $crawler->filter('[data-w="map"] .map-plate');
+        self::assertCount(1, $plate);
+        self::assertSame('uhifadhi--atlas-bundle--map-plate', $plate->attr('data-controller'));
+
+        // The legend the plate rendered: a row per layer, each a real switch.
+        self::assertGreaterThan(0, $crawler->filter('[data-w="map"] .map-legend .lay')->count());
+        self::assertStringContainsString('Zones', $crawler->filter('[data-w="map"] .map-legend')->text());
     }
 
     /**

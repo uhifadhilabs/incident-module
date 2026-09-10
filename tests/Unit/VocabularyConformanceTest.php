@@ -24,9 +24,8 @@ use Uhifadhi\Bundle\ShellBundle\Test\VocabularyConformanceTestCase;
  * already carries, and every glyph is drawn under a prefix this bundle may use.
  *
  * THE CHAIN IS WHAT `templates/base.html.twig` LINKS, in the order it links it:
- * the shell's design system, the atlas's Leaflet build and map sheet, the shell's
- * widget sheet, and this module's own last, because it is the one allowed to
- * decorate. A sheet left out of this list is a sheet whose classes read as
+ * the shell's design system, the atlas's map sheet, the shell's widget sheet,
+ * and this module's own last, because it is the one allowed to decorate. A sheet left out of this list is a sheet whose classes read as
  * shipped-by-nobody; one added that the pages do not link is a sheet whose rules
  * this module would be free to restate without being told.
  *
@@ -67,7 +66,6 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
             $shell.'/shell.css',
             $shell.'/widget.css',
             $atlas.'/map.css',
-            $atlas.'/leaflet/leaflet.css',
             // The AREA's sheet, because this module renders on the area's
             // overview as well as on its own pages: the overview partials under
             // templates/overview/ are drawn INTO AreaBundle's page, which links
@@ -77,6 +75,66 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
             // module free to restate it.
             self::publicDirectoryOf(AreaBundle::class).'/area.css',
         ];
+    }
+
+    /**
+     * NO MODULE DRAWS ITS OWN MAP. Maps come from the atlas: a module states
+     * what is on one in PHP and calls render_map(). A template that names a map
+     * controller of its own has a second opinion about imagery, chrome and
+     * fullscreen, and two maps in the product then read differently.
+     */
+    public function testNoTemplateMountsAMapControllerOfItsOwn(): void
+    {
+        $offenders = [];
+        foreach (self::templateFiles() as $file) {
+            $markup = (string) file_get_contents($file);
+            if (preg_match('/(data-controller|stimulus_controller)[^
+]*map/i', $markup)) {
+                $offenders[] = basename($file);
+            }
+        }
+
+        self::assertSame([], $offenders, 'These templates mount a map controller: the atlas ships the only one.');
+    }
+
+    /**
+     * AND NONE OF THEM NAMES LEAFLET. There is one Leaflet in an installation
+     * and the UX Map bridge brings it; a module that links or names a second
+     * gives the page a second module namespace, and layers built against one
+     * are refused by the other.
+     */
+    public function testNoTemplateNamesLeaflet(): void
+    {
+        $offenders = [];
+        foreach (self::templateFiles() as $file) {
+            if (false !== stripos((string) file_get_contents($file), 'leaflet')) {
+                $offenders[] = basename($file);
+            }
+        }
+
+        self::assertSame([], $offenders, 'These templates name Leaflet: the atlas and its UX Map bridge own it.');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function templateFiles(): array
+    {
+        $directory = self::bundlePath().'/templates';
+        if (!is_dir($directory)) {
+            return [];
+        }
+
+        $files = [];
+        /** @var \SplFileInfo $file */
+        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory)) as $file) {
+            if ($file->isFile() && 'twig' === $file->getExtension()) {
+                $files[] = $file->getPathname();
+            }
+        }
+        sort($files);
+
+        return $files;
     }
 
     /** @param class-string $bundle */

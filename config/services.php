@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
+use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Incident\Controller\IncidentController;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
@@ -29,6 +31,7 @@ use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentEvidenceService;
+use Uhifadhi\Incident\Service\IncidentMapService;
 use Uhifadhi\Incident\Service\IncidentMoneyService;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
 use Uhifadhi\Incident\Service\IncidentReportService;
@@ -73,11 +76,25 @@ return static function (ContainerConfigurator $container): void {
     $services->set('incident.zone_locator', IncidentZoneLocator::class)
         ->args([service('doctrine.orm.entity_manager')]);
 
+    /*
+     * WHERE EVERY INCIDENT WAS FILED, stated in PHP for the atlas to draw. The
+     * module ships no map JavaScript: it says what is on the plate and
+     * render_map() puts it on the page.
+     */
+    $services->set('incident.map', IncidentMapService::class)
+        ->args([
+            service(MapBuilderInterface::class),
+            // The area's zones are the AREA's, read from the bundle that owns
+            // them rather than copied into this module's schema.
+            service(ZoneRepository::class),
+        ]);
+
     $services->set('incident.dashboard', IncidentDashboardService::class)
         ->args([
             service(IncidentRepository::class),
             service(IncidentCategoryRepository::class),
             service('incident.transitions'),
+            service('incident.map'),
             param('incident.currency'),
         ]);
 

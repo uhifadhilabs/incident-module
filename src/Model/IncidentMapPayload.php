@@ -29,9 +29,9 @@ use Uhifadhi\Incident\Entity\Incident;
  *   filled       = still open · hollow = resolved or closed
  *   dashed ring  = the serious end (high or critical)
  *
- * A JSON-able array rather than rendered markup: the map is Leaflet
- * (`window.L`), fed by a Stimulus controller — never MapLibre, and never an SVG
- * plate pretending to be a map.
+ * A GeoJSON FeatureCollection rather than rendered markup: {@see
+ * \Uhifadhi\Incident\Service\IncidentMapService} splits it into the atlas's
+ * layers, one per category, and the atlas draws them.
  */
 final class IncidentMapPayload
 {
@@ -58,6 +58,9 @@ final class IncidentMapPayload
                     // A map pin's label is a row, so it prints the first line —
                     // the same line the register does.
                     'title' => $incident->headline(),
+                    // The key the plate's layers are split by: one layer per
+                    // category, so a legend row switches a category on and off.
+                    'slug' => $incident->getCategory()->getSlug(),
                     'colour' => $incident->getCategory()->getColourKey(),
                     'category' => $incident->getCategory()->getLabel(),
                     'subcategory' => $incident->getSubcategory()->getLabel(),

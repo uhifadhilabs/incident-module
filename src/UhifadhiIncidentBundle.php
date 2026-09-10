@@ -334,6 +334,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('router'),
                     service(IncidentRepository::class),
                     service('incident.dashboard'),
+                    service('incident.map'),
                     service('incident.case'),
                     service('security.authorization_checker'),
                     // FrameworkBundle defines this id whenever symfony/security-csrf

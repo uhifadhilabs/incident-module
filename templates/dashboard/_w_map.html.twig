@@ -1,21 +1,19 @@
 {# IN·03 — where every incident was filed.
 
-   A REAL MAP, not a picture of one: self-hosted Leaflet (`window.L`), fed by the
-   incident-map Stimulus controller from a GeoJSON payload. MapLibre is
-   deliberately not used anywhere in this deployment.
+   THE MAP IS THE ATLAS'S. This module states what is on it in PHP
+   (Service/IncidentMapService) and calls render_map(); the imagery, the
+   boundary treatment, the control stack, the legend and fullscreen are the
+   platform's, so an incident map, a patrol map and the area map cannot disagree
+   about any of them. The module writes no map JavaScript.
 
-   THE MARKS MEAN SOMETHING, and the legend says what: hue is the category,
-   filled means still open, hollow means resolved or closed, a dashed ring marks
-   the serious end (high or critical). The same legend renders here, on the
-   map+results plate, and on the case file — one macro, three places. #}
-{% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
+   THE MARKS MEAN SOMETHING, and the legend says what: one layer per category in
+   that category's own hue, each row a switch. The area's zones lie underneath,
+   quiet, wearing their names.
+
+   THE FILTER ROW RIDES IN THE PLATE, one row above the map, so the chips stay a
+   row in fullscreen instead of being left behind on the page. #}
 <div class="c" data-w="map">
     <span class="tab">Incident map<span class="src">· one filter drives map AND register</span></span>
-    {{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}
-    <div class="viewer"
-         {{ stimulus_controller('@uhifadhi/incident-module/incident-map', {
-             incidents: dashboard.mapPayload,
-             boundary: area.hasBoundary ? area.geom : '',
-         }) }}></div>
-    {{ ui.mapLegend(dashboard.categories) }}
+    {% set filters %}{{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}{% endset %}
+    {{ render_map(dashboard.map, {'role': 'img', 'aria-label': 'Where every incident was filed'}, filters) }}
 </div>

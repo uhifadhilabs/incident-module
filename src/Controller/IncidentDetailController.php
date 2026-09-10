@@ -34,11 +34,11 @@ use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 use Uhifadhi\Incident\Exception\IncidentTransitionException;
-use Uhifadhi\Incident\Model\IncidentMapPayload;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
+use Uhifadhi\Incident\Service\IncidentMapService;
 
 /**
  * ONE CASE FILE — the whole record on one page, and the one place an incident is
@@ -88,6 +88,7 @@ final class IncidentDetailController
         private readonly UrlGeneratorInterface $router,
         private readonly IncidentRepository $incidents,
         private readonly IncidentDashboardService $dashboard,
+        private readonly IncidentMapService $map,
         private readonly IncidentCaseService $cases,
         private readonly ?AuthorizationCheckerInterface $authorization = null,
         private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
@@ -114,8 +115,9 @@ final class IncidentDetailController
             'incident' => $incident,
             'rail' => $this->dashboard->railFor($incident, $now),
             // The SAME builder the dashboard's maps use: one marker, one meaning,
-            // wherever it is drawn.
-            'mapPayload' => IncidentMapPayload::of([$incident]),
+            // wherever it is drawn. The legend states this incident's category
+            // alone, because that is the only kind on the plate.
+            'map' => $this->map->forArea($area, [$incident], [$incident->getCategory()]),
             'canManage' => $this->canManage(),
             'csrfToken' => $this->csrfTokenManager?->getToken(self::csrfTokenId($area))->getValue(),
         ]));

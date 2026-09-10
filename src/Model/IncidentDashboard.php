@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Model;
 
+use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentCategory;
 use Uhifadhi\Incident\Entity\IncidentEvidence;
@@ -55,6 +56,7 @@ final readonly class IncidentDashboard
      * @param array<string, list<Incident>>                                                                    $board          status value => the cards in that column
      * @param list<IncidentEvidence>                                                                           $evidence       newest capture first
      * @param IncidentRail|null                                                                                $rail           the one incident this person last touched, or null
+     * @param AtlasMap                                                                                         $map            what every map on this screen draws, stated for the atlas
      */
     public function __construct(
         public IncidentFilter $filter,
@@ -79,6 +81,7 @@ final readonly class IncidentDashboard
         public int $pastTermCount,
         public ?IncidentRail $rail,
         public string $currency,
+        public AtlasMap $map,
     ) {
     }
 
@@ -205,18 +208,6 @@ final readonly class IncidentDashboard
         }
 
         return $grouped;
-    }
-
-    /**
-     * WHAT THE MAP DRAWS. Delegated so the case file's single-incident map and the
-     * dashboard's whole-month map are built by the SAME code — one marker, one
-     * meaning, wherever it is drawn.
-     *
-     * @return array{type: string, features: list<array{type: string, geometry: array<string, mixed>, properties: array<string, mixed>}>}
-     */
-    public function mapPayload(): array
-    {
-        return IncidentMapPayload::of($this->recent);
     }
 
     /** The count against one category, zero where nothing of that kind was filed. */

@@ -71,14 +71,3 @@
     <span class="i-sla {{ hours > term ? 'late' : 'due' }}">{{ hours < 48 ? hours ~ ' h' : (hours // 24) ~ ' d' }} open · term {{ incident.subcategory.termLabel }}</span>
 {% endmacro %}
 
-{# EVERY LAYER SHIPS A LEGEND, and this one says what the marks MEAN, not just
-   what colour they are: hue = category, filled = still open, hollow = resolved or
-   closed, dashed ring = the serious end (high or critical). The same legend
-   renders under every map plate and on the detail page. #}
-{% macro mapLegend(categories) %}
-    <div class="i-legend">
-        {% for category in categories %}<span class="i-cat {{ category.colourKey }}"><i></i>{{ category.label|lower }}</span>{% endfor %}
-        <span class="chip idle">● open &nbsp;○ closed</span>
-        <span class="chip idle">◎ high or critical</span>
-    </div>
-{% endmacro %}

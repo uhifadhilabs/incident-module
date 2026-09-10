@@ -59,6 +59,7 @@ final readonly class IncidentDashboardService
         private IncidentRepository $incidents,
         private IncidentCategoryRepository $categories,
         private IncidentTransitionService $transitions,
+        private IncidentMapService $map,
         private string $currency,
     ) {
     }
@@ -66,11 +67,12 @@ final readonly class IncidentDashboardService
     public function build(IncidentFilter $filter, \DateTimeImmutable $now, ?UserInterface $viewer = null): IncidentDashboard
     {
         $incidents = $this->incidents->findFiltered($filter);
+        $categories = $this->categories->allInOrder();
 
         return new IncidentDashboard(
             filter: $filter,
             now: $now,
-            categories: $this->categories->allInOrder(),
+            categories: $categories,
             filedCount: \count($incidents),
             categoryCounts: self::byCategory($incidents),
             statusCounts: self::byStatus($incidents),
@@ -90,6 +92,9 @@ final readonly class IncidentDashboardService
             pastTermCount: self::pastTermCount($incidents, $now),
             rail: $this->rail($filter, $now, $viewer),
             currency: $this->currency,
+            // Every category the taxonomy carries states a row, so a legend
+            // reads the same on a quiet month as on a busy one.
+            map: $this->map->forArea($filter->area, $incidents, $categories),
         );
     }
 

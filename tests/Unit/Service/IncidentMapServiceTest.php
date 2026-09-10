@@ -1,0 +1,202 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the UhifadhiLabs Incidents Module.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Incident\Tests\Unit\Service;
+
+use PHPUnit\Framework\TestCase;
+use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilder;
+use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
+use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Incident\Model\IncidentHues;
+use Uhifadhi\Incident\Service\IncidentMapService;
+
+/**
+ * WHERE EVERY INCIDENT WAS FILED, STATED IN PHP.
+ *
+ * One layer per category, each in that category's own hue with a legend row
+ * that switches it, and the area's zones underneath as context. The module
+ * writes no map JavaScript: the atlas draws what this states.
+ *
+ * The geometry arrives as the text the geometry column returns. Anything
+ * unusable is simply not drawn — a position that will not parse is one mark
+ * missing, never a page that fails.
+ */
+final class IncidentMapServiceTest extends TestCase
+{
+    private const string BOUNDARY = '{"type":"Polygon","coordinates":[[[-29.5,-3.2],[-29.4,-3.2],[-29.4,-3.1],[-29.5,-3.1],[-29.5,-3.2]]]}';
+    private const string ZONE = '{"type":"Polygon","coordinates":[[[-29.48,-3.18],[-29.44,-3.18],[-29.44,-3.14],[-29.48,-3.14],[-29.48,-3.18]]]}';
+
+    public function testTheBoundaryIsDrawnTheOneWayThePlatformDrawsIt(): void
+    {
+        $map = self::compose(self::BOUNDARY);
+
+        self::assertSame(['geojson' => json_decode(self::BOUNDARY, true), 'scrim' => true], $map->toArray()['boundary']);
+    }
+
+    public function testAnAreaWithNoBoundaryStillGetsARealMap(): void
+    {
+        self::assertNull(self::compose(null)->toArray()['boundary']);
+    }
+
+    public function testBoundaryTextThatWillNotParseIsSimplyNotDrawn(): void
+    {
+        self::assertNull(self::compose('not json')->toArray()['boundary']);
+    }
+
+    /**
+     * ONE LAYER PER CATEGORY, in the taxonomy's own order, each carrying the
+     * hue that category is drawn in everywhere else.
+     */
+    public function testEachCategoryIsItsOwnLayerInItsOwnHue(): void
+    {
+        $layers = self::compose(self::BOUNDARY)->toArray()['layers'];
+
+        self::assertSame(
+            ['incident.zones', 'incident.poaching', 'incident.mortality'],
+            array_column($layers, 'id'),
+        );
+        self::assertSame(IncidentHues::of('poach'), $layers[1]['swatch']);
+        self::assertSame(IncidentHues::of('mort'), $layers[2]['swatch']);
+        self::assertSame('point', $layers[1]['shape']);
+    }
+
+    public function testAnIncidentIsDrawnOnItsOwnCategorysLayer(): void
+    {
+        $layers = self::compose(self::BOUNDARY)->toArray()['layers'];
+
+        self::assertCount(2, self::featuresOf($layers[1]));
+        self::assertCount(1, self::featuresOf($layers[2]));
+    }
+
+    /**
+     * A CATEGORY WITH NOTHING FILED STILL SHIPS ITS ROW. A legend that comes
+     * and goes with the data is a legend nobody can read: "compensation · 0" is
+     * an answer, a missing row is a question.
+     */
+    public function testACategoryWithNothingFiledKeepsItsRowSwitchedOff(): void
+    {
+        $layers = self::compose(self::BOUNDARY, categories: [
+            ['slug' => 'compensation', 'label' => 'Compensation', 'colourKey' => 'comp'],
+        ])->toArray()['layers'];
+
+        self::assertSame('incident.compensation', $layers[1]['id']);
+        self::assertSame([], self::featuresOf($layers[1]));
+        self::assertFalse($layers[1]['visible']);
+    }
+
+    public function testEveryLegendRowCountsWhatItsLayerDraws(): void
+    {
+        $legend = self::compose(self::BOUNDARY)->legend();
+
+        self::assertSame(['Zones', 'Poaching', 'Mortality'], array_map(static fn (LegendItem $i) => $i->label, $legend));
+        self::assertSame([1, 2, 1], array_map(static fn (LegendItem $i) => $i->count, $legend));
+        self::assertSame(['incident.zones', 'incident.poaching', 'incident.mortality'], array_map(static fn (LegendItem $i) => $i->layerId, $legend));
+    }
+
+    /** Every category row sits under one heading, so the plate reads as this module's. */
+    public function testTheCategoryRowsShareOneHeading(): void
+    {
+        $legend = self::compose(self::BOUNDARY)->legend();
+
+        self::assertSame(IncidentMapService::GROUP, $legend[1]->group);
+        self::assertSame(IncidentMapService::GROUP, $legend[2]->group);
+    }
+
+    /**
+     * The zones are the area's, drawn as quiet outlines with their names on
+     * them — the plate draws a feature that names itself as a halo label.
+     */
+    public function testEachZoneTravelsWithItsNameOnTheFeature(): void
+    {
+        $zones = self::compose(self::BOUNDARY)->toArray()['layers'][0];
+
+        self::assertSame('incident.zones', $zones['id']);
+        self::assertSame('line', $zones['shape']);
+        self::assertSame(
+            [['type' => 'Feature', 'properties' => ['label' => 'The northern block'], 'geometry' => json_decode(self::ZONE, true)]],
+            self::featuresOf($zones),
+        );
+    }
+
+    public function testAnAreaWithNoZonesStillStatesTheRow(): void
+    {
+        $zones = self::compose(self::BOUNDARY, zones: [])->toArray()['layers'][0];
+
+        self::assertSame([], self::featuresOf($zones));
+        self::assertFalse($zones['visible']);
+    }
+
+    /**
+     * The features one layer carries, narrowed for the analyser.
+     *
+     * @param array<string, mixed> $layer
+     *
+     * @return list<mixed>
+     */
+    private static function featuresOf(array $layer): array
+    {
+        $collection = $layer['features'];
+
+        self::assertIsArray($collection);
+        self::assertIsList($collection['features'] ?? null);
+
+        return $collection['features'];
+    }
+
+    /**
+     * @param list<array{slug: string, label: string, colourKey: string}>|null $categories
+     * @param list<array{name: string, geom: string|null}>|null                $zones
+     */
+    private static function compose(?string $boundary, ?array $categories = null, ?array $zones = null): AtlasMap
+    {
+        return IncidentMapService::compose(
+            new MapBuilder(),
+            $boundary,
+            self::collection(),
+            $categories ?? [
+                ['slug' => 'poaching', 'label' => 'Poaching', 'colourKey' => 'poach'],
+                ['slug' => 'mortality', 'label' => 'Mortality', 'colourKey' => 'mort'],
+            ],
+            $zones ?? [['name' => 'The northern block', 'geom' => self::ZONE]],
+        );
+    }
+
+    /**
+     * The shape {@see \Uhifadhi\Incident\Model\IncidentMapPayload} hands over.
+     *
+     * @return array<string, mixed>
+     */
+    private static function collection(): array
+    {
+        return [
+            'type' => 'FeatureCollection',
+            'features' => [
+                self::feature('poaching', -29.48, -3.18),
+                self::feature('poaching', -29.46, -3.16),
+                self::feature('mortality', -29.45, -3.15),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function feature(string $slug, float $lon, float $lat): array
+    {
+        return [
+            'type' => 'Feature',
+            'geometry' => ['type' => 'Point', 'coordinates' => [$lon, $lat]],
+            'properties' => ['slug' => $slug, 'reference' => 'IN-1'],
+        ];
+    }
+}

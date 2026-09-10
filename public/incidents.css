@@ -8,11 +8,10 @@
    rules exist only where the module renders, and the host's own stylesheet never
    mentions incidents.
 
-   Everything below is MODULE vocabulary except the map plate at the very bottom
-   (.viewer / .ol / .zoomui / .laymenu), which is flagged there: it is HOST
-   vocabulary that patrols.css also declares, and it belongs in the host's own
-   stylesheet. Until that is ruled on, both modules carry their own copy — the
-   duplication is deliberate and marked, not accidental.
+   Everything below is MODULE vocabulary. The map is not: the atlas ships the
+   plate, the imagery frame, the chrome, the legend and the fullscreen rules,
+   and this sheet states only how tall a map card on this module's own screens
+   stands.
 
    TWO VOCABULARIES HAVE ALREADY GONE THAT WAY, and the DIRECTION B and
    DIRECTION C blocks say where and why: the docked map split and the
@@ -415,23 +414,14 @@ html.light{
    The map is the page. The list docks beside it and scrolls independently, so
    panning never loses your place in the results.
 
-   THE SPLIT ITSELF NOW LIVES IN THE HOST, beside .viewer in
-   assets/styles/app.css: .i-split, .i-mapcol, .i-listcol, .i-listhd,
-   .i-listbody, .i-hit and .i-pincard. The area overview draws the same split,
-   and two surfaces means the vocabulary is not a module's — the same markup
-   must render identically on both. The copy that stood here had already
-   drifted from itself: a second .i-listcol further down this file capped the
-   column at 520px and put the scrollbar back, so which rule won depended on
-   where the cascade stopped. That is exactly the failure one copy prevents.
+   A MODULE ADDS MAP CONTENT — its layers, its hues, its legend rows — and it
+   states them in PHP. It never ships a plate and never a second split.
 
-   A module adds map CONTENT — its pins, its hues, its legend entry. It never
-   ships a second plate and never a second split.
-
-   ONE RULE STAYS, and it is genuinely this module's: the widget library's
-   full-width preview renders the map plate outside any split, and the map
-   controller refuses a zero-height container. Nothing in the host's split
-   covers a `.c[data-w=map]` standing on its own.                             */
-.c[data-w=map] .viewer{min-height:460px;display:grid}
+   ONE RULE HERE, and it is genuinely this module's: how tall THIS screen's map
+   card is. The plate itself — its column, its imagery frame, its floating
+   legend, its control stack, its fullscreen — is the atlas's, so the height is
+   stated on the plate root and the atlas fills it.                           */
+.c[data-w=map] .map-plate{min-height:460px}
 
 /* THE DOCKED SPLIT AND THE DAY-GROUPED FEED, carried by the module after all.
    The blocks above say these vocabularies "now live in the host" — but the park
@@ -439,14 +429,14 @@ html.light{
    map+results split and the feed widget rendered UNSTYLED (the split collapsed,
    the .i-hit rows and .i-feed rows fell back to bare text). Ported byte-faithful
    from the design's uhifadhi.css onto this module's token bridge, the same
-   self-sufficiency rule as .mchip, .chip, .factband and the map-chrome stylesheet:
+   self-sufficiency rule as .mchip, .chip, .factband and the atlas's map sheet:
    an incidents page styles everything it renders, without depending on the host.
    (The .i-pincard map overlay is omitted — the app uses Leaflet popups, not that
    markup, so it renders nothing that would need it.) */
 .i-split{display:grid;grid-template-columns:minmax(0,1fr) 388px;gap:18px;align-items:stretch}
 @media(max-width:1100px){.i-split{grid-template-columns:1fr}}
 .i-split>.i-mapcol{min-width:0;display:flex;flex-direction:column}
-.i-split>.i-mapcol .viewer{flex:1;min-height:460px;display:grid}
+.i-split>.i-mapcol .map-plate{flex:1;min-height:460px}
 .i-listcol{display:flex;flex-direction:column;min-height:0;border:1px solid var(--ln);border-radius:14px;
   background:linear-gradient(180deg,var(--p1),var(--p2));box-shadow:var(--shadow);overflow:hidden}
 .i-listhd{padding:12px 15px;border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:9px;
@@ -487,29 +477,18 @@ html.light{
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
 .i-feed .rt{flex:none;align-self:center}
 /* The case file's "Where" plate, sized by THIS screen's design: the map on
-   incidents/detail.html states height:min(46vh,440px). It was previously sized
-   to patrol's detail plate instead — a sibling module's screen — which is how a
-   port drifts while every test stays green.
+   incidents/detail.html states height:min(46vh,440px). Sizing it against a
+   sibling module's screen is how a port drifts while every test stays green, so
+   the number is this screen's own and CaseFilePlateSizingTest holds it there.
 
-   The height is a FLOOR, not a fixed size, and the plate takes whatever else
-   the card has. The row (.i-cols) is a stretch row, as it is in the design, so
-   the card is as tall as the column beside it needs; a plate pinned to one
-   height left the difference as dead space under the legend chips. Nothing
-   drawn changes — only where the spare space goes.
+   The height is a FLOOR and the plate takes whatever else the card has: .i-cols
+   is a stretch row, so the card is as tall as the column beside it needs.
 
-   Scoped to the detail card, so the dashboard and overview maps keep their own
-   `.c[data-w=map] .viewer` min-height:460px sizing. Like that rule, this is
-   genuinely this module's plate SIZING: the plate frame's look (ground, border,
-   overflow) and the .map-chrome* controls stay the HOST's, never shipped
-   twice. */
+   THE HEIGHT IS ALL THIS MODULE STATES. The plate's column, its imagery frame,
+   its floating legend, its control stack and its fullscreen are the atlas's,
+   which is why there is one rule here and not a plate. */
 .c.plate-fill{display:flex;flex-direction:column}
-.plate-fill .viewer{flex:1;min-height:min(46vh,440px)}
-/* The Leaflet canvas the incident-map controller builds inside the host's
-   .viewer plate — this module's own map CONTENT plumbing, the way patrol.css
-   carries .patrol-canvas. It fills the plate; the plate (position, ground,
-   overflow) and the .map-chrome* controls are the HOST's, never shipped twice. */
-.viewer .i-mapcanvas{position:absolute;inset:0;isolation:isolate}
-.viewer .i-mapcanvas .leaflet-container{width:100%;height:100%;font:inherit;background:var(--z-imagery,#20241F)}
+.plate-fill .map-plate{flex:1;min-height:min(46vh,440px)}
 
 /* ── DIRECTION C · FEED ───────────────────────────────────────────────────
    Reverse-chronological, grouped by day.
@@ -834,8 +813,6 @@ html.light{
    they stood for are named here — the rendering is identical and the markup is
    clean. Nothing else about the port differs from the design's stylesheet.   */
 
-/* The map legend row, under every map plate and on the case file. */
-.i-legend{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
 /* A saved-something notice, rendered the way the host's own pages render one. */
 .i-flash{display:flex;align-items:center;gap:9px;margin-bottom:16px}
 .i-flash .acc{color:var(--acc);font-weight:700}

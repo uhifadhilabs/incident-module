@@ -27,6 +27,7 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\UX\Icons\UXIconsBundle;
+use Symfony\UX\Map\UXMapBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
@@ -98,9 +99,13 @@ final class TestKernel extends Kernel
         // The frame every incident screen renders in, and the widget machinery
         // the dashboard IS — a widget surface, not a page with widgets on it.
         yield new ShellBundle();
-        // The maps: this module's base template links the atlas's Leaflet build
-        // and its map sheet by the constants the bundle publishes, and an
-        // installation that draws an incident's position has it.
+        // UX Map and its Leaflet bridge: the atlas's plate is built on them, so
+        // an installation that draws a map registers both — and every incident
+        // screen with a map renders through the configured renderer.
+        yield new UXMapBundle();
+        // The maps: this module's base template links the atlas's map sheet by
+        // the constant the bundle publishes, and an installation that draws an
+        // incident's position has it.
         yield new AtlasBundle();
         // The place an incident happens in, the zones its map reads, and the six
         // contribution points this module fills on an area's overview.
@@ -235,6 +240,10 @@ final class TestKernel extends Kernel
          *
          * @see https://symfony.com/bundles/ux-icons/current/index.html#icons-on-demand
          */
+        // Which renderer draws the maps. UX Map draws nothing at all until one
+        // is named, and an installation names it in config/packages/ux_map.yaml.
+        $container->extension('ux_map', ['renderer' => 'leaflet://default']);
+
         $container->extension('ux_icons', [
             'icon_dir' => __DIR__.'/Fixtures/icons',
             'iconify' => ['on_demand' => false],
