@@ -43,7 +43,7 @@ final class IncidentSearchTest extends IntegrationTestCase
     }
 
     /** @return list<string> the titles the search returned, so order and set are both asserted */
-    private function titlesMatching(string $query, \Uhifadhi\Area\Entity\AreaOfInterest $area): array
+    private function titlesMatching(string $query, \Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest $area): array
     {
         $filter = new IncidentFilter(area: $area, search: $query);
 

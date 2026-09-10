@@ -17,14 +17,14 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use Uhifadhi\Area\Entity\AreaOfInterest;
-use Uhifadhi\Area\Entity\Zone;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Repository\IncidentRepository;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * ONE EVENT, IN ONE AREA, AT ONE PLACE, IN ONE CATEGORY, AT ONE POINT IN A
@@ -171,7 +171,7 @@ class Incident
      * and none in uhifadhi/team-module, so a `ManyToOne` here would name
      * somebody's class and make every installation that records an incident
      * hard-require the module that owns it. The fleet's rule for a department is
-     * to walk the mapping and never the type — {@see \Uhifadhi\Area\Kpi\DepartmentRef}
+     * to walk the mapping and never the type — {@see \Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentRef}
      * is the same decision made one layer up — and by the time the lens reaches
      * a column it is one integer.
      */

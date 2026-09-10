@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Model;
 
 use Symfony\Component\HttpFoundation\Request;
-use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\IncidentCategory;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 

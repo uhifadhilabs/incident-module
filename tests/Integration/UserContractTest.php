@@ -16,12 +16,12 @@ namespace Uhifadhi\Incident\Tests\Integration;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Entity\IncidentLink;
 use Uhifadhi\Incident\Entity\IncidentParty;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
-use Uhifadhi\Team\Entity\User;
 
 /**
  * EVERY PERSON ON AN INCIDENT IS POINTED AT THROUGH THE CONTRACT.

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Entity\IncidentMoney;
@@ -21,7 +22,6 @@ use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Exception\IncidentMoneyException;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * THE ONLY WAY MONEY GETS ONTO AN INCIDENT — the write surface behind the case

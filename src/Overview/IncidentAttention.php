@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Overview;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Uhifadhi\Area\Entity\AreaOfInterest;
-use Uhifadhi\Area\Overview\AttentionItem;
-use Uhifadhi\Area\Overview\AttentionProviderInterface;
-use Uhifadhi\Area\Overview\AttentionSeverity;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Overview\AttentionItem;
+use Uhifadhi\Bundle\AreaBundle\Overview\AttentionProviderInterface;
+use Uhifadhi\Bundle\AreaBundle\Overview\AttentionSeverity;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\IncidentAge;

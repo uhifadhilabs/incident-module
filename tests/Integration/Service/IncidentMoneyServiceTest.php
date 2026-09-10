@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Integration\Service;
 
-use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;

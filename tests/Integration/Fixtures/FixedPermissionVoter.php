@@ -16,9 +16,9 @@ namespace Uhifadhi\Incident\Tests\Integration\Fixtures;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
 use Uhifadhi\Incident\Controller\IncidentReportController;
-use Uhifadhi\Team\Entity\User;
 
 /**
  * Test stand-in for the HOST's permission voter. The bundle only DECLARES

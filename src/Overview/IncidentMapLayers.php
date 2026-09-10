@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Overview;
 
-use Uhifadhi\Area\Entity\AreaOfInterest;
-use Uhifadhi\Area\Overview\MapLayer;
-use Uhifadhi\Area\Overview\MapLayerProviderInterface;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Overview\MapLayer;
+use Uhifadhi\Bundle\AreaBundle\Overview\MapLayerProviderInterface;
 use Uhifadhi\Incident\Model\IncidentHues;
 use Uhifadhi\Incident\Model\IncidentMapPayload;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;

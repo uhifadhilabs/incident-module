@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Integration\Module;
 
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Uhifadhi\Contracts\ModulePermission;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
-use Uhifadhi\ModuleContracts\ModulePermission;
 
 /**
  * The host contract: installing this bundle puts "incidents" in the catalogue.

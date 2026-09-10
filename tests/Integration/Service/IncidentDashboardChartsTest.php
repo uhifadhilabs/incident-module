@@ -44,7 +44,7 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
     }
 
     private function fileWithSeverity(
-        \Uhifadhi\Area\Entity\AreaOfInterest $area,
+        \Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest $area,
         string $subcategory,
         string $title,
         IncidentSeverityEnum $severity,

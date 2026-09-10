@@ -24,9 +24,18 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\UX\Icons\UXIconsBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
-use Uhifadhi\Area\UhifadhiAreaBundle;
+use Uhifadhi\Bundle\AreaBundle\AreaBundle;
+use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
+use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
+use Uhifadhi\Bundle\ShellBundle\ShellBundle;
+use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceRegistry;
+use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
+use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
@@ -34,33 +43,27 @@ use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\HeaderUserAuthenticator;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
 use Uhifadhi\Incident\UhifadhiIncidentBundle;
-use Uhifadhi\Seam\UhifadhiSeamBundle;
-use Uhifadhi\Shell\UhifadhiShellBundle;
+use Uhifadhi\Storage\Controller\EvidenceController;
 use Uhifadhi\Storage\Registry\FileSourceInterface;
 use Uhifadhi\Storage\UhifadhiStorageBundle;
-use Uhifadhi\Team\Entity\User;
-use Uhifadhi\Team\UhifadhiTeamBundle;
-use Uhifadhi\Widget\UhifadhiWidgetBundle;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 /**
  * The smallest INSTALLATION this bundle can live in, and every part of it is
- * real: framework + twig + doctrine + PostGIS + security, the shell every
- * incident screen renders through, the widget framework the dashboard IS, the
- * area an incident happens in, the seam that switches this module on there, the
- * team the account class and the org chart come from, and the storage the Files
- * hub reads — against a REAL PostGIS database (INCIDENTS_TEST_DATABASE_URL, see
- * phpunit.dist.xml).
+ * real: framework + twig + doctrine + PostGIS + security, and five of the core's
+ * bundles — the registry this module registers itself in, the shell every screen
+ * renders through and whose widget machinery the dashboard IS, the atlas whose
+ * Leaflet build and map sheet the base template links, the area an incident
+ * happens in, and the team the account class and the org chart come from —
+ * beside the storage the Files hub reads, against a REAL PostGIS database
+ * (INCIDENTS_TEST_DATABASE_URL, see phpunit.dist.xml).
  *
- * NOTHING HERE IS A COPY ANY MORE, and that is the change. This kernel used to
- * assemble a stand-in: a `layout.html.twig` typed into a fixture directory, a
- * hand-wired WidgetService pointing at classes copied under tests/Fixtures, an
- * account class of this suite's own, and three route definitions standing in for
- * an application's pages. A copy cannot hold a contract — it pins whatever the
- * copyist believed — so each of them is now the published bundle it was
- * imitating.
+ * NOTHING HERE IS A COPY, and that is the point. Every entity, frame and
+ * contribution point this module talks to is the published one: a copy cannot
+ * hold a contract, because it pins whatever the copyist believed on the day it
+ * was made.
  *
  * TEAM AND AREA ARE BOOTED FOR THEIR MODELS, NOT FOR THEIR DASHBOARDS.
  * {@see OnlyThisModulesSurfacesPass} takes the widget-surface tag off everything
@@ -82,19 +85,22 @@ final class TestKernel extends Kernel
         yield new DoctrineBundle();
         yield new FundiStadiPostGISBundle();
         yield new SecurityBundle();
-        // The frame every incident screen renders in.
-        yield new UhifadhiShellBundle();
-        // Hard-required: the dashboard is a widget surface, not a page with
-        // widgets on it.
-        yield new UhifadhiWidgetBundle();
+        // The per-area catalogue this module registers itself in, and the gate
+        // that closes a parked module's pages. TeamBundle requires it too.
+        yield new RegistryBundle();
+        // The frame every incident screen renders in, and the widget machinery
+        // the dashboard IS — a widget surface, not a page with widgets on it.
+        yield new ShellBundle();
+        // The maps: this module's base template links the atlas's Leaflet build
+        // and its map sheet by the constants the bundle publishes, and an
+        // installation that draws an incident's position has it.
+        yield new AtlasBundle();
         // The place an incident happens in, the zones its map reads, and the six
-        // seams this module contributes to an area's overview.
-        yield new UhifadhiAreaBundle();
-        // The per-area catalogue this module registers itself in.
-        yield new UhifadhiSeamBundle();
+        // contribution points this module fills on an area's overview.
+        yield new AreaBundle();
         // For the account class every incident, event and stored layout is keyed
         // by — and for the org chart the department figures walk.
-        yield new UhifadhiTeamBundle();
+        yield new TeamBundle();
         // The platform's Files hub. OPTIONAL for this module — the source is
         // registered only where the storage bundle is in the kernel — and
         // registered here in the order an installation registers it: flysystem
@@ -136,16 +142,41 @@ final class TestKernel extends Kernel
         // people are TEAM's own entity rather than InMemoryUser, because an
         // incident and a stored layout both carry a foreign key to a person and
         // an in-memory one has no row to point at.
+        // THE INSTALLATION'S SECURITY FILE, minus the screens this kernel does
+        // not mount. The hashers, the entity provider over the account TeamBundle
+        // owns and the role hierarchy are the ones the core's own throwaway
+        // application configures, and the firewall takes the user checker that
+        // refuses a deactivated account. No form_login and no access_control:
+        // TeamBundle's sign-in screens are not mounted here, and the suite signs
+        // people in through loginUser() and a test header instead.
+        //
+        // The people are TeamBundle's own entity rather than InMemoryUser,
+        // because an incident and a stored layout both carry a foreign key to a
+        // person and an in-memory one has no row to point at.
         $container->extension('security', [
+            'password_hashers' => [
+                PasswordAuthenticatedUserInterface::class => [
+                    // Test-only cost floor, the documented Symfony practice.
+                    'algorithm' => 'auto',
+                    'cost' => 4,
+                    'time_cost' => 3,
+                    'memory_cost' => 10,
+                ],
+            ],
             'providers' => [
-                'app_users' => ['entity' => ['class' => User::class, 'property' => 'email']],
+                'team_user_provider' => ['entity' => ['class' => User::class, 'property' => 'email']],
             ],
             'firewalls' => [
                 'main' => [
                     'lazy' => true,
-                    'provider' => 'app_users',
+                    'provider' => 'team_user_provider',
+                    'user_checker' => 'team.user_checker',
                     'custom_authenticators' => [HeaderUserAuthenticator::class],
                 ],
+            ],
+            'role_hierarchy' => [
+                'ROLE_ADMIN' => ['ROLE_USER'],
+                'ROLE_SUPER_ADMIN' => ['ROLE_ADMIN', 'ROLE_ALLOWED_TO_SWITCH'],
             ],
         ]);
 
@@ -234,14 +265,14 @@ final class TestKernel extends Kernel
         }
 
         // Services registered under their CLASS names get their test aliases
-        // keyed by hand — this module's repository, and the widget framework by
-        // the ids uhifadhi/widget-module publishes plus the registry a surface
-        // has to be findable in.
+        // keyed by hand — this module's repository, and the widget machinery by
+        // the ids ShellBundle publishes plus the registry a surface has to be
+        // findable in.
         foreach ([
             'incident.repository' => IncidentRepository::class,
-            'widget.service' => \Uhifadhi\Widget\Service\WidgetService::class,
-            'widget.endpoint' => \Uhifadhi\Widget\Service\WidgetEndpoint::class,
-            'widget.surfaces' => \Uhifadhi\Widget\Registry\WidgetSurfaceRegistry::class,
+            'shell.widget.service' => WidgetService::class,
+            'shell.widget.endpoint' => WidgetEndpoint::class,
+            'shell.widget.surfaces' => WidgetSurfaceRegistry::class,
         ] as $alias => $id) {
             $services->alias('test_public.'.$alias, $id)->public();
         }
@@ -274,20 +305,18 @@ final class TestKernel extends Kernel
         // importing uhifadhi/storage-module gets it; the report flow's source
         // card serves the source record's photographs through it, so a kernel
         // without it would prove the card works only where nobody can see one.
-        $evidence = (new \ReflectionClass(\Uhifadhi\Storage\Controller\EvidenceController::class))->getFileName();
+        $evidence = (new \ReflectionClass(EvidenceController::class))->getFileName();
         if (\is_string($evidence)) {
             $routes->import($evidence, 'attribute');
         }
 
         // THE SCREENS THIS MODULE'S CRUMB POINTS AT, mounted from the bundles
         // that own them rather than declared as bare paths here. The area
-        // register and the area page are uhifadhi/area-module's; the front door
-        // is the shell's. `seam_area_modules` is deliberately absent — the
-        // per-area module grid is the seam's page and the seam does not ship one
-        // yet, which is exactly the case incident_url() answers null for and the
-        // crumb prints as plain text.
-        $routes->import('@UhifadhiShellBundle/src/Controller/', 'attribute');
-        $routes->import('@UhifadhiAreaBundle/src/Controller/', 'attribute');
+        // register, the area page and the per-area module grid are AreaBundle's;
+        // the front door is the shell's, shipped as a RESOURCE the shell never
+        // loads and an application imports.
+        $routes->import(ShellBundle::ROUTES);
+        $routes->import('@AreaBundle/Controller/', 'attribute');
     }
 
     public function build(ContainerBuilder $container): void

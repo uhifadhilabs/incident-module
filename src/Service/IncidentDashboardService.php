@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Service;
 
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
@@ -22,7 +23,6 @@ use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Model\IncidentRail;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * BUILDS THE DASHBOARD, once per request.

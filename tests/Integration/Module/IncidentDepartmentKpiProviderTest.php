@@ -13,8 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Integration\Module;
 
-use Uhifadhi\Area\Kpi\DepartmentKpi;
-use Uhifadhi\Area\Kpi\DepartmentRef;
+use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpi;
+use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentRef;
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Incident\Entity\IncidentMoney;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
@@ -22,7 +23,6 @@ use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
-use Uhifadhi\Team\Entity\Department;
 
 /**
  * WHAT A DEPARTMENT'S PEOPLE DID WITH THIS MODULE — the host's performance seam,

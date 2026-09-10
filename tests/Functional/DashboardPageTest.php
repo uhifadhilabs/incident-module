@@ -163,11 +163,10 @@ final class DashboardPageTest extends FunctionalTestCase
 
     /**
      * THE MAP SHIPS ITS CHROME AND ITS LEGEND. The zoom column, layer menu and
-     * fullscreen control are built by map-module's chrome.js and styled by its
+     * fullscreen control are built by the atlas's chrome.js and styled by its
      * map.css — which the incident base template must LINK, or the controls render
-     * invisible (the flaw the pass caught). And every map plate carries the legend
-     * row beneath it: the category hue chips plus the "open / closed / serious"
-     * meaning chips.
+     * invisible. And every map plate carries the legend row beneath it: the
+     * category hue chips plus the "open / closed / serious" meaning chips.
      */
     public function testTheMapShipsItsChromeStylesheetAndLegend(): void
     {
@@ -179,9 +178,11 @@ final class DashboardPageTest extends FunctionalTestCase
         $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
         self::assertResponseIsSuccessful();
 
-        // map-module's one chrome stylesheet is linked, so the JS-built controls
+        // The atlas's one chrome stylesheet is linked, so the JS-built controls
         // (zoom / layer / fullscreen, .map-chrome*) are styled rather than invisible.
-        self::assertGreaterThan(0, $crawler->filter('link[href*="uhifadhimap/map.css"]')->count());
+        // The stem, not the filename: AssetMapper content-digests what a bundle's
+        // public/ dir serves, exactly as it does in an installation.
+        self::assertGreaterThan(0, $crawler->filter('link[href*="atlas/map"]')->count());
 
         // The legend row under the map: the category hue chips and the meaning chips.
         self::assertGreaterThan(0, $crawler->filter('[data-w="map"] .i-legend .i-cat')->count());

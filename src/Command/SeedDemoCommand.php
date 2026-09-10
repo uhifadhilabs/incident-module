@@ -22,8 +22,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Uhifadhi\Area\Entity\AreaOfInterest;
-use Uhifadhi\Area\Entity\Zone;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Entity\IncidentEvidence;
@@ -44,7 +45,6 @@ use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
 use Uhifadhi\Storage\Service\EvidenceStorage;
 
 /**

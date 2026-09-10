@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Integration\Fixtures;
 
-use Uhifadhi\Area\Kpi\DepartmentKpiProviderInterface;
+use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpiProviderInterface;
 
 /**
  * The HOST's DepartmentKpiService, played by a fixture: it receives every service

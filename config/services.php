@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Incident\Controller\IncidentController;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
@@ -34,7 +35,6 @@ use Uhifadhi\Incident\Service\IncidentTransitionService;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
 use Uhifadhi\Incident\Service\TaxonomyAdminService;
 use Uhifadhi\Incident\Twig\IncidentTrailExtension;
-use Uhifadhi\Widget\Service\WidgetService;
 
 /*
  * The bundle's static service wiring.

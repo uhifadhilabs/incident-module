@@ -14,7 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Entity\IncidentParty;
@@ -26,7 +27,6 @@ use Uhifadhi\Incident\Enum\PartyRoleEnum;
 use Uhifadhi\Incident\Model\IncidentPrefill;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * FILING AN INCIDENT — the only door in.

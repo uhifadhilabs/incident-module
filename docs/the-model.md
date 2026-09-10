@@ -36,14 +36,14 @@ incidents/taxonomy`, `incidents.manage`). They do not yet share storage — fili
 against the area-scoped taxonomy, and retiring the seeded one, is the convergence
 step that follows this slice. The admin's "copy from another area" gesture is
 deliberately deferred: it needs to enumerate areas and read their names — which
-`Uhifadhi\ModuleContracts\Entity\AreaInterface` now exposes (`getName`,
+`Uhifadhi\Contracts\Entity\AreaInterface` now exposes (`getName`,
 `getUuidString`, and enumeration through the ORM against the interface; see
 [module-contracts/docs/area-contract.md](https://github.com/uhifadhilabs/module-contracts/blob/main/docs/area-contract.md)) —
 but the gesture itself is not yet ruled, and the empty-state template marks the
 seam.
 
 **How this module references areas.** `Incident::$area` and the area-scoped
-`TaxonomyKind` are mapped to the concrete `Uhifadhi\Area\Entity\AreaOfInterest`,
+`TaxonomyKind` are mapped to the concrete `Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest`,
 not to the `AreaInterface` contract. The contract lets a module point at an area
 *without* requiring area-module — the way team-module's `Department` does — but
 this module already hard-requires area-module for its PostGIS points, zones and

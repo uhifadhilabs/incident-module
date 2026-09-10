@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Unit\Module;
 
 use PHPUnit\Framework\TestCase;
+use Uhifadhi\Contracts\ModulePermission;
+use Uhifadhi\Contracts\ModuleProviderInterface;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
-use Uhifadhi\ModuleContracts\ModulePermission;
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
 
 final class IncidentModuleProviderTest extends TestCase
 {

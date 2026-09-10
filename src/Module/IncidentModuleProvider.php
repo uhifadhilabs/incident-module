@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Module;
 
+use Uhifadhi\Contracts\ModulePermission;
+use Uhifadhi\Contracts\ModuleProviderInterface;
+use Uhifadhi\Contracts\ModuleProviderTrait;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
 use Uhifadhi\Incident\Controller\IncidentReportController;
-use Uhifadhi\ModuleContracts\ModulePermission;
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
-use Uhifadhi\ModuleContracts\ModuleProviderTrait;
 
 /**
  * Declares the one module this bundle contributes — "Incidents": what happened

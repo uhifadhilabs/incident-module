@@ -23,7 +23,9 @@ use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Environment;
-use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
@@ -31,8 +33,6 @@ use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
 use Uhifadhi\Incident\Widget\IncidentWidgets;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
-use Uhifadhi\Widget\Service\WidgetService;
 
 /**
  * THE INCIDENTS DASHBOARD for one area — the widget surface.

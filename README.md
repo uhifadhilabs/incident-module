@@ -32,7 +32,7 @@ Then, in the host:
    incident, who it is assigned to, who acted on the event, who linked it to
    another, and the team member behind a party to it — and none of them names an
    account class. They are mapped to
-   `Uhifadhi\ModuleContracts\Entity\UserInterface`, and the installation resolves
+   `Uhifadhi\Contracts\Entity\UserInterface`, and the installation resolves
    that interface to whatever it calls its people. Install
    `uhifadhi/team-module` and the answer arrives with it (0.3.2 and later states
    the resolution from its own bundle); otherwise write one line naming your own
@@ -42,7 +42,7 @@ Then, in the host:
    doctrine:
        orm:
            resolve_target_entities:
-               Uhifadhi\ModuleContracts\Entity\UserInterface: App\Entity\Person
+               Uhifadhi\Contracts\Entity\UserInterface: App\Entity\Person
    ```
 
    Until something answers it, the bundle installs and the kernel boots, but

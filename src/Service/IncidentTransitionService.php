@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Service;
 
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
@@ -21,7 +22,6 @@ use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 use Uhifadhi\Incident\Exception\IncidentTransitionException;
 use Uhifadhi\Incident\Workflow\IncidentGuardEnum;
 use Uhifadhi\Incident\Workflow\IncidentWorkflow;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * THE ONLY SUPPORTED WAY AN INCIDENT MOVES.

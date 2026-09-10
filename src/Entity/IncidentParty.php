@@ -15,10 +15,10 @@ namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Incident\Enum\PartyRoleEnum;
 use Uhifadhi\Incident\Repository\IncidentPartyRepository;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * SOMEBODY — OR SOMETHING — INVOLVED, wearing a role.

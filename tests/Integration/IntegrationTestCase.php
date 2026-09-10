@@ -16,14 +16,14 @@ namespace Uhifadhi\Incident\Tests\Integration;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Uhifadhi\Area\Entity\AreaOfInterest;
-use Uhifadhi\Area\Entity\Zone;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
-use Uhifadhi\Team\Entity\Department;
-use Uhifadhi\Team\Entity\Position;
-use Uhifadhi\Team\Entity\User;
 
 /**
  * Symfony-standard kernel testing: KernelTestCase + KERNEL_CLASS (phpunit.dist.xml)

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Functional;
 
-use Uhifadhi\Widget\Model\WidgetDom;
+use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetDom;
 
 /**
  * THE REPORT ENTRY CARD — the dashboard widget whose whole job is starting a

@@ -15,10 +15,10 @@ namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * ONE THING THAT HAPPENED TO AN INCIDENT — the spine of the record.

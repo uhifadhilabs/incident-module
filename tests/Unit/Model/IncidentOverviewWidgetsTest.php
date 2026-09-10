@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Unit\Model;
 
 use PHPUnit\Framework\TestCase;
+use Uhifadhi\Bundle\ShellBundle\Widget\Model\Widget;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
-use Uhifadhi\Widget\Model\Widget;
 
 /**
  * The declaration this module puts into the HOST's area-overview library — a

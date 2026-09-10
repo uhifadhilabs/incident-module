@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Model;
 
-use Uhifadhi\Widget\Model\Widget;
-use Uhifadhi\Widget\Model\WidgetGroup;
+use Uhifadhi\Bundle\ShellBundle\Widget\Model\Widget;
+use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
 
 /**
  * WHAT THIS MODULE PUTS IN THE HOST'S AREA-OVERVIEW LIBRARY — a transcription of

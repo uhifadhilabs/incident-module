@@ -18,14 +18,14 @@ use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
-use Uhifadhi\Area\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Workflow\IncidentWorkflow;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * EVERY QUESTION THE INCIDENTS SURFACES ASK, in one place.
@@ -579,7 +579,7 @@ final class IncidentRepository extends ServiceEntityRepository
      * filters by department, and no screen may.
      *
      * THE DEPARTMENT ARRIVES AS AN ID, because no package publishes a contract
-     * for one — {@see \Uhifadhi\Area\Kpi\DepartmentRef} is the same decision made
+     * for one — {@see \Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentRef} is the same decision made
      * one layer up, and by the time the question reaches SQL it is one integer
      * anyway.
      *
@@ -607,7 +607,7 @@ final class IncidentRepository extends ServiceEntityRepository
     /**
      * How many incidents this department's people recorded, per area — what the
      * per-area performance widget reads. Keyed by area name because that is what
-     * the widget prints and the host's {@see \Uhifadhi\Area\Kpi\DepartmentKpi} keys
+     * the widget prints and the host's {@see \Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpi} keys
      * an area's share by.
      *
      * @return array<string, int>

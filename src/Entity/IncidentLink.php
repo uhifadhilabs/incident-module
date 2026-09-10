@@ -15,9 +15,9 @@ namespace Uhifadhi\Incident\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Incident\Repository\IncidentLinkRepository;
-use Uhifadhi\ModuleContracts\Entity\UserInterface;
 
 /**
  * "THESE TWO ARE RELATED" — and A LINK IS A CLAIM, so it carries who made it.

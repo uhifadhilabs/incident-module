@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Overview;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Uhifadhi\Area\Entity\AreaOfInterest;
-use Uhifadhi\Area\Overview\PulseEvent;
-use Uhifadhi\Area\Overview\PulseProviderInterface;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Overview\PulseEvent;
+use Uhifadhi\Bundle\AreaBundle\Overview\PulseProviderInterface;
 use Uhifadhi\Incident\Model\IncidentHues;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
