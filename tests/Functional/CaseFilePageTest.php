@@ -76,15 +76,13 @@ final class CaseFilePageTest extends FunctionalTestCase
     }
 
     /**
-     * THE WAY BACK IS A CONTROL, NOT A HYPERLINK.
+     * THE WAY BACK IS THE SHELL'S PILL.
      *
-     * It rendered as one: the class was dropped as a dead name during the
-     * repoint and nothing replaced it, so the shell's document styles left a
-     * bare `<a>` — purple and underlined, the one thing no screen in this
-     * product looks like. `.tgl` is the shell's own quiet secondary control and
-     * is what every other way-back in the shell wears; it is deliberately NOT
-     * patrol's `.backbtn`, which is a private class in patrol's own sheet and
-     * would render as browser defaults here.
+     * `.backbtn` is the settled cross-module idiom for the way back off a
+     * record — the shell ships it, so every module's case file returns to its
+     * list wearing the same control. The rule is `.backbtn`, never a `.tgl` and
+     * never a page action; the sheet that defines it is the shell's, so this
+     * module's own sheet stays free of a copy.
      */
     public function testTheWayBackWearsTheShellsOwnControl(): void
     {
@@ -98,10 +96,10 @@ final class CaseFilePageTest extends FunctionalTestCase
             $incident->getReference(),
         ));
 
-        $back = $crawler->filter('a.tgl:contains("All incidents")');
-        self::assertCount(1, $back, 'The way back has to carry the shell\'s .tgl, or it renders as a bare hyperlink.');
+        $back = $crawler->filter('a.backbtn:contains("All incidents")');
+        self::assertCount(1, $back, 'The way back has to carry the shell\'s .backbtn, or it renders as a bare hyperlink.');
         self::assertGreaterThan(0, $back->filter('svg')->count(), 'And the shell\'s own chevron beside the words.');
-        self::assertStringNotContainsString('backbtn', $crawler->html(), 'backbtn is patrol\'s private class and is not shipped here.');
+        self::assertCount(0, $crawler->filter('a.tgl:contains("All incidents")'), 'And it is the pill, not the toggle control it wore before the shell shipped one.');
     }
 
     /** An incident of another area is a 404 — the same answer as one that never existed. */

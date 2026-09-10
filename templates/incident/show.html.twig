@@ -34,11 +34,11 @@
 
 {% block incident_page %}
     {% set money = incident.money %}
-    {# THE WAY BACK, on the shell's own quiet secondary control. Not a bare <a>,
-       which the document styles render as a purple underlined hyperlink, and not
-       patrol's .backbtn, which is a private class in patrol's sheet and would
-       reach this page as browser defaults. #}
-    <a class="tgl" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('shell:chevron-left') }}All incidents</a>
+    {# THE WAY BACK, on the shell's own pill — the settled cross-module idiom for
+       coming off a record to the list it was opened from: at the top of the page
+       body, never a page action and never a .tgl. The class is the shell's, so
+       this module's sheet ships no rule for it. #}
+    <a class="backbtn" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('shell:chevron-left') }} All incidents</a>
 
     {# THE IDENTITY BAND — the record's own facts on the shared .factband every
        entity-detail screen wears, below the head (the settled page-chrome theme:
