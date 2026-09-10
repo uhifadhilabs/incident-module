@@ -9,6 +9,7 @@ wildlife mortality. A [uhifadhi](https://github.com/uhifadhilabs) module bundle.
 - [What it is](#what-it-is)
 - [Installation](#installation)
 - [Getting started](#getting-started)
+- [Upgrading](#upgrading)
 - [Learn more](#learn-more)
 - [License](#license)
 
@@ -19,7 +20,7 @@ point in a five-state workflow — `reported → verified → in progress → re
 closed`. One record type serves every reader: Protection and Ecology read
 subsets of one taxonomy rather than each keeping their own copy.
 
-The module ships seven `incident*` tables, the report flow, the case file, a
+The module ships ten `incident*` tables, the report flow, the case file, a
 sixteen-widget dashboard surface composed on the shell's widget machinery, and a
 seeded, configurable taxonomy of four kinds and sixteen sub-categories.
 
@@ -71,13 +72,23 @@ Then, in the host:
    ```
 
    Until something answers it, the bundle installs and the kernel boots, but
-   anything that walks the metadata — including the `diff` below — stops on the
-   unresolved interface. Deleting an account later sets those five columns null
-   and leaves the incidents standing, which is why each of those records keeps
-   the person's name beside the relation.
-2. **Migrate.** The bundle maps its own entities, so no doctrine mappings block
-   is needed — just `bin/console doctrine:migrations:diff` and review. It adds
-   seven `incident*` tables and nothing else; it alters no host table.
+   anything that walks the metadata stops on the unresolved interface. Deleting
+   an account later sets those five columns null and leaves the incidents
+   standing, which is why each of those records keeps the person's name beside
+   the relation.
+2. **Migrate.**
+
+   ```bash
+   bin/console doctrine:migrations:migrate
+   ```
+
+   That is the whole step. This module ships the statements that create its
+   tables, so there is no mappings block to write and nothing to generate:
+   `doctrine:migrations:diff` is what an installation runs for the entities IT
+   owns, and after installing or updating this package it must report no
+   changes. The versions add ten `incident*` tables and nothing else; they alter
+   no host table, and the foreign keys into `area_of_interest`, `zone` and
+   `team_user` are declared here rather than in the core.
 3. **Install the taxonomy** — the one step that is not automatic, because it is a
    data decision and a bundle that wrote rows into a host's database on boot would
    be making it for them:
@@ -117,11 +128,56 @@ under two prefixes only: `incident:`, answered by the glyphs it ships in
 drawn from here, so a deployment with on-demand fetching off — which is what a
 deployment configures — renders every mark on these pages.
 
+## Upgrading
+
+```bash
+composer update uhifadhi/incident-module
+bin/console doctrine:migrations:migrate
+```
+
+Again, `migrate` is the whole of it. New tables and columns arrive as versions
+in this package; `doctrine:migrations:diff` stays what you run for your own
+entities, and after this update it must report no changes. If it does report
+something, that is a bug in this package — please report it rather than
+committing the version it wrote.
+
+Before a production run:
+
+```bash
+# 1. Back up. Nothing below is a substitute for this.
+pg_dump …
+
+# 2. Read what will run, without running it.
+bin/console doctrine:migrations:migrate --dry-run
+```
+
+Two hatches, for the two ways this goes wrong:
+
+- **An installation that already has the `incident*` tables** — created by a
+  `diff` written before this package shipped its own versions — must tell the
+  version log they are there, or the first version will try to create them
+  again:
+
+  ```bash
+  bin/console doctrine:migrations:version \
+      'Uhifadhi\Incident\Migrations\Version20260910045214' --add
+  ```
+
+  That marks the version executed without running it. Check the table list in
+  `docs/the-model.md` against your database first.
+
+- **A deployment that applies SQL by hand** — a reviewed change window, a
+  database somebody else administers — takes the statements instead of the run:
+
+  ```bash
+  bin/console doctrine:migrations:migrate --write-sql=incident-upgrade.sql
+  ```
+
 ## Learn more
 
 - [Charter](docs/charter.md) — one record type and many readers, why departments
   are a lens and never a fence, and why the dashboard rides the shell's framework.
-- [The model](docs/the-model.md) — the seven tables, and the three rules about
+- [The model](docs/the-model.md) — the ten tables, and the three rules about
   money, filing and provenance that somebody will otherwise re-argue.
 - [The workflow, and the definition under it](docs/workflow.md) — the five places,
   their guards, and how `IncidentWorkflow` maps one-to-one onto a Symfony

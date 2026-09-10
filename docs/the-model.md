@@ -2,14 +2,14 @@
 
 ## Contents
 
-- [The seven tables](#the-seven-tables)
+- [The ten tables](#the-ten-tables)
 - [Money runs in two directions](#money-runs-in-two-directions)
 - [No money record is opened at filing](#no-money-record-is-opened-at-filing)
 - [Two taxonomies coexist, for now](#two-taxonomies-coexist-for-now)
 - [How this module references areas](#how-this-module-references-areas)
 - [Provenance is written once](#provenance-is-written-once)
 
-## The seven tables
+## The ten tables
 
 An **incident** is one event, in one area, at one place, in one category, at one
 point in a five-state workflow.
