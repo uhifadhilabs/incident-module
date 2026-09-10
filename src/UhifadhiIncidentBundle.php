@@ -164,6 +164,33 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 ],
             ]);
         }
+
+        // THE TABLES ARRIVE WITH THE CODE. The incident record, its taxonomy and
+        // the area-scoped admin's own two tables are this module's, so their DDL
+        // ships here too, under the module's own namespace — the shape the
+        // migrations bundle documents for a bundle-shipped history:
+        //
+        // > migrations_paths:
+        // >     'SomeBundle\Migrations': '@SomeBundle/Migrations'
+        //
+        // An installation runs `doctrine:migrations:migrate` and writes no
+        // version for this module; `doctrine:migrations:diff` stays what it runs
+        // for the entities IT owns.
+        //
+        // @see https://symfony.com/bundles/DoctrineMigrationsBundle/current/index.html
+        // @see vendor/doctrine/doctrine-migrations-bundle/src/DependencyInjection/Configuration.php
+        //      — `migrations_paths`, "A list of namespace/path pairs where to look for migrations."
+        //
+        // Guarded: an application may install this bundle without the migrations
+        // bundle in its kernel, and there this module simply has no history to
+        // run.
+        if ($builder->hasExtension('doctrine_migrations')) {
+            $container->extension('doctrine_migrations', [
+                'migrations_paths' => [
+                    'Uhifadhi\\Incident\\Migrations' => __DIR__.'/../migrations',
+                ],
+            ], prepend: true);
+        }
     }
 
     /**
