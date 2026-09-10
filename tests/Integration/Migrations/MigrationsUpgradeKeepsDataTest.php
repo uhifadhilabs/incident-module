@@ -17,7 +17,9 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
+use Uhifadhi\Incident\Entity\IncidentEvidence;
 use Uhifadhi\Incident\Entity\IncidentMoney;
+use Uhifadhi\Incident\Entity\IncidentParty;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedContentProviders;
 
 /**
@@ -82,6 +84,8 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
         $rebuilt = $this->connection()->createSchemaManager()->listTableNames();
         self::assertContains('incident', $rebuilt);
         self::assertContains('incident_money', $rebuilt);
+        self::assertContains('incident_party', $rebuilt);
+        self::assertContains('incident_evidence', $rebuilt);
     }
 
     /** @return array<string, int> */
@@ -92,6 +96,11 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
             'incident' => Incident::class,
             'incident_event' => IncidentEvent::class,
             'incident_money' => IncidentMoney::class,
+            // The three the provider could not write until it had services for
+            // them. A rehearsal that only ever protected incidents and their
+            // events was rehearsing against half the tables this module owns.
+            'incident_party' => IncidentParty::class,
+            'incident_evidence' => IncidentEvidence::class,
         ] as $table => $entity) {
             $counts[$table] = $this->em->getRepository($entity)->count([]);
         }
@@ -117,11 +126,15 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
 
         $this->em->clear();
 
-        // Seeded through the real doors, so the rows carry a history and figures
-        // — the thing a schema change is most likely to break.
+        // Seeded through the real doors, so the rows carry a history, figures,
+        // the people involved and evidence with bytes behind it — the things a
+        // schema change is most likely to break, and the things a hand-written
+        // fixture would never have produced.
         self::assertGreaterThan(0, $this->em->getRepository(Incident::class)->count([]));
         self::assertGreaterThan(0, $this->em->getRepository(IncidentEvent::class)->count([]));
         self::assertGreaterThan(0, $this->em->getRepository(IncidentMoney::class)->count([]));
+        self::assertGreaterThan(0, $this->em->getRepository(IncidentParty::class)->count([]));
+        self::assertGreaterThan(0, $this->em->getRepository(IncidentEvidence::class)->count([]));
     }
 
     private function anArea(): void
