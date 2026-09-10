@@ -207,8 +207,9 @@ Two hatches, for the two ways this goes wrong:
 
 - [Charter](docs/charter.md) — one record type and many readers, why departments
   are a lens and never a fence, and why the dashboard rides the shell's framework.
-- [The model](docs/the-model.md) — the ten tables, and the three rules about
-  money, filing and provenance that somebody will otherwise re-argue.
+- [The model](docs/the-model.md) — the ten tables, and the rules about money (two
+  directions, each recorded from its own place in the workflow), filing and
+  provenance that somebody will otherwise re-argue.
 - [The workflow, and the definition under it](docs/workflow.md) — the five places,
   their guards, and how `IncidentWorkflow` maps one-to-one onto a Symfony
   `state_machine`.

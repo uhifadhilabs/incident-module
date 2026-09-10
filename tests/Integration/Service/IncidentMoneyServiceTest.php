@@ -54,6 +54,19 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
         return $incident;
     }
 
+    /** An incident walked only as far as `verified`. */
+    private function verified(AreaOfInterest $area, string $subcategory): Incident
+    {
+        $incident = $this->anIncident($area, $subcategory);
+
+        /** @var IncidentTransitionService $transitions */
+        $transitions = $this->service('incident.transitions');
+        $transitions->apply($incident, IncidentTransitionEnum::Verify, new \DateTimeImmutable());
+        $this->em->flush();
+
+        return $incident;
+    }
+
     public function testNoRowExistsUntilAnAmountIsRecorded(): void
     {
         $this->installTaxonomy();
@@ -143,13 +156,58 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
         $this->money()->record($incident, 1_000_000, null, null, null, new \DateTimeImmutable());
     }
 
-    /** Not before response has started: the gate is a rule, not only a rendering. */
-    public function testMoneyCannotBeRecordedBeforeResponse(): void
+    /**
+     * A CLAIM IS RECORDED FROM `verified`. A household asks for compensation as
+     * soon as the authority agrees the thing happened; making them wait until
+     * somebody is assigned would be the product refusing to write down a claim it
+     * has already been given.
+     */
+    public function testACompensationClaimIsRecordedFromVerified(): void
     {
         $this->installTaxonomy();
-        $incident = $this->anIncident($this->anArea()); // still `reported`
+        $incident = $this->verified($this->anArea(), 'livestock-depredation');
+
+        $money = $this->money()->record($incident, 900_000, null, null, null, new \DateTimeImmutable());
+
+        self::assertSame(900_000, $money->getClaimed());
+        self::assertSame(900_000, $money->outstanding());
+    }
+
+    /**
+     * A FINE IS NOT. Assessing a penalty is enforcement, which is the work that
+     * starts at `in progress` — an authority that fined somebody before it had
+     * opened the case would be fining them on the strength of a report.
+     */
+    public function testAFineIsRefusedUntilResponseHasStarted(): void
+    {
+        $this->installTaxonomy();
+        $incident = $this->verified($this->anArea(), 'illegal-grazing');
 
         $this->expectException(IncidentMoneyException::class);
+        $this->expectExceptionMessage('A fine is assessed once response has started — this incident has not reached in progress yet.');
+        $this->money()->record($incident, null, 750_000, null, null, new \DateTimeImmutable());
+    }
+
+    /** …and it is recorded the moment response does start. */
+    public function testAFineIsRecordedFromInProgress(): void
+    {
+        $this->installTaxonomy();
+        $incident = $this->inProgress($this->anArea(), 'illegal-grazing');
+
+        $money = $this->money()->record($incident, null, 750_000, 750_000, 750_000, new \DateTimeImmutable());
+
+        self::assertSame(750_000, $money->getAssessed());
+        self::assertSame(0, $money->outstanding());
+    }
+
+    /** Neither direction is recorded on a bare report, and each says so its own way. */
+    public function testNeitherDirectionIsRecordedOnABareReport(): void
+    {
+        $this->installTaxonomy();
+        $incident = $this->anIncident($this->anArea()); // livestock-depredation, still `reported`
+
+        $this->expectException(IncidentMoneyException::class);
+        $this->expectExceptionMessage('A compensation claim is recorded once an incident is verified — this incident has not reached verified yet.');
         $this->money()->record($incident, 1_000_000, null, null, null, new \DateTimeImmutable());
     }
 }

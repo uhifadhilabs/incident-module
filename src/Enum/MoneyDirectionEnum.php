@@ -28,6 +28,39 @@ enum MoneyDirectionEnum: string
     case Fine = 'fine';
     case Compensation = 'compensation';
 
+    /**
+     * HOW FAR AN INCIDENT MUST HAVE GOT before money can be recorded on it, and
+     * the two directions do not answer the same.
+     *
+     * A CLAIM is somebody else's statement: a household asks for compensation the
+     * moment the authority agrees the thing happened, and a product that refused
+     * to write it down until a responder had been assigned would be losing a claim
+     * it has already been handed. `verified` is when the authority agrees.
+     *
+     * A FINE is the authority's own act. Assessing a penalty is enforcement, which
+     * is the work `in progress` names — fining somebody while the report is still
+     * only a report would be fining them on the strength of an allegation.
+     */
+    public function recordableFrom(): IncidentStatusEnum
+    {
+        return match ($this) {
+            self::Fine => IncidentStatusEnum::InProgress,
+            self::Compensation => IncidentStatusEnum::Verified,
+        };
+    }
+
+    /**
+     * What the money panel prints when it refuses, in this direction's own words —
+     * a claimant told "response has not started" would be told the wrong rule.
+     */
+    public function refusedTooEarly(): string
+    {
+        return match ($this) {
+            self::Fine => 'A fine is assessed once response has started — this incident has not reached in progress yet.',
+            self::Compensation => 'A compensation claim is recorded once an incident is verified — this incident has not reached verified yet.',
+        };
+    }
+
     /** The money block's heading, in the design's own words. */
     public function heading(): string
     {

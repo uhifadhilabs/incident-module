@@ -175,6 +175,55 @@ final class DemoMonthTest extends TestCase
         self::assertNotNull($incident['narrative'], 'The narrative is quoted verbatim on the detail page.');
     }
 
+    /**
+     * THREE ROWS THE DESIGN'S REGISTER DRAWS, to the word — the two that were
+     * drifting and the one the money rule used to make unwritable.
+     */
+    public function testTheRegistersOwnRowsAreTheRegistersRows(): void
+    {
+        $grazing = self::row('INC-0310');
+        self::assertSame('illegal-grazing', $grazing['subcategory']);
+        self::assertSame('resolved', $grazing['status']);
+        self::assertNotNull($grazing['money']);
+        self::assertSame(750_000, $grazing['money']['approved']);
+        self::assertSame(750_000, $grazing['money']['settled'], 'The register prints it settled.');
+
+        $snaring = self::row('INC-0318');
+        self::assertSame('snaring', $snaring['subcategory']);
+        self::assertSame('verified', $snaring['status']);
+        self::assertSame('critical', $snaring['severity']);
+        self::assertNull($snaring['money'], 'The register draws an em dash: this incident carries no money at all.');
+
+        $raid = self::row('INC-0312');
+        self::assertSame('crop-raiding', $raid['subcategory']);
+        self::assertSame('verified', $raid['status']);
+        self::assertNotNull($raid['money']);
+        self::assertSame(900_000, $raid['money']['claimed']);
+        self::assertNull($raid['money']['approved'], 'A claim taken at verified has been asked for, not yet judged.');
+        self::assertSame(0, $raid['money']['settled'], 'The register prints it "claim open".');
+    }
+
+    /**
+     * @return array{
+     *     reference: string, day: int, hour: int, minute: int,
+     *     subcategory: string, status: string, severity: string, zone: string,
+     *     title: string, narrative: string|null, source: string,
+     *     money: array{claimed: int|null, assessed: int|null, approved: int|null, settled: int|null}|null,
+     *     evidence: int,
+     *     parties: list<array{role: string, name: string, described: string|null}>
+     * }
+     */
+    private static function row(string $reference): array
+    {
+        foreach (DemoMonth::incidents() as $row) {
+            if ($reference === $row['reference']) {
+                return $row;
+            }
+        }
+
+        self::fail(\sprintf('The sample month has no %s.', $reference));
+    }
+
     /** @return array<string, int> */
     private static function tally(string $column): array
     {

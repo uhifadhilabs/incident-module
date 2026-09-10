@@ -50,6 +50,15 @@ final class MoneyPanelTest extends FunctionalTestCase
         return $incident;
     }
 
+    private function verified(AreaOfInterest $area, string $subcategory): Incident
+    {
+        $incident = $this->anIncident($area, $subcategory);
+        $this->transitions()->apply($incident, IncidentTransitionEnum::Verify, new \DateTimeImmutable());
+        $this->em->flush();
+
+        return $incident;
+    }
+
     private function show(AreaOfInterest $area, Incident $incident): string
     {
         return $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $incident->getReference()))->html();
@@ -92,6 +101,31 @@ final class MoneyPanelTest extends FunctionalTestCase
         // The direction rides as a fixed heading, in the module's own words — the
         // authority, never a named client.
         self::assertStringContainsString('owed BY the authority', $html);
+    }
+
+    /**
+     * GATED PER DIRECTION: a COMPENSATION claim is taken from `verified`, so the
+     * panel is already there — the same rule the service enforces, drawn.
+     */
+    public function testTheCompensationPanelAppearsAtVerified(): void
+    {
+        $area = $this->anArea();
+        $incident = $this->verified($area, 'livestock-depredation');
+        $this->client->loginUser($this->aManager());
+
+        $html = $this->show($area, $incident);
+        self::assertStringContainsString('i-moneyedit', $html);
+        self::assertStringContainsString('owed BY the authority', $html);
+    }
+
+    /** …and a FINE is not: enforcement starts at `in progress`, so the panel waits. */
+    public function testTheFinePanelIsStillShutAtVerified(): void
+    {
+        $area = $this->anArea();
+        $incident = $this->verified($area, 'illegal-grazing');
+        $this->client->loginUser($this->aManager());
+
+        self::assertStringNotContainsString('i-moneyedit', $this->show($area, $incident));
     }
 
     /** A reporter, who cannot manage, is never shown the write panel. */

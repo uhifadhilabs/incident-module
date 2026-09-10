@@ -62,11 +62,10 @@ use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
  *
  * WHAT IS STILL NOT SEEDED, SAID PLAINLY:
  *
- *   MONEY BELOW `in progress`. Sixteen rows of the sample month carry money at
- *   `reported` or `verified`, which is a state no screen can produce, so their
- *   figures are left out rather than written past the rule. The rows and the
- *   product's rule genuinely disagree, and which of them is wrong is a ruling
- *   nobody has made.
+ *   MONEY ON A BARE REPORT. Six rows of the sample month carry money at
+ *   `reported`, which is a state no screen can produce in either direction — a
+ *   claim is taken from `verified` and a fine from `in progress` — so their
+ *   figures are left out rather than written past the rule.
  *
  *   DOCUMENTS. The evidence a money case carries is a signed form, and the
  *   platform's default accepted types are images. Photographs are seeded with
@@ -239,8 +238,9 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
     /**
      * Move a freshly filed incident to where the sample month says it is — one
      * legal transition at a time, with the assignee named and the money recorded
-     * at the points the product allows: response is somebody's work, and money is
-     * recorded after response has started and before the resolve that reads it.
+     * at the point the product allows, which is the DIRECTION's point: a
+     * compensation claim as soon as the case is verified, a fine once response has
+     * started. Either way it lands before the resolve that reads it.
      *
      * @param array{claimed: int|null, assessed: int|null, approved: int|null, settled: int|null}|null $money
      */
@@ -266,13 +266,16 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
             $at = $at->modify('+7 hours');
             $this->cases->move($incident, $step, $at, $actor, self::nameOf($actor));
 
-            if (IncidentTransitionEnum::Respond !== $step) {
-                continue;
+            if (IncidentTransitionEnum::Respond === $step) {
+                $this->cases->assign($incident, $responder, $at, $actor, self::nameOf($actor));
             }
 
-            $this->cases->assign($incident, $responder, $at, $actor, self::nameOf($actor));
-
-            if (null !== $money && $incident->getSubcategory()->carriesMoney()) {
+            $direction = $incident->getSubcategory()->getMoneyDirection();
+            if (null !== $money
+                && null !== $direction
+                && null === $incident->getMoney()
+                && $incident->getStatus()->hasReached($direction->recordableFrom())
+            ) {
                 $this->money->record(
                     $incident,
                     $money['claimed'],

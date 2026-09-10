@@ -64,7 +64,7 @@ Two things are still not written, and both are findings rather than omissions:
 
 | Not seeded | Why |
 |---|---|
-| Money on an incident below `in progress` | The money service records money once response has started, which is the product's rule. Sixteen rows of the table disagree with it — and so, on one row, does the design: its register draws INC-0312 at `verified` carrying TZS 900,000, "claim open". Which of the two is wrong is a ruling nobody has made, so nothing is written past the rule and nothing is moved to suit it. |
+| Money on an incident still at `reported` | Money enters at a different place per direction — a claim from `verified`, a fine from `in progress` — and six rows of the table carry an amount while the incident is still only a report, which neither direction allows. Their figures are left out rather than written past the rule. |
 | The signed document a money case carries | The platform's default accepted types are images, so a PDF is refused before a key is built. Photographs are seeded with real bytes; the signed form waits on a deployment that accepts one. |
 
 The retired command wrote all of it straight to the entity manager, which kept

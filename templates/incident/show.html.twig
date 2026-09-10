@@ -106,14 +106,16 @@
                 </div>
             {% endif %}
 
-            {# THE MONEY WRITE SURFACE — a GATED PANEL. It does not exist until the
-               incident reaches `in progress`, and only where the sub-category
-               carries money; the direction is FIXED (inherited from the category),
-               never a choice made here. The row is born on the first amount, which
-               is when the read-only card above appears. → POST incident_money /
-               incident_money/waive, guarded by "incidents.manage". #}
+            {# THE MONEY WRITE SURFACE — a GATED PANEL, and the gate is the
+               DIRECTION's. A compensation claim is taken from `verified`, a fine
+               only from `in progress`; the service refuses the same two places, so
+               the panel is never drawn on a POST that would be refused. Only where
+               the sub-category carries money, and the direction is FIXED (inherited
+               from the category), never a choice made here. The row is born on the
+               first amount, which is when the read-only card above appears. → POST
+               incident_money / incident_money/waive, guarded by "incidents.manage". #}
             {% if canManage and incident.subcategory.carriesMoney
-                and incident.status.hasReached(constant('Uhifadhi\\Incident\\Enum\\IncidentStatusEnum::InProgress')) %}
+                and incident.status.hasReached(incident.subcategory.moneyDirection.recordableFrom) %}
                 {% set dir = incident.subcategory.moneyDirection %}
                 <div class="c i-moneyedit">
                     <span class="tab">Record money<span class="src">· {{ dir.value }} · direction is fixed</span></span>

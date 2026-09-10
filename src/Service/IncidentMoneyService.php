@@ -19,7 +19,6 @@ use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Entity\IncidentMoney;
 use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
-use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Exception\IncidentMoneyException;
 
@@ -62,7 +61,8 @@ final readonly class IncidentMoneyService
      * that prefills the current figures and posts them back is authoritative.
      *
      * @throws IncidentMoneyException when the incident carries no money, has not
-     *                                reached response, or nothing was entered on a first save
+     *                                reached the place its direction is recorded from, or
+     *                                nothing was entered on a first save
      */
     public function record(
         Incident $incident,
@@ -112,7 +112,8 @@ final readonly class IncidentMoneyService
      * waiver is itself a statement that there was money to give up on.
      *
      * @throws IncidentMoneyException when the incident carries no money, has not
-     *                                reached response, or the reason is blank
+     *                                reached the place its direction is recorded from, or
+     *                                the reason is blank
      */
     public function waive(
         Incident $incident,
@@ -149,8 +150,8 @@ final readonly class IncidentMoneyService
             throw new IncidentMoneyException('This kind of incident carries no money, so there is nothing to record on it.');
         }
 
-        if (!$incident->getStatus()->hasReached(IncidentStatusEnum::InProgress)) {
-            throw new IncidentMoneyException('Money is recorded once response has started — this incident has not reached in progress yet.');
+        if (!$incident->getStatus()->hasReached($direction->recordableFrom())) {
+            throw new IncidentMoneyException($direction->refusedTooEarly());
         }
 
         return $direction;

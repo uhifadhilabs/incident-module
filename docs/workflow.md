@@ -16,6 +16,9 @@ reported → verified → in progress → resolved → closed
 - **`resolve` requires the money settled or waived** — where there is money at
   all. An incident whose claim is outstanding is not resolved, it is *unpaid*.
   A waiver passes the guard, because somebody wrote down why.
+- **Money enters at a different place per direction** — a compensation claim from
+  `verified`, a fine from `in progress`. See
+  [each direction is recorded from its own place](the-model.md#each-direction-is-recorded-from-its-own-place).
 - **`closed` is reached by TIME, never by a person** — 30 days after resolution.
   It is refused to every actor without exception; the only caller that gets
   through is the clock, and it gets through by not being an actor at all.
