@@ -9,6 +9,7 @@ wildlife mortality. A [uhifadhi](https://github.com/uhifadhilabs) module bundle.
 - [What it is](#what-it-is)
 - [Installation](#installation)
 - [Getting started](#getting-started)
+- [The maps](#the-maps)
 - [Upgrading](#upgrading)
 - [Learn more](#learn-more)
 - [License](#license)
@@ -100,7 +101,7 @@ Then, in the host:
    Idempotent and non-destructive. Run it again after any change to
    `incident.taxonomy`; a kind of incident that has left the configuration is
    **left alone**, never deleted, because case files are filed against it.
-The three Stimulus controllers — `incident-map`, `incident-board`,
+The three Stimulus controllers — `incident-filters`, `incident-board`,
 `incident-report` — need no step of their own: Flex synchronises
 `assets/controllers.json` from this package's own `assets/package.json` on every
 `composer require`/`update`, because the package declares the `symfony-ux`
@@ -109,8 +110,8 @@ keyword.
 Everything this module binds to arrives in ONE package, `uhifadhi/uhifadhi` —
 the core, whose five bundles are what these screens stand on: AreaBundle for the
 area an incident happens in and its zones, ShellBundle for the page frame and
-the widget machinery the dashboard is, AtlasBundle for Leaflet and the map
-chrome, RegistryBundle for the per-area catalogue this module registers itself
+the widget machinery the dashboard is, AtlasBundle for the maps, RegistryBundle
+for the per-area catalogue this module registers itself
 in, and TeamBundle for the account class. The contracts it implements ship
 inside it. One further package is required: `uhifadhi/storage-module` stores
 the photographs an incident is filed with and puts them on the Files hub.
@@ -125,6 +126,37 @@ under two prefixes only: `incident:`, answered by the glyphs it ships in
 `assets/icons/incident`, and `shell:`, answered by the core. No `lucide:` name is
 drawn from here, so a deployment with on-demand fetching off — which is what a
 deployment configures — renders every mark on these pages.
+
+## The maps
+
+**Maps come from the atlas.** This module ships no map JavaScript, no Leaflet and
+no chrome: it states what is on a plate in PHP and renders it with one Twig call.
+
+```php
+// src/Service/IncidentMapService.php
+$map->addLayer(new GeoJsonLayer(
+    id: 'incident.'.$category['slug'],
+    label: $category['label'],
+    features: $collection,
+    swatch: IncidentHues::of($category['colourKey']),
+    shape: LayerShape::Point,
+    count: \count($own),
+    group: IncidentMapService::GROUP,
+));
+```
+
+```twig
+{{ render_map(dashboard.map, {'role': 'img', 'aria-label': 'Where every incident was filed'}, filters) }}
+```
+
+One layer per category in that category's own hue, each legend row a switch; the
+area's zones underneath, wearing their names; the boundary in the platform's one
+treatment. The imagery, the control stack, the floating legend and fullscreen are
+the atlas's, which is why an incident map, a patrol map and the area map read
+identically. The third argument is this module's filter row, rendered one row
+above the map and inside the plate, so the chips stay a row in fullscreen.
+
+The full API is [the atlas components](https://github.com/uhifadhilabs/uhifadhi/blob/main/src/Uhifadhi/Bundle/AtlasBundle/docs/components.md).
 
 ## Upgrading
 

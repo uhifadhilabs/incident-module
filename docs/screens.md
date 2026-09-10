@@ -6,6 +6,7 @@
 - [Parking closes every one of them](#parking-closes-every-one-of-them)
 - [The five directions are presets, not pages](#the-five-directions-are-presets-not-pages)
 - [Filing from another module](#filing-from-another-module)
+- [The maps](#the-maps)
 
 ## The routes
 
@@ -74,3 +75,20 @@ knows, without either bundle naming the other's classes or routes:
 
 Everything there is a guess the filer may overrule — except `record` and `label`,
 which become the incident's provenance and are never editable again.
+
+## The maps
+
+Three screens draw one: the `map` widget, the `maplist` widget and the case
+file's **Where** card. All three are the atlas's plate, stated by
+`Service/IncidentMapService` and rendered with `render_map()`.
+
+| What is on it | How it is stated |
+|---|---|
+| one layer per category, in that category's hue | `GeoJsonLayer`, `shape: LayerShape::Point`, `swatch: IncidentHues::of(...)` |
+| the area's zones, quiet, wearing their names | `GeoJsonLayer`, `shape: LayerShape::Line`, a `label` on each feature |
+| the area boundary and its scrim | `Boundary` |
+| the legend, one switching row per layer | the layers' own rows, under one group |
+
+The filter row goes in the plate's filter slot, so it is one row above the map
+and comes along into fullscreen. The module writes no map JavaScript: the
+imagery, the control stack, the legend and fullscreen belong to the atlas.
