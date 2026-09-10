@@ -79,27 +79,6 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
         ];
     }
 
-    /**
-     * The two prefixes this module draws with, plus the one its INSTALLED
-     * DEPENDENCIES answer for themselves.
-     *
-     * The third is a workaround, not a permission. The base collects icon
-     * references by walking every `.twig`, `.php` and `.js` file under
-     * {@see bundlePath()} and filtering out only `tests/`
-     * (VocabularyConformanceTestCase::sourceFiles(), lines 490-503), so a
-     * checkout whose `vendor/` holds another uhifadhi package reads that
-     * package's templates as if they were this bundle's. `storage:` is
-     * storage-module's own alias, registered by storage-module and answered from
-     * storage-module's own directory; nothing here draws one. Delete this
-     * override the day the base excludes `vendor/`.
-     *
-     * @return list<string>
-     */
-    protected static function allowedIconPrefixes(): array
-    {
-        return [...parent::allowedIconPrefixes(), 'storage'];
-    }
-
     /** @param class-string $bundle */
     private static function publicDirectoryOf(string $bundle): string
     {
