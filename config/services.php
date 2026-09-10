@@ -104,6 +104,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('doctrine.orm.entity_manager'),
             service('incident.transitions'),
+            service(IncidentLinkRepository::class),
         ]);
 
     $services->set('incident.report', IncidentReportService::class)
