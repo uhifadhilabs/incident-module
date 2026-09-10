@@ -652,9 +652,8 @@ final class ReportFlowTest extends FunctionalTestCase
 
     /**
      * NO PHOTOGRAPHS IS A FACT, NOT A FAILURE. A record nobody photographed, a
-     * token naming a module this deployment does not have, a storage bundle that
-     * is not installed — all of them draw a source card with no strip, and none of
-     * them costs anybody a report.
+     * token naming a module this deployment does not have — both draw a source
+     * card with no strip, and neither costs anybody a report.
      */
     public function testACardWithNoPhotographsSimplyHasNoStrip(): void
     {

@@ -112,10 +112,8 @@ area an incident happens in and its zones, ShellBundle for the page frame and
 the widget machinery the dashboard is, AtlasBundle for Leaflet and the map
 chrome, RegistryBundle for the per-area catalogue this module registers itself
 in, and TeamBundle for the account class. The contracts it implements ship
-inside it. One package is a suggestion rather than a requirement:
-`uhifadhi/storage-module` puts an incident's evidence on the Files hub, and
-without it every incident screen still works and simply has no `/files` to
-appear on.
+inside it. One further package is required: `uhifadhi/storage-module` stores
+the photographs an incident is filed with and puts them on the Files hub.
 
 The one thing an installation still provides is the ACCOUNT CLASS behind the
 person contract — see the user contract above. TeamBundle answers it from its
@@ -188,7 +186,7 @@ Two hatches, for the two ways this goes wrong:
   sentences the permission matrix prints under them.
 - [Configuration](docs/configuration.md) — `config/packages/incident.yaml`, the
   taxonomy tree, and what `leads` does and does not decide.
-- [Evidence on the Files hub](docs/files-hub.md) — the optional
+- [Evidence on the Files hub](docs/files-hub.md) — the
   `uhifadhi/storage-module` contract, and what this module honestly knows about a file.
 - [Dev tooling](docs/dev-tooling.md) — the demo month this module declares for
   devkit to seed, the two commands that stay, and what the declaration cannot

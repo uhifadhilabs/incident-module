@@ -22,10 +22,8 @@
 {% block title %}Report an incident{% endblock %}
 
 {# THE FILE PREVIEW's vocabulary, and ONLY where the card actually has
-   photographs to open in it. This module does not require the storage bundle —
-   a deployment with incidents and no Files hub is a real deployment — so asking
-   for that bundle's stylesheet unconditionally would be a 404 on every report
-   page in such a host. #}
+   photographs to open in it. A sheet linked on a page with nothing to open is a
+   request every reader pays for and nobody uses. #}
 {% block stylesheets %}
     {{ parent() }}
     {% if sourceFiles is not empty %}

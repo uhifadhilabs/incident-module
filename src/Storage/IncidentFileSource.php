@@ -43,7 +43,7 @@ use Uhifadhi\Storage\Service\EvidenceKey;
  * the platform's own EvidenceStorage (photographs) and its evidence storage
  * (signed documents), so the sample month appears on the hub with real sizes and
  * thumbnails. A row that carries only a KEY and no stored bytes — evidence keyed
- * before a blob was written, or a host running no storage — is still described
+ * before a blob was written — is still described
  * truthfully rather than conveniently, and three rules in the mapping below make
  * that so:
  *

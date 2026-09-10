@@ -110,18 +110,13 @@ final class IncidentReportController
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly TokenStorageInterface $tokenStorage,
         /**
-         * THE PLATFORM'S FILE REGISTRY, and null where the host runs no Files
-         * hub. It is how the source card shows the observation's photographs
-         * without this bundle knowing anything about observations: it hands the
-         * registry the source token and the record uuid the hand-off arrived with,
-         * and the module that OWNS that record answers.
-         *
-         * Optional on purpose. A deployment with incidents and no storage bundle
-         * is a real deployment; it gets a source card with no photograph strip,
-         * which is the honest drawing of "there are no photographs here", not a
-         * broken page.
+         * THE PLATFORM'S FILE REGISTRY. It is how the source card shows the
+         * observation's photographs without this bundle knowing anything about
+         * observations: it hands the registry the source token and the record
+         * uuid the hand-off arrived with, and the module that OWNS that record
+         * answers.
          */
-        private readonly ?FileRegistry $fileRegistry = null,
+        private readonly FileRegistry $fileRegistry,
     ) {
     }
 
@@ -269,17 +264,16 @@ final class IncidentReportController
      * the token and the uuid the hand-off's query string carried, and that is exactly
      * what {@see FileRegistry::forRecord()} takes.
      *
-     * EVERY WAY OF HAVING NONE ANSWERS THE SAME. No storage bundle, no
-     * photographs, a token naming a module this deployment does not have, a
-     * registry having a bad day — all of them are an empty list and a card with
-     * no strip. None of them is an error, and none of them may cost anybody a
-     * report.
+     * EVERY WAY OF HAVING NONE ANSWERS THE SAME. No photographs, a token naming
+     * a module this deployment does not have, a registry having a bad day — all
+     * of them are an empty list and a card with no strip. None of them is an
+     * error, and none of them may cost anybody a report.
      *
      * @return list<FileEntry>
      */
     private function filesOf(IncidentPrefill $prefill): array
     {
-        if (null === $this->fileRegistry || null === $prefill->source || null === $prefill->record) {
+        if (null === $prefill->source || null === $prefill->record) {
             return [];
         }
 

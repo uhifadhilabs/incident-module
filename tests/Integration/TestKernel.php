@@ -108,10 +108,10 @@ final class TestKernel extends Kernel
         // For the account class every incident, event and stored layout is keyed
         // by — and for the org chart the department figures walk.
         yield new TeamBundle();
-        // The platform's Files hub. OPTIONAL for this module — the source is
-        // registered only where the storage bundle is in the kernel — and
-        // registered here in the order an installation registers it: flysystem
-        // first, because the storage bundle PREPENDS a flysystem storage.
+        // The platform's Files hub, where an incident's photographs are stored
+        // and listed. A hard requirement of this module, registered here in the
+        // order an installation registers it: flysystem first, because the
+        // storage bundle PREPENDS a flysystem storage.
         yield new FlysystemBundle();
         yield new UhifadhiStorageBundle();
         yield new UhifadhiIncidentBundle();

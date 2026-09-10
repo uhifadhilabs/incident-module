@@ -254,44 +254,33 @@ final class UhifadhiIncidentBundle extends AbstractBundle
         $builder->setParameter('incident.widget_screens', $hasSecurity);
 
         /*
-         * INCIDENTS ON THE PLATFORM'S FILES HUB — registered only where the host
-         * actually runs uhifadhi/storage-module.
+         * INCIDENTS ON THE PLATFORM'S FILES HUB — unguarded, because
+         * uhifadhi/storage-module is a hard requirement of this bundle.
          *
-         * OPTIONAL, unlike patrol's hard requirement, and the difference is real
-         * rather than stylistic: patrol's photographs ARE stored through that
-         * bundle and its upload endpoint cannot work without it, while incidents
-         * only DESCRIBES rows it already holds. A host that never installed
-         * storage still runs every incident screen; it simply has no /files for
-         * this module to appear on. So the package is a suggestion in
-         * composer.json, and this is the guard that makes the suggestion true.
-         *
-         * The check reads kernel.bundles for the same reason the security guard
-         * above does: interface_exists() would only prove the class autoloads,
-         * and storage-module is one of this bundle's DEV dependencies — it
-         * autoloads in our own test runs whether or not the bundle is registered,
-         * and the service would then reference storage.* ids that do not exist.
+         * An incident filed by hand carries photographs: the case file's evidence
+         * card is not an optional extra rendered where a Files hub happens to
+         * exist, it is one of the things the record is FOR. So there is no
+         * `kernel.bundles` check here and no `incident.files_hub` parameter for a
+         * template to hide a door with — anything that resolves this bundle has
+         * storage, and a kernel that omits the bundle fails loudly on the missing
+         * `storage.*` ids rather than quietly serving a product with no evidence
+         * in it.
          *
          * Tagged by hand with the interface's own constant. A reusable bundle is
          * not autoconfigured, and a module that forgot this tag would simply not
          * appear on /files — the hub grows by MODULES, so a missing source looks
          * exactly like a module nobody installed.
          */
-        $hasStorage = \is_array($bundles) && isset($bundles['UhifadhiStorageBundle']);
-        $builder->setParameter('incident.files_hub', $hasStorage);
+        $services->set('incident.file_source', IncidentFileSource::class)
+            ->args([service(IncidentEvidenceRepository::class), service('router')])
+            ->tag(FileSourceInterface::TAG);
 
-        if ($hasStorage) {
-            $services->set('incident.file_source', IncidentFileSource::class)
-                ->args([service(IncidentEvidenceRepository::class), service('router')])
-                ->tag(FileSourceInterface::TAG);
-
-            // The permission half of it: without a voter claiming
-            // `incident/…` keys, storage-module denies them by default and every
-            // photograph, document and preview 404s on the hub. Registered here
-            // (only where storage is installed) beside the source that writes them.
-            $services->set('incident.evidence_voter', IncidentEvidenceVoter::class)
-                ->args([service(IncidentEvidenceRepository::class)])
-                ->tag('uhifadhi.evidence_access_voter');
-        }
+        // The permission half of it: without a voter claiming `incident/…` keys,
+        // storage-module denies them by default and every photograph, document
+        // and preview 404s on the hub.
+        $services->set('incident.evidence_voter', IncidentEvidenceVoter::class)
+            ->args([service(IncidentEvidenceRepository::class)])
+            ->tag('uhifadhi.evidence_access_voter');
 
         /*
          * THE WIDGET SURFACE, in the registry — the catalogue naming itself so
@@ -382,10 +371,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('security.authorization_checker'),
                     service('security.csrf.token_manager'),
                     service('security.token_storage'),
-                    // The platform's file registry, and genuinely absent where the
-                    // host runs no Files hub — then the source card simply has no
-                    // photograph strip. See the controller's own note.
-                    service('storage.file_registry')->nullOnInvalid(),
+                    service('storage.file_registry'),
                 ])
                 ->public();
             $services->alias(IncidentReportController::class, 'incident.controller.report')->public();

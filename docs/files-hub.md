@@ -1,4 +1,4 @@
-# Optional — evidence on the Files hub
+# Evidence on the Files hub
 
 ## Contents
 
@@ -8,13 +8,14 @@
 
 ## How an incident's evidence reaches the hub
 
-Where a host also runs `uhifadhi/storage-module` and mounts its cross-module
-hub at `/files`, this module puts its evidence on it: `IncidentFileSource` is
-tagged `storage.file_source` and hands over one entry per `IncidentEvidence`,
-carrying the case file it belongs to (`INC-0313`, linked to its own page), the
-incident's area, the handset's `capturedAt` for a photograph, and the record's
-caption. Registering the storage bundle is the only step; a host without it runs
-every incident screen unchanged and simply has no hub to appear on.
+`uhifadhi/storage-module` is a requirement of this module, so its cross-module
+hub at `/files` is always there to appear on: `IncidentFileSource` is tagged
+`storage.file_source` and hands over one entry per `IncidentEvidence`, carrying
+the case file it belongs to (`INC-0313`, linked to its own page), the incident's
+area, the handset's `capturedAt` for a photograph, and the record's caption.
+There is no registration step and no guard — an incident filed by hand carries
+photographs, and a deployment that could not store one would not be running this
+module.
 
 ## What the hub is told is only what this module knows
 
