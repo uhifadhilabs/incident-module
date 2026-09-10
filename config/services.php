@@ -26,6 +26,7 @@ use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
+use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentMoneyService;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
@@ -91,6 +92,18 @@ return static function (ContainerConfigurator $container): void {
             service(IncidentCategoryRepository::class),
             service('router'),
             param('incident.currency'),
+        ]);
+
+    /*
+     * THE CASE FILE'S WRITE SURFACE — what happens to an incident after it is
+     * filed, and the place a workflow decision becomes durable. It exists so a
+     * controller never holds an entity manager for a single flush: the state
+     * machine decides, this writes, the screen authorizes and responds.
+     */
+    $services->set('incident.case', IncidentCaseService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service('incident.transitions'),
         ]);
 
     $services->set('incident.report', IncidentReportService::class)

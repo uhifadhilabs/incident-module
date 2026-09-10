@@ -284,6 +284,8 @@ final class TestKernel extends Kernel
             'incident.overview.pulse',
             'incident.overview.copy',
             'incident.transitions',
+            // The case file's write surface — the durable half of a move.
+            'incident.case',
             // The inert demo-content declaration devkit collects in a dev
             // install. Nothing in this suite is devkit, so the provider is
             // reached directly and asked to do the one thing it does.

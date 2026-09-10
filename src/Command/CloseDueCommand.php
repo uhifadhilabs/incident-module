@@ -13,14 +13,13 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Command;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Uhifadhi\Incident\Repository\IncidentRepository;
-use Uhifadhi\Incident\Service\IncidentTransitionService;
+use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Workflow\IncidentWorkflow;
 
 /**
@@ -28,7 +27,8 @@ use Uhifadhi\Incident\Workflow\IncidentWorkflow;
  *
  * `closed` is reached BY TIME, never by a person: an incident closes itself
  * {@see IncidentWorkflow::CLOSE_AFTER_DAYS} days after it was resolved. That rule
- * has always lived in {@see IncidentTransitionService::closeIfDue()}, but nothing
+ * has always lived in the workflow, reached through
+ * {@see IncidentCaseService::closeIfDue()}, but nothing
  * in production ever TURNED the hand — so this command is the hand, and it is
  * registered in every environment (not dev tooling), because a workflow whose last
  * step never happens is a workflow that lies about being finished.
@@ -55,9 +55,8 @@ use Uhifadhi\Incident\Workflow\IncidentWorkflow;
 final class CloseDueCommand extends Command
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
         private readonly IncidentRepository $incidents,
-        private readonly IncidentTransitionService $transitions,
+        private readonly IncidentCaseService $cases,
     ) {
         parent::__construct();
     }
@@ -75,13 +74,11 @@ final class CloseDueCommand extends Command
             // The SERVICE decides, not this loop: closeIfDue() re-checks the term
             // and answers null for anything not actually due, so the query
             // narrowing the set can never make the command close something early.
-            if (null !== $this->transitions->closeIfDue($incident, $now)) {
+            // It also writes what it decided, which is why this loop holds no
+            // entity manager of its own.
+            if (null !== $this->cases->closeIfDue($incident, $now)) {
                 ++$closed;
             }
-        }
-
-        if ($closed > 0) {
-            $this->entityManager->flush();
         }
 
         $io->definitionList(

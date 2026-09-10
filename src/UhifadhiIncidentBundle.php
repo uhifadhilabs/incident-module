@@ -332,10 +332,9 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 ->args([
                     service('twig'),
                     service('router'),
-                    service('doctrine.orm.entity_manager'),
                     service(IncidentRepository::class),
                     service('incident.dashboard'),
-                    service('incident.transitions'),
+                    service('incident.case'),
                     service('security.authorization_checker'),
                     // FrameworkBundle defines this id whenever symfony/security-csrf
                     // is installed, which a host running SecurityBundle already has.
@@ -410,9 +409,8 @@ final class UhifadhiIncidentBundle extends AbstractBundle
         // the class docblock for the cron line and the scheduler note.
         $services->set('incident.command.close_due', CloseDueCommand::class)
             ->args([
-                service('doctrine.orm.entity_manager'),
                 service(IncidentRepository::class),
-                service('incident.transitions'),
+                service('incident.case'),
             ])
             ->tag('console.command');
 

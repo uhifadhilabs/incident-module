@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Controller;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -38,8 +37,8 @@ use Uhifadhi\Incident\Exception\IncidentTransitionException;
 use Uhifadhi\Incident\Model\IncidentMapPayload;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
-use Uhifadhi\Incident\Service\IncidentTransitionService;
 
 /**
  * ONE CASE FILE — the whole record on one page, and the one place an incident is
@@ -50,8 +49,9 @@ use Uhifadhi\Incident\Service\IncidentTransitionService;
  *  1. **The rail, not a dropdown.** A status is never a select box. The page
  *     draws where the incident is, what it passed and what is left, and offers
  *     ONLY the legal transitions — with the refusal printed beside them for the
- *     ones it cannot make. {@see IncidentTransitionService} decides all of it;
- *     this controller decides nothing about the workflow.
+ *     ones it cannot make. The workflow decides all of it and
+ *     {@see IncidentCaseService} writes it down; this controller decides nothing
+ *     about either.
  *  2. **Gated panels.** A step owns a panel, and the panel DOES NOT EXIST until
  *     the step is reached — never rendered-and-disabled. There is no empty
  *     "resolution" form sitting on a freshly reported incident inviting somebody
@@ -86,10 +86,9 @@ final class IncidentDetailController
     public function __construct(
         private readonly Environment $twig,
         private readonly UrlGeneratorInterface $router,
-        private readonly EntityManagerInterface $entityManager,
         private readonly IncidentRepository $incidents,
         private readonly IncidentDashboardService $dashboard,
-        private readonly IncidentTransitionService $transitions,
+        private readonly IncidentCaseService $cases,
         private readonly ?AuthorizationCheckerInterface $authorization = null,
         private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
         private readonly ?TokenStorageInterface $tokenStorage = null,
@@ -154,7 +153,7 @@ final class IncidentDetailController
 
         $actor = $this->actor();
         try {
-            $this->transitions->apply(
+            $this->cases->move(
                 $incident,
                 $move,
                 new \DateTimeImmutable(),
@@ -168,7 +167,6 @@ final class IncidentDetailController
             return new Response($refused->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $this->entityManager->flush();
         $this->flash($request, \sprintf('%s is now %s.', $incident->getReference(), $incident->getStatus()->label()));
 
         return new RedirectResponse($this->router->generate('incident_show', [
