@@ -13,14 +13,18 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Service;
 
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
+use Uhifadhi\Bundle\AtlasBundle\Model\FeaturePopup;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
+use Uhifadhi\Bundle\AtlasBundle\Model\LayerStyle;
+use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentCategory;
 use Uhifadhi\Incident\Model\IncidentHues;
@@ -40,6 +44,14 @@ use Uhifadhi\Incident\Model\IncidentMapPayload;
  * ONE LAYER PER CATEGORY, because a category is what a person switches on and
  * off. The hue is the category's own, read from {@see IncidentHues} — the same
  * value the chips are drawn in — so a marker and a chip cannot drift apart.
+ *
+ * AND A MARK MEANS WHAT THE LEGEND PROMISES: filled is still open, hollow is
+ * resolved or closed, a dashed ring is the serious end. All three are stated —
+ * a base style and rules on the incidents' own properties — and the atlas
+ * evaluates them per feature. What a mark says on hover and what it opens on a
+ * click are stated the same way, as the names of properties the payload
+ * carries; the atlas writes the markup and escapes the values, so nothing here
+ * is ever rendered HTML on somebody's map.
  *
  * The zones under them are the AREA's, not this module's: drawn as quiet
  * outlines wearing their names, so a mark can be read against the ground it
@@ -65,9 +77,37 @@ final readonly class IncidentMapService
      */
     public const string ZONE_SWATCH = '#B9C8BD';
 
+    /**
+     * WHAT A MARK MEANS, AND THE LEGEND SAYS EXACTLY THIS.
+     *
+     *   hue          the category — the layer's own swatch
+     *   filled       still open · hollow = resolved or closed
+     *   dashed ring  the serious end: high OR critical, never high alone
+     *
+     * Numbers rather than tokens, because a mark is drawn over imagery that is
+     * dark in both themes, and because the atlas draws the whole platform's
+     * layers from data — a class name would mean nothing to it.
+     */
+    public const float OPEN_FILL = 0.85;
+    public const float MARK_RADIUS = 5.5;
+    public const float MARK_WEIGHT = 1.6;
+    public const float SERIOUS_RADIUS = 7.0;
+    public const float SERIOUS_WEIGHT = 2.4;
+    public const string SERIOUS_DASH = '3 3';
+
+    /** The property a hover reads: which case, what kind, where it stands. */
+    public const string HOVER_PROPERTY = 'summary';
+
+    /** What the popup's one link says. The rest of the story is only on that page. */
+    public const string CASE_FILE_LINK = 'Open the case file →';
+
+    /** The route a mark leads to, and the parameter names it is generated with. */
+    public const string CASE_FILE_ROUTE = 'incident_show';
+
     public function __construct(
         private MapBuilderInterface $maps,
         private ZoneRepository $zones,
+        private UrlGeneratorInterface $urls,
     ) {
     }
 
@@ -87,7 +127,7 @@ final readonly class IncidentMapService
         return self::compose(
             $this->maps,
             $area->hasBoundary() ? $area->getGeom() : null,
-            IncidentMapPayload::of($incidents),
+            IncidentMapPayload::of($incidents, $this->caseFiles($area, $incidents)),
             array_map(static fn (IncidentCategory $category): array => [
                 'slug' => $category->getSlug(),
                 'label' => $category->getLabel(),
@@ -166,10 +206,58 @@ final readonly class IncidentMapService
                 visible: [] !== $own,
                 count: \count($own),
                 group: self::GROUP,
+                style: new LayerStyle(
+                    weight: self::MARK_WEIGHT,
+                    fillOpacity: self::OPEN_FILL,
+                    radius: self::MARK_RADIUS,
+                ),
+                rules: [
+                    // HOLLOW once it is finished. The stroke stays, so a closed
+                    // case is still a mark in its category's hue — it has simply
+                    // stopped being something anybody is working on.
+                    StyleRule::when('open', false)->fillOpacity(0.0),
+                    // And the serious end wears a wider dashed ring, so it reads
+                    // across a plate without anybody hovering anything.
+                    StyleRule::when('severity', ['high', 'critical'])
+                        ->weight(self::SERIOUS_WEIGHT)
+                        ->dashArray(self::SERIOUS_DASH)
+                        ->radius(self::SERIOUS_RADIUS),
+                ],
+                tooltip: self::HOVER_PROPERTY,
+                popup: new FeaturePopup(
+                    title: 'title',
+                    lines: ['category', 'zone', 'statusLabel'],
+                    href: 'href',
+                    linkLabel: self::CASE_FILE_LINK,
+                ),
+                // What a row elsewhere on the page spotlights a mark by.
+                featureId: 'reference',
             ));
         }
 
         return $map;
+    }
+
+    /**
+     * WHERE EACH MARK LEADS. Generated here rather than in the payload because
+     * this is the only layer that knows the router, and a model that generated
+     * urls would be a model that could not be unit-tested without one.
+     *
+     * @param list<Incident> $incidents
+     *
+     * @return array<string, string>
+     */
+    private function caseFiles(AreaOfInterest $area, array $incidents): array
+    {
+        $urls = [];
+        foreach ($incidents as $incident) {
+            $urls[$incident->getReference()] = $this->urls->generate(self::CASE_FILE_ROUTE, [
+                'uuid' => (string) $area->getUuid(),
+                'reference' => $incident->getReference(),
+            ]);
+        }
+
+        return $urls;
     }
 
     /**

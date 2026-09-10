@@ -88,6 +88,26 @@ file's **Where** card. All three are the atlas's plate, stated by
 | the area's zones, quiet, wearing their names | `GeoJsonLayer`, `shape: LayerShape::Line`, a `label` on each feature |
 | the area boundary and its scrim | `Boundary` |
 | the legend, one switching row per layer | the layers' own rows, under one group |
+| filled = open · hollow = resolved or closed | `StyleRule::when('open', false)->fillOpacity(0.0)` |
+| a dashed ring at the serious end | `StyleRule::when('severity', ['high', 'critical'])->…->dashArray('3 3')` |
+| what a mark says on hover | the layer's `tooltip: 'summary'`, a property the payload composes |
+| what a click opens | `FeaturePopup(title: 'title', lines: [...], href: 'href', linkLabel: 'Open the case file →')` |
+| a hit in the docked list spotlighting its own mark | `data-atlas-highlight="<layer>:<reference>"` on the row, `featureId: 'reference'` on the layer |
+| how tall the map is on each screen | `--map-plate-height`, set on the card in `incidents.css` |
+
+**What a mark means is stated, not drawn.** Hue is the category, filled is still
+open, hollow is resolved or closed, and a dashed ring is the serious end — high
+or critical, never high alone. All four are the legend's own promise, and all
+four are `LayerStyle`/`StyleRule` statements the atlas evaluates per feature. The
+tooltip line and the case-file url travel as feature properties; the atlas reads
+the property, writes the markup and escapes the value, so nothing this module
+produces is ever rendered HTML on a map.
+
+**How tall a plate is, is a number and nothing else.** A plate carries a real
+height off `--map-plate-height` and refuses to stretch to its row; this module
+sets the number per screen (460px on the map and map+results widgets, the design's
+`min(46vh,440px)` on the case file's Where card) and states not one word about the
+plate's own layout.
 
 The filter row goes in the plate's filter slot, so it is one row above the map
 and comes along into fullscreen. The module writes no map JavaScript: the

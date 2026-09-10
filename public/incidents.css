@@ -418,10 +418,11 @@ html.light{
    states them in PHP. It never ships a plate and never a second split.
 
    ONE RULE HERE, and it is genuinely this module's: how tall THIS screen's map
-   card is. The plate itself — its column, its imagery frame, its floating
-   legend, its control stack, its fullscreen — is the atlas's, so the height is
-   stated on the plate root and the atlas fills it.                           */
-.c[data-w=map] .map-plate{min-height:460px}
+   is. The plate itself — its column, its imagery frame, its floating legend, its
+   control stack, its fullscreen — is the atlas's, and so is the RULE about
+   height: a plate carries a real height off --map-plate-height and refuses to
+   stretch to its row. All a screen says is the number.                       */
+.c[data-w=map]{--map-plate-height:460px}
 
 /* THE DOCKED SPLIT AND THE DAY-GROUPED FEED, carried by the module after all.
    The blocks above say these vocabularies "now live in the host" — but the park
@@ -435,8 +436,7 @@ html.light{
    markup, so it renders nothing that would need it.) */
 .i-split{display:grid;grid-template-columns:minmax(0,1fr) 388px;gap:18px;align-items:stretch}
 @media(max-width:1100px){.i-split{grid-template-columns:1fr}}
-.i-split>.i-mapcol{min-width:0;display:flex;flex-direction:column}
-.i-split>.i-mapcol .map-plate{flex:1;min-height:460px}
+.i-split>.i-mapcol{min-width:0;display:flex;flex-direction:column;--map-plate-height:460px}
 .i-listcol{display:flex;flex-direction:column;min-height:0;border:1px solid var(--ln);border-radius:14px;
   background:linear-gradient(180deg,var(--p1),var(--p2));box-shadow:var(--shadow);overflow:hidden}
 .i-listhd{padding:12px 15px;border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:9px;
@@ -481,14 +481,15 @@ html.light{
    sibling module's screen is how a port drifts while every test stays green, so
    the number is this screen's own and CaseFilePlateSizingTest holds it there.
 
-   The height is a FLOOR and the plate takes whatever else the card has: .i-cols
-   is a stretch row, so the card is as tall as the column beside it needs.
+   The height is the PLATE's, not the row's. .i-cols is a stretch row, so the
+   card is as tall as the column beside it needs — and the plate inside it is
+   not, because a plate that stretched to a long column of facts is exactly how
+   this map came out over a thousand pixels tall.
 
-   THE HEIGHT IS ALL THIS MODULE STATES. The plate's column, its imagery frame,
-   its floating legend, its control stack and its fullscreen are the atlas's,
-   which is why there is one rule here and not a plate. */
-.c.plate-fill{display:flex;flex-direction:column}
-.plate-fill .map-plate{flex:1;min-height:min(46vh,440px)}
+   THE NUMBER IS ALL THIS MODULE STATES. The plate's column, its imagery frame,
+   its floating legend, its control stack, its fullscreen and its refusal to
+   stretch are the atlas's. */
+.c.plate-fill{display:flex;flex-direction:column;--map-plate-height:min(46vh,440px)}
 
 /* ── DIRECTION C · FEED ───────────────────────────────────────────────────
    Reverse-chronological, grouped by day.

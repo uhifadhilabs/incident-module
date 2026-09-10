@@ -119,6 +119,13 @@ final class DashboardPageTest extends FunctionalTestCase
         self::assertGreaterThan(0, $crawler->filter('[data-w="maplist"] .i-listhd')->count());
         self::assertGreaterThan(0, $crawler->filter('[data-w="maplist"] a.i-hit .r1 .id')->count());
 
+        // And each hit names the mark it spotlights: the layer its category is
+        // drawn on, and its own reference. One attribute, no map JavaScript.
+        self::assertMatchesRegularExpression(
+            '/^incident\.[a-z-]+:INC-\d+$/',
+            $crawler->filter('[data-w="maplist"] a.i-hit')->first()->attr('data-atlas-highlight') ?? '',
+        );
+
         // The status board's card footer is the .ft row with the zone chip.
         self::assertGreaterThan(0, $crawler->filter('[data-w="board"] .i-card .ft .i-zone')->count());
     }
@@ -193,6 +200,67 @@ final class DashboardPageTest extends FunctionalTestCase
         // The legend the plate rendered: a row per layer, each a real switch.
         self::assertGreaterThan(0, $crawler->filter('[data-w="map"] .map-legend .lay')->count());
         self::assertStringContainsString('Zones', $crawler->filter('[data-w="map"] .map-legend')->text());
+    }
+
+    /**
+     * A MARK CARRIES WHAT IT SAYS AND WHERE IT GOES.
+     *
+     * The line a hover prints and the url a popup links to are the incident's
+     * own properties, travelling in the payload the plate reads — so the atlas
+     * binds the tooltip and writes the popup, and this module ships no map
+     * JavaScript to do either.
+     */
+    public function testEveryMarkCarriesItsHoverLineAndItsCaseFileUrl(): void
+    {
+        $area = $this->anArea();
+        $incident = $this->anIncident($area);
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+        self::assertResponseIsSuccessful();
+
+        // Read as the browser would: the atlas's own key of UX Map's extra
+        // payload, decoded, rather than a substring of the markup.
+        $extra = json_decode(
+            $crawler->filter('[data-w="map"] .map-canvas')->first()->attr('data-symfony--ux-leaflet-map--map-extra-value') ?? '',
+            true,
+        );
+        self::assertIsArray($extra);
+        $properties = self::firstMarkOf($extra);
+
+        self::assertIsString($properties['summary']);
+        self::assertStringStartsWith($incident->getReference().' · ', $properties['summary']);
+        self::assertSame(
+            \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $incident->getReference()),
+            $properties['href'],
+        );
+    }
+
+    /**
+     * The properties of the one mark on the plate.
+     *
+     * @param array<array-key, mixed> $extra
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function firstMarkOf(array $extra): array
+    {
+        $atlas = $extra['atlas'] ?? null;
+        self::assertIsArray($atlas);
+        $layers = $atlas['layers'] ?? null;
+        self::assertIsArray($layers);
+
+        foreach ($layers as $layer) {
+            $collection = \is_array($layer) ? ($layer['features'] ?? null) : null;
+            $features = \is_array($collection) ? ($collection['features'] ?? null) : null;
+            $first = \is_array($features) ? ($features[0] ?? null) : null;
+            $properties = \is_array($first) ? ($first['properties'] ?? null) : null;
+            if (\is_array($properties) && isset($properties['summary'])) {
+                return $properties;
+            }
+        }
+
+        self::fail('No mark reached the plate.');
     }
 
     /**

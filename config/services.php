@@ -87,6 +87,9 @@ return static function (ContainerConfigurator $container): void {
             // The area's zones are the AREA's, read from the bundle that owns
             // them rather than copied into this module's schema.
             service(ZoneRepository::class),
+            // Where a mark leads when it is clicked. The url is generated here
+            // and travels as a feature property; the atlas writes the link.
+            service('router'),
         ]);
 
     $services->set('incident.dashboard', IncidentDashboardService::class)

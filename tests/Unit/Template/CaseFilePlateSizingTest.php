@@ -45,7 +45,7 @@ final class CaseFilePlateSizingTest extends TestCase
     public function testThePlateIsTheHeightTheDesignStates(): void
     {
         self::assertMatchesRegularExpression(
-            '/\.plate-fill \.map-plate\{[^}]*min-height:'.preg_quote(self::DESIGN_HEIGHT, '/').'/',
+            '/\.c\.plate-fill\{[^}]*--map-plate-height:'.preg_quote(self::DESIGN_HEIGHT, '/').'/',
             self::stylesheet(),
             'The case file plate is sized by incidents/detail.html, not by another module\'s screen.',
         );
@@ -73,16 +73,22 @@ final class CaseFilePlateSizingTest extends TestCase
     }
 
     /**
-     * The plate takes the slack a stretch row hands the card, so there is no
-     * dead region below it.
+     * THE HEIGHT IS A HEIGHT, NOT A FLOOR.
+     *
+     * `min-height` plus `flex: 1` is what this card used to say, and in a
+     * stretch row it made the plate as tall as the column of facts beside it —
+     * over a thousand pixels of imagery for a card whose design asks for 440.
+     * The atlas owns the rule now: a real height, off one custom property,
+     * refusing to stretch. All this sheet states is the number.
      */
-    public function testThePlateFillsTheCardItIsNamedFor(): void
+    public function testTheSheetNeitherFloorsThePlateNorStretchesIt(): void
     {
         $sheet = self::stylesheet();
 
         self::assertMatchesRegularExpression('/\.c\.plate-fill\{[^}]*display:flex/', $sheet);
         self::assertMatchesRegularExpression('/\.c\.plate-fill\{[^}]*flex-direction:column/', $sheet);
-        self::assertMatchesRegularExpression('/\.plate-fill \.map-plate\{[^}]*flex:1/', $sheet);
+        self::assertDoesNotMatchRegularExpression('/\.plate-fill \.map-plate\{[^}]*min-height/', $sheet);
+        self::assertDoesNotMatchRegularExpression('/\.plate-fill \.map-plate\{[^}]*flex:1/', $sheet);
     }
 
     private static function stylesheet(): string

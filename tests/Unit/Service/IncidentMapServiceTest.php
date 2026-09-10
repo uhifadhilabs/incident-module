@@ -137,6 +137,92 @@ final class IncidentMapServiceTest extends TestCase
     }
 
     /**
+     * WHAT A MARK MEANS, AND THE LEGEND SAYS SO: filled is still open, hollow is
+     * resolved or closed. Stated as a rule on the incidents' own `open`
+     * property, so the atlas draws it and this module ships no map JavaScript.
+     */
+    public function testAnOpenIncidentIsFilledAndAFinishedOneIsHollow(): void
+    {
+        self::assertSame(IncidentMapService::OPEN_FILL, self::partOf('style')['fillOpacity']);
+        self::assertContains(
+            ['property' => 'open', 'values' => [false], 'style' => ['fillOpacity' => 0.0]],
+            self::partOf('rules'),
+        );
+    }
+
+    /** The serious end — high or critical, not high alone — wears a dashed ring. */
+    public function testTheSeriousEndWearsADashedRing(): void
+    {
+        self::assertContains(
+            [
+                'property' => 'severity',
+                'values' => ['high', 'critical'],
+                'style' => [
+                    'weight' => IncidentMapService::SERIOUS_WEIGHT,
+                    'dashArray' => IncidentMapService::SERIOUS_DASH,
+                    'radius' => IncidentMapService::SERIOUS_RADIUS,
+                ],
+            ],
+            self::partOf('rules'),
+        );
+    }
+
+    /** A mark says what it is under the cursor, without being clicked. */
+    public function testAMarkSaysWhatItIsOnHover(): void
+    {
+        self::assertSame('summary', self::markLayer()['tooltip']);
+    }
+
+    /** And clicking it opens the case file, which is where the rest of the story is. */
+    public function testAMarkOpensTheCaseFile(): void
+    {
+        $popup = self::partOf('popup');
+
+        self::assertSame('title', $popup['title']);
+        self::assertSame('href', $popup['href']);
+        self::assertSame(IncidentMapService::CASE_FILE_LINK, $popup['linkLabel']);
+    }
+
+    /** A row beside the map spotlights its own mark, and this is what it names it by. */
+    public function testAMarkIsSpotlitByItsReference(): void
+    {
+        self::assertSame('reference', self::markLayer()['featureId']);
+    }
+
+    /** The zones underneath are context, so they answer neither a hover nor a click. */
+    public function testTheZonesUnderneathSayNothing(): void
+    {
+        $zones = self::compose(self::BOUNDARY)->toArray()['layers'][0];
+
+        self::assertNull($zones['tooltip']);
+        self::assertNull($zones['popup']);
+    }
+
+    /**
+     * The first category layer — the one every statement about a mark is made
+     * on. Narrowed for the analyser.
+     *
+     * @return array<string, mixed>
+     */
+    private static function markLayer(): array
+    {
+        return self::compose(self::BOUNDARY)->toArray()['layers'][1];
+    }
+
+    /**
+     * One part of that layer's statement, narrowed the same way.
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function partOf(string $key): array
+    {
+        $part = self::markLayer()[$key];
+        self::assertIsArray($part);
+
+        return $part;
+    }
+
+    /**
      * The features one layer carries, narrowed for the analyser.
      *
      * @param array<string, mixed> $layer
