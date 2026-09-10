@@ -79,8 +79,8 @@ final class TestKernel extends Kernel
         yield new FrameworkBundle();
         yield new TwigBundle();
         yield new StimulusBundle();
-        // A real installation renders every icon through symfony/ux-icons
-        // (lucide:*), so the module's templates do too.
+        // Every icon is drawn by name through symfony/ux-icons, under a prefix
+        // its package answers for — `incident:` here, `shell:` in the core.
         yield new UXIconsBundle();
         yield new DoctrineBundle();
         yield new FundiStadiPostGISBundle();
