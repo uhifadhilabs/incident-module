@@ -214,13 +214,23 @@ final class TestKernel extends Kernel
             ],
         ]);
 
-        // A real installation vendors its icon set (bin/console ux:icons:import).
-        // These tests are about the module's markup, not about which glyph an
-        // icon resolves to, so a missing one renders as nothing rather than
-        // failing the page — and the assertions never depend on an icon.
+        /*
+         * THE ICONS ARE LOCAL, AND A MISSING ONE IS A FAILURE. `icon_dir` is the
+         * application's own directory, which every installation has and which
+         * answers BARE names only; the prefixed names this module draws are
+         * answered by the sets their packages register — `incident:` from this
+         * bundle's assets/icons/incident, `shell:` from ShellBundle's.
+         *
+         * On-demand fetching is OFF, which is what a deployment configures: with
+         * it on, a name no file answers to is fetched from a remote API and
+         * cached, so a missing glyph stays invisible until the deployment with no
+         * outbound network draws a blank square.
+         *
+         * @see https://symfony.com/bundles/ux-icons/current/index.html#icons-on-demand
+         */
         $container->extension('ux_icons', [
             'icon_dir' => __DIR__.'/Fixtures/icons',
-            'ignore_not_found' => true,
+            'iconify' => ['on_demand' => false],
         ]);
 
         $services = $container->services();

@@ -16,7 +16,7 @@
     {# THE CONTRIBUTOR TAG. Provenance has to survive a screenshot: this card came
        from the incidents module and leaves with it. #}
     <span class="ao-by incidents"><i></i>incidents</span>
-    <div class="ao-flow">
+    <div>
         {% for place in o.places %}
             <a class="s{{ loop.index }}" href="{{ o.statusUrl(place) }}"><span class="n">{{ o.count(place) }}</span><span class="s">{{ place.label }}</span><span class="b"></span></a>
         {% endfor %}

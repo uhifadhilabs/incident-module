@@ -12,7 +12,7 @@
             {% for direction, totals in dashboard.money %}
                 {% set isFine = direction == 'fine' %}
                 <div class="i-moneyblock">
-                    <div class="hd">{{ ux_icon('lucide:circle-dollar-sign') }}<b>{{ isFine ? 'Fines — owed TO the authority' : 'Compensation — owed BY the authority' }}</b></div>
+                    <div class="hd">{{ ux_icon('incident:circle-dollar-sign') }}<b>{{ isFine ? 'Fines — owed TO the authority' : 'Compensation — owed BY the authority' }}</b></div>
                     {% if not isFine %}<div class="i-mrow"><span>claimed</span>{{ ui.amount(dashboard.currency, totals.claimed) }}</div>{% endif %}
                     <div class="i-mrow"><span>{{ isFine ? 'assessed' : 'approved' }}</span>{{ ui.amount(dashboard.currency, totals.approved) }}</div>
                     <div class="i-mrow"><span>{{ isFine ? 'collected' : 'paid' }}</span>{{ ui.amount(dashboard.currency, totals.settled, 'paid') }}</div>

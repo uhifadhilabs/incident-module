@@ -8,7 +8,7 @@
    ========================================================================== #}
 <div class="tx-empty">
   <div class="top">
-    <div class="ic">{{ ux_icon('lucide:layers', {width: 38, height: 38}) }}</div>
+    <div class="ic">{{ ux_icon('shell:layers', {width: 38, height: 38}) }}</div>
     <h3>{{ area.name }} has no kinds of incident yet</h3>
     <p>Nobody can file an incident in this area until it says what kinds of incident there are. <b>The words are
     this area&rsquo;s to choose</b> &mdash; the platform ships with none and will never suggest any. Write the first
@@ -21,7 +21,7 @@
       <select class="tx-input" name="colour" aria-label="Colour">
         {% for key in colourKeys %}<option value="{{ key }}">{{ key }}</option>{% endfor %}
       </select>
-      <button class="tx-cta" type="submit">{{ ux_icon('lucide:plus', {width: 15, height: 15}) }} Write the first kind of incident</button>
+      <button class="tx-cta" type="submit">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Write the first kind of incident</button>
     </form>
   </div>
 
@@ -78,7 +78,7 @@
       renaming is safe. And nothing is ever deleted: a row you stop using is <b>retired</b>, and the records
       already filed under it keep it.</div></div>
   </div>
-  <div class="tx-docs">{{ ux_icon('lucide:book-open', {width: 14, height: 14}) }}<span>Not sure where to start?
+  <div class="tx-docs">{{ ux_icon('incident:book-open', {width: 14, height: 14}) }}<span>Not sure where to start?
     <a href="#">How other areas structure a taxonomy</a> &mdash; in the documentation, deliberately not in the
     product.</span></div>
 </div>

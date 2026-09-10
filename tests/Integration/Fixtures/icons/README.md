@@ -1,11 +1,13 @@
-# Test icons
+# The application's icon directory
 
-The host renders every icon through **symfony/ux-icons** (`lucide:*`) and vendors
-its icon set with `bin/console ux:icons:import`. These tests are about the
-module's markup, not about which glyph an icon resolves to, so this directory
-holds just the names the templates ask for — two copied from the host's own set
-and the rest as placeholders of the right shape.
+An installation always has one, and it is what answers a **bare** icon name —
+never a prefixed one. A prefix maps to a single directory and is answered only
+from it, so `incident:*` comes from this bundle's own `assets/icons/incident`
+and `shell:*` from ShellBundle's, whatever is or is not in here.
 
-Nothing in the test suite asserts on an icon. If one is missing the page still
-renders (`ux_icons.ignore_not_found` is on in the test kernel); the files are
-here only to keep the log clean, so a real warning is visible when it happens.
+It is deliberately empty. Nothing this module draws is a bare name, so an icon
+that resolved from here would be an icon drawn under a prefix the module may not
+use — which the vocabulary conformance test already refuses. Keeping the
+directory real, and on-demand fetching off in the kernel, is what makes the
+functional suite prove that the glyphs SHIP rather than that the machine has a
+network.

@@ -123,6 +123,31 @@ final class UhifadhiIncidentBundle extends AbstractBundle
             ]);
         }
 
+        /*
+         * THE GLYPHS THIS MODULE DRAWS WITH, under a prefix that is its own.
+         *
+         * An icon set maps one prefix to ONE directory and is answered only from
+         * it, so registering `incident` takes that word away from everybody else
+         * in the installation — which is why a package answers for its own alias
+         * and no other. The marks the shell already ships are drawn as `shell:`
+         * rather than copied: an incidents page renders inside the shell, so
+         * `shell:plus` there is the same mark as `shell:plus` on a core page.
+         *
+         * `lucide:` is not drawn from a bundle at all. That prefix belongs to the
+         * installation, which may answer it with its own artwork or, with
+         * on-demand fetching off, not answer it at all — and an unanswered name
+         * is an empty box.
+         *
+         * https://symfony.com/bundles/ux-icons/current/index.html#full-configuration
+         */
+        if ($builder->hasExtension('ux_icons')) {
+            $container->extension('ux_icons', [
+                'icon_sets' => [
+                    'incident' => ['path' => __DIR__.'/../assets/icons/incident'],
+                ],
+            ]);
+        }
+
         // Zero-config persistence: the bundle maps its own entities, so hosts
         // never write a doctrine mappings block for incident_* tables.
         if ($builder->hasExtension('doctrine')) {

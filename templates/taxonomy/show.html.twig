@@ -32,13 +32,13 @@
     the words that describe it.{% endblock %}
 
 {% block shell_page_actions %}
-    <a class="cta" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('lucide:chevron-left', {width: 15, height: 15}) }} Back to dashboard</a>
+    <a class="cta" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('shell:chevron-left', {width: 15, height: 15}) }} Back to dashboard</a>
 {% endblock %}
 
 {% block incident_page %}
     {# Area scope, said once, plainly — the one fact that changes how the page is
        read: the list is this area's. #}
-    <div class="tx-say">{{ ux_icon('lucide:shield', {width: 17, height: 17}) }}<div><b>This taxonomy is {{ area.name }}&rsquo;s own.</b>
+    <div class="tx-say">{{ ux_icon('incident:shield', {width: 17, height: 17}) }}<div><b>This taxonomy is {{ area.name }}&rsquo;s own.</b>
         Each area keeps its own kinds and sub-categories, so a change here reaches only the people filing incidents in
         {{ area.name }}. Editing rides on <span class="mono">incidents.manage</span> &mdash; the same authority that moves a
         case through verification and settles the money on it. Filing an incident is not enough to name the kinds of case.</div></div>

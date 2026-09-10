@@ -12,7 +12,7 @@
             <tr>
                 {# The row header is the category and a way in: the caret names the
                    sub-categories on hover rather than printing them all inline. #}
-                <td class="rowhd"><span class="i-mxrow"><span class="i-cat {{ category.colourKey }}"><i></i>{{ category.label }}</span><button class="i-mxexp" type="button" title="Sub-categories: {{ category.subcategories|map(s => s.label)|join(' · ') }}" aria-label="Show sub-categories of {{ category.label }}">{{ ux_icon('lucide:chevron-right', {width: 11, height: 11}) }}</button></span></td>
+                <td class="rowhd"><span class="i-mxrow"><span class="i-cat {{ category.colourKey }}"><i></i>{{ category.label }}</span><button class="i-mxexp" type="button" title="Sub-categories: {{ category.subcategories|map(s => s.label)|join(' · ') }}" aria-label="Show sub-categories of {{ category.label }}">{{ ux_icon('incident:chevron-right', {width: 11, height: 11}) }}</button></span></td>
                 {% for place in dashboard.places %}
                     {% set count = dashboard.matrixCount(category, place) %}
                     <td>{% if count > 0 %}<a class="cell h{{ min(count, 4) }}" href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyCategory(category.slug).onlyStatus(place).toQuery)) }}" title="{{ category.label|lower }} · {{ place.label }}">{{ count }}<em>{{ place.label }}</em></a>{% else %}<span class="cell z">—</span>{% endif %}</td>

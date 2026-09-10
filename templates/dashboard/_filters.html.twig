@@ -40,7 +40,7 @@
     <span class="i-dd" data-dd>
         <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
                 {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'toggle') }}>
-            <span class="i-ddval">{{ catLabel }}</span><span class="i-ddcaret">&#9662;</span>
+            <span>{{ catLabel }}</span><span class="i-ddcaret">&#9662;</span>
         </button>
         <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by category">
             <span class="i-ddhead">category</span>
@@ -60,7 +60,7 @@
     <span class="i-dd" data-dd>
         <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
                 {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'toggle') }}>
-            <span class="i-ddval">{{ filter.statuses is empty ? 'status' : filter.statuses|map(s => s.label)|join(', ') }}</span><span class="i-ddcaret">&#9662;</span>
+            <span>{{ filter.statuses is empty ? 'status' : filter.statuses|map(s => s.label)|join(', ') }}</span><span class="i-ddcaret">&#9662;</span>
         </button>
         <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by status">
             <span class="i-ddhead">status</span>
@@ -78,7 +78,7 @@
     <span class="i-dd" data-dd>
         <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
                 {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'toggle') }}>
-            <span class="i-ddval">{{ filter.zoneName ?: 'zone' }}</span><span class="i-ddcaret">&#9662;</span>
+            <span>{{ filter.zoneName ?: 'zone' }}</span><span class="i-ddcaret">&#9662;</span>
         </button>
         <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by zone">
             <span class="i-ddhead">zone</span>
@@ -99,7 +99,7 @@
     <span class="i-dd" data-dd>
         <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
                 {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'toggle') }}>
-            <span class="i-ddval">{{ filter.from ? filter.from|date('F Y')|lower : 'month' }}</span><span class="i-ddcaret">&#9662;</span>
+            <span>{{ filter.from ? filter.from|date('F Y')|lower : 'month' }}</span><span class="i-ddcaret">&#9662;</span>
         </button>
         <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by month">
             <span class="i-ddhead">month</span>
@@ -115,7 +115,7 @@
 
     {# SEARCH — id, place or name; Enter submits, carrying the hidden fields above. #}
     <span class="i-search">
-        {{ ux_icon('lucide:search') }}
+        {{ ux_icon('shell:search') }}
         <input type="text" name="q" value="{{ filter.search }}" placeholder="id, place, name"
                autocomplete="off" aria-label="Search incidents">
     </span>

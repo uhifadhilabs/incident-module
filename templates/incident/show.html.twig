@@ -34,7 +34,7 @@
 
 {% block incident_page %}
     {% set money = incident.money %}
-    <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}" class="backbtn">{{ ux_icon('lucide:chevron-left') }}All incidents</a>
+    <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('shell:chevron-left') }}All incidents</a>
 
     {# THE IDENTITY BAND — the record's own facts on the shared .factband every
        entity-detail screen wears, below the head (the settled page-chrome theme:
@@ -89,7 +89,7 @@
                 <div class="c">
                     <span class="tab">Money<span class="src">· this category carries {{ money.direction.value }}</span></span>
                     <div class="i-moneyblock">
-                        <div class="hd">{{ ux_icon('lucide:circle-dollar-sign') }}<b>{{ money.direction.heading }}</b></div>
+                        <div class="hd">{{ ux_icon('incident:circle-dollar-sign') }}<b>{{ money.direction.heading }}</b></div>
                         {% if money.claimed is not null %}<div class="i-mrow"><span>claimed</span>{{ ui.amount(money.currency, money.claimed) }}</div>{% endif %}
                         {% if money.assessed is not null %}<div class="i-mrow"><span>assessed</span>{{ ui.amount(money.currency, money.assessed) }}</div>{% endif %}
                         {% if money.approved is not null %}<div class="i-mrow"><span>approved</span>{{ ui.amount(money.currency, money.approved) }}</div>{% endif %}
@@ -115,7 +115,7 @@
                 {% set dir = incident.subcategory.moneyDirection %}
                 <div class="c i-moneyedit">
                     <span class="tab">Record money<span class="src">· {{ dir.value }} · direction is fixed</span></span>
-                    <div class="i-moneyedit-dir">{{ ux_icon('lucide:circle-dollar-sign') }}<b>{{ dir.heading }}</b></div>
+                    <div class="i-moneyedit-dir">{{ ux_icon('incident:circle-dollar-sign') }}<b>{{ dir.heading }}</b></div>
                     <form method="post" class="i-moneyform" action="{{ path('incident_money', {uuid: area.uuid, reference: incident.reference}) }}">
                         <input type="hidden" name="_token" value="{{ csrfToken }}">
                         <div class="i-fieldset">
@@ -176,17 +176,17 @@
             <div class="c">
                 <span class="tab">Provenance &amp; links</span>
                 {% if incident.hasProvenance %}
-                    <a class="i-prov" href="{{ incident.sourceRecordUrl ?? '#' }}">{{ ux_icon('lucide:git-branch') }}
+                    <a class="i-prov" href="{{ incident.sourceRecordUrl ?? '#' }}">{{ ux_icon('incident:git-branch') }}
                         <span class="bd"><b>{{ incident.sourceRecordLabel }}</b> — this incident was filed from that record and stays
                             linked to it.<em>source: {{ incident.source.badge }}</em></span>
                         <span class="go">{{ incident.sourceRecordUrl ? 'Open →' : ' ' }}</span></a>
                 {% else %}
-                    <span class="i-prov">{{ ux_icon('lucide:file-pen') }}
+                    <span class="i-prov">{{ ux_icon('incident:file-pen') }}
                         <span class="bd"><b>{{ incident.source.label|capitalize }}</b> — entered directly, with no earlier record
                             behind it.<em>source: {{ incident.source.badge }}</em></span><span class="go"> </span></span>
                 {% endif %}
                 {% for link in incident.links %}
-                    <a class="i-prov" href="{{ path('incident_show', {uuid: area.uuid, reference: link.related.reference}) }}">{{ ux_icon('lucide:link') }}
+                    <a class="i-prov" href="{{ path('incident_show', {uuid: area.uuid, reference: link.related.reference}) }}">{{ ux_icon('incident:link') }}
                         <span class="bd"><b>Related — {{ link.related.reference }}</b>{% if link.note %} {{ link.note }}{% endif %}
                             <em>{% if link.linkedByName %}linked by {{ link.linkedByName }} · {% endif %}a link is a claim, and it carries who made it</em></span>
                         <span class="go">Open →</span></a>
@@ -202,7 +202,7 @@
             <span class="tab">Evidence<span class="src">· {{ incident.evidence|length }} attached</span></span>
             <div class="i-evgrid">
                 {% for item in incident.evidence %}
-                    <span class="i-ph {{ item.kind.cssClass }}">{{ ux_icon(item.kind.value == 'document' ? 'lucide:file-text' : 'lucide:camera') }}
+                    <span class="i-ph {{ item.kind.cssClass }}">{{ ux_icon(item.kind.value == 'document' ? 'incident:file-text' : 'incident:camera') }}
                         <i>{{ item.filename }}{% if item.capturedAt %} · {{ item.capturedAt|date('H:i') }}{% endif %}</i></span>
                 {% else %}
                     <div class="use">Nothing attached yet.</div>

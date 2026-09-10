@@ -9,7 +9,7 @@
     <div class="i-evgrid">
         {% for item in dashboard.evidence %}
             <a class="i-ph {{ item.kind.cssClass }}" href="{{ path('incident_show', {uuid: area.uuid, reference: item.incident.reference}) }}">
-                {{ ux_icon(item.kind.value == 'document' ? 'lucide:file-text' : 'lucide:image') }}
+                {{ ux_icon(item.kind.value == 'document' ? 'incident:file-text' : 'incident:image') }}
                 <i>{{ item.incident.reference }} · {{ item.filename }}</i>
             </a>
         {% else %}

@@ -38,7 +38,7 @@
             {%- endif -%}
         </span>
         {% if recordScreens %}
-            <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('lucide:plus') }} Report an incident</a>
+            <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('shell:plus') }} Report an incident</a>
         {% else %}
             <span class="chip idle">filing is not enabled here</span>
         {% endif %}

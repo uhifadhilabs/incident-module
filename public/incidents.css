@@ -210,25 +210,6 @@ html.light{
    One filter drives everything on the page — the map, the list, the charts —
    exactly as the patrols module's does.                                      */
 
-/* THE FILTER CHIP — .mchip. This is the platform's shared filter/pill chip
-   (uhifadhi.css owns it, and the area overview + patrols draw it too). It is
-   NOT in this bundle's stylesheet by default, so on an incidents page the
-   status counts and the month chip fell back to bare underlined links — the
-   most visible styling miss on the register. Ported here the same way and for
-   the same reason as .factband and the map plate: a two-plus-surface vocabulary
-   that belongs in the shell, carried as a marked module copy until it lands
-   there, so an incidents page never depends on the host stylesheet being loaded.
-   Byte-faithful to the design's rule, on this module's token bridge.          */
-.mchip{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",ui-monospace,monospace;
-  font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--fog);
-  border:1px solid var(--ln2);border-radius:99px;padding:7px 14px 6px;text-decoration:none;line-height:1;
-  background:none;white-space:nowrap}
-.mchip:hover{color:var(--tx);border-color:var(--fog);text-decoration:none}
-.mchip.on{color:var(--accT);background:var(--acc);border-color:var(--acc)}
-.mchip.on:hover{color:var(--accT)}
-.mchip.ghost{border-style:dashed;color:var(--fog);cursor:pointer}
-.mchip.add{border-style:dashed;border-color:var(--acc);color:var(--acc);cursor:pointer}
-
 /* THE FILTER DROPDOWNS — category, status, zone and month. Each is a .mchip
    trigger (.i-ddt) opening a floating .i-ddmenu, hidden until the .i-dd carries
    .open (the incident-filters controller toggles it, one at a time). Ported from
@@ -288,14 +269,6 @@ html.light{
    is actually narrowing the register. */
 .i-reset{display:inline-flex;align-items:center;gap:5px}
 .i-reset svg{width:12px;height:12px;flex:none}
-
-/* ── KPI STRIP ────────────────────────────────────────────────────────────
-   The four figures the dashboard leads with, laid out the way the design's
-   dp-kstrip does: as many equal columns as fit, each at least 168px, wrapping
-   below that. Named .kstrip here (the design's own class name is dp-kstrip in
-   its widgets.css). Without this the strip inherits the generic widget grid and
-   the four KPIs do not size as a row. */
-.kstrip{grid-template-columns:repeat(auto-fit,minmax(168px,1fr))}
 
 /* ── MONEY ────────────────────────────────────────────────────────────────
    Fines and compensation. The rule the design makes: an amount is never a
@@ -687,28 +660,6 @@ html.light{
   display:inline-flex;align-items:center;gap:7px}
 .i-blocked svg{width:12px;height:12px;flex:none}
 
-/* ── THE IDENTITY BAND ────────────────────────────────────────────────────
-   THE PLATFORM'S SHARED .factband — the identity band every entity-detail
-   screen wears (the area overview, a patrol, an observation, a station), and
-   now the incident case file: the record's own facts in a wrapping row below
-   the head, a segment with no data OMITTED rather than rendered empty.
-
-   Carried here the same way and for the same reason as the map plate and the
-   .rln row: two-plus surfaces depend on it, so it belongs in the host's shell
-   stylesheet — until that lands, each module ships its own marked copy (see
-   patrol.css's identical block), and an incidents page never depends on
-   patrol.css being loaded. Ported to this module's token bridge.               */
-.factband{display:flex;align-items:center;flex-wrap:wrap;gap:0 26px;padding:13px 16px;margin-bottom:18px;
-  border:1px solid var(--ln);border-radius:12px;background:var(--raised)}
-.factband .f{display:flex;flex-direction:column;gap:3px}
-.factband .k{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;font-weight:600;
-  letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
-.factband .v{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--tx)}
-.factband .v em{font-style:normal;font-size:10px;font-weight:500;color:var(--fog);margin-left:3px}
-.factband .sp{flex:1}
-.factband .more{font-size:11px;color:var(--acc);text-decoration:none;white-space:nowrap}
-.factband .more:hover{text-decoration:underline}
-
 /* ── KEY / VALUE ROW ──────────────────────────────────────────────────────
    The meta card's row: a mono label on the left, the fact on the right. The
    patrols module has its own copy of this shape under a different name; both
@@ -877,15 +828,6 @@ html.light{
 
 /* The map legend row, under every map plate and on the case file. */
 .i-legend{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
-/* The legend's meaning chips — "● open  ○ closed" and "◎ high or critical". These
-   are the platform's shared .chip (uhifadhi.css owns it); ported here so the map
-   legend reads correctly on an incidents page without the host stylesheet, the
-   same reason .mchip and .factband are carried. Only the base + the idle (dashed,
-   quiet) variant the legend actually uses. */
-.chip{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
-  border-radius:6px;padding:2.5px 9px;border:1px solid;white-space:nowrap}
-.chip.idle{color:var(--dim);border:1px dashed color-mix(in srgb,var(--fog) 45%,transparent);font-weight:600}
-
 /* A saved-something notice, rendered the way the host's own pages render one. */
 .i-flash{display:flex;align-items:center;gap:9px;margin-bottom:16px}
 .i-flash .acc{color:var(--acc);font-weight:700}

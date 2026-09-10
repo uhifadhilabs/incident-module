@@ -45,9 +45,9 @@
     {% endif %}
     {# Only the refusals worth printing — see IncidentRail::notableBlocked(). #}
     {% for reason in rail.notableBlocked %}
-        <span class="i-blocked">{{ ux_icon('lucide:lock') }} {{ reason }}</span>
+        <span class="i-blocked">{{ ux_icon('incident:lock') }} {{ reason }}</span>
     {% endfor %}
     {% if canManage and rail.available is empty %}
-        <span class="i-blocked">{{ ux_icon('lucide:check') }} Nothing to do here — this incident has run its course.</span>
+        <span class="i-blocked">{{ ux_icon('shell:check') }} Nothing to do here — this incident has run its course.</span>
     {% endif %}
 </div>

@@ -22,7 +22,7 @@
         <span class="n">{{ o.openCount }} open · {{ o.today|length }} filed today</span>
         <a href="{{ o.dashboardUrl }}">Open the module &rarr;</a>
     </div>
-    <div class="ao-colstack">
+    <div>
         {{ include('@UhifadhiIncident/overview/_w_in_flow.html.twig', _context, with_context: false) }}
         {{ include('@UhifadhiIncident/overview/_w_in_today.html.twig', _context, with_context: false) }}
         {{ include('@UhifadhiIncident/overview/_w_in_money.html.twig', _context, with_context: false) }}

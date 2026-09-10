@@ -84,7 +84,7 @@
 {% for category in categories %}
     {% for subcategory in category.subcategories %}
         {% set isChosen = chosen and chosen.slug == subcategory.slug %}
-        <div class="i-fieldset i-step2" {{ stimulus_target(controller, 'fieldset') }}
+        <div class="i-fieldset" {{ stimulus_target(controller, 'fieldset') }}
              data-subcategory="{{ subcategory.slug }}"{{ isChosen ? '' : ' hidden' }}>
             <div class="hd">the fields {{ subcategory.label }} asks for</div>
 
