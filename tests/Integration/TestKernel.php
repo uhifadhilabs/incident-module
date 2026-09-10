@@ -265,6 +265,10 @@ final class TestKernel extends Kernel
             'incident.overview.pulse',
             'incident.overview.copy',
             'incident.transitions',
+            // The inert demo-content declaration devkit collects in a dev
+            // install. Nothing in this suite is devkit, so the provider is
+            // reached directly and asked to do the one thing it does.
+            'incident.devkit.content',
             'incident.zone_locator',
             // The storage seam: the source itself, and the registry the hub
             // reads it through.
@@ -297,10 +301,6 @@ final class TestKernel extends Kernel
                 'adapter' => 'local',
                 'directory' => sys_get_temp_dir().'/incident-module-tests/evidence',
             ],
-        ]);
-
-        $container->extension('incident', [
-            'dev_tools' => true, // this IS the test env — the recipe enables it via when@test
         ]);
     }
 

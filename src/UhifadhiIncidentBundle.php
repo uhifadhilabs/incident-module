@@ -29,7 +29,6 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Incident\Command\CloseDueCommand;
-use Uhifadhi\Incident\Command\SeedDemoCommand;
 use Uhifadhi\Incident\Command\SyncTaxonomyCommand;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
 use Uhifadhi\Incident\Controller\IncidentMoneyController;
@@ -37,6 +36,7 @@ use Uhifadhi\Incident\Controller\IncidentReportController;
 use Uhifadhi\Incident\Controller\IncidentTaxonomyController;
 use Uhifadhi\Incident\Controller\IncidentWidgetsController;
 use Uhifadhi\Incident\DependencyInjection\IncidentConfiguration;
+use Uhifadhi\Incident\Devkit\IncidentContentProvider;
 use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Overview\IncidentAttention;
@@ -403,30 +403,29 @@ final class UhifadhiIncidentBundle extends AbstractBundle
             ])
             ->tag('console.command');
 
-        // Dev tooling: the demo seeder exists only where incident.dev_tools is on
-        // (the recipe enables it via when@dev/when@test), so production never gets
-        // a command that writes invented incidents.
-        if (true === ($config['dev_tools'] ?? false)) {
-            $services->set('incident.command.seed_demo', SeedDemoCommand::class)
-                ->args([
-                    service('doctrine.orm.entity_manager'),
-                    service(IncidentRepository::class),
-                    service(IncidentSubcategoryRepository::class),
-                    service('incident.taxonomy_installer'),
-                    service('incident.transitions'),
-                    service('incident.zone_locator'),
-                    param('incident.currency'),
-                    // The evidence storage, so the sample month's photographs are
-                    // stored with a real size and a preview — and the storage
-                    // itself, for the one thing store() will not do, a PDF document.
-                    // Both nullOnInvalid: a host that seeds a demo without ever
-                    // installing storage still gets its incidents, evidence keyed
-                    // without bytes, exactly as before.
-                    service('storage.evidence_storage')->nullOnInvalid(),
-                    service('storage.evidence')->nullOnInvalid(),
-                ])
-                ->tag('console.command');
-        }
+        /*
+         * THE DEMO CONTENT, AS AN INERT DECLARATION. devkit — dev-only, installed
+         * through `require-dev` — is what collects this and materialises the
+         * command that runs it; in a production build nothing collects it and it
+         * is an ordinary service nobody ever asks anything of. That dependency
+         * graph is the firewall, which is why there is no environment check here
+         * and no config flag gating it.
+         *
+         * THE TAG IS A LITERAL STRING, not a constant of devkit's: devkit is
+         * absent in production, so a module cannot reference its classes.
+         * `uhifadhi.devkit.content_provider` is the string
+         * UhifadhiDevkitBundle::CONTENT_PROVIDER_TAG carries.
+         */
+        $services->set('incident.devkit.content', IncidentContentProvider::class)
+            ->args([
+                service('doctrine.orm.entity_manager'),
+                service('incident.taxonomy_installer'),
+                service(IncidentSubcategoryRepository::class),
+                service('incident.report'),
+                service('incident.money'),
+                service('incident.transitions'),
+            ])
+            ->tag('uhifadhi.devkit.content_provider');
 
         /*
          * The department KPI seam. Tagged EXPLICITLY, exactly like

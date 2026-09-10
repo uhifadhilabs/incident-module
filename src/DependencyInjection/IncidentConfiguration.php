@@ -22,7 +22,6 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
  *
  *   incident:
  *     module_category: operations   # catalogue category for the tile
- *     dev_tools: false            # dev-only commands (when@dev / when@test)
  *     currency: TZS               # what money on an incident is denominated in
  *     taxonomy:                   # OPTIONAL — omit to install the shipped four × sixteen
  *       poaching:
@@ -64,10 +63,6 @@ final class IncidentConfiguration
                     // thing. A deployment may still override it.
                     ->info('Catalogue category the Incidents module is filed under in each area.')
                     ->defaultValue('operations')->cannotBeEmpty()
-                ->end()
-                ->booleanNode('dev_tools')
-                    ->info('Register dev-only tooling (seeders, fixtures). The recipe enables this via when@dev/when@test.')
-                    ->defaultFalse()
                 ->end()
                 ->scalarNode('currency')
                     ->info('ISO code the money on an incident is denominated in. One currency per deployment: an area does not collect fines in two.')

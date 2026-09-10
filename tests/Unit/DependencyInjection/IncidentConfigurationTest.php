@@ -37,12 +37,25 @@ final class IncidentConfigurationTest extends TestCase
         return $processed;
     }
 
-    public function testDefaultsFileTheModuleUnderPressureWithoutDevTools(): void
+    public function testDefaultsFileTheModuleUnderOperations(): void
     {
         $config = $this->process([]);
 
         self::assertSame('operations', $config['module_category']);
-        self::assertFalse($config['dev_tools']);
+    }
+
+    /**
+     * NO KNOB THAT GATES NOTHING. `dev_tools` existed to keep the demo seeder out
+     * of production; the demo content is a devkit provider now, and devkit is
+     * `require-dev`, so the dependency graph is the firewall and the key would
+     * turn nothing off. The tree is closed, so a deployment that still writes it
+     * is told rather than ignored.
+     */
+    public function testDevToolsIsNoLongerAKeyThisModuleAnswersTo(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['dev_tools' => true]);
     }
 
     public function testADeploymentFilesTheModuleWhereItWants(): void
