@@ -22,6 +22,12 @@ That dependency graph is the firewall: nothing collects the declaration there an
 it is an ordinary service nobody ever asks anything of. There is no environment
 check and no config flag, because there is nothing left for one to gate.
 
+The month it seeds is a table of its own: `src/Devkit/DemoMonth.php`. A demo data
+table is devkit's kind of class, not a model — nothing in the product reads it and
+no screen renders it — so it sits beside the declaration that consumes it, under
+`Devkit/`, and the class-category table files it as **Demo data table ·
+`XxxDemoMonth`/`DemoMonth` · `Devkit/`**.
+
 The declaration seeds the design's sample month — 47 incidents across four
 categories, walked to the states the register shows, with their parties, their
 responders and their photographs — into the first area the installation has, and

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Incident\Model;
+namespace Uhifadhi\Incident\Devkit;
 
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 
@@ -28,7 +28,7 @@ use Uhifadhi\Incident\Entity\IncidentSubcategory;
  *   TZS 12,400,000 claimed in compensation, 9,200,000 approved, 4,700,000 paid
  *   seven zones
  *
- * {@see \Uhifadhi\Incident\Tests\Unit\Model\DemoMonthTest} adds those columns
+ * {@see \Uhifadhi\Incident\Tests\Unit\Devkit\DemoMonthTest} adds those columns
  * up and fails if a row ever drifts, because a demo that quietly stopped matching
  * the spec is worse than no demo: every screenshot in the gallery would be a
  * claim the product no longer supports.
@@ -75,7 +75,7 @@ final class DemoMonth
      * The seed PostGIS scatters the sample month's points with.
      *
      * WHERE the points are is the installation's boundary's business and no
-     * table's — see {@see \Uhifadhi\Incident\Devkit\IncidentContentProvider}.
+     * table's — see {@see IncidentContentProvider}.
      * All that lives here is the seed, so two runs against the same area put the
      * same incident in the same place and a screenshot keeps meaning something.
      */

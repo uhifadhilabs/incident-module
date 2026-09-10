@@ -15,6 +15,7 @@ namespace Uhifadhi\Incident\Tests\Integration\Devkit;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
+use Uhifadhi\Incident\Devkit\DemoMonth;
 use Uhifadhi\Incident\Devkit\IncidentContentProvider;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvidence;
@@ -22,7 +23,6 @@ use Uhifadhi\Incident\Entity\IncidentParty;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Enum\PartyRoleEnum;
-use Uhifadhi\Incident\Model\DemoMonth;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Storage\IncidentFileSource;
@@ -33,7 +33,7 @@ use Uhifadhi\Storage\Registry\FileRegistry;
  * THE DESIGN'S SAMPLE MONTH, SEEDED THROUGH THE MODULE'S OWN SERVICES — and then
  * read back through the DASHBOARD.
  *
- * {@see \Uhifadhi\Incident\Tests\Unit\Model\DemoMonthTest} adds the table up;
+ * {@see \Uhifadhi\Incident\Tests\Unit\Devkit\DemoMonthTest} adds the table up;
  * this proves the table survives being written to a real database through the
  * doors a person uses, and that the widgets then print the numbers the preset
  * gallery states.

@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Incident\Tests\Unit\Model;
+namespace Uhifadhi\Incident\Tests\Unit\Devkit;
 
 use PHPUnit\Framework\TestCase;
-use Uhifadhi\Incident\Model\DemoMonth;
+use Uhifadhi\Incident\Devkit\DemoMonth;
 use Uhifadhi\Incident\Model\IncidentTaxonomy;
 
 /**
