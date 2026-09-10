@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Integration;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
 use FundiStadi\PostGISBundle\FundiStadiPostGISBundle;
 use League\FlysystemBundle\FlysystemBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -37,6 +38,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedContentProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
@@ -83,6 +85,11 @@ final class TestKernel extends Kernel
         // its package answers for — `incident:` here, `shell:` in the core.
         yield new UXIconsBundle();
         yield new DoctrineBundle();
+        // The history every package here ships, run the way an installation runs
+        // it. Nothing else in this suite uses it — the rest builds its tables
+        // with SchemaTool — but the locks under Integration/Migrations are about
+        // the shipped versions, and those need the bundle that finds them.
+        yield new DoctrineMigrationsBundle();
         yield new FundiStadiPostGISBundle();
         yield new SecurityBundle();
         // The per-area catalogue this module registers itself in, and the gate
@@ -243,6 +250,18 @@ final class TestKernel extends Kernel
             ->args([tagged_iterator('uhifadhi.module')])->public();
         $services->set(CollectedKpiProviders::class)
             ->args([tagged_iterator('uhifadhi.department_kpi')])->public();
+
+        // And for DEVKIT's content collector, which the migrations upgrade lock
+        // seeds through: this module's demo month depends on team's people, and
+        // the tag is where that dependency is actually satisfied.
+        $services->set(CollectedContentProviders::class)
+            ->args([tagged_iterator('uhifadhi.devkit.content_provider')])->public();
+        $services->alias('test_public.devkit.content_providers', CollectedContentProviders::class)->public();
+
+        // The migrations bundle's dependency factory, which is private — the
+        // locks read the configured paths off it and run the plans through it.
+        $services->alias('test_public.doctrine.migrations.dependency_factory', 'doctrine.migrations.dependency_factory')
+            ->public();
 
         // Public aliases so tests can reach private services, keyed by service id
         // for readability (see IntegrationTestCase::service()).

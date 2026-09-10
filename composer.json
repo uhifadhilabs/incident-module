@@ -54,7 +54,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Uhifadhi\\Incident\\Tests\\": "tests/"
+            "Uhifadhi\\Incident\\Tests\\": "tests/",
+            "Uhifadhi\\Incident\\Tests\\Integration\\Migrations\\Fixtures\\Migrations\\": "tests/Integration/Migrations/Fixtures/migrations/"
         }
     },
     "require-dev": {
