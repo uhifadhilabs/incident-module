@@ -22,6 +22,15 @@ enum EvidenceKindEnum: string
     case Photo = 'photo';
     case Document = 'document';
 
+    /** What the timeline calls it when one arrives. */
+    public function label(): string
+    {
+        return match ($this) {
+            self::Photo => 'Photograph',
+            self::Document => 'Document',
+        };
+    }
+
     /** The modifier the `.i-ph` tile wears; a photograph is the tile's default. */
     public function cssClass(): string
     {

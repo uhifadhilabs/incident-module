@@ -28,6 +28,7 @@ use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
+use Uhifadhi\Incident\Service\IncidentEvidenceService;
 use Uhifadhi\Incident\Service\IncidentMoneyService;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
 use Uhifadhi\Incident\Service\IncidentReportService;
@@ -123,6 +124,22 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('incident.money', IncidentMoneyService::class)
         ->args([service('doctrine.orm.entity_manager')]);
+
+    /*
+     * THE EVIDENCE WRITE SURFACE — the one door a photograph or a document takes
+     * onto a case file, whether a browser or an importer sent the bytes.
+     *
+     * Unguarded, like the file source and the voter: uhifadhi/storage-module is a
+     * hard requirement of this bundle, so `storage.evidence_storage` is always
+     * there. Separate from incident.case deliberately — this is the only write on
+     * a case file that leaves the database, and its refusals are the deployment's
+     * rules about files rather than the workflow's about records.
+     */
+    $services->set('incident.evidence', IncidentEvidenceService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service('storage.evidence_storage'),
+        ]);
 
     /*
      * THE AREA-SCOPED TAXONOMY ADMIN's logic. Registered unconditionally — it is

@@ -300,7 +300,9 @@ final class TestKernel extends Kernel
             // The storage contract: the source itself, and the registry the hub
             // reads it through.
             'incident.file_source',
+            'incident.evidence',
             'storage.file_registry',
+            'storage.evidence_storage',
         ] as $id) {
             $services->alias('test_public.'.$id, $id)->public();
         }
