@@ -24,14 +24,17 @@ use Doctrine\Migrations\AbstractMigration;
  * (category / sub-category) and the area-scoped taxonomy an administrator edits
  * (kind / sub-category).
  *
- * IT RUNS AFTER THE CORE, and the date in the class name is what says so: an
- * incident is filed in an AREA, may fall in a ZONE, and is recorded by a PERSON,
- * so `area_of_interest`, `zone` and `team_user` all have to exist before the
- * constraints below are declared. Those three foreign keys live HERE, in the
- * version of the package that declares them, and never in the core's.
+ * IT RUNS AFTER THE CORE, because a module's versions run after the versions of
+ * every package it requires, whatever dates either of them carries. That is what
+ * makes the cross-package constraints below safe to declare here: an incident is
+ * filed in an AREA, may fall in a ZONE, and is recorded by a PERSON, so
+ * `area_of_interest`, `zone` and `team_user` already exist by the time this runs.
+ * Those three foreign keys live HERE, in the version of the package that declares
+ * them, and never in the core's.
  *
- * @see vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/RegistryBundle/Version/VersionTimestampComparator.php
- *      — why the timestamp decides the order and the namespace does not
+ * @see vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/RegistryBundle/Version/DependencyOrderComparator.php
+ *      — the dependency graph decides between packages; the timestamp only
+ *      orders versions inside one
  */
 final class Version20260910045214 extends AbstractMigration
 {

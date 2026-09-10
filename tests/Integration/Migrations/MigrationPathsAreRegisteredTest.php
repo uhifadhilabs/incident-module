@@ -92,44 +92,4 @@ final class MigrationPathsAreRegisteredTest extends KernelTestCase
             );
         }
     }
-
-    /**
-     * The versions this module ships run AFTER the core's, because its tables
-     * carry foreign keys into the core's. Order is decided by the trailing
-     * timestamp, not by the namespace — the core replaces doctrine's
-     * alphabetical comparator for exactly that reason.
-     *
-     * @see vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/RegistryBundle/Version/VersionTimestampComparator.php
-     */
-    public function testEveryShippedVersionIsDatedAfterTheCores(): void
-    {
-        $directories = $this->directories();
-        self::assertArrayHasKey(self::NAMESPACE, $directories);
-
-        $core = [];
-        foreach ($directories as $namespace => $path) {
-            if (!str_starts_with($namespace, 'Uhifadhi\Bundle\\')) {
-                continue;
-            }
-            foreach ((array) glob(rtrim($path, '/').'/Version*.php') as $file) {
-                $core[] = basename((string) $file, '.php');
-            }
-        }
-
-        self::assertNotSame([], $core, 'The core bundles ship the versions this module has to come after.');
-
-        $latestCore = '';
-        foreach ($core as $version) {
-            $latestCore = max($latestCore, $version);
-        }
-
-        foreach ((array) glob(rtrim($directories[self::NAMESPACE], '/').'/Version*.php') as $file) {
-            $version = basename((string) $file, '.php');
-            self::assertGreaterThan(
-                $latestCore,
-                $version,
-                \sprintf('%s must be dated after the core\'s last version %s.', $version, $latestCore),
-            );
-        }
-    }
 }
