@@ -270,6 +270,12 @@ final class TestKernel extends Kernel
             // reached directly and asked to do the one thing it does.
             'incident.devkit.content',
             'incident.zone_locator',
+            // The registry's own two: the reconciliation that puts this module
+            // in the catalogue, and the service an admin's Customize page calls
+            // to switch it on for one area. A suite that renders a module page
+            // needs both, because the gate reads what they wrote.
+            'registry.sync',
+            'registry.area_modules',
             // The storage contract: the source itself, and the registry the hub
             // reads it through.
             'incident.file_source',

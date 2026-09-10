@@ -30,6 +30,16 @@ final class IncidentModuleProvider implements ModuleProviderInterface
 {
     use ModuleProviderTrait;
 
+    /**
+     * THE MODULE'S MACHINE IDENTITY, stated once because four readers must never
+     * disagree about it: the catalogue row the registry sync upserts by it, the
+     * per-area ledger an admin's Customize page writes against it, the
+     * `_uhifadhi_module` default every one of this module's routes carries so the
+     * parking gate knows whose page it is, and the `moduleSlug()` each overview
+     * contribution returns so it disappears when an area switches the module off.
+     */
+    public const string SLUG = 'incidents';
+
     public function __construct(
         private readonly string $category,
     ) {
@@ -37,7 +47,7 @@ final class IncidentModuleProvider implements ModuleProviderInterface
 
     public function slug(): string
     {
-        return 'incidents';
+        return self::SLUG;
     }
 
     public function name(): string

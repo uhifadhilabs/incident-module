@@ -28,11 +28,13 @@ use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
 use Uhifadhi\Incident\Model\IncidentPrefill;
+use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentReportService;
@@ -71,7 +73,22 @@ use Uhifadhi\Storage\Registry\FileRegistry;
  * a record still has to be guarded by something a host can grant, so the module
  * DECLARES this permission and a deployment that agrees with the design grants it
  * to everyone who can reach the module. See `docs/permissions.md`.
+ *
+ * WHICH MODULE THESE ROUTES BELONG TO, said once for the class. RegistryBundle
+ * owns the per-area ledger and closes a parked module's pages before any
+ * controller is asked — 404, not 403, because a parked module is not withheld:
+ * the area is not running it. The class-level default below is how a route tells
+ * the gate whose page it is.
+ *
+ * WITHOUT IT THESE ROUTES ARE NOT EXEMPT, THEY ARE GUESSED AT. The gate falls
+ * back to reading `/areas/{uuid}/modules/{slug}/…` and matching the segment
+ * against the catalogue, which happens to land here because the segment and the
+ * slug are both `incidents`. That is an accident of naming, not a contract, and
+ * it would end the moment a path moved. The area's uuid is in a parameter called
+ * `uuid`, which is the gate's own default, so there is no
+ * `_uhifadhi_module_area` to state.
  */
+#[Route(defaults: [RegistryBundle::MODULE_ROUTE_DEFAULT => IncidentModuleProvider::SLUG])]
 final class IncidentReportController
 {
     /** Filing an incident. Cheap by design — see the class docblock. */

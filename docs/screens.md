@@ -3,6 +3,7 @@
 ## Contents
 
 - [The routes](#the-routes)
+- [Parking closes every one of them](#parking-closes-every-one-of-them)
 - [The five directions are presets, not pages](#the-five-directions-are-presets-not-pages)
 - [Filing from another module](#filing-from-another-module)
 
@@ -21,6 +22,32 @@ All under `/areas/{uuid}/modules/incidents`, the same shape as patrols.
 
 Plus the eight widget-library write endpoints the shell's `WidgetEndpoint`
 answers (`/widgets/save`, `/widgets/reset`, `/widgets/preset/{id}`, …).
+
+## Parking closes every one of them
+
+**Where an area is not running this module, every page above answers 404.** The
+module writes no check for it and cannot forget it: RegistryBundle owns the
+per-area ledger, so RegistryBundle enforces it, in one `kernel.request` listener
+that runs after the router and before any controller. It is 404 rather than 403
+because a parked module is not withheld — the area is simply not running it,
+which is what the area's own screens already say with the module sitting in the
+shop rather than the sub-nav.
+
+Each controller carries one class-level default naming the module its routes
+belong to:
+
+```php
+#[Route(defaults: [RegistryBundle::MODULE_ROUTE_DEFAULT => IncidentModuleProvider::SLUG])]
+```
+
+Without it a route is not exempt, it is **guessed at**: the gate falls back to
+reading `/areas/{uuid}/modules/{slug}/…` and matching the segment against the
+catalogue, which happens to land here only because the segment and the slug are
+both `incidents`. That is an accident of naming, and it would end the moment a
+path moved.
+
+The area's uuid rides in a parameter called `uuid`, which is the gate's own
+default, so no `_uhifadhi_module_area` is stated.
 
 ## The five directions are presets, not pages
 

@@ -25,10 +25,12 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Model\IncidentFilter;
+use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
@@ -57,7 +59,22 @@ use Uhifadhi\Incident\Widget\IncidentWidgets;
  * without a signed-in user there is nothing to read or write — a host in that
  * state gets no library at all rather than a screen that edits nobody's
  * preferences.
+ *
+ * WHICH MODULE THESE ROUTES BELONG TO, said once for the class. RegistryBundle
+ * owns the per-area ledger and closes a parked module's pages before any
+ * controller is asked — 404, not 403, because a parked module is not withheld:
+ * the area is not running it. The class-level default below is how a route tells
+ * the gate whose page it is.
+ *
+ * WITHOUT IT THESE ROUTES ARE NOT EXEMPT, THEY ARE GUESSED AT. The gate falls
+ * back to reading `/areas/{uuid}/modules/{slug}/…` and matching the segment
+ * against the catalogue, which happens to land here because the segment and the
+ * slug are both `incidents`. That is an accident of naming, not a contract, and
+ * it would end the moment a path moved. The area's uuid is in a parameter called
+ * `uuid`, which is the gate's own default, so there is no
+ * `_uhifadhi_module_area` to state.
  */
+#[Route(defaults: [RegistryBundle::MODULE_ROUTE_DEFAULT => IncidentModuleProvider::SLUG])]
 final class IncidentWidgetsController
 {
     public function __construct(

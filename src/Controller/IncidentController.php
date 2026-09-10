@@ -24,10 +24,12 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Model\IncidentFilter;
+use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
@@ -54,7 +56,22 @@ use Uhifadhi\Incident\Widget\IncidentWidgets;
  * {@see IncidentFilter}, and every widget on the page reads the one
  * {@see \Uhifadhi\Incident\Model\IncidentDashboard} built from it — so the
  * map, the register and the charts can never be answering different questions.
+ *
+ * WHICH MODULE THESE ROUTES BELONG TO, said once for the class. RegistryBundle
+ * owns the per-area ledger and closes a parked module's pages before any
+ * controller is asked — 404, not 403, because a parked module is not withheld:
+ * the area is not running it. The class-level default below is how a route tells
+ * the gate whose page it is.
+ *
+ * WITHOUT IT THESE ROUTES ARE NOT EXEMPT, THEY ARE GUESSED AT. The gate falls
+ * back to reading `/areas/{uuid}/modules/{slug}/…` and matching the segment
+ * against the catalogue, which happens to land here because the segment and the
+ * slug are both `incidents`. That is an accident of naming, not a contract, and
+ * it would end the moment a path moved. The area's uuid is in a parameter called
+ * `uuid`, which is the gate's own default, so there is no
+ * `_uhifadhi_module_area` to state.
  */
+#[Route(defaults: [RegistryBundle::MODULE_ROUTE_DEFAULT => IncidentModuleProvider::SLUG])]
 final class IncidentController
 {
     /**
@@ -215,7 +232,7 @@ final class IncidentController
      * NO PERMISSION OF ITS OWN, and deliberately so. Reading incidents is reading
      * the module — the module declares no "view" permission, because a view gate is
      * exactly the tool one department would use to hide a row from another (see
-     * {@see \Uhifadhi\Incident\Module\IncidentModuleProvider::permissions()}). A CSV
+     * {@see IncidentModuleProvider::permissions()}). A CSV
      * of the register is the same read as the register on screen, so it is offered
      * on the same terms: whoever can reach the dashboard can download it, and the
      * host's firewall is what stands between the wider world and either one.

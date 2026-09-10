@@ -28,11 +28,13 @@ use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Incident\Entity\TaxonomyKind;
 use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\BehaviorBlockEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Exception\TaxonomyConflictException;
+use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\TaxonomyAdminService;
@@ -61,7 +63,22 @@ use Uhifadhi\Incident\Service\TaxonomyAdminService;
  * requires an area-directory contract that is not yet ruled; this admin ships the
  * "write the first kind" start and leaves the picker's socket open. See
  * templates/taxonomy/_empty.html.twig.
+ *
+ * WHICH MODULE THESE ROUTES BELONG TO, said once for the class. RegistryBundle
+ * owns the per-area ledger and closes a parked module's pages before any
+ * controller is asked — 404, not 403, because a parked module is not withheld:
+ * the area is not running it. The class-level default below is how a route tells
+ * the gate whose page it is.
+ *
+ * WITHOUT IT THESE ROUTES ARE NOT EXEMPT, THEY ARE GUESSED AT. The gate falls
+ * back to reading `/areas/{uuid}/modules/{slug}/…` and matching the segment
+ * against the catalogue, which happens to land here because the segment and the
+ * slug are both `incidents`. That is an accident of naming, not a contract, and
+ * it would end the moment a path moved. The area's uuid is in a parameter called
+ * `uuid`, which is the gate's own default, so there is no
+ * `_uhifadhi_module_area` to state.
  */
+#[Route(defaults: [RegistryBundle::MODULE_ROUTE_DEFAULT => IncidentModuleProvider::SLUG])]
 final class IncidentTaxonomyController
 {
     /** Managing the taxonomy rides on the same authority as moving a case. */

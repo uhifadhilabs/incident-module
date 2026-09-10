@@ -19,10 +19,13 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
+use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
+use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
@@ -53,6 +56,18 @@ abstract class FunctionalTestCase extends WebTestCase
         /** @var IncidentTaxonomyInstaller $installer */
         $installer = static::getContainer()->get('test_public.incident.taxonomy_installer');
         $installer->install();
+
+        // THE HALF A DEPLOY ALREADY DOES. In an installation the registry
+        // reconciles itself on a cache warm-up, so the catalogue holds this
+        // module before the first request; here the schema is rebuilt after the
+        // kernel booted, so the tables the warmer wrote into are gone and the
+        // reconciliation is run again by hand. Without it the catalogue is empty,
+        // `install()` below has no row to point at, and the gate lets everything
+        // through — a suite that would pass while every page 404'd in the park.
+        /** @var RegistrySyncService $registry */
+        $registry = static::getContainer()->get('test_public.registry.sync');
+        $registry->sync();
+        $this->em->clear();
     }
 
     protected function tearDown(): void
@@ -83,7 +98,39 @@ abstract class FunctionalTestCase extends WebTestCase
         return $uuid;
     }
 
+    /**
+     * An area this module is NOT switched on for — which is the state every area
+     * is in until an admin says otherwise. Every page this module ships answers
+     * 404 there, and that is the registry's doing rather than this module's.
+     */
+    protected function anAreaWithoutTheModule(string $name = 'Unopened Reserve'): AreaOfInterest
+    {
+        return $this->newArea($name);
+    }
+
+    /**
+     * An area with this module switched on — which is what a functional test
+     * about an incident screen needs, because an area written straight into the
+     * database is running nothing and every page below answers 404, correctly
+     * and uselessly.
+     *
+     * It is switched on the way an ADMIN switches it on: through the registry's
+     * own service, against the catalogue row the sync wrote from this module's
+     * provider. That is the one half of installing a module no warm-up will ever
+     * do, because it is exactly the decision the sync refuses to overrule.
+     */
     protected function anArea(string $name = 'Sample Area'): AreaOfInterest
+    {
+        $area = $this->newArea($name);
+
+        /** @var AreaModuleService $areaModules */
+        $areaModules = static::getContainer()->get('test_public.registry.area_modules');
+        $areaModules->install($area, IncidentModuleProvider::SLUG);
+
+        return $area;
+    }
+
+    private function newArea(string $name): AreaOfInterest
     {
         $area = new AreaOfInterest();
         $area->setName($name);
