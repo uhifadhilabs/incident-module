@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Integration\Devkit;
 
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 use Uhifadhi\Incident\Devkit\IncidentContentProvider;
 use Uhifadhi\Incident\Entity\Incident;
@@ -210,6 +211,116 @@ final class IncidentContentProviderTest extends IntegrationTestCase
         foreach ($this->em->getRepository(Incident::class)->findAll() as $incident) {
             self::assertLessThanOrEqual($endOfToday, $incident->getReportedAt(), (string) $incident->getReference());
         }
+    }
+
+    /**
+     * DEMO CONTENT IS PLACED IN THE INSTALLATION'S AREA, whatever area that is.
+     *
+     * The provider used to carry fixed fixture coordinates, and those coordinates
+     * had been shifted sixty-five degrees west when the client names were purged.
+     * Nothing noticed, because nothing asked the one question that matters: is the
+     * point inside the boundary? On a real installation every one of the
+     * forty-seven landed in the open Atlantic, the dashboard map fitted itself to
+     * a blob a continent away from the area, and `st_within` answered 0 of 47.
+     *
+     * So the boundary is now the only thing that decides where a demo incident
+     * is, and this asks PostGIS the question directly rather than comparing
+     * numbers in PHP.
+     */
+    public function testEveryIncidentIsPlacedInsideTheAreasOwnBoundary(): void
+    {
+        $area = $this->anArea('Sample Area');
+        $this->provider()->load();
+
+        $total = $this->em->getRepository(Incident::class)->count([]);
+        self::assertSame(47, $total, 'The seeding has to have left something to place.');
+
+        $within = $this->countBySql(
+            'SELECT count(*) FROM incident i JOIN area_of_interest a ON a.id = i.area_id
+             WHERE ST_Within(i.position, a.geom)',
+        );
+
+        self::assertSame($total, $within, 'Every seeded incident belongs inside the area it was filed in.');
+        self::assertNotNull($area->getGeom());
+    }
+
+    /**
+     * AND NOWHERE NEAR THE COORDINATES THAT WERE WRONG — asked of an area that is
+     * NOT sitting on them.
+     *
+     * That qualification is the point. This suite's own area fixture had been
+     * shifted the same sixty-five degrees as the provider's, so it contained the
+     * bad points and a within-the-boundary assertion passed against both halves
+     * of the same mistake. An area somewhere else is what makes the question
+     * answerable.
+     */
+    public function testNothingIsSeededAtTheOldFixtureCoordinates(): void
+    {
+        $this->anAreaSomewhereElse();
+        $this->provider()->load();
+
+        $stray = $this->countBySql('SELECT count(*) FROM incident WHERE ST_X(position) BETWEEN -30.0 AND -29.0');
+
+        self::assertSame(0, $stray, 'The shifted fixture coordinates must not survive anywhere.');
+    }
+
+    /**
+     * TWO AREAS, TWO PLACES. The points are the boundary's, so seeding into a
+     * different area puts them somewhere different — which is the whole claim.
+     */
+    public function testTheSameSampleMonthLandsWhereverTheAreaIs(): void
+    {
+        $this->anAreaSomewhereElse();
+
+        $this->provider()->load();
+
+        $outside = $this->countBySql('SELECT count(*) FROM incident WHERE ST_X(position) NOT BETWEEN 35.0 AND 35.8');
+
+        self::assertSame(0, $outside);
+    }
+
+    /**
+     * AN AREA WITH NO BOUNDARY HAS NOWHERE HONEST TO PUT ANYTHING. An area is
+     * gazetted and named before its boundary is imported, so a boundaryless area
+     * is a real state and not a broken row; inventing a coordinate for it is
+     * exactly the bug above, and seeding nothing is the honest answer.
+     */
+    public function testAnAreaWithNoBoundaryIsSeededNothingAndDoesNotThrow(): void
+    {
+        // Built here rather than through the fixture helper, because an area gets
+        // its boundary from an import and setGeom() has no way to take it away.
+        $area = new AreaOfInterest();
+        $area->setName('Not Yet Surveyed')->setSource('test fixture');
+        $this->em->persist($area);
+        $this->em->flush();
+        self::assertFalse($area->hasBoundary());
+
+        $this->provider()->load();
+
+        self::assertSame(0, $this->em->getRepository(Incident::class)->count([]));
+    }
+
+    /** A count asked of PostGIS, which is the only thing that can answer where an inside is. */
+    private function countBySql(string $sql): int
+    {
+        $count = $this->em->getConnection()->fetchOne($sql);
+        self::assertIsNumeric($count);
+
+        return (int) $count;
+    }
+
+    /**
+     * An area that is nowhere near the coordinates the provider used to carry, so
+     * "inside the boundary" and "not at the old place" are two questions rather
+     * than one.
+     */
+    private function anAreaSomewhereElse(): AreaOfInterest
+    {
+        $area = $this->anArea('Sample Area');
+        $area->setGeom('{"type":"MultiPolygon","coordinates":[[[[35.0,-3.5],[35.8,-3.5],[35.8,-2.7],[35.0,-2.7],[35.0,-3.5]]]]}');
+        $this->em->flush();
+
+        return $area;
     }
 
     /**

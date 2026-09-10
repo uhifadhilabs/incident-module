@@ -51,6 +51,16 @@ use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
  * {@see DemoMonth::reportedAt()} for why a fixed month seeded a dashboard that
  * opened on nothing.
  *
+ * AND IT IS PLACED WHERE THE INSTALLATION IS. The sample month says WHAT
+ * happened and WHEN; it does not say where, and it must not. Fixed fixture
+ * coordinates put every one of the forty-seven a continent away from the only
+ * boundary the installation had — the dashboard map fitted itself to a blob in
+ * the open ocean and `ST_Within` answered none of forty-seven — and no test
+ * caught it, because the suite's own area fixture had been shifted by the same
+ * sixty-five degrees. So PostGIS scatters the points inside the area's own
+ * geometry ({@see samplePositions()}), deterministically, and an area with no
+ * boundary yet is seeded nothing rather than given an invented place.
+ *
  * WHAT IS STILL NOT SEEDED, SAID PLAINLY:
  *
  *   MONEY BELOW `in progress`. Sixteen rows of the sample month carry money at
@@ -80,6 +90,33 @@ use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
  */
 final readonly class IncidentContentProvider implements ContentProviderInterface
 {
+    /** Kept clear of the boundary, as a fraction of the area's narrow side. */
+    private const float INTERIOR_MARGIN = 0.05;
+
+    /**
+     * THE INTERIOR THE DEMO IS ALLOWED TO USE: the area's boundary eroded by
+     * {@see INTERIOR_MARGIN} of its narrow side, so a seeded incident is not
+     * sitting on the line where it is impossible to tell which side of the
+     * boundary it is on. An area too narrow to erode keeps its own outline.
+     *
+     * ST_MakeValid first, because an imported boundary is whatever the shapefile
+     * had in it, and a self-intersecting ring makes every predicate after it
+     * answer nonsense rather than fail.
+     */
+    private const string INTERIOR_CTE = <<<'SQL'
+        WITH raw AS (
+            SELECT ST_MakeValid(geom) AS geom FROM area_of_interest WHERE id = :id AND geom IS NOT NULL
+        ), sized AS (
+            SELECT geom, LEAST(ST_XMax(geom) - ST_XMin(geom), ST_YMax(geom) - ST_YMin(geom)) AS narrow FROM raw
+        ), interior AS (
+            SELECT CASE
+                       WHEN ST_IsEmpty(ST_Buffer(geom, -narrow * %1$F)) THEN geom
+                       ELSE ST_Buffer(geom, -narrow * %1$F)
+                   END AS geom
+            FROM sized
+        )
+        SQL;
+
     /**
      * THE PHOTOGRAPH EVERY SEEDED PIECE OF EVIDENCE IS. A small flat rectangle,
      * base64 of a real PNG — real enough that the platform detects its type,
@@ -148,10 +185,19 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
             return;
         }
 
+        $rows = DemoMonth::incidents();
+        $positions = $this->samplePositions($area, \count($rows));
+        if ([] === $positions) {
+            // An area that is gazetted and named but whose boundary has not been
+            // imported yet. There is no honest place to put an incident in it,
+            // and inventing one is the bug this guard exists for.
+            return;
+        }
+
         $today = new \DateTimeImmutable();
         $recorders = $this->recorders();
 
-        foreach (DemoMonth::incidents() as $index => $row) {
+        foreach ($rows as $index => $row) {
             $subcategory = $this->subcategories->findOneBySlug($row['subcategory']);
             if (null === $subcategory) {
                 continue;
@@ -164,7 +210,7 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
                 area: $area,
                 subcategory: $subcategory,
                 title: $row['title'],
-                position: DemoMonth::positionFor($index),
+                position: $positions[$index],
                 now: $reportedAt,
                 severity: IncidentSeverityEnum::from($row['severity']),
                 source: IncidentSourceEnum::from($row['source']),
@@ -303,6 +349,47 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
                 return;
             }
         }
+    }
+
+    /**
+     * ONE POINT PER INCIDENT, INSIDE THE AREA — asked of PostGIS, because the
+     * boundary is a geometry and only the database can answer where its inside
+     * is.
+     *
+     * ST_GeneratePoints in its three-argument form takes a SEED, so this is
+     * deterministic: the same area seeded twice puts the same incident in the
+     * same place, and a screenshot of the demo keeps meaning something. Ordered
+     * by latitude then longitude for the same reason — the mapping from row to
+     * place must not depend on what order the database felt like returning.
+     *
+     * @return list<string> GeoJSON Point text, one per row, or an empty list where
+     *                      the area has no boundary to place anything in
+     */
+    private function samplePositions(AreaOfInterest $area, int $count): array
+    {
+        if (!$area->hasBoundary()) {
+            return [];
+        }
+
+        $rows = $this->entityManager->getConnection()->fetchAllAssociative(
+            \sprintf(self::INTERIOR_CTE, self::INTERIOR_MARGIN).
+            ' SELECT ST_X(p) AS lon, ST_Y(p) AS lat
+              FROM (SELECT (ST_Dump(ST_GeneratePoints(interior.geom, :count, :seed))).geom AS p FROM interior) d
+              ORDER BY ST_Y(p), ST_X(p)',
+            ['id' => $area->getId(), 'count' => $count, 'seed' => DemoMonth::RANDOM_SEED],
+        );
+
+        $positions = [];
+        foreach ($rows as $row) {
+            if (is_numeric($row['lon'] ?? null) && is_numeric($row['lat'] ?? null)) {
+                $positions[] = \sprintf('{"type":"Point","coordinates":[%.6F,%.6F]}', (float) $row['lon'], (float) $row['lat']);
+            }
+        }
+
+        // Fewer points than rows is a shape ST_GeneratePoints could not fill —
+        // seeding a partial month would be a demo that silently disagrees with
+        // every total the gallery states, so it seeds none.
+        return \count($positions) >= $count ? \array_slice($positions, 0, $count) : [];
     }
 
     /** The seeded photograph, on disk where the platform's storage can read it. */

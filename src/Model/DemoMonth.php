@@ -71,6 +71,16 @@ final class DemoMonth
     /** How far back the recent group may start when the month is already long. */
     private const int RECENT_MAX_DAYS = 21;
 
+    /**
+     * The seed PostGIS scatters the sample month's points with.
+     *
+     * WHERE the points are is the installation's boundary's business and no
+     * table's — see {@see \Uhifadhi\Incident\Devkit\IncidentContentProvider}.
+     * All that lives here is the seed, so two runs against the same area put the
+     * same incident in the same place and a screenshot keeps meaning something.
+     */
+    public const int RANDOM_SEED = 20_260_822;
+
     /** The seven zones the gallery names. Attached only where the host has drawn them. */
     public const array ZONES = ['North Gate', 'Acacia Wood', 'South Gate', 'Highland Ward', 'Salt Pan', 'Spring Basin', 'West Plains'];
 
@@ -1148,14 +1158,6 @@ final class DemoMonth
     public static function evidenceCount(): int
     {
         return array_sum(array_column(self::incidents(), 'evidence'));
-    }
-
-    public static function positionFor(int $index): string
-    {
-        $latitude = -3.40 + 0.055 * ($index % 9);
-        $longitude = -29.80 + 0.062 * intdiv($index, 9) + 0.011 * ($index % 5);
-
-        return \sprintf('{"type":"Point","coordinates":[%.6F,%.6F]}', $longitude, $latitude);
     }
 
     /**
