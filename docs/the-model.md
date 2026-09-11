@@ -2,24 +2,23 @@
 
 ## Contents
 
-- [The ten tables](#the-ten-tables)
+- [The nine tables](#the-nine-tables)
 - [Money runs in two directions](#money-runs-in-two-directions)
 - [No money record is opened at filing](#no-money-record-is-opened-at-filing)
 - [Each direction is recorded from its own place](#each-direction-is-recorded-from-its-own-place)
-- [Two taxonomies coexist, for now](#two-taxonomies-coexist-for-now)
+- [One taxonomy, and it is the area’s](#one-taxonomy-and-it-is-the-areas)
 - [How this module references areas](#how-this-module-references-areas)
 - [Provenance is written once](#provenance-is-written-once)
 
-## The ten tables
+## The nine tables
 
-An **incident** is one event, in one area, at one place, in one category, at one
-point in a five-state workflow.
+An **incident** is one event, in one area, at one place, filed against one of
+that area's own sub-categories, at one point in a five-state workflow.
 
 | Thing | Table | Why it exists |
 |---|---|---|
 | `Incident` | `incident` | The event. One area, one PostGIS point, one sub-category, one place in the workflow. |
-| `IncidentCategory` / `IncidentSubcategory` | `incident_category`, `incident_subcategory` | The taxonomy, as **seeded, configurable data** — four kinds and sixteen sub-categories out of the box. Nothing in the bundle switches on a slug. |
-| `TaxonomyKind` / `TaxonomySubcategory` | `incident_taxonomy_kind`, `incident_taxonomy_subcategory` | The **area-scoped** taxonomy the admin screen writes (design option B): each area owns its own kinds and sub-categories, starts **empty** (no seed), composes **behaviour blocks** per sub-category, keeps per-area **wire-codes**, and **deactivates, never deletes**. Coexists with the seeded taxonomy above while the platform converges on one — see the note below. |
+| `TaxonomyKind` / `TaxonomySubcategory` | `incident_taxonomy_kind`, `incident_taxonomy_subcategory` | The taxonomy, and it is **each area's own**. An area starts **empty** — nothing is shipped or seeded — and writes its kinds in the Incident kinds editor. A kind carries its colour and the departments a lens leads with; a sub-category composes **behaviour blocks**, says which way money runs, what term it promises and what fields its form asks for. Wire-codes are unique per area and never change; retirement **deactivates, never deletes**. |
 | `IncidentEvent` | `incident_event` | The **append-only** timeline. Nothing on it is ever edited or removed; a correction is a new event saying what was corrected. |
 | `IncidentEvidence` | `incident_evidence` | Photographs and documents, each keeping **its own** capture time and position — never the upload's. |
 | `IncidentParty` | `incident_party` | A suspect, a claimant, a witness, the ranger who filed it — and the **animal**. One shape, different roles; the design refuses to build four tables. |
@@ -63,14 +62,16 @@ so the panel is never drawn where a POST would be refused. Each direction also
 refuses in its own words (`refusedTooEarly()`): a claimant told "response has not
 started" would be told the wrong rule.
 
-## Two taxonomies coexist, for now
+## One taxonomy, and it is the area’s
 
-**Two taxonomies coexist, for now.** The seeded org-wide `IncidentCategory`
-tree is what filed incidents currently point at; the new area-scoped
-`TaxonomyKind` tree backs the area's own kinds section (`/areas/{uuid}/modules/
-incidents/kinds`, `incidents.manage`). They do not yet share storage — filing
-against the area-scoped kinds, and retiring the seeded ones, is the convergence
-step that follows this slice. The admin's "copy from another area" gesture is
+**An incident is filed against its own area's words.** `Incident.subcategory`
+points at a `TaxonomySubcategory`, whose kind belongs to the same area; two areas
+that use the same wire-code hold two rows, and neither can reach the other's.
+There is no installation-wide vocabulary behind it and nothing is seeded on
+install, which is why a new area's kinds section opens empty and the demo's four
+kinds arrive only through devkit.
+
+The admin's "copy from another area" gesture is
 deliberately deferred: it needs to enumerate areas and read their names — which
 `Uhifadhi\Contracts\Entity\AreaInterface` now exposes (`getName`,
 `getUuidString`, and enumeration through the ORM against the interface; see

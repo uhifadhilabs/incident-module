@@ -91,19 +91,8 @@ rows already due, and then asks the service — the same guard a person's refuse
 Close hits — so a second run in the same minute closes nothing a first run did
 not.
 
-```bash
-bin/console incidents:taxonomy:sync
-```
-
-The one install step that cannot honestly be automatic: without a taxonomy there
-is nothing to file an incident against, and a bundle that wrote rows into a
-deployment's database on boot would be making that decision for them. Run it once
-on install and again after any change to `incident.taxonomy`. Idempotent and
-non-destructive — a kind of incident that has left the configuration is left
-alone, never deleted, because case files are filed against it.
-
-It is entangled with a decision that is still open: the module carries
-[two taxonomies](the-model.md#two-taxonomies-coexist-for-now), the seeded
-org-wide one this command installs and the area-scoped one the admin screen
-writes. Converging them is the step that follows, and this command's behaviour is
-deliberately unchanged until that is ruled.
+There is no taxonomy command. Kinds of incident are
+[each area's own](the-model.md#one-taxonomy-and-it-is-the-areas), written in the
+Incident kinds editor; the module ships none and seeds none, so there is nothing
+for an install step to install. Demo kinds arrive with the rest of the demo
+content, through devkit's `fixtures:demo`.

@@ -21,9 +21,17 @@ point in a five-state workflow — `reported → verified → in progress → re
 closed`. One record type serves every reader: Protection and Ecology read
 subsets of one taxonomy rather than each keeping their own copy.
 
-The module ships ten `incident*` tables, the report flow, the case file, a
-sixteen-widget dashboard surface composed on the shell's widget machinery, and a
-seeded, configurable taxonomy of four kinds and sixteen sub-categories.
+The module ships nine `incident*` tables, the report flow, the case file, a
+sixteen-widget dashboard surface composed on the shell's widget machinery, and
+the **Incident kinds** editor each area writes its own classification in.
+
+**An area starts empty.** The module ships no kinds of incident, seeds none and
+suggests none: a kind, its colour, the departments a lens puts it in front of,
+and under it the sub-categories — their behaviour blocks, which way money runs,
+the term each promises and the fields its form asks for — are all the area's own,
+written in the kinds editor before the first incident is filed there. Sample
+kinds exist only in the devkit demo content, which writes them into an area
+through that same editor's service.
 
 ## Installation
 
@@ -87,20 +95,16 @@ Then, in the host:
    tables, so there is no mappings block to write and nothing to generate:
    `doctrine:migrations:diff` is what an installation runs for the entities IT
    owns, and after installing or updating this package it must report no
-   changes. The versions add ten `incident*` tables and nothing else; they alter
+   changes. The versions add nine `incident*` tables and nothing else; they alter
    no host table, and the foreign keys into `area_of_interest`, `zone` and
    `team_user` are declared here rather than in the core.
-3. **Install the taxonomy** — the one step that is not automatic, because it is a
-   data decision and a bundle that wrote rows into a host's database on boot would
-   be making it for them:
-
-   ```bash
-   bin/console incidents:taxonomy:sync
-   ```
-
-   Idempotent and non-destructive. Run it again after any change to
-   `incident.taxonomy`; a kind of incident that has left the configuration is
-   **left alone**, never deleted, because case files are filed against it.
+3. **Write the area's kinds.** Open *Incidents → Incident kinds* in each area
+   (permission `incidents.manage`) and name what that area files. Nothing is
+   seeded, so this is the step between installing the module and filing the first
+   incident; a bundle that wrote somebody's classification scheme into their
+   database on boot would be making that decision for them. In a development
+   installation, `bin/console fixtures:demo` writes a month of sample incidents
+   and the kinds they are filed under.
 The three Stimulus controllers — `incident-filters`, `incident-board`,
 `incident-report` — need no step of their own: Flex synchronises
 `assets/controllers.json` from this package's own `assets/package.json` on every
@@ -169,7 +173,39 @@ Again, `migrate` is the whole of it. New tables and columns arrive as versions
 in this package; `doctrine:migrations:diff` stays what you run for your own
 entities, and after this update it must report no changes. If it does report
 something, that is a bug in this package — please report it rather than
-committing the version it wrote.
+committing the version it wrote. The one exception is named below.
+
+### Upgrading to 0.3: one taxonomy, and it is the area's
+
+`Uhifadhi\Incident\Migrations\Version20260911140000` converges the
+installation-wide classification onto the per-area one. It runs with `migrate`
+like any other version and needs nothing from you, but it is worth knowing what
+it does, because it moves data rather than only schema:
+
+- Every area that has filed an incident is given **its own copy** of exactly the
+  words its incidents reference — the same wire-code as the old slug, the same
+  label, colour, money direction, term and fields. Two areas that shared a slug
+  end up with two rows, and from here their vocabularies move independently.
+- `incident.taxonomy_subcategory_id` is added, filled by (area, slug), and made
+  required once every row has found its area's copy. By construction every row
+  does: the copies are generated from the rows the incidents point at. If any
+  row were left over the column stays optional, the migration raises a warning,
+  and `incident.subcategory_id` still holds what those incidents were filed
+  against — point them at one of the area's sub-categories and tighten the
+  column by hand.
+- **Nothing is dropped.** `incident.subcategory_id`, `incident_subcategory` and
+  `incident_category` are kept, still populated, for one release, so you can read
+  what a record used to say and can roll the code back. A later release drops all
+  three in a version marked `@destructive`.
+- **Until that release, `doctrine:migrations:diff` proposes dropping those
+  three things**, because the mapping no longer knows them. That proposal is the
+  deferral working, not drift — do not apply it.
+
+If your `config/packages/incident.yaml` carries an `incident.taxonomy` tree, the
+container refuses to build until you remove the key, and says so in those words.
+The tree is not silently ignored, because a deployment that lost its
+classification scheme would find out on the first filing screen. Your areas keep
+the words they were using: the migration above copied them in.
 
 Before a production run:
 
@@ -207,7 +243,7 @@ Two hatches, for the two ways this goes wrong:
 
 - [Charter](docs/charter.md) — one record type and many readers, why departments
   are a lens and never a fence, and why the dashboard rides the shell's framework.
-- [The model](docs/the-model.md) — the ten tables, and the rules about money (two
+- [The model](docs/the-model.md) — the nine tables, and the rules about money (two
   directions, each recorded from its own place in the workflow), filing and
   provenance that somebody will otherwise re-argue.
 - [The workflow, and the definition under it](docs/workflow.md) — the five places,
