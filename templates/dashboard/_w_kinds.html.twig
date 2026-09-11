@@ -1,0 +1,31 @@
+{# Widget "kinds" — the kinds this area files, read only.
+
+   READ ONLY, AND SAYING SO. Editing a kind is a click away in Configure; a card
+   that let you rename one here would be a second place the vocabulary is owned,
+   and the two would eventually disagree.
+
+   ONE MARK FOR MONEY, never a second chip: a sub-category that carries a fine or
+   a claim wears "¤" and nothing else. #}
+<div class="c" data-incident-kinds>
+    <span class="tab">Incident kinds<span class="src">· {{ dashboard.categories|length }} {{ dashboard.categories|length == 1 ? 'kind' : 'kinds' }} · {{ dashboard.categories|reduce((total, c) => total + c.subcategories|length, 0) }} sub-categories</span></span>
+    <div class="kx">
+        {% for category in dashboard.categories %}
+            <div class="kx-k">
+                <div class="kx-h"><i class="dot i-hue-{{ category.colourKey }}"></i><b>{{ category.label }}</b><span class="n">{{ dashboard.categoryCount(category) }}<em>this month</em></span></div>
+                <div class="kx-s">
+                    {%- for subcategory in category.subcategories -%}
+                        {% if not loop.first %} · {% endif %}<i class="{{ subcategory.moneyDirection ? 'm' }}">{{ subcategory.label|lower }}</i>
+                    {%- endfor -%}
+                </div>
+            </div>
+        {% else %}
+            <div class="kx-k"><div class="kx-h"><b>No incident kinds yet</b></div>
+                <div class="kx-s">this area has not written its own vocabulary</div></div>
+        {% endfor %}
+    </div>
+    <div class="kx-foot">
+        <span class="use">Read only. <span class="mono">¤</span> marks a sub-category that carries money.</span>
+        {% set kindsUrl = incident_url('incident_kinds', {uuid: area.uuid}) %}
+        {% if kindsUrl %}<a class="open-btn" href="{{ kindsUrl }}">Edit in Configure →</a>{% endif %}
+    </div>
+</div>

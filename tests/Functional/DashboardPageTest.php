@@ -543,6 +543,27 @@ final class DashboardPageTest extends FunctionalTestCase
     }
 
     /**
+     * THE READ-ONLY KINDS CARD — what this area files, with this month's count
+     * under each kind, and one link out to the section that edits them.
+     */
+    public function testTheDashboardShowsTheKindsThisAreaFiles(): void
+    {
+        $area = $this->anArea();
+        $this->anIncident($area);
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        $card = $crawler->filter('[data-incident-kinds]');
+        self::assertCount(1, $card);
+        self::assertGreaterThan(0, $card->filter('.kx-k')->count());
+        self::assertStringContainsString('this month', $card->filter('.kx-h .n')->first()->text());
+        self::assertStringContainsString('Edit in Configure', $card->filter('.kx-foot')->text());
+        self::assertStringContainsString('/incidents/kinds', (string) $card->filter('.kx-foot a')->attr('href'));
+    }
+
+    /**
      * THE KINDS SCREEN IS STILL GATED, and the gate is the screen's own. The
      * dashboard offers nobody a door to it — the shell's one `Configure` action
      * does — so what is left to hold is that the screen refuses whoever may not

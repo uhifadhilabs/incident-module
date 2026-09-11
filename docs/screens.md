@@ -3,6 +3,7 @@
 ## Contents
 
 - [The routes](#the-routes)
+- [The module frame](#the-module-frame)
 - [Parking closes every one of them](#parking-closes-every-one-of-them)
 - [The five directions are presets, not pages](#the-five-directions-are-presets-not-pages)
 - [Filing from another module](#filing-from-another-module)
@@ -14,8 +15,11 @@ All under `/areas/{uuid}/modules/incidents`, the same shape as patrols.
 
 | Route | Path | What it is |
 |---|---|---|
-| `incident_dashboard` | `` | The widget surface: this person's own composition of the module's sixteen widgets. |
-| `incident_widgets` | `/widgets` | The widget library — the shell's preset component over this surface's catalogue. |
+| `incident_dashboard` | `` | The Overview tab: this person's own composition of the module's widgets. |
+| `incident_list` | `/incidents` | The Incidents tab: every incident the window holds, twenty a page, driven by the one filter. |
+| `incident_widgets` | `/widgets` | The widget library — the first section of the configure page, on an address of its own. |
+| `incident_kinds` | `/kinds` | The incident kinds — the second section of the configure page, on an address of its own. `/taxonomy` permanently redirects here. |
+| `incident_settings_save` | `/configure/settings` (POST) | Saves the module's per-area settings. |
 | `incident_new` | `/new` | The report flow, as its own page. |
 | `incident_create` | `` (POST) | Files it. |
 | `incident_show` | `/{reference}` | One case file. |
@@ -23,6 +27,34 @@ All under `/areas/{uuid}/modules/incidents`, the same shape as patrols.
 
 Plus the eight widget-library write endpoints the shell's `WidgetEndpoint`
 answers (`/widgets/save`, `/widgets/reset`, `/widgets/preset/{id}`, …).
+
+## The module frame
+
+This module draws no navigation of its own. It declares two lists and the shell
+draws both:
+
+- **Two data tabs** — `Overview` and `Incidents` — through `ModuleTabsInterface`
+  (`Uhifadhi\Incident\Shell\IncidentModuleTabs`). A tab is a place where DATA
+  lives; the case file keeps the `Incidents` tab lit, because opening a case does
+  not leave the place cases live in.
+- **Three configure sections** — `Widget library`, `Incident kinds`, `Settings` —
+  through `ConfigurationSectionsInterface`
+  (`Uhifadhi\Incident\Shell\IncidentConfigurationSections`). The first two keep
+  an address of their own, exactly as the settled design draws them; `Settings` is
+  a body the shell renders inside its own configure page, at the bare
+  `/configure` address.
+
+There is one configuration entry per surface — the shell's `Configure` action —
+and no `Settings`, `Incident kinds` or `Widget library` button anywhere else, and
+no "Back to dashboard": the first data tab, the lit `Configure` and the crumb are
+the three ways back.
+
+The `Settings` section reads and writes one row per area (`incident_settings`).
+An area that has never saved counts money in the installation's own `incident:`
+currency, so an untouched default and a chosen one stay distinguishable. The
+per-kind colour, the "shown first to" departments, and a sub-category's term and
+form fields are **not editable there yet** — the section says so, and the kinds
+section is where a colour and a money direction are edited today.
 
 ## Parking closes every one of them
 

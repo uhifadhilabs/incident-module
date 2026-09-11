@@ -118,6 +118,10 @@ final class IncidentWidgets implements WidgetSurfaceInterface
             // then where, then what, then the money ({@see DEFAULT_DESCRIPTION}).
             new Widget('map', 'Incident map', 'b', 12, [12, 9, 6], on: true, note: 'Where every incident was filed; hue is the category, hollow means closed.'),
             new Widget('register', 'Incidents', 'a', 12, [12, 9, 6], on: true, note: 'Every incident as a row: id, category, what happened, zone, status, severity, money.'),
+            // THE READ-ONLY VOCABULARY CARD. It shows what this area files and how
+            // often each kind was filed this month; editing is one click away in
+            // Configure, and never here.
+            new Widget('kinds', 'Incident kinds', 'a', 12, [12, 9, 6], on: true, note: 'The kinds this area files, with this month\'s count under each and a mark on the sub-categories that carry money. Read only — editing is a click away in Configure.'),
             new Widget('queue', 'My queue', 'a', 12, [12, 9, 6], on: false, note: 'Only what is waiting on you, oldest first, with the clock against each one.'),
             // THE WAY IN TO THE REPORT FLOW, filed under Case files: that is the
             // direction of whoever keeps the register, and opening a new file is

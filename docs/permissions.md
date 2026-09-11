@@ -16,7 +16,7 @@ over.
 | Value | Name | Printed under it |
 |---|---|---|
 | `incidents.record` | Incidents · Record | File an incident: what happened, where, and the evidence for it. |
-| `incidents.manage` | Incidents · Manage | Move an incident through verification, response and closure, settle the fines and compensation on it, and **manage the area's incident taxonomy** — its kinds, sub-categories and behaviour blocks. |
+| `incidents.manage` | Incidents · Manage | Move an incident through verification, response and closure, settle the fines and compensation on it, and **manage the area's incident kinds** — the kinds, their sub-categories and the behaviour blocks, and what the area counts money in. |
 
 ## Why filing and managing are split
 

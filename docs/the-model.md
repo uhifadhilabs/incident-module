@@ -67,9 +67,9 @@ started" would be told the wrong rule.
 
 **Two taxonomies coexist, for now.** The seeded org-wide `IncidentCategory`
 tree is what filed incidents currently point at; the new area-scoped
-`TaxonomyKind` tree backs the area taxonomy admin (`/areas/{uuid}/modules/
-incidents/taxonomy`, `incidents.manage`). They do not yet share storage — filing
-against the area-scoped taxonomy, and retiring the seeded one, is the convergence
+`TaxonomyKind` tree backs the area's own kinds section (`/areas/{uuid}/modules/
+incidents/kinds`, `incidents.manage`). They do not yet share storage — filing
+against the area-scoped kinds, and retiring the seeded ones, is the convergence
 step that follows this slice. The admin's "copy from another area" gesture is
 deliberately deferred: it needs to enumerate areas and read their names — which
 `Uhifadhi\Contracts\Entity\AreaInterface` now exposes (`getName`,

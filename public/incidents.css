@@ -898,3 +898,24 @@ html.light{
 .ao-move.wip{color:var(--i-mort)}
 .ao-move.res{color:var(--ok)}
 .ao-move.cls{color:var(--dim)}
+
+/* THE READ-ONLY KINDS CARD (the dashboard's kinds widget) — one tile per kind
+   with this month's count, its sub-categories on a second line, and a single
+   link out to the section that does the editing. */
+.kx{display:flex;flex-wrap:wrap;gap:9px;margin-top:2px}
+.kx-k{flex:1 1 210px;min-width:0;border:1px solid var(--ln);border-radius:11px;padding:10px 12px 9px;
+  background:color-mix(in srgb,var(--fog) 3%,transparent)}
+.kx-h{display:flex;align-items:center;gap:8px}
+.kx-h .dot{width:9px;height:9px;border-radius:3px;flex:none;background:var(--acc)}
+.kx-h b{font-size:12.5px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.kx-h .n{margin-left:auto;flex:none;font:600 10px "JetBrains Mono",ui-monospace,monospace;color:var(--acc);
+  font-variant-numeric:tabular-nums}
+.kx-h .n em{font-style:normal;font-size:8.5px;color:var(--dim);margin-left:3px}
+.kx-s{margin-top:6px;font:500 9.5px "JetBrains Mono",ui-monospace,monospace;line-height:1.7;color:var(--dim)}
+.kx-s i{font-style:normal}
+/* A sub-category that carries money says so with one mark, never a second chip. */
+.kx-s i.m::after{content:"\00A4";color:var(--acc);margin-left:2px;font-style:normal}
+.kx-foot{display:flex;align-items:center;gap:8px;margin-top:11px;padding-top:10px;
+  border-top:1px solid var(--ln)}
+.kx-foot .use{margin:0;flex:1}

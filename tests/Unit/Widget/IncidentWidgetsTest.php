@@ -43,17 +43,17 @@ final class IncidentWidgetsTest extends TestCase
     }
 
     /**
-     * Twenty widgets, including the three charts the design added to Map first —
+     * Twenty-one widgets, including the three charts the design added to Map first —
      * the trend line, the category donut and the severity bars — beside the zone
      * chart they share a two-by-two grid with.
      */
-    public function testItShipsTheTwentyWidgetsTheDesignDeclares(): void
+    public function testItShipsTheTwentyOneWidgetsTheDesignDeclares(): void
     {
         // Declaration order IS the shipped composition's order, so the map leads
         // just below the KPIs — second, before the register — even though it is
         // filed under Map first (group 'b') in the library.
         self::assertSame([
-            'kpis', 'map', 'register', 'queue', 'report',
+            'kpis', 'map', 'register', 'kinds', 'queue', 'report',
             'maplist', 'zones', 'trend', 'bycat', 'severity',
             'spark', 'feed', 'evidence',
             'categories', 'matrix', 'money',
@@ -117,15 +117,15 @@ final class IncidentWidgetsTest extends TestCase
 
     /**
      * THE SHIPPED COMPOSITION IS NOT ONE OF THE FIVE. It takes the numbers from
-     * A, the map from B, the register from A and the money board from D — so it
-     * leads the strip as a built-in preset in its own right, under the name the
-     * design gives it.
+     * A, the map from B, the list and its kinds from A and the money board from
+     * D — so it leads the strip as a built-in preset in its own right, under the
+     * name the design gives it.
      */
     public function testTheShippedCompositionIsItsOwnNamedDesign(): void
     {
         $catalog = IncidentWidgets::declaration();
 
-        self::assertSame(['kpis' => 12, 'map' => 12, 'register' => 12, 'money' => 12], $catalog->defaultLayout());
+        self::assertSame(['kpis' => 12, 'map' => 12, 'register' => 12, 'kinds' => 12, 'money' => 12], $catalog->defaultLayout());
         self::assertSame(WidgetCatalog::DEFAULT_PRESET_ID, $catalog->defaultPresetId());
 
         $shipped = $catalog->preset(WidgetCatalog::DEFAULT_PRESET_ID);
