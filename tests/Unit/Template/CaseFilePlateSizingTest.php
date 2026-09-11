@@ -18,10 +18,12 @@ use PHPUnit\Framework\TestCase;
 /**
  * THE CASE FILE'S MAP PLATE IS SIZED BY THIS SCREEN'S OWN DESIGN.
  *
- * The incident case file the design draws states `height:min(46vh,440px)` on its
- * own map. Sizing a screen against a sibling module's screen instead of against
- * its own design is how a port drifts while every test stays green, so the
- * number is asserted here against the value the design file carries.
+ * The incident case file the design draws gives the "Where" card the height of
+ * the column beside it, with 360px as the floor — `.recgrid>.c.plate-fill` and
+ * the plate inside it filling what the row gives the card. Sizing a screen
+ * against a sibling module's screen instead of against its own design is how a
+ * port drifts while every test stays green, so the rule is asserted here against
+ * what the design file carries.
  *
  * A TEXT CHECK, and that is the limit of what it promises: it catches the plate
  * being sized to something other than the design, not a plate that renders
@@ -34,20 +36,29 @@ use PHPUnit\Framework\TestCase;
  *
  * THE PLATE FILLS THE CARD, which is what `.plate-fill` is named for. The row is
  * a stretch row — as it is in the design — so the card is as tall as whatever
- * the column beside it needs, the design's height is the FLOOR, and the plate
- * takes the slack.
+ * the column beside it needs, 360px is the FLOOR under both, and the plate takes
+ * the whole of it.
  */
 final class CaseFilePlateSizingTest extends TestCase
 {
-    /** The height the design's own "Where" card states on its map. */
-    private const string DESIGN_HEIGHT = 'min(46vh,440px)';
+    /** The floor the design's own "Where" card states under its map. */
+    private const string DESIGN_FLOOR = '360px';
 
-    public function testThePlateIsTheHeightTheDesignStates(): void
+    public function testThePlateTakesTheHeightTheRowGivesTheCard(): void
     {
         self::assertMatchesRegularExpression(
-            '/\.c\.plate-fill\{[^}]*--map-plate-height:'.preg_quote(self::DESIGN_HEIGHT, '/').'/',
+            '/\\.c\\.plate-fill\\{[^}]*--map-plate-height:100%/',
             self::stylesheet(),
-            'The case file plate is sized by incidents/detail.html, not by another module\'s screen.',
+            'The case file plate is the height of the column beside it, as incidents/detail.html draws it.',
+        );
+    }
+
+    public function testTheCardCarriesTheDesignsFloor(): void
+    {
+        self::assertMatchesRegularExpression(
+            '/\\.c\\.plate-fill\\{[^}]*min-height:'.preg_quote(self::DESIGN_FLOOR, '/').'/',
+            self::stylesheet(),
+            'A short column must not shrink the map below the floor the design states.',
         );
     }
 
@@ -73,22 +84,21 @@ final class CaseFilePlateSizingTest extends TestCase
     }
 
     /**
-     * THE HEIGHT IS A HEIGHT, NOT A FLOOR.
+     * THE FLOOR IS THE CARD'S, THE HEIGHT IS THE PLATE'S.
      *
-     * `min-height` plus `flex: 1` is what this card used to say, and in a
-     * stretch row it made the plate as tall as the column of facts beside it —
-     * over a thousand pixels of imagery for a card whose design asks for 440.
-     * The atlas owns the rule now: a real height, off one custom property,
-     * refusing to stretch. All this sheet states is the number.
+     * `min-height` plus `flex: 1` on the plate is what this card used to say,
+     * and the atlas owns that rule now: the plate takes one custom property and
+     * refuses to invent a height of its own. All this sheet states is that the
+     * property is the card's own height, and how short the card may get.
      */
-    public function testTheSheetNeitherFloorsThePlateNorStretchesIt(): void
+    public function testTheSheetStatesTheRuleOnTheCardAndNotOnThePlate(): void
     {
         $sheet = self::stylesheet();
 
-        self::assertMatchesRegularExpression('/\.c\.plate-fill\{[^}]*display:flex/', $sheet);
-        self::assertMatchesRegularExpression('/\.c\.plate-fill\{[^}]*flex-direction:column/', $sheet);
-        self::assertDoesNotMatchRegularExpression('/\.plate-fill \.map-plate\{[^}]*min-height/', $sheet);
-        self::assertDoesNotMatchRegularExpression('/\.plate-fill \.map-plate\{[^}]*flex:1/', $sheet);
+        self::assertMatchesRegularExpression('/\\.c\\.plate-fill\\{[^}]*display:flex/', $sheet);
+        self::assertMatchesRegularExpression('/\\.c\\.plate-fill\\{[^}]*flex-direction:column/', $sheet);
+        self::assertDoesNotMatchRegularExpression('/\\.plate-fill \\.map-plate\\{[^}]*min-height/', $sheet);
+        self::assertDoesNotMatchRegularExpression('/\\.plate-fill \\.map-plate\\{[^}]*flex:1/', $sheet);
     }
 
     private static function stylesheet(): string
