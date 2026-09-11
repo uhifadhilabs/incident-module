@@ -18,12 +18,12 @@ use PHPUnit\Framework\TestCase;
 /**
  * THE CASE FILE'S MAP PLATE IS SIZED BY THIS SCREEN'S OWN DESIGN.
  *
- * The incident case file the design draws gives the "Where" card the height of
- * the column beside it, with 360px as the floor — `.recgrid>.c.plate-fill` and
- * the plate inside it filling what the row gives the card. Sizing a screen
- * against a sibling module's screen instead of against its own design is how a
- * port drifts while every test stays green, so the rule is asserted here against
- * what the design file carries.
+ * The incident case file the design draws gives the "Where" card a 400px map and
+ * lets the card end where the map ends — `.recgrid>.c.plate-fill` with
+ * `align-self:start`, and a viewer inside it at `flex:none;height:400px`. Sizing
+ * a screen against a sibling module's screen instead of against its own design
+ * is how a port drifts while every test stays green, so the rule is asserted
+ * here against what the design file carries.
  *
  * A TEXT CHECK, and that is the limit of what it promises: it catches the plate
  * being sized to something other than the design, not a plate that renders
@@ -34,31 +34,38 @@ use PHPUnit\Framework\TestCase;
  * and its fullscreen are the atlas's; a module that restated any of them would
  * be the one map in the product that reads differently.
  *
- * THE PLATE FILLS THE CARD, which is what `.plate-fill` is named for. The row is
- * a stretch row — as it is in the design — so the card is as tall as whatever
- * the column beside it needs, 360px is the FLOOR under both, and the plate takes
- * the whole of it.
+ * THE CARD IS THE PLATE'S SIZE, not the row's. The row is a stretch row — as it
+ * is in the design — so the card says out loud that it will not stretch, and the
+ * imagery keeps the size it was drawn at while the facts beside it run as long as
+ * they need to.
  */
 final class CaseFilePlateSizingTest extends TestCase
 {
-    /** The floor the design's own "Where" card states under its map. */
-    private const string DESIGN_FLOOR = '360px';
+    /** The height the design's own "Where" card states for its map. */
+    private const string DESIGN_HEIGHT = '400px';
 
-    public function testThePlateTakesTheHeightTheRowGivesTheCard(): void
+    public function testThePlateIsTheHeightTheDesignStates(): void
     {
         self::assertMatchesRegularExpression(
-            '/\\.c\\.plate-fill\\{[^}]*--map-plate-height:100%/',
+            '/\\.c\\.plate-fill\\{[^}]*--map-plate-height:'.preg_quote(self::DESIGN_HEIGHT, '/').'/',
             self::stylesheet(),
-            'The case file plate is the height of the column beside it, as incidents/detail.html draws it.',
+            'The case file map is a fixed plate of imagery, as incidents/detail.html draws it.',
         );
     }
 
-    public function testTheCardCarriesTheDesignsFloor(): void
+    public function testTheCardEndsWhereTheMapEnds(): void
     {
+        $sheet = self::stylesheet();
+
         self::assertMatchesRegularExpression(
-            '/\\.c\\.plate-fill\\{[^}]*min-height:'.preg_quote(self::DESIGN_FLOOR, '/').'/',
-            self::stylesheet(),
-            'A short column must not shrink the map below the floor the design states.',
+            '/\\.c\\.plate-fill\\{[^}]*align-self:start/',
+            $sheet,
+            'A stretch row would otherwise run the card down past the imagery it holds.',
+        );
+        self::assertDoesNotMatchRegularExpression(
+            '/\\.c\\.plate-fill\\{[^}]*min-height/',
+            $sheet,
+            'A floor under a fixed height is a floor that can only fight it.',
         );
     }
 
@@ -84,12 +91,11 @@ final class CaseFilePlateSizingTest extends TestCase
     }
 
     /**
-     * THE FLOOR IS THE CARD'S, THE HEIGHT IS THE PLATE'S.
+     * THE RULE IS STATED ON THE CARD, NEVER ON THE PLATE.
      *
-     * `min-height` plus `flex: 1` on the plate is what this card used to say,
-     * and the atlas owns that rule now: the plate takes one custom property and
-     * refuses to invent a height of its own. All this sheet states is that the
-     * property is the card's own height, and how short the card may get.
+     * A plate takes one custom property and invents no height of its own, and it
+     * is the full width of whatever card it sits in. All this sheet states is
+     * what that property is here, and that the card keeps to it.
      */
     public function testTheSheetStatesTheRuleOnTheCardAndNotOnThePlate(): void
     {

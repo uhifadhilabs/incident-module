@@ -457,19 +457,19 @@ html.light{
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
 .i-feed .rt{flex:none;align-self:center}
 /* The case file's "Where" plate, sized by THIS screen's design: on
-   incidents/detail.html the card is as tall as the column of facts beside it and
-   the map inside fills it, with 360px as the floor under both. Sizing it against
-   a sibling module's screen is how a port drifts while every test stays green,
-   so the rule is this screen's own and CaseFilePlateSizingTest holds it there.
+   incidents/detail.html the map is 400px and the card ends where the map ends.
+   Sizing it against a sibling module's screen is how a port drifts while every
+   test stays green, so the rule is this screen's own and CaseFilePlateSizingTest
+   holds it there.
 
-   The height the plate takes is the CARD's — .i-cols is a stretch row, so the
-   card already has one — and the floor is the card's too, because a short column
-   must not shrink the map to nothing.
+   .i-cols is a stretch row, so the card states that it will not stretch: imagery
+   is a fixed plate, and the column of facts beside it runs as long as it needs to
+   without dragging the map down with it.
 
    THE RULE IS ALL THIS MODULE STATES. The plate's column, its imagery frame, its
    floating legend, its control stack, its fullscreen and its refusal to invent a
    height are the atlas's. */
-.c.plate-fill{display:flex;flex-direction:column;min-height:360px;--map-plate-height:100%}
+.c.plate-fill{display:flex;flex-direction:column;align-self:start;--map-plate-height:400px}
 
 /* ── DIRECTION C · FEED ───────────────────────────────────────────────────
    Reverse-chronological, grouped by day.
