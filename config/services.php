@@ -168,6 +168,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('doctrine.orm.entity_manager'),
             service('storage.evidence_storage'),
+            service(IncidentEvidenceRepository::class),
         ]);
 
     /*

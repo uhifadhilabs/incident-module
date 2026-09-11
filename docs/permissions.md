@@ -3,6 +3,7 @@
 ## Contents
 
 - [The two this module declares](#the-two-this-module-declares)
+- [Attaching evidence rides on managing](#attaching-evidence-rides-on-managing)
 - [Why filing and managing are split](#why-filing-and-managing-are-split)
 
 ## The two this module declares
@@ -17,6 +18,15 @@ over.
 |---|---|---|
 | `incidents.record` | Incidents · Record | File an incident: what happened, where, and the evidence for it. |
 | `incidents.manage` | Incidents · Manage | Move an incident through verification, response and closure, settle the fines and compensation on it, and **manage the area's incident kinds** — the kinds, their sub-categories and the behaviour blocks, and what the area counts money in. |
+
+## Attaching evidence rides on managing
+
+Putting a file onto a case file, and taking one back off, both check
+`incidents.manage` — not `incidents.record`. Evidence is what a claim rests on,
+so it is the same tier of decision as moving the case through its workflow. The
+check is `IncidentEvidenceTarget`'s, asked by the platform's upload endpoint on
+every call and again at render time so the add tile is not drawn for somebody who
+may not use it.
 
 ## Why filing and managing are split
 

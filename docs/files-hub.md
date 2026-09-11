@@ -2,10 +2,51 @@
 
 ## Contents
 
+- [How a file gets onto a case file](#how-a-file-gets-onto-a-case-file)
 - [How an incident's evidence reaches the hub](#how-an-incidents-evidence-reaches-the-hub)
 - [Which keys are ours, asked in one place](#which-keys-are-ours-asked-in-one-place)
 - [What the hub is told is only what this module knows](#what-the-hub-is-told-is-only-what-this-module-knows)
 - [The guard is the case file's own answer](#the-guard-is-the-case-files-own-answer)
+
+## How a file gets onto a case file
+
+Through the platform's ONE upload component, which storage owns. This module
+wrote two things for it and nothing else:
+
+`src/Upload/IncidentEvidenceTarget.php` — an `UploadTargetInterface`, tagged
+`storage.upload_target` under the security guard, answering the four questions
+only this module can:
+
+| Question | This module's answer |
+|---|---|
+| which case | by **uuid**, never by reference — evidence filed under a label would move when the label did, the same choice `IncidentEvidenceKey::prefixFor()` already made |
+| who may | `incidents.manage` — the same tier as moving a case through its workflow, and NOT the cheaper `incidents.record`. Filing a report is cheap; putting a photograph onto somebody else's case file is not |
+| what and how big | the deployment's own, unnarrowed. A case file takes whatever this installation accepts as evidence |
+| what it became | evidence, and the chip on the finished tile says so |
+
+…and one line in `templates/incident/show.html.twig`:
+
+```twig
+{{ render_upload('incident:' ~ incident.uuid, 'tile', {label: 'Add evidence'}) }}
+```
+
+No controller, no route, no JavaScript, no stylesheet. The component is not drawn
+for somebody who may not use it — storage asks `mayUpload()` at render time — so
+the template carries no permission check of its own.
+
+**A kept tile is the component's own finished state.** The evidence card draws
+each attached file as `.upl-tile.done`, exactly as the controller draws a file
+that landed a second ago, hover remove and all. Two kinds of tile for the same
+thing on one card is precisely the drift the single component exists to end.
+
+**Removal is a recorded event.** `IncidentEvidenceService::detach()` drops the
+row and writes the case a timeline line saying the file went — the platform's
+upload service calls it BEFORE deleting the bytes, so a refusal thrown from here
+leaves the file exactly where it was. The trail is append-only: a removal adds an
+event, it never erases one.
+
+The full contract, the endpoint and the refusal sentences are in
+storage-module's `docs/uploads.md`.
 
 ## How an incident's evidence reaches the hub
 

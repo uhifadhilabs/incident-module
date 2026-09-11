@@ -43,7 +43,7 @@ final class IncidentEvidenceServiceTest extends IntegrationTestCase
     {
         $incident = $this->filedIncident();
 
-        $evidence = $this->evidenceService()->attach($incident, $this->aPhotograph(), 'IMG_1204.jpg');
+        $evidence = $this->evidenceService()->store($incident, $this->aPhotograph(), 'IMG_1204.jpg');
 
         self::assertSame(EvidenceKindEnum::Photo, $evidence->getKind());
         self::assertSame('IMG_1204.jpg', $evidence->getFilename());
@@ -65,7 +65,7 @@ final class IncidentEvidenceServiceTest extends IntegrationTestCase
     {
         $incident = $this->filedIncident();
 
-        $evidence = $this->evidenceService()->attach($incident, $this->aPhotograph(), 'IMG_1204.jpg');
+        $evidence = $this->evidenceService()->store($incident, $this->aPhotograph(), 'IMG_1204.jpg');
 
         $key = (string) $evidence->getPath();
         self::assertTrue(IncidentEvidenceKey::claims($key));
@@ -78,7 +78,7 @@ final class IncidentEvidenceServiceTest extends IntegrationTestCase
     {
         $incident = $this->filedIncident();
 
-        $evidence = $this->evidenceService()->attach($incident, $this->aPhotograph(), 'IMG_1204.jpg');
+        $evidence = $this->evidenceService()->store($incident, $this->aPhotograph(), 'IMG_1204.jpg');
 
         self::assertNotNull($evidence->getThumbKey());
         self::assertTrue($this->storage()->exists((string) $evidence->getThumbKey()));
@@ -94,7 +94,7 @@ final class IncidentEvidenceServiceTest extends IntegrationTestCase
         $incident = $this->filedIncident();
         $capturedAt = new \DateTimeImmutable('2026-08-20 11:02:00');
 
-        $evidence = $this->evidenceService()->attach(
+        $evidence = $this->evidenceService()->store(
             $incident,
             $this->aPhotograph(),
             'IMG_1204.jpg',
@@ -115,7 +115,7 @@ final class IncidentEvidenceServiceTest extends IntegrationTestCase
         $incident = $this->filedIncident();
         $before = $incident->getEvents()->count();
 
-        $this->evidenceService()->attach($incident, $this->aPhotograph(), 'IMG_1204.jpg');
+        $this->evidenceService()->store($incident, $this->aPhotograph(), 'IMG_1204.jpg');
 
         self::assertSame($before + 1, $incident->getEvents()->count());
     }
@@ -125,7 +125,7 @@ final class IncidentEvidenceServiceTest extends IntegrationTestCase
     {
         $incident = $this->filedIncident();
 
-        $evidence = $this->evidenceService()->attach($incident, $this->anUpload('IMG_1207.png'));
+        $evidence = $this->evidenceService()->store($incident, $this->anUpload('IMG_1207.png'));
 
         self::assertSame('IMG_1207.png', $evidence->getFilename());
     }
@@ -140,7 +140,7 @@ final class IncidentEvidenceServiceTest extends IntegrationTestCase
         $incident = $this->filedIncident();
 
         try {
-            $this->evidenceService()->attach($incident, $this->notAPhotograph(), 'notes.txt');
+            $this->evidenceService()->store($incident, $this->notAPhotograph(), 'notes.txt');
             self::fail('A file outside the deployment\'s accepted types must be refused.');
         } catch (IncidentEvidenceException $refused) {
             self::assertNotSame('', $refused->getMessage());

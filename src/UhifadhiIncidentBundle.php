@@ -56,8 +56,11 @@ use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Security\IncidentEvidenceVoter;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Storage\IncidentFileSource;
+use Uhifadhi\Incident\Upload\IncidentEvidenceTarget;
 use Uhifadhi\Incident\Widget\IncidentWidgets;
+use Uhifadhi\Storage\Model\EvidenceConstraints;
 use Uhifadhi\Storage\Registry\FileSourceInterface;
+use Uhifadhi\Storage\Upload\UploadTargetInterface;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -303,6 +306,32 @@ final class UhifadhiIncidentBundle extends AbstractBundle
             ->tag(WidgetSurfaceInterface::TAG);
 
         if ($hasSecurity) {
+            /*
+             * HOW A FILE GETS ONTO A CASE FILE — this module's half of the
+             * platform's one upload component, and the whole of what it wrote to
+             * gain uploads.
+             *
+             * Under the security guard because every question it answers is
+             * about a PERSON: may this one attach, may this one take a file back
+             * off. Without SecurityBundle there is nobody to ask, and storage
+             * registers no upload endpoint on such a host either — so a target
+             * there would be an answer to a question nothing could pose.
+             *
+             * Tagged by hand with the contract's own constant, for the third
+             * time in this file and the third same reason: a reusable bundle is
+             * not autoconfigured. A module that forgot this tag gets a case file
+             * whose evidence card simply has no way in.
+             */
+            $services->set('incident.upload_target', IncidentEvidenceTarget::class)
+                ->args([
+                    service(IncidentRepository::class),
+                    service(IncidentEvidenceRepository::class),
+                    service('incident.evidence'),
+                    service('security.authorization_checker'),
+                    service(EvidenceConstraints::class),
+                ])
+                ->tag(UploadTargetInterface::TAG);
+
             // The one token both the case file and the status board post with.
             // Registered under the security guard because without SecurityBundle
             // there is nobody to grant the permission it checks.

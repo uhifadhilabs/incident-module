@@ -619,6 +619,17 @@ class Incident
         return $this;
     }
 
+    /**
+     * A file leaves the case; the LINE saying it did does not. The timeline is
+     * append-only, so a removal adds an event rather than erasing one.
+     */
+    public function removeEvidence(IncidentEvidence $evidence): static
+    {
+        $this->evidence->removeElement($evidence);
+
+        return $this;
+    }
+
     /** @return Collection<int, IncidentParty> */
     public function getParties(): Collection
     {

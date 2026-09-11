@@ -337,7 +337,7 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
             $capturedAt = $at->modify(\sprintf('+%d minutes', 90 + $n));
 
             try {
-                $this->evidence->attach(
+                $this->evidence->store(
                     $incident,
                     $this->aPhotograph(),
                     \sprintf('IMG_%04d.png', ($incident->getId() ?? 0) * 10 + $n),

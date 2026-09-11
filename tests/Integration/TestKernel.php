@@ -47,6 +47,7 @@ use Uhifadhi\Incident\Tests\Integration\Fixtures\HeaderUserAuthenticator;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
 use Uhifadhi\Incident\UhifadhiIncidentBundle;
 use Uhifadhi\Storage\Controller\EvidenceController;
+use Uhifadhi\Storage\Controller\UploadController;
 use Uhifadhi\Storage\Registry\FileSourceInterface;
 use Uhifadhi\Storage\UhifadhiStorageBundle;
 
@@ -356,6 +357,14 @@ final class TestKernel extends Kernel
         $evidence = (new \ReflectionClass(EvidenceController::class))->getFileName();
         if (\is_string($evidence)) {
             $routes->import($evidence, 'attribute');
+        }
+
+        // THE UPLOAD ENDPOINT, from the same bundle and for the same reason: the
+        // case file's evidence card posts to it, and a kernel without it would
+        // prove the card renders and never that a file can reach a case.
+        $upload = (new \ReflectionClass(UploadController::class))->getFileName();
+        if (\is_string($upload)) {
+            $routes->import($upload, 'attribute');
         }
 
         // THE SCREENS THIS MODULE'S CRUMB POINTS AT, mounted from the bundles
