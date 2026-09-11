@@ -47,7 +47,7 @@ final class IncidentListPageTest extends FunctionalTestCase
     }
 
     /** The shell draws the strip from this module's declaration, list tab lit. */
-    public function testTheShellDrawsTheModulesTwoDataPlaces(): void
+    public function testTheShellDrawsTheModulesThreeDataPlaces(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aReporter());
@@ -55,7 +55,7 @@ final class IncidentListPageTest extends FunctionalTestCase
         $crawler = $this->client->request('GET', $this->url($area));
 
         self::assertSame(
-            ['Overview', 'Incidents'],
+            ['Overview', 'Incidents', 'Incident kinds'],
             $crawler->filter('.atabs a')->each(static fn (Crawler $a): string => trim($a->text())),
         );
         self::assertSame('Incidents', trim($crawler->filter('.atabs a.on')->text()));

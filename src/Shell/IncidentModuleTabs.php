@@ -18,14 +18,15 @@ use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 
 /**
- * WHERE INCIDENT DATA LIVES — the two places, and the whole of what this module
- * says about its own navigation.
+ * WHERE INCIDENT DATA LIVES — the three places, and the whole of what this
+ * module says about its own navigation.
  *
  * A TAB IS A PLACE WHERE DATA LIVES. The dashboard reads the month; the full
- * list is every incident filed in it, uncapped. Nothing that CONFIGURES the
- * module is here — the kinds, the widget library and the module's settings are
- * sections of the one configure page, reached from the one Configure action the
- * shell draws.
+ * list is every incident filed in it, uncapped; the kinds page is what the area
+ * files against and how much of each. Nothing that CONFIGURES the module is
+ * here — the editing of the kinds, the widget library and the module's settings
+ * are sections of the one configure page, reached from the one Configure action
+ * the shell draws.
  *
  * THE SHELL DRAWS BOTH RENDERINGS — the strip under the page head and the
  * module's children in the sidebar's tree — so the two cannot drift, which is
@@ -51,6 +52,12 @@ final readonly class IncidentModuleTabs implements ModuleTabsInterface
                 'incident_list',
                 'incident_show',
             ]),
+            /*
+             * THE WORDS THIS AREA FILES AGAINST, and what has been filed under
+             * each — data, and read-only. Editing the same words stays a section
+             * of the one configure page.
+             */
+            new ModuleTab('Incident kinds', 'incident_kinds_overview'),
         ];
     }
 }

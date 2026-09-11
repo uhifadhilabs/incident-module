@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
 use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 use Uhifadhi\Incident\Controller\IncidentController;
+use Uhifadhi\Incident\Controller\IncidentKindsOverviewController;
 use Uhifadhi\Incident\Controller\IncidentListController;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
@@ -36,6 +37,7 @@ use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentEvidenceService;
+use Uhifadhi\Incident\Service\IncidentKindsOverviewService;
 use Uhifadhi\Incident\Service\IncidentListService;
 use Uhifadhi\Incident\Service\IncidentMapService;
 use Uhifadhi\Incident\Service\IncidentMoneyService;
@@ -295,6 +297,27 @@ return static function (ContainerConfigurator $container): void {
         ->public();
 
     $services->alias(IncidentListController::class, 'incident.controller.list')->public();
+
+    /*
+     * THE AREA'S OWN VOCABULARY, WITH WHAT HAS BEEN FILED AGAINST EACH WORD.
+     * The list is the area's taxonomy; the counts are the filed register's, read
+     * across by wire-code — see the service for the matching rule.
+     */
+    $services->set('incident.kinds_overview', IncidentKindsOverviewService::class)
+        ->args([
+            service(TaxonomyKindRepository::class),
+            service(IncidentSubcategoryRepository::class),
+            service(IncidentRepository::class),
+        ]);
+
+    $services->set('incident.controller.kinds_overview', IncidentKindsOverviewController::class)
+        ->args([
+            service('twig'),
+            service('incident.kinds_overview'),
+        ])
+        ->public();
+
+    $services->alias(IncidentKindsOverviewController::class, 'incident.controller.kinds_overview')->public();
 
     /*
      * THE MODULE'S DATA PLACES. Tagged BY HAND: a reusable bundle does not

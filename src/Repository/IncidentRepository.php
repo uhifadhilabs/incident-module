@@ -310,6 +310,41 @@ final class IncidentRepository extends ServiceEntityRepository
     }
 
     /**
+     * HOW MANY WERE FILED AGAINST EACH SUB-CATEGORY, by the sub-category's slug.
+     *
+     * Keyed by SLUG rather than by id because the reader of this answer is the
+     * area's own vocabulary, whose sub-categories are told apart by a wire-code
+     * and not by a row of this table.
+     *
+     * @return array<string, int> sub-category slug => how many the window holds
+     */
+    public function countsBySubcategorySlug(AreaOfInterest $area, ?\DateTimeImmutable $from = null, ?\DateTimeImmutable $to = null): array
+    {
+        $qb = $this->createQueryBuilder('i')
+            ->select('s.slug AS slug, COUNT(i.id) AS n')
+            ->join('i.subcategory', 's')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->groupBy('s.slug');
+
+        if (null !== $from) {
+            $qb->andWhere('i.reportedAt >= :from')->setParameter('from', $from);
+        }
+        if (null !== $to) {
+            $qb->andWhere('i.reportedAt < :to')->setParameter('to', $to);
+        }
+
+        /** @var list<array{slug: string, n: int|string}> $rows */
+        $rows = $qb->getQuery()->getScalarResult();
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[$row['slug']] = (int) $row['n'];
+        }
+
+        return $counts;
+    }
+
+    /**
      * What was FILED in a window — one day of it, on the overview.
      *
      * @return list<Incident>

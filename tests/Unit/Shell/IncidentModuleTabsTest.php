@@ -19,7 +19,7 @@ use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Shell\IncidentModuleTabs;
 
 /**
- * THE MODULE'S DATA PLACES — two, and neither of them configures anything.
+ * THE MODULE'S DATA PLACES — three, and none of them configures anything.
  */
 final class IncidentModuleTabsTest extends TestCase
 {
@@ -28,12 +28,12 @@ final class IncidentModuleTabsTest extends TestCase
         self::assertSame(IncidentModuleProvider::SLUG, new IncidentModuleTabs()->slug());
     }
 
-    public function testItDeclaresTheOverviewAndTheFullList(): void
+    public function testItDeclaresTheOverviewTheFullListAndTheKinds(): void
     {
         $tabs = new IncidentModuleTabs()->tabs();
 
-        self::assertSame(['Overview', 'Incidents'], array_map(static fn (ModuleTab $t): string => $t->label, $tabs));
-        self::assertSame(['incident_dashboard', 'incident_list'], array_map(static fn (ModuleTab $t): string => $t->routeName, $tabs));
+        self::assertSame(['Overview', 'Incidents', 'Incident kinds'], array_map(static fn (ModuleTab $t): string => $t->label, $tabs));
+        self::assertSame(['incident_dashboard', 'incident_list', 'incident_kinds_overview'], array_map(static fn (ModuleTab $t): string => $t->routeName, $tabs));
     }
 
     /** A list and its case file are one place: opening a case does not leave it. */

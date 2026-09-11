@@ -1,0 +1,70 @@
+{# THE KINDS THIS AREA FILES, AND WHAT HAS BEEN FILED AGAINST EACH WORD — every
+   kind at once down the left, one kind's numbers on the right, so neither
+   question is a click away from the other.
+
+   NOTHING HERE WRITES. Each kind is its own address, so switching kinds is a
+   GET and the one way to change a word is the link out to Configure.
+
+   THE FRAME IS THE SHELL'S. The tab strip, the Configure action and the way back
+   are drawn by the shell from this module's declarations — see
+   Uhifadhi\Incident\Shell\IncidentModuleTabs — so nothing here draws navigation.
+
+   `area` and `kinds` are supplied by IncidentKindsOverviewController. #}
+{% extends '@UhifadhiIncident/base.html.twig' %}
+
+{% block title %}Incident kinds{% endblock %}
+
+{% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / incident kinds{% endblock %}
+
+{% block shell_page_title %}{{ area.name }} — Incident kinds{% endblock %}
+
+{% block shell_page_subtitle %}The kinds of incident this area files, what each switches on, and what has been filed against each word. This page changes nothing — editing is one link away, in Configure.{% endblock %}
+
+{% block incident_page %}
+<div class="kpane">
+    <div class="l" role="list" aria-label="Kinds">
+        <div class="kpane-hd">kinds<span class="n">{{ kinds.activeCount }}{% if kinds.retiredCount %} · {{ kinds.retiredCount }} retired{% endif %}</span></div>
+        {% for kind in kinds.kinds %}
+            <a class="krow{{ kinds.selected is same as(kind) ? ' on' }}{{ kind.active ? '' : ' gone' }}" role="listitem"
+               href="{{ path('incident_kinds_overview', {uuid: area.uuid, kind: kind.code}) }}">
+                <i class="dot" style="background:var(--i-{{ kind.colourKey }})"></i>
+                <span class="nm">{{ kind.label }}<em>{{ kind.code }}{{ kind.active ? '' : ' · retired' }}</em></span>
+                <span class="n">{{ kind.active ? kind.thisMonth : '—' }}<em>this month</em></span>
+                <span class="n" style="min-width:34px">{{ kind.subcategoryCount }}<em>subs</em></span>
+            </a>
+        {% endfor %}
+    </div>
+    <div class="r">
+        {% if kinds.selected %}
+            <div style="--heat:var(--i-{{ kinds.selected.colourKey }})">
+                <table class="kmatrix">
+                    <tr><th>sub-category</th><th>this month</th><th>last month</th><th>all time</th><th>money</th><th>term</th></tr>
+                    <tr class="all">
+                        <td>all of {{ kinds.selected.label }}</td>
+                        <td>{{ kinds.selected.thisMonth }}</td>
+                        <td>{{ kinds.selected.lastMonth }}</td>
+                        <td>{{ kinds.selected.allTime }}</td>
+                        <td class="d">—</td>
+                        <td class="d">—</td>
+                    </tr>
+                    {% for sub in kinds.selected.subcategories %}
+                        <tr>
+                            <td>{{ sub.label|lower }} <span class="kkey">{{ sub.code }}</span>{{ sub.active ? '' : ' · retired' }}</td>
+                            {# The wash is measured against the busiest word of the kind on screen. #}
+                            <td><span class="kheat" style="--w:{{ sub.heat }}">{{ sub.thisMonth }}</span></td>
+                            <td>{{ sub.lastMonth }}</td>
+                            <td>{{ sub.allTime }}</td>
+                            <td>{% if sub.moneyDirection %}<span class="kmark money">{{ sub.moneyDirection.value }}</span>{% else %}<span class="d">none</span>{% endif %}</td>
+                            <td>{% if sub.termLabel %}{{ sub.termLabel }}{% else %}<span class="d">—</span>{% endif %}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+<div class="kp-foot">
+    <span class="use">Nothing on this page writes. A term is the hours a case is answered against and a money mark says which way money runs — both are properties of the word, never chosen by whoever files.</span>
+    <a class="open-btn" href="{{ path('incident_kinds', {uuid: area.uuid}) }}">Edit in Configure →</a>
+</div>
+{% endblock %}
