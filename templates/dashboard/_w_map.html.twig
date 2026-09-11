@@ -13,7 +13,7 @@
    THE FILTER ROW RIDES IN THE PLATE, one row above the map, so the chips stay a
    row in fullscreen instead of being left behind on the page. #}
 <div class="c" data-w="map">
-    <span class="tab">Incident map<span class="src">· one filter drives map AND register</span></span>
+    <span class="tab">Incident map<span class="src">· one filter drives map AND list</span></span>
     {% set filters %}{{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}{% endset %}
     {{ render_map(dashboard.map, {'role': 'img', 'aria-label': 'Where every incident was filed'}, filters) }}
 </div>

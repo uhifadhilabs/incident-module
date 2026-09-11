@@ -365,6 +365,13 @@ final class TestKernel extends Kernel
         // loads and an application imports.
         $routes->import(ShellBundle::ROUTES);
         $routes->import('@AreaBundle/Controller/', 'attribute');
+
+        // THE CONFIGURE PAGE, mounted the way an installation mounts it — a
+        // second resource the shell ships and an application asks for in one
+        // line. This module declares its configure sections through the
+        // contract, and without the page behind them a declared section has no
+        // address and the strip drops it.
+        $routes->import(ShellBundle::CONFIGURE_ROUTES);
     }
 
     public function build(ContainerBuilder $container): void

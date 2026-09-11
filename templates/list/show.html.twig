@@ -1,0 +1,84 @@
+{# EVERY INCIDENT FILED IN THIS AREA — the dashboard's list widget without a cap
+   on it, which is the one thing a widget cannot be: a card that grew with the
+   data would make a busy month a page nobody can read.
+
+   THE PAGE IS ONE GET. The filter row, the counts inside it, these rows and the
+   pager are all readings of a single query, so the count in the caption and the
+   rows under it can never be answering different questions.
+
+   THE FRAME IS THE SHELL'S. The tab strip, the Configure action and the way back
+   are drawn by the shell from this module's declarations — see
+   Uhifadhi\Incident\Shell\IncidentModuleTabs — so nothing here draws navigation. #}
+{% extends '@UhifadhiIncident/base.html.twig' %}
+{% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
+
+{% block title %}Incidents{% endblock %}
+
+{% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / incidents{% endblock %}
+
+{% block shell_page_title %}{{ area.name }} — Incidents · all incidents{% endblock %}
+
+{% block shell_page_subtitle %}Every incident filed in this area, newest first — the dashboard’s list widget without a cap on it. Search runs over the reference, what happened and the zone; the lens orders the list without ever hiding a row from anybody.{% endblock %}
+
+{% block shell_page_actions %}
+    {# The file carries the filter on screen, so it matches what is being read.
+       No gate of its own: reading the list is reading the module. #}
+    <a class="tgl w-act" href="{{ path('incident_export', {uuid: area.uuid}) ~ (filter.toQuery ? '?' ~ filter.toQuery|url_encode : '') }}">{{ ux_icon('incident:download') }} Export</a>
+    {% if recordScreens %}
+        <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('incident:pencil') }} Report incident</a>
+    {% endif %}
+{% endblock %}
+
+{% block incident_page %}
+<div class="c">
+    <span class="tab">Incidents<span class="src">· {{ filter.from ? filter.from|date('F Y')|lower ~ ' · ' }}{{ list.total }} {{ list.total == 1 ? 'incident' : 'incidents' }}</span></span>
+
+    {{ include('@UhifadhiIncident/dashboard/_filters.html.twig', {here: 'incident_list'}) }}
+
+    <table class="tbl">
+        <tr><th>id</th><th>category</th><th>what happened</th><th>zone</th><th>status</th><th>severity</th><th class="num">money</th><th>reported</th><th></th></tr>
+        {% for incident in list.incidents %}
+            <tr>
+                <td><a href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">{{ ui.id(incident.reference) }}</a></td>
+                <td>{{ ui.cat(incident.category, incident.subcategory.label) }}</td>
+                <td class="i-what">{{ incident.headline }}
+                    <em>{{ incident.sourceRecordLabel ?? incident.source.badge }}</em></td>
+                <td>{{ ui.zone(incident) }}</td>
+                <td>{{ ui.status(incident.status) }}</td>
+                <td>{{ ui.severity(incident.severity) }}</td>
+                <td class="num">{{ ui.moneyTag(incident) }}</td>
+                <td>{{ ui.when(incident.reportedAt, now) }}</td>
+                <td class="num"><a class="open-btn" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">Open →</a></td>
+            </tr>
+        {% else %}
+            <tr><td colspan="9" class="use">{{ filter.isNarrowed ? 'Nothing matches this filter. That is a fact about the question, not about the area.' : 'Nothing filed in this window. That is a fact about the list, not about the area.' }}</td></tr>
+        {% endfor %}
+    </table>
+
+    {# THE PAGER, in the shell's own vocabulary. It carries the whole question,
+       so paging never quietly widens or narrows what is being paged through. #}
+    <div class="pgr">
+        <span class="cnt">{{ list.firstIndex }}–{{ list.lastIndex }} of {{ list.total }}</span>
+        <span class="sp"></span>
+        {% if list.page > 1 %}
+            <a href="{{ path('incident_list', {uuid: area.uuid, page: list.page - 1}|merge(filter.toQuery)) }}">← Newer</a>
+        {% else %}
+            <a class="off" href="#">← Newer</a>
+        {% endif %}
+        {% for p in 1..list.pageCount %}
+            {% if p == list.page %}
+                <span class="pg-n on">{{ p }}</span>
+            {% elseif p <= 3 or p == list.pageCount %}
+                <a href="{{ path('incident_list', {uuid: area.uuid, page: p}|merge(filter.toQuery)) }}">{{ p }}</a>
+            {% elseif p == 4 %}
+                <span class="pg-n gap">…</span>
+            {% endif %}
+        {% endfor %}
+        {% if list.page < list.pageCount %}
+            <a href="{{ path('incident_list', {uuid: area.uuid, page: list.page + 1}|merge(filter.toQuery)) }}">Older →</a>
+        {% else %}
+            <a class="off" href="#">Older →</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

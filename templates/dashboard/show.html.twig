@@ -19,7 +19,7 @@
 {% block shell_page_title %}{{ area.name }} — Incidents{% endblock %}
 
 {% block shell_page_subtitle %}Poaching, human–wildlife conflict, compliance and wildlife mortality — every report
-    filed in this area, what state it is in, what it cost and who is on it. One filter drives the map, the register
+    filed in this area, what state it is in, what it cost and who is on it. One filter drives the map, the list
     and the charts together.{% endblock %}
 
 {% block shell_page_actions %}
@@ -49,7 +49,6 @@
    container its entry point earned — and this dashboard's Report button is not
    anchored to any record, so it is standalone filing and it navigates to the full
    page. See templates/report/show.html.twig. #}
-    {{ include('@UhifadhiIncident/dashboard/_lensbar.html.twig') }}
 
     {% set widgetContext = {
         area: area,

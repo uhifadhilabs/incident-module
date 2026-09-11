@@ -5,7 +5,7 @@
    readings. #}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 <div class="c" data-w="register">
-    <span class="tab">Incident register<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }} · latest {{ min(dashboard.recent|length, 14) }} of {{ dashboard.recentTotal }}</span></span>
+    <span class="tab">Incidents<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }} · latest {{ min(dashboard.recent|length, 14) }} of {{ dashboard.recentTotal }}</span></span>
     {{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}
     <table class="tbl">
         <tr><th>id</th><th>category</th><th>what happened</th><th>zone</th><th>status</th><th>severity</th><th class="num">money</th><th>reported</th><th></th></tr>
@@ -25,7 +25,7 @@
                 <td class="num"><a class="open-btn" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">Open →</a></td>
             </tr>
         {% else %}
-            <tr><td colspan="9" class="use">Nothing filed in this window. That is a fact about the register, not about the area.</td></tr>
+            <tr><td colspan="9" class="use">Nothing filed in this window. That is a fact about the list, not about the area.</td></tr>
         {% endfor %}
     </table>
 </div>

@@ -176,22 +176,6 @@ html.light{
    drawn.
    → GET …/modules/incidents?lens=protection|ecology|all (a query parameter,
      never a permission)                                                      */
-/* Bottom margin is 22px, not the design's 14px: the design sets the lens bar's
-   14px and then floats the ".w-galnote" note between it and the widget grid, so
-   the lens bar never sits directly above the KPI strip there. The app drops that
-   note (it is scaffolding), which left the lens bar too tight against the KPI
-   strip below — owner-flagged. The extra 8px restores the design's breathing
-   room between the lens control and the first widget. */
-.i-lensbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 22px}
-.i-lensbar .lbl{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-weight:600;
-  letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-right:2px}
-.i-lens{display:inline-flex;align-items:center;gap:7px;font-family:"JetBrains Mono",ui-monospace,monospace;
-  font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fog);
-  border:1px solid var(--ln2);border-radius:99px;padding:6px 13px 5px;text-decoration:none;
-  cursor:pointer;background:none;font-family:"JetBrains Mono",ui-monospace,monospace;line-height:1}
-.i-lens:hover{color:var(--tx);border-color:var(--fog);text-decoration:none}
-.i-lens.on{color:var(--accT);background:var(--acc);border-color:var(--acc)}
-.i-lens svg{width:13px;height:13px;flex:none}
 .i-lensnote{display:flex;gap:12px;align-items:flex-start;
   border:1px dashed color-mix(in srgb,var(--acc) 42%,transparent);border-radius:12px;
   padding:13px 16px;background:color-mix(in srgb,var(--acc) 5%,transparent);
@@ -241,14 +225,10 @@ html.light{
 .i-dot.comp{background:var(--i-comp)}
 .i-dot.mort{background:var(--i-mort)}
 
-.i-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:2px 0 14px}
-.i-filters .sep{width:1px;height:18px;background:var(--ln2);margin:0 3px}
-.i-search{display:inline-flex;align-items:center;gap:7px;background:color-mix(in srgb,var(--fog) 7%,transparent);
-  border:1px solid var(--ln2);border-radius:99px;padding:5px 13px}
-.i-search svg{width:13px;height:13px;color:var(--fog);flex:none}
-.i-search input{border:0;background:none;font-family:"JetBrains Mono",ui-monospace,monospace;
-  font-size:10.5px;color:var(--tx);width:150px;outline:none}
-.i-search input::placeholder{color:var(--dim)}
+/* THE FILTER ROW IS THE SHELL'S `.lfilt` AND `.lsearch` now. It was this
+   module's own `.i-filters` / `.i-search` until the frame shipped the row every
+   list in the platform wears; the dropdown chrome inside it (.i-dd*) is still
+   this module's, because the shell ships no dropdown. */
 /* CATEGORY DROPDOWN — the row of pills is one themed select now. Styled to sit
    in the chip row the way the design's "status ▾" chips do: a rounded ghost
    pill in the uppercase mono the chips use, with its own chevron (a native

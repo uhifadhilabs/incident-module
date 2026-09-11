@@ -16,7 +16,9 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
+use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 use Uhifadhi\Incident\Controller\IncidentController;
+use Uhifadhi\Incident\Controller\IncidentListController;
 use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
@@ -31,6 +33,7 @@ use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentEvidenceService;
+use Uhifadhi\Incident\Service\IncidentListService;
 use Uhifadhi\Incident\Service\IncidentMapService;
 use Uhifadhi\Incident\Service\IncidentMoneyService;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
@@ -39,6 +42,7 @@ use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
 use Uhifadhi\Incident\Service\TaxonomyAdminService;
+use Uhifadhi\Incident\Shell\IncidentModuleTabs;
 use Uhifadhi\Incident\Twig\IncidentTrailExtension;
 
 /*
@@ -264,4 +268,34 @@ return static function (ContainerConfigurator $container): void {
         ->public();
 
     $services->alias(IncidentController::class, 'incident.controller.dashboard')->public();
+
+    /*
+     * WHICH SLICE OF THE FILTERED ANSWER IS ON SCREEN. Pure — it takes the
+     * answer the counts are already worked out from, so the caption's total and
+     * the rows under it are two readings of one thing.
+     */
+    $services->set('incident.list', IncidentListService::class);
+
+    $services->set('incident.controller.list', IncidentListController::class)
+        ->args([
+            service('twig'),
+            service('incident.dashboard'),
+            service(IncidentCategoryRepository::class),
+            service('incident.list'),
+            param('incident.record_screens'),
+            service('security.token_storage')->nullOnInvalid(),
+            service('security.authorization_checker')->nullOnInvalid(),
+        ])
+        ->public();
+
+    $services->alias(IncidentListController::class, 'incident.controller.list')->public();
+
+    /*
+     * THE MODULE'S DATA PLACES. Tagged BY HAND: a reusable bundle does not
+     * autoconfigure, so the platform's registerForAutoconfiguration never fires
+     * for it, and a forgotten tag is a module with no strip and no children in
+     * the sidebar's tree, with nothing anywhere saying why.
+     */
+    $services->set('incident.module_tabs', IncidentModuleTabs::class)
+        ->tag(ModuleTabsInterface::TAG);
 };

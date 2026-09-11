@@ -363,14 +363,14 @@ final class DashboardPageTest extends FunctionalTestCase
 
         // The box itself is on the page, once per reading of the register.
         $all = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
-        self::assertGreaterThan(0, $all->filter('.i-filters input[name="q"]')->count());
+        self::assertGreaterThan(0, $all->filter('.lfilt input[name="q"]')->count());
 
         $narrowed = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?q=goats', $this->uuidOf($area)));
         self::assertResponseIsSuccessful();
         self::assertCount(1, $narrowed->filter('[data-w="register"] .i-id'));
         self::assertStringContainsString('goats', $narrowed->filter('[data-w="register"]')->text());
         // The box keeps what was typed, so a person sees their own query.
-        self::assertSame('goats', $narrowed->filter('.i-filters input[name="q"]')->first()->attr('value'));
+        self::assertSame('goats', $narrowed->filter('.lfilt input[name="q"]')->first()->attr('value'));
     }
 
     /**
@@ -378,7 +378,7 @@ final class DashboardPageTest extends FunctionalTestCase
      * the search box. The category dropdown collapses the all/kind chips (with hue
      * dots and counts) into one; each option is a REAL link driving the one query.
      */
-    public function testTheFilterBarIsFourDropdowns(): void
+    public function testTheFilterBarIsFiveDropdowns(): void
     {
         $area = $this->anArea();
         $this->anIncident($area);
@@ -387,10 +387,11 @@ final class DashboardPageTest extends FunctionalTestCase
         $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
         self::assertResponseIsSuccessful();
 
-        // No bare select — the bar is dropdowns. Four of them (register instance).
-        self::assertCount(0, $crawler->filter('.i-filters select[name="category"]'));
-        $register = $crawler->filter('[data-w="register"] .i-filters')->first();
-        self::assertCount(4, $register->filter('.i-dd'));
+        // No bare select — the bar is dropdowns. FIVE of them: the lens joined
+        // them when it stopped being a row of its own above the page.
+        self::assertCount(0, $crawler->filter('.lfilt select[name="category"]'));
+        $register = $crawler->filter('[data-w="register"] .lfilt')->first();
+        self::assertCount(5, $register->filter('.i-dd'));
 
         // Category dropdown: an "all" option plus one hue-dot option per kind, each
         // a real link carrying its count.
@@ -402,7 +403,7 @@ final class DashboardPageTest extends FunctionalTestCase
         // A zone dropdown is present (its options are the zones that have incidents).
         self::assertCount(1, $register->filter('.i-ddmenu[aria-label="Filter by zone"]'));
         // The search box is preserved.
-        self::assertGreaterThan(0, $register->filter('.i-search input[name="q"]')->count());
+        self::assertGreaterThan(0, $register->filter('.lsearch input[name="q"]')->count());
     }
 
     /**
@@ -424,26 +425,26 @@ final class DashboardPageTest extends FunctionalTestCase
         $byStatus = $this->client->request('GET', (string) $statusHref);
         self::assertResponseIsSuccessful();
         self::assertGreaterThan(0, $byStatus->filter('[data-w="register"] .i-id')->count());
-        self::assertStringContainsString('reported', $byStatus->filter('[data-w="register"] .i-filters')->first()->text());
+        self::assertStringContainsString('reported', $byStatus->filter('[data-w="register"] .lfilt')->first()->text());
 
         // A month with nothing filed shows an empty register — the month param is real.
         $empty = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?month=2020-01', $this->uuidOf($area)));
         self::assertResponseIsSuccessful();
         self::assertCount(0, $empty->filter('[data-w="register"] .i-id'));
-        self::assertStringContainsString('january 2020', $empty->filter('[data-w="register"] .i-filters')->first()->text());
+        self::assertStringContainsString('january 2020', $empty->filter('[data-w="register"] .lfilt')->first()->text());
 
         // The zone param is wired: the trigger reflects it even where geometry left
         // the register empty, proving the dropdown drives ?zone=.
         $byZone = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents?zone=%s', $this->uuidOf($area), rawurlencode('Highland Ward')));
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Highland Ward', $byZone->filter('[data-w="register"] .i-filters')->first()->text());
+        self::assertStringContainsString('Highland Ward', $byZone->filter('[data-w="register"] .lfilt')->first()->text());
     }
 
     /**
      * THE LENS IS A LENS, NOT A FENCE. Whatever it selects, "Every category" is
      * always one click away and shows the whole register to anybody.
      */
-    public function testTheLensBarAlwaysOffersTheWholeRegister(): void
+    public function testTheLensChipAlwaysOffersTheWholeList(): void
     {
         $area = $this->anArea();
         $this->anIncident($area);
@@ -453,8 +454,9 @@ final class DashboardPageTest extends FunctionalTestCase
 
         self::assertResponseIsSuccessful();
         // "Every category" is present whatever the lens, so nothing is fenced off.
-        self::assertGreaterThan(0, $crawler->filter('.i-lensbar a[data-lens="all"]')->count());
-        self::assertSame('Every category', $crawler->filter('.i-lensbar a[data-lens="all"]')->text());
+        $all = $crawler->filter('.lfilt .i-ddmenu[aria-label="Order by department lens"] a[data-lens="all"]')->first();
+        self::assertGreaterThan(0, $all->count());
+        self::assertSame('Every category', trim($all->filter('.i-ddopt-l')->text()));
     }
 
     /**

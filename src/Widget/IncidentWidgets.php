@@ -117,7 +117,7 @@ final class IncidentWidgets implements WidgetSurfaceInterface
             // declaration order IS the shipped composition's order — the counts,
             // then where, then what, then the money ({@see DEFAULT_DESCRIPTION}).
             new Widget('map', 'Incident map', 'b', 12, [12, 9, 6], on: true, note: 'Where every incident was filed; hue is the category, hollow means closed.'),
-            new Widget('register', 'Incident register', 'a', 12, [12, 9, 6], on: true, note: 'Every incident as a row: id, category, what happened, zone, status, severity, money.'),
+            new Widget('register', 'Incidents', 'a', 12, [12, 9, 6], on: true, note: 'Every incident as a row: id, category, what happened, zone, status, severity, money.'),
             new Widget('queue', 'My queue', 'a', 12, [12, 9, 6], on: false, note: 'Only what is waiting on you, oldest first, with the clock against each one.'),
             // THE WAY IN TO THE REPORT FLOW, filed under Case files: that is the
             // direction of whoever keeps the register, and opening a new file is
@@ -171,7 +171,7 @@ final class IncidentWidgets implements WidgetSurfaceInterface
         return [
             'a' => [
                 'Case files',
-                'Every incident is a record with a number and a due date; the dashboard is the file drawer and the list of what is yours today. Fastest for whoever keeps the register, and the only direction that never hides a field; says nothing about where anything happened.',
+                'Every incident is a record with a number and a due date; the dashboard is the file drawer and the list of what is yours today. Fastest for whoever keeps the list, and the only direction that never hides a field; says nothing about where anything happened.',
                 ['kpis' => 12, 'register' => 12, 'queue' => 12],
             ],
             'b' => [
@@ -191,7 +191,7 @@ final class IncidentWidgets implements WidgetSurfaceInterface
             ],
             'e' => [
                 'Status board',
-                'Five columns, one per state, and dragging a card moves the incident on. Turns the register into a queue a supervisor can clear and makes it obvious what has been sitting too long; a busy month does not fit on a screen.',
+                'Five columns, one per state, and dragging a card moves the incident on. Turns the list into a queue a supervisor can clear and makes it obvious what has been sitting too long; a busy month does not fit on a screen.',
                 ['kpis' => 12, 'rail' => 12, 'board' => 12, 'sla' => 6, 'funnel' => 6],
             ],
         ];

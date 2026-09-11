@@ -16,10 +16,21 @@
    query, and its form carries the current choices in hidden fields so typing a
    query never drops them.
 
+   THE LENS IS ONE OF THE CHIPS, after the month. It used to be a row of its own
+   above the page, which made an ordering control read as a second navigation;
+   it orders and pre-selects exactly as it did, and it now sits where every other
+   choice about what is on screen sits.
+
+   THE ROW IS THE SHELL'S `.lfilt`, and the search is the shell's `.lsearch` —
+   the same row the full list wears, so the dashboard and the list cannot drift
+   into two different filter rows. This module defines neither class.
+
    → GET /areas/{uuid}/modules/incidents?category=&status=&zone=&month=&q=&lens=
    ========================================================================== #}
-<form class="i-filters" method="get"
-      action="{{ path('incident_dashboard', {uuid: area.uuid}) }}"
+{# The page this row re-queries: the dashboard, or the full list. #}
+{% set here = here|default('incident_dashboard') %}
+<form class="lfilt" method="get"
+      action="{{ path(here, {uuid: area.uuid}) }}"
       {{ stimulus_controller('@uhifadhi/incident-module/incident-filters') }}>
     {# The current choices ride along in the search form, so pressing Enter on a
        query keeps the category, status, zone, lens and month already chosen. #}
@@ -45,11 +56,11 @@
         <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by category">
             <span class="i-ddhead">category</span>
             <a class="i-ddopt{{ filter.categorySlugs is empty ? ' on' }}" role="option" data-dd-opt
-               href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.withoutCategories.toQuery)) }}"><span class="i-dot"></span><span class="i-ddopt-l">All categories</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
+               href="{{ path(here, {uuid: area.uuid}|merge(filter.withoutCategories.toQuery)) }}"><span class="i-dot"></span><span class="i-ddopt-l">All categories</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
             <span class="i-ddsep"></span>
             {% for category in dashboard.categories %}
                 <a class="i-ddopt{{ category.slug in filter.categorySlugs ? ' on' }}" role="option" data-dd-opt
-                   href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.onlyCategory(category.slug).toQuery)) }}"><span class="i-dot {{ category.colourKey }}"></span><span class="i-ddopt-l">{{ category.label|lower }}</span><span class="i-ddopt-n">{{ dashboard.categoryCount(category) }}</span></a>
+                   href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyCategory(category.slug).toQuery)) }}"><span class="i-dot {{ category.colourKey }}"></span><span class="i-ddopt-l">{{ category.label|lower }}</span><span class="i-ddopt-n">{{ dashboard.categoryCount(category) }}</span></a>
             {% endfor %}
         </div>
     </span>
@@ -65,11 +76,11 @@
         <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by status">
             <span class="i-ddhead">status</span>
             <a class="i-ddopt{{ filter.statuses is empty ? ' on' }}" role="option" data-dd-opt
-               href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.withoutStatuses.toQuery)) }}"><span class="i-ddopt-l">All statuses</span></a>
+               href="{{ path(here, {uuid: area.uuid}|merge(filter.withoutStatuses.toQuery)) }}"><span class="i-ddopt-l">All statuses</span></a>
             <span class="i-ddsep"></span>
             {% for place in dashboard.places %}
                 <a class="i-ddopt{{ place in filter.statuses ? ' on' }}" role="option" data-dd-opt
-                   href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.onlyStatus(place).toQuery)) }}"><span class="i-ddopt-l">{{ place.label }}</span><span class="i-ddopt-n">{{ dashboard.statusCount(place) }}</span></a>
+                   href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyStatus(place).toQuery)) }}"><span class="i-ddopt-l">{{ place.label }}</span><span class="i-ddopt-n">{{ dashboard.statusCount(place) }}</span></a>
             {% endfor %}
         </div>
     </span>
@@ -83,12 +94,12 @@
         <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by zone">
             <span class="i-ddhead">zone</span>
             <a class="i-ddopt{{ filter.zoneName is null ? ' on' }}" role="option" data-dd-opt
-               href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.withoutZone.toQuery)) }}"><span class="i-ddopt-l">All zones</span></a>
+               href="{{ path(here, {uuid: area.uuid}|merge(filter.withoutZone.toQuery)) }}"><span class="i-ddopt-l">All zones</span></a>
             {% set zones = dashboard.zoneCounts|filter((count, zone) => zone is not empty) %}
             {% if zones is not empty %}<span class="i-ddsep"></span>{% endif %}
             {% for zone, count in zones %}
                 <a class="i-ddopt{{ zone == filter.zoneName ? ' on' }}" role="option" data-dd-opt
-                   href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.onlyZone(zone).toQuery)) }}"><span class="i-ddopt-l">{{ zone }}</span><span class="i-ddopt-n">{{ count }}</span></a>
+                   href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyZone(zone).toQuery)) }}"><span class="i-ddopt-l">{{ zone }}</span><span class="i-ddopt-n">{{ count }}</span></a>
             {% endfor %}
         </div>
     </span>
@@ -108,15 +119,42 @@
                 {% set m = anchor|date_modify('-' ~ i ~ ' months') %}
                 {% set mKey = m|date('Y-m') %}
                 <a class="i-ddopt{{ filter.from and filter.from|date('Y-m') == mKey ? ' on' }}" role="option" data-dd-opt
-                   href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(filter.toQuery|merge({month: mKey}))) }}"><span class="i-ddopt-l">{{ m|date('F Y')|lower }}</span></a>
+                   href="{{ path(here, {uuid: area.uuid}|merge(filter.toQuery|merge({month: mKey}))) }}"><span class="i-ddopt-l">{{ m|date('F Y')|lower }}</span></a>
             {% endfor %}
         </div>
     </span>
 
-    {# SEARCH — id, place or name; Enter submits, carrying the hidden fields above. #}
-    <span class="i-search">
+    {# LENS — which department's categories come first. It ORDERS and PRE-SELECTS;
+       it never fences, and "Every category" is always here, so nothing is out of
+       reach through it. #}
+    {% set lenses = {} %}
+    {% for category in dashboard.categories %}
+        {% for lead in category.leads %}
+            {% set lenses = lenses|merge({(lead|lower|split(' ')|first): lead}) %}
+        {% endfor %}
+    {% endfor %}
+    <span class="i-dd" data-dd>
+        <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
+                {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'toggle') }}>
+            <span>lens · {{ filter.lens == 'all' ? 'every category' : (lenses[filter.lens]|default(filter.lens))|lower }}</span><span class="i-ddcaret">&#9662;</span>
+        </button>
+        <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Order by department lens">
+            <span class="i-ddhead">lens</span>
+            <a class="i-ddopt{{ filter.lens == 'all' ? ' on' }}" role="option" data-dd-opt data-lens="all"
+               href="{{ path(here, {uuid: area.uuid}|merge(filter.toQuery|merge({lens: 'all'}))) }}"><span class="i-dot"></span><span class="i-ddopt-l">Every category</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
+            <span class="i-ddsep"></span>
+            {% for key, label in lenses %}
+                <a class="i-ddopt{{ filter.lens == key ? ' on' }}" role="option" data-dd-opt data-lens="{{ key }}"
+                   href="{{ path(here, {uuid: area.uuid}|merge(filter.toQuery|merge({lens: key}))) }}"><span class="i-dot"></span><span class="i-ddopt-l">{{ label }}</span></a>
+            {% endfor %}
+        </div>
+    </span>
+
+    {# SEARCH — the reference, what happened or the zone; Enter submits, carrying
+       the hidden fields above so a query never drops the chips. #}
+    <span class="lsearch">
         {{ ux_icon('shell:search') }}
-        <input type="text" name="q" value="{{ filter.search }}" placeholder="id, place, name"
+        <input class="fld" type="search" name="q" value="{{ filter.search }}" placeholder="Search incidents&hellip;"
                autocomplete="off" aria-label="Search incidents">
     </span>
 </form>
