@@ -462,12 +462,11 @@ html.light{
    test stays green, so the rule is this screen's own and CaseFilePlateSizingTest
    holds it there.
 
-   The record grid is a stretch row, so the card states that it will not stretch:
-   imagery is a fixed plate, and the column of facts beside it runs as long as it
-   needs to without dragging the map down with it. The refusal is written on the
-   cross axis of a GRID cell, so the card is a direct child of the row and never
-   sits inside a column that stacks cards — in a flex column the same rule would
-   read across the other axis and shrink the card to its content.
+   The card leads a column of cards, so it is already as tall as the fixed plate
+   it holds and the column beside it runs as long as it needs to without dragging
+   the map down. It states nothing about its own alignment: inside a flex column
+   an align-self reads across the other axis and would shrink the card off the
+   width it shares with the cards under it.
 
    --map-plate-height sizes the PLATE, and the plate is the imagery plus whatever
    is stacked above it inside — here, the offset the atlas sets the imagery frame
@@ -477,7 +476,7 @@ html.light{
    THE RULE IS ALL THIS MODULE STATES. The plate's column, its imagery frame, its
    floating legend, its control stack, its fullscreen and its refusal to invent a
    height are the atlas's. */
-.c.plate-fill{display:flex;flex-direction:column;align-self:start;
+.c.plate-fill{display:flex;flex-direction:column;
   --i-plate-imagery:400px;
   /* The atlas sets the imagery frame 8px below whatever precedes it. */
   --i-plate-frame-offset:8px;
@@ -839,8 +838,8 @@ html.light{
 
 /* The case file's header chips and the small slots the design set inline. */
 .i-headchips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 18px}
-/* The gap the design leaves between the transition row and the first grid row;
-   every row after it takes the grid's own 16px. */
+/* The gap the design leaves between the transition row and the case file's grid;
+   inside it the cards take the grid's own 16px. */
 .i-caselead{margin-top:22px}
 .i-step-now{border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
 .i-steps-grid{margin-bottom:0}

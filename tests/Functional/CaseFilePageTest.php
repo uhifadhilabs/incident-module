@@ -324,19 +324,15 @@ final class CaseFilePageTest extends FunctionalTestCase
     }
 
     /**
-     * THE CASE FILE IS THREE ROWS OF THE RECORD GRID, and the grid is the
-     * shell's.
+     * THE CASE FILE IS ONE RECORD GRID OF TWO CONTINUOUS COLUMNS, and the grid
+     * is the shell's.
      *
-     * A record page's rows share one column template so a card is exactly as
-     * wide as the card above it, and each row is the height of its OWN content.
-     * The membership is the design's: the plate beside the money, the timeline
-     * beside the parties and the provenance, the evidence beside the narrative.
-     *
-     * THE PLATE IS A DIRECT CHILD OF THE ROW, never wrapped in a column that
-     * stacks cards: the card refuses to stretch, and in a flex column that
-     * refusal reads across the other axis and shrinks it to its content.
+     * Both cells are columns that run the whole page, so the membership is a
+     * reading order and not a set of rows: where, then the timeline, then the
+     * evidence down the left; the money, the parties, the provenance and the
+     * narrative down the right.
      */
-    public function testTheCaseFileIsThreeRowsOfTheRecordGrid(): void
+    public function testTheCaseFileIsOneGridOfTwoContinuousColumns(): void
     {
         $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, 'livestock-depredation');
@@ -344,51 +340,54 @@ final class CaseFilePageTest extends FunctionalTestCase
         $this->em->flush();
         $this->client->loginUser($this->aReporter());
 
-        $rows = $this->client->request('GET', \sprintf(
+        $grid = $this->client->request('GET', \sprintf(
             '/areas/%s/modules/incidents/%s',
             $this->uuidOf($area),
             $incident->getReference(),
         ))->filter('.recgrid');
 
-        self::assertCount(3, $rows, 'The design composes the case file as three rows of the record grid.');
+        self::assertCount(1, $grid, 'The design composes the case file as one grid, not a stack of rows.');
 
-        self::assertSame(['Where'], self::cardsIn($rows->eq(0)->children()->eq(0)));
-        self::assertSame(['Money'], self::cardsIn($rows->eq(0)->children()->eq(1)));
-        self::assertSame(['Timeline'], self::cardsIn($rows->eq(1)->children()->eq(0)));
-        self::assertSame(['Involved parties', 'Provenance & links'], self::cardsIn($rows->eq(1)->children()->eq(1)));
-        self::assertSame(['Evidence'], self::cardsIn($rows->eq(2)->children()->eq(0)));
-        self::assertSame(['Narrative'], self::cardsIn($rows->eq(2)->children()->eq(1)));
+        $columns = $grid->children();
+        self::assertCount(2, $columns);
+        self::assertCount(2, $grid->children('.col'), 'Both cells stack cards, so both are columns.');
 
-        // The two rows whose right-hand cell stacks more than one card say so;
-        // the row that holds one card on each side needs no column at all.
-        self::assertCount(2, $rows->filter('.col'));
+        self::assertSame(['Where', 'Timeline', 'Evidence'], self::cardsIn($columns->eq(0)));
+        self::assertSame(
+            ['Money', 'Involved parties', 'Provenance & links', 'Narrative'],
+            self::cardsIn($columns->eq(1)),
+        );
 
         self::assertCount(
             1,
-            $rows->eq(0)->children('.plate-fill'),
-            'The plate card sits straight in the row, so its refusal to stretch stays on the vertical axis.',
+            $columns->eq(0)->children('.plate-fill'),
+            'The plate leads the left column.',
         );
     }
 
     /**
-     * A ROW WITH NOTHING BESIDE IT DRAWS NOTHING BESIDE IT. The money cell of the
-     * design exists only where there is money to put in it; an empty cell in a
-     * stretch row is a box as tall as the plate and as empty as the reason for it.
+     * A RECORD THAT CARRIES NO MONEY HAS NO MONEY CARD — and the right column
+     * still starts at the top, beside the plate, which is the whole reason the
+     * case file is two columns rather than three aligned rows.
      */
-    public function testARowWhoseSecondCellHasNothingInItDrawsNoSecondCell(): void
+    public function testWithoutMoneyTheRightColumnStartsWithTheParties(): void
     {
         $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass, no injury pattern');
         $this->client->loginUser($this->aReporter());
 
-        $rows = $this->client->request('GET', \sprintf(
+        $grid = $this->client->request('GET', \sprintf(
             '/areas/%s/modules/incidents/%s',
             $this->uuidOf($area),
             $incident->getReference(),
         ))->filter('.recgrid');
 
-        self::assertCount(1, $rows->eq(0)->children(), 'A category that carries no money leaves the plate alone in its row.');
-        self::assertSame(['Where'], self::cardsIn($rows->eq(0)->children()->eq(0)));
+        self::assertCount(1, $grid);
+        self::assertSame(['Where', 'Timeline', 'Evidence'], self::cardsIn($grid->children()->eq(0)));
+        self::assertSame(
+            ['Involved parties', 'Provenance & links', 'Narrative'],
+            self::cardsIn($grid->children()->eq(1)),
+        );
     }
 
     /**

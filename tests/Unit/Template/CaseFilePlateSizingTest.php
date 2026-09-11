@@ -19,8 +19,8 @@ use PHPUnit\Framework\TestCase;
  * THE CASE FILE'S MAP PLATE IS SIZED BY THIS SCREEN'S OWN DESIGN.
  *
  * The incident case file the design draws gives the "Where" card a 400px map and
- * lets the card end where the map ends — `.recgrid>.c.plate-fill` with
- * `align-self:start`, and a viewer inside it at `flex:none;height:400px`. Sizing
+ * lets the card end where the map ends — `.recgrid>.col>.c.plate-fill`, a flex
+ * column whose viewer is `flex:none;height:400px`. Sizing
  * a screen against a sibling module's screen instead of against its own design
  * is how a port drifts while every test stays green, so the rule is asserted
  * here against what the design file carries.
@@ -36,10 +36,10 @@ use PHPUnit\Framework\TestCase;
  * and its fullscreen are the atlas's; a module that restated any of them would
  * be the one map in the product that reads differently.
  *
- * THE CARD IS THE PLATE'S SIZE, not the row's. The row is a stretch row — as it
- * is in the design — so the card says out loud that it will not stretch, and the
- * imagery keeps the size it was drawn at while the facts beside it run as long as
- * they need to.
+ * THE CARD IS THE PLATE'S SIZE. It leads a column of cards, so it is as tall as
+ * what it holds without saying anything about alignment: an `align-self` here
+ * would read across the column's other axis and shrink the card off the width it
+ * shares with the cards under it.
  */
 final class CaseFilePlateSizingTest extends TestCase
 {
@@ -90,10 +90,10 @@ final class CaseFilePlateSizingTest extends TestCase
     {
         $sheet = self::stylesheet();
 
-        self::assertMatchesRegularExpression(
-            '/\\.c\\.plate-fill\\{[^}]*align-self:start/',
+        self::assertDoesNotMatchRegularExpression(
+            '/\\.c\\.plate-fill\\{[^}]*align-self/',
             $sheet,
-            'A stretch row would otherwise run the card down past the imagery it holds.',
+            'Inside a column the card already ends where the map ends, and that alignment would shrink it across the column instead.',
         );
         self::assertDoesNotMatchRegularExpression(
             '/\\.c\\.plate-fill\\{[^}]*min-height/',
