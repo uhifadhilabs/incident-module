@@ -511,14 +511,12 @@ final class DashboardPageTest extends FunctionalTestCase
     }
 
     /**
-     * THE GRADUATED HEADER — four actions, in the design's order: Kinds &
-     * sub-categories · Widget library · Export · Report incident.
-     *
-     * A manager holds both tiers, so every door is drawn; the test pins the ORDER,
-     * because the design reads left to right and a header that had them all but
-     * shuffled would not be this design.
+     * THE HEADER'S OWN ACTIONS, AND NO CONFIGURATION BUTTON AMONG THEM. There is
+     * one configuration entry per surface — the shell's `Configure` action — so
+     * a kinds link and a Widget library button in this module's action row is
+     * exactly what the frame replaced. What is left is the file and the filing.
      */
-    public function testTheHeaderRendersAllFourGraduatedActionsInOrder(): void
+    public function testTheHeaderDrawsTheExportAndTheFilingAndNoConfigurationButton(): void
     {
         $area = $this->anArea();
         $this->anIncident($area);
@@ -528,48 +526,41 @@ final class DashboardPageTest extends FunctionalTestCase
 
         self::assertResponseIsSuccessful();
         $actions = $crawler->filter('.pgact');
-        self::assertCount(1, $actions->filter('a[href$="/incidents/taxonomy"]'));
-        self::assertCount(1, $actions->filter('a[href$="/incidents/widgets"]'));
         self::assertGreaterThan(0, $actions->filter('a[href*="/incidents/export.csv"]')->count());
         self::assertCount(1, $actions->filter('a[href$="/incidents/new"]'));
 
+        // The configuration doors are gone from here, every one of them.
+        self::assertCount(0, $actions->filter('a[href$="/incidents/kinds"]'));
+        self::assertCount(0, $actions->filter('a[href$="/incidents/taxonomy"]'));
+        self::assertCount(0, $actions->filter('a[href$="/incidents/widgets"]'));
+
         $html = $actions->html();
-        $order = [
-            strpos($html, '/incidents/taxonomy'),
-            strpos($html, '/incidents/widgets'),
-            strpos($html, '/incidents/export.csv'),
+        self::assertLessThan(
             strpos($html, '/incidents/new'),
-        ];
-        self::assertSame($order, array_values(array_filter($order, static fn ($p) => false !== $p)));
-        $sorted = $order;
-        sort($sorted);
-        self::assertSame($sorted, $order, 'The four header actions are not in the design order.');
+            strpos($html, '/incidents/export.csv'),
+            'The file comes before the filing, as the design draws them.',
+        );
     }
 
     /**
-     * THE TAXONOMY DOOR IS THE MANAGE TIER'S. It rides on incidents.manage, so a
-     * reporter — who may file but not manage — is handed no link into it, exactly
-     * as the Report door is absent for somebody who may not file. The Export and
-     * Widget-library doors stay, because neither is the manage tier's.
+     * THE KINDS SCREEN IS STILL GATED, and the gate is the screen's own. The
+     * dashboard offers nobody a door to it — the shell's one `Configure` action
+     * does — so what is left to hold is that the screen refuses whoever may not
+     * manage and opens for whoever may.
      */
-    public function testTheTaxonomyLinkIsOfferedOnlyToSomebodyWhoMayManage(): void
+    public function testTheKindsScreenIsOfferedOnlyToSomebodyWhoMayManage(): void
     {
         $area = $this->anArea();
         $this->anIncident($area);
+        $kinds = \sprintf('/areas/%s/modules/incidents/kinds', $this->uuidOf($area));
 
         $this->client->loginUser($this->aReporter());
-        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+        $this->client->request('GET', $kinds);
+        self::assertResponseStatusCodeSame(403);
 
-        self::assertResponseIsSuccessful();
-        self::assertCount(0, $crawler->filter('.pgact a[href$="/incidents/taxonomy"]'));
-        // …but the ungated doors are still there.
-        self::assertGreaterThan(0, $crawler->filter('.pgact a[href*="/incidents/export.csv"]')->count());
-        self::assertCount(1, $crawler->filter('.pgact a[href$="/incidents/widgets"]'));
-
-        // …and the manager, who may, is handed it.
         $this->client->loginUser($this->aManager());
-        $offered = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
-        self::assertCount(1, $offered->filter('.pgact a[href$="/incidents/taxonomy"]'));
+        $this->client->request('GET', $kinds);
+        self::assertResponseIsSuccessful();
     }
 
     /**

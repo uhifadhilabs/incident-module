@@ -27,9 +27,9 @@ use Uhifadhi\Incident\Service\TaxonomyAdminService;
  */
 final class TaxonomyAdminPageTest extends FunctionalTestCase
 {
-    private function taxonomyUrl(AreaOfInterest $area): string
+    private function kindsUrl(AreaOfInterest $area): string
     {
-        return \sprintf('/areas/%s/modules/incidents/taxonomy', $this->uuidOf($area));
+        return \sprintf('/areas/%s/modules/incidents/kinds', $this->uuidOf($area));
     }
 
     private function admin(): TaxonomyAdminService
@@ -52,7 +52,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $area = $this->anArea('Southern Reserve');
         $this->client->loginUser($this->aManager());
 
-        $crawler = $this->client->request('GET', $this->taxonomyUrl($area));
+        $crawler = $this->client->request('GET', $this->kindsUrl($area));
 
         self::assertResponseIsSuccessful();
         // The empty condition, not the manager.
@@ -62,7 +62,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         self::assertCount(1, $crawler->filter('.tx-sketch'));
         self::assertStringContainsString('Southern Reserve has no kinds of incident yet', $crawler->text());
         // One honest way in: a real form that writes the first kind.
-        self::assertCount(1, $crawler->filter('.tx-empty form[action$="/taxonomy/kinds"]'));
+        self::assertCount(1, $crawler->filter('.tx-empty form[action$="/incidents/kinds"]'));
     }
 
     /** The copy-from-area picker is deferred, so the empty start offers no such live control. */
@@ -71,7 +71,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $area = $this->anArea();
         $this->client->loginUser($this->aManager());
 
-        $crawler = $this->client->request('GET', $this->taxonomyUrl($area));
+        $crawler = $this->client->request('GET', $this->kindsUrl($area));
 
         self::assertCount(0, $crawler->filter('.tx-copy'));
         self::assertCount(0, $crawler->filter('.tx-area'));
@@ -85,7 +85,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         // A reporter may file, and may NOT manage — the split the module rests on.
         $this->client->loginUser($this->aReporter());
 
-        $this->client->request('GET', $this->taxonomyUrl($area));
+        $this->client->request('GET', $this->kindsUrl($area));
 
         self::assertResponseStatusCodeSame(403);
     }
@@ -97,8 +97,8 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $area = $this->anArea();
         $this->client->loginUser($this->aManager());
 
-        $html = $this->client->request('GET', $this->taxonomyUrl($area))->html();
-        $this->client->request('POST', $this->taxonomyUrl($area).'/kinds', [
+        $html = $this->client->request('GET', $this->kindsUrl($area))->html();
+        $this->client->request('POST', $this->kindsUrl($area), [
             '_token' => $this->tokenFrom($html),
             'label' => 'Poaching & wildlife crime',
             'colour' => 'poach',
@@ -123,12 +123,12 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $this->client->loginUser($this->aManager());
 
         // The sub row and its two block chips.
-        $crawler = $this->client->request('GET', $this->taxonomyUrl($area).'?kind='.$kind->getUuid()->toRfc4122());
+        $crawler = $this->client->request('GET', $this->kindsUrl($area).'?kind='.$kind->getUuid()->toRfc4122());
         self::assertStringContainsString('Snaring', $crawler->filter('.tx-sub')->text());
         self::assertGreaterThanOrEqual(2, $crawler->filter('.tx-sub .tx-blk.on')->count());
 
         // Opening the block editor shows all twelve composable toggles.
-        $editor = $this->client->request('GET', $this->taxonomyUrl($area).'?kind='.$kind->getUuid()->toRfc4122().'&blocks='.$sub->getUuid()->toRfc4122());
+        $editor = $this->client->request('GET', $this->kindsUrl($area).'?kind='.$kind->getUuid()->toRfc4122().'&blocks='.$sub->getUuid()->toRfc4122());
         self::assertCount(1, $editor->filter('.tx-blockedit'));
         self::assertCount(\count(BehaviorBlockEnum::cases()), $editor->filter('.tx-toggles .tx-tog input[type="checkbox"]'));
         // The two already-on blocks are checked.
@@ -142,8 +142,8 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $sub = $this->admin()->createSubcategory($kind, 'Livestock depredation');
         $this->client->loginUser($this->aManager());
 
-        $html = $this->client->request('GET', $this->taxonomyUrl($area).'?kind='.$kind->getUuid()->toRfc4122().'&blocks='.$sub->getUuid()->toRfc4122())->html();
-        $this->client->request('POST', $this->taxonomyUrl($area).'/subcategories/'.$sub->getUuid()->toRfc4122().'/blocks', [
+        $html = $this->client->request('GET', $this->kindsUrl($area).'?kind='.$kind->getUuid()->toRfc4122().'&blocks='.$sub->getUuid()->toRfc4122())->html();
+        $this->client->request('POST', $this->kindsUrl($area).'/subcategories/'.$sub->getUuid()->toRfc4122().'/blocks', [
             '_token' => $this->tokenFrom($html),
             'blocks' => ['species', 'money'],
             'money_direction' => 'compensation',
@@ -166,8 +166,8 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $kind = $this->admin()->createKind($area, 'Fire', 'mort');
         $this->client->loginUser($this->aManager());
 
-        $html = $this->client->request('GET', $this->taxonomyUrl($area))->html();
-        $this->client->request('POST', $this->taxonomyUrl($area).'/kinds/'.$kind->getUuid()->toRfc4122().'/deactivate', [
+        $html = $this->client->request('GET', $this->kindsUrl($area))->html();
+        $this->client->request('POST', $this->kindsUrl($area).'/'.$kind->getUuid()->toRfc4122().'/deactivate', [
             '_token' => $this->tokenFrom($html),
         ]);
         $crawler = $this->client->followRedirect();
@@ -177,7 +177,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         self::assertSame(1, $this->kindCount($area));
 
         // And it reactivates in one click.
-        $this->client->request('POST', $this->taxonomyUrl($area).'/kinds/'.$kind->getUuid()->toRfc4122().'/reactivate', [
+        $this->client->request('POST', $this->kindsUrl($area).'/'.$kind->getUuid()->toRfc4122().'/reactivate', [
             '_token' => $this->tokenFrom($crawler->html()),
         ]);
         $back = $this->client->followRedirect();
@@ -192,7 +192,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $this->admin()->createSubcategory($kind, 'Snaring');
         $this->client->loginUser($this->aManager());
 
-        $html = $this->client->request('GET', $this->taxonomyUrl($area))->html();
+        $html = $this->client->request('GET', $this->kindsUrl($area))->html();
 
         self::assertStringNotContainsStringIgnoringCase('/delete', $html);
         self::assertStringNotContainsStringIgnoringCase('>Delete<', $html);
@@ -208,7 +208,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $this->client->loginUser($this->aManager());
 
         // Southern Reserve sees its own (empty) list, not Northern Reserve's kind.
-        $crawler = $this->client->request('GET', $this->taxonomyUrl($southern));
+        $crawler = $this->client->request('GET', $this->kindsUrl($southern));
         self::assertCount(1, $crawler->filter('.tx-empty'));
         self::assertStringNotContainsString('Poaching', $crawler->filter('.tx-empty')->text());
     }
@@ -221,9 +221,9 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $kind = $this->admin()->createKind($northern, 'Poaching', 'poach');
         $this->client->loginUser($this->aManager());
 
-        $html = $this->client->request('GET', $this->taxonomyUrl($southern))->html();
+        $html = $this->client->request('GET', $this->kindsUrl($southern))->html();
         // Northern Reserve's kind uuid, posted at Southern Reserve's URL.
-        $this->client->request('POST', $this->taxonomyUrl($southern).'/kinds/'.$kind->getUuid()->toRfc4122().'/deactivate', [
+        $this->client->request('POST', $this->kindsUrl($southern).'/kinds/'.$kind->getUuid()->toRfc4122().'/deactivate', [
             '_token' => $this->tokenFrom($html),
         ]);
 
@@ -238,8 +238,8 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $this->admin()->createKind($area, 'Fire', 'mort');
         $this->client->loginUser($this->aManager());
 
-        $html = $this->client->request('GET', $this->taxonomyUrl($area))->html();
-        $this->client->request('POST', $this->taxonomyUrl($area).'/kinds', [
+        $html = $this->client->request('GET', $this->kindsUrl($area))->html();
+        $this->client->request('POST', $this->kindsUrl($area), [
             '_token' => $this->tokenFrom($html),
             'label' => 'fire',
             'colour' => 'mort',
@@ -259,7 +259,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $area = $this->anArea();
         $this->client->loginUser($this->aManager());
 
-        $this->client->request('POST', $this->taxonomyUrl($area).'/kinds', [
+        $this->client->request('POST', $this->kindsUrl($area), [
             'label' => 'Poaching',
             'colour' => 'poach',
         ]);

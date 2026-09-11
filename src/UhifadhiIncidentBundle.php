@@ -33,6 +33,7 @@ use Uhifadhi\Incident\Command\SyncTaxonomyCommand;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
 use Uhifadhi\Incident\Controller\IncidentMoneyController;
 use Uhifadhi\Incident\Controller\IncidentReportController;
+use Uhifadhi\Incident\Controller\IncidentSettingsController;
 use Uhifadhi\Incident\Controller\IncidentTaxonomyController;
 use Uhifadhi\Incident\Controller\IncidentWidgetsController;
 use Uhifadhi\Incident\DependencyInjection\IncidentConfiguration;
@@ -394,6 +395,23 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 ])
                 ->public();
             $services->alias(IncidentTaxonomyController::class, 'incident.controller.taxonomy')->public();
+
+            /*
+             * THE SETTINGS SECTION'S ONE POST. It changes what the area runs
+             * incidents on, so it rides on "incidents.manage" and exists only
+             * where SecurityBundle can enforce it. The SERVICE behind it is
+             * unconditional — reading what an area runs on is not a privilege —
+             * and only this door is guarded.
+             */
+            $services->set('incident.controller.settings', IncidentSettingsController::class)
+                ->args([
+                    service('router'),
+                    service('incident.settings'),
+                    service('security.authorization_checker'),
+                    service('security.csrf.token_manager'),
+                ])
+                ->public();
+            $services->alias(IncidentSettingsController::class, 'incident.controller.settings')->public();
         }
 
         // THE TAXONOMY COMMAND IS NOT DEV TOOLING. Without a taxonomy there is

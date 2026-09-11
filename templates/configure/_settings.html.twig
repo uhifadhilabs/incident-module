@@ -1,0 +1,71 @@
+{# THE SETTINGS SECTION OF THE INCIDENTS CONFIGURE PAGE — body only.
+
+   NO HEAD, NO STRIP, NO CRUMB, NO WAY BACK. The shell draws all four; this file
+   writes the section's content and nothing around it, which is the whole of what
+   a rendered section is.
+
+   IT SPENDS ONLY THE PLATFORM'S VOCABULARY — .c, .srow, .sout, .frow,
+   .save-row — because the shell's stylesheet is the only one linked on the
+   configure page, and because those classes are the shell's to define.
+
+   ONE SCREEN, ONE POST. Every control below is a field of this area's settings
+   record; nothing here writes on change. #}
+
+{% set save = incident_url('incident_settings_save', {uuid: area.uuid}) %}
+
+{% if save %}<form method="post" action="{{ save }}">
+<input type="hidden" name="_token" value="{{ csrfToken }}">{% endif %}
+
+{# ── SET·10 · Currency ────────────────────────────────────────────────────── #}
+<div class="c" style="margin-bottom:20px">
+    <span class="tab">Currency<span class="src">· {{ areaChose ? 'this area’s own' : 'the installation’s, until this area saves' }}</span></span>
+    <div class="frow">
+        <label for="incident-currency">currency</label>
+        <div style="display:flex;align-items:center;gap:9px">
+            <select class="fld" id="incident-currency" name="currency" style="width:240px"{{ save ? '' : ' disabled' }}>
+                {% for code, name in currencies %}
+                    <option value="{{ code }}"{{ code == currency ? ' selected' : '' }}>{{ code }} — {{ name }}</option>
+                {% endfor %}
+            </select>
+            <span class="use" style="margin:0">every fine and every compensation claim in this area is recorded and totalled in this one currency.</span>
+        </div>
+    </div>
+</div>
+
+{# ── SET·11 · Kinds ───────────────────────────────────────────────────────── #}
+<div class="c" style="margin-bottom:20px">
+    <span class="tab">Kinds<span class="src">· colour, who sees it first, money, term and fields</span></span>
+    <div class="sout" style="margin-bottom:14px">
+        <span class="bd"><b>Creating, renaming and retiring a kind or a sub-category happens in the <em>Incident kinds</em> section.</b>
+        {{ kinds|length }} {{ kinds|length == 1 ? 'kind' : 'kinds' }}, {{ subcategoryCount }}
+        {{ subcategoryCount == 1 ? 'sub-category' : 'sub-categories' }} in this area.</span>
+        {% set kindsUrl = incident_url('incident_kinds', {uuid: area.uuid}) %}
+        {% if kindsUrl %}<a class="cta" href="{{ kindsUrl }}">Open Incident kinds →</a>{% endif %}
+    </div>
+
+    {% for kind in kinds %}
+        {# NO COLOUR SWATCH HERE. A kind's hue is this module's own token, and
+           this module's stylesheet is not linked on the shell's configure page —
+           a swatch would draw an empty square. The colour is named, and edited,
+           in the Incident kinds section, where the sheet is. #}
+        <div class="srow"><span class="nm">{{ kind.label }}</span><span class="cd">{{ kind.code }}</span><span class="n">{{ kind.subcategories|length }} subs</span></div>
+    {% else %}
+        <div class="srow"><span class="nm">This area has not written its own kinds yet.</span></div>
+    {% endfor %}
+
+    <div class="sout" style="margin-top:12px">
+        <span class="bd"><b>Setting what each kind and sub-category DOES is not editable here yet.</b> A kind's colour and a
+        sub-category's money direction are edited in the <em>Incident kinds</em> section, which is where they are stored.
+        "Shown first to" — which departments a kind heads for — needs a department relation this module does not carry, and
+        a sub-category's term in hours and its form fields need columns it does not have; each is a record and a migration,
+        not a control this page can grow.</span>
+    </div>
+</div>
+
+{% if save %}
+    {# NO CANCEL LINK OUT OF THE MODULE. The section strip, the lit Configure and
+       the crumb are the ways back; a fourth would be the thing the frame
+       replaced. #}
+    <div class="save-row"><button class="cta" type="submit">Save settings</button></div>
+</form>
+{% endif %}

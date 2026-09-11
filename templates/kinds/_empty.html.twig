@@ -15,7 +15,7 @@
     kind from scratch below.</p>
 
     {# → POST …/taxonomy/kinds {label, colour} — the "write the first kind" path. #}
-    <form class="tx-form" method="post" action="{{ path('incident_taxonomy_kind_create', {uuid: area.uuid}) }}" style="justify-content:center">
+    <form class="tx-form" method="post" action="{{ path('incident_kinds_kind_create', {uuid: area.uuid}) }}" style="justify-content:center">
       <input type="hidden" name="_token" value="{{ csrfToken }}">
       <input class="tx-input" type="text" name="label" placeholder="e.g. Poaching &amp; wildlife crime" required style="min-width:280px">
       <select class="tx-input" name="colour" aria-label="Colour">

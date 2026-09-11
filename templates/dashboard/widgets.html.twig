@@ -26,13 +26,11 @@
     </script>
 {% endblock %}
 
-{% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / widget library{% endblock %}
+{% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / widgets{% endblock %}
 
-{% block shell_page_title %}Incidents · widget library{% endblock %}
+{% block shell_page_title %}{{ area.name }} — Incidents · configure{% endblock %}
 
-{% block shell_page_subtitle %}Adopt one of the five designs this module ships, or compose your own. Every widget
-    is the real thing at full size, exactly as the dashboard renders it — and the five headed sections below are the five
-    directions incidents was drawn in.{% endblock %}
+{% block shell_page_subtitle %}Everything this module is set up with in <b>this area</b>, in one place: how its dashboard is composed, the kinds a case is filed under, and what this area counts money in.{% endblock %}
 
 {% block shell_page_actions %}
     {# Throwing the whole composition away asks first — through the shell's
@@ -44,7 +42,6 @@
             data-confirm-modal-message-value="This area's incidents dashboard goes back to the composition the module ships with. Your own presets are kept, and your other areas are untouched."
             data-confirm-modal-confirm-label-value="Reset layout"
             data-confirm-modal-danger-value="true">{{ ux_icon('shell:rotate-ccw') }}Reset to defaults</button>
-    <a class="cta" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('shell:chevron-left') }}Back to dashboard</a>
 {% endblock %}
 
 {% block incident_page %}

@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
+use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
 use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 use Uhifadhi\Incident\Controller\IncidentController;
 use Uhifadhi\Incident\Controller\IncidentListController;
@@ -26,6 +28,7 @@ use Uhifadhi\Incident\Repository\IncidentLinkRepository;
 use Uhifadhi\Incident\Repository\IncidentMoneyRepository;
 use Uhifadhi\Incident\Repository\IncidentPartyRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Repository\IncidentSettingsRepository;
 use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
@@ -38,10 +41,12 @@ use Uhifadhi\Incident\Service\IncidentMapService;
 use Uhifadhi\Incident\Service\IncidentMoneyService;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
 use Uhifadhi\Incident\Service\IncidentReportService;
+use Uhifadhi\Incident\Service\IncidentSettingsService;
 use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
 use Uhifadhi\Incident\Service\TaxonomyAdminService;
+use Uhifadhi\Incident\Shell\IncidentConfigurationSections;
 use Uhifadhi\Incident\Shell\IncidentModuleTabs;
 use Uhifadhi\Incident\Twig\IncidentTrailExtension;
 
@@ -298,4 +303,36 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('incident.module_tabs', IncidentModuleTabs::class)
         ->tag(ModuleTabsInterface::TAG);
+
+    // What one area runs incidents on. Registered with the rest for the same
+    // reason: a repository is a query surface over a mapped entity.
+    $services->set(IncidentSettingsRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    /*
+     * WHAT ONE AREA COUNTS MONEY IN. Unconditional: reading it is not a
+     * privilege, and the WRITE rides on a guarded controller.
+     */
+    $services->set('incident.settings', IncidentSettingsService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(IncidentSettingsRepository::class),
+            param('incident.currency'),
+        ]);
+
+    /*
+     * WHAT IS ON THE MODULE'S ONE CONFIGURE PAGE. Tagged by hand, like the tabs
+     * and for the same reason; a module with no declaration has no Configure
+     * action at all.
+     */
+    $services->set('incident.configuration_sections', IncidentConfigurationSections::class)
+        ->args([
+            service('request_stack'),
+            service(AreaOfInterestRepository::class),
+            service('incident.settings'),
+            service(TaxonomyKindRepository::class),
+            service('security.csrf.token_manager')->nullOnInvalid(),
+        ])
+        ->tag(ConfigurationSectionsInterface::TAG);
 };

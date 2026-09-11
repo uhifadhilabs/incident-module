@@ -92,6 +92,7 @@ final class BundleBootTest extends KernelTestCase
             'incident_link',
             'incident_money',
             'incident_party',
+            'incident_settings',
             'incident_subcategory',
             'incident_taxonomy_kind',
             'incident_taxonomy_subcategory',

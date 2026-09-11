@@ -1,18 +1,24 @@
 {# ============================================================================
-   THE AREA-SCOPED INCIDENT TAXONOMY ADMIN — the design's taxonomy.html, ported.
+   THE INCIDENT KINDS THIS AREA FILES — the design's kinds.html, ported.
+
+   IT IS A SECTION OF THE CONFIGURE PAGE that kept an address of its own, so it
+   wears the configure page's heading and the configure page's strip, and the
+   Configure action stays lit on it. The shell draws all three; nothing here
+   draws navigation, and there is no way back other than the strip, the lit
+   Configure and the crumb.
 
    ONE ROUTE, TWO DATA CONDITIONS on the same address:
      · POPULATED — the two-pane manager (_manager.html.twig): kinds on the left,
        the selected kind's sub-categories and their behaviour blocks on the right.
      · EMPTY — the first-run start (_empty.html.twig): the ghost sketch of a
-       taxonomy's shape and the "write the first kind" path.
+       list's shape and the "write the first kind" path.
 
    AREA SCOPE, said once at the top and true of every read and write below: this
    list is THIS area's own, and nothing here is shared with another area.
    ========================================================================== #}
 {% extends '@UhifadhiIncident/base.html.twig' %}
 
-{% block title %}Incident taxonomy{% endblock %}
+{% block title %}Incidents · incident kinds{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -21,31 +27,31 @@
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Incident\\UhifadhiIncidentBundle::TAXONOMY_STYLESHEET')) }}">
 {% endblock %}
 
-{% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / taxonomy{% endblock %}
+{% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / kinds{% endblock %}
 
-{% block shell_page_title %}{{ area.name }} &mdash; incident taxonomy{% endblock %}
+{% block shell_page_title %}{{ area.name }} &mdash; Incidents &middot; configure{% endblock %}
 
-{% block shell_page_subtitle %}The kinds of incident <b>this area</b> files, the sub-categories under each, and &mdash;
-    per sub-category &mdash; which of the platform&rsquo;s coded behaviours it switches on. Every area writes its
-    own; nothing here is shared with another area, and nothing ships filled in. Rows can be created, renamed and
-    retired &mdash; <b>never deleted</b>, because incidents are filed against them and a case file must never lose
-    the words that describe it.{% endblock %}
+{% block shell_page_subtitle %}Everything this module is set up with in <b>this area</b>, in one place: how its dashboard is composed, the kinds a case is filed under, and what this area counts money in.{% endblock %}
 
+{# NO WAY BACK IS DRAWN HERE. The section strip, the lit Configure action and the
+   crumb are the three ways back, and there is no fourth. #}
 {% block shell_page_actions %}
-    <a class="cta" href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">{{ ux_icon('shell:chevron-left', {width: 15, height: 15}) }} Back to dashboard</a>
+    {% if recordScreens %}
+        <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('incident:pencil') }} Report incident</a>
+    {% endif %}
 {% endblock %}
 
 {% block incident_page %}
     {# Area scope, said once, plainly — the one fact that changes how the page is
        read: the list is this area's. #}
-    <div class="tx-say">{{ ux_icon('incident:shield', {width: 17, height: 17}) }}<div><b>This taxonomy is {{ area.name }}&rsquo;s own.</b>
+    <div class="tx-say">{{ ux_icon('incident:shield', {width: 17, height: 17}) }}<div><b>These kinds are {{ area.name }}&rsquo;s own.</b>
         Each area keeps its own kinds and sub-categories, so a change here reaches only the people filing incidents in
         {{ area.name }}. Editing rides on <span class="mono">incidents.manage</span> &mdash; the same authority that moves a
         case through verification and settles the money on it. Filing an incident is not enough to name the kinds of case.</div></div>
 
     {% if kinds is empty %}
-        {{ include('@UhifadhiIncident/taxonomy/_empty.html.twig') }}
+        {{ include('@UhifadhiIncident/kinds/_empty.html.twig') }}
     {% else %}
-        {{ include('@UhifadhiIncident/taxonomy/_manager.html.twig') }}
+        {{ include('@UhifadhiIncident/kinds/_manager.html.twig') }}
     {% endif %}
 {% endblock %}

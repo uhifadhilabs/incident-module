@@ -82,6 +82,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
             'incident_party',
             'incident_taxonomy_kind',
             'incident_taxonomy_subcategory',
+            'incident_settings',
         ] as $table) {
             self::assertContains($table, $tables, \sprintf('No shipped version creates "%s".', $table));
         }

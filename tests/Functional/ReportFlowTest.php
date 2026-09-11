@@ -121,10 +121,12 @@ final class ReportFlowTest extends FunctionalTestCase
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
 
-        self::assertSame(
-            $this->createUrl($this->uuidOf($area)),
-            $crawler->filter('.pghead .pgact a')->first()->attr('href'),
-        );
+        // Not `first()`: the SHELL draws the module's one `Configure` action at
+        // the head of every page in the module, so the flow's own way back is
+        // found by where it goes rather than by where it sits.
+        self::assertCount(1, $crawler->filter('.pghead .pgact a')->reduce(
+            fn ($node): bool => $this->createUrl($this->uuidOf($area)) === $node->attr('href'),
+        ));
         self::assertSame(
             $this->createUrl($this->uuidOf($area)),
             $crawler->filter('.ro-filebar a.tgl')->attr('href'),

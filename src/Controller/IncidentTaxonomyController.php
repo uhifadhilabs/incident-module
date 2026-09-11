@@ -99,8 +99,8 @@ final class IncidentTaxonomyController
     }
 
     #[Route(
-        '/areas/{uuid}/modules/incidents/taxonomy',
-        name: 'incident_taxonomy',
+        '/areas/{uuid}/modules/incidents/kinds',
+        name: 'incident_kinds',
         requirements: ['uuid' => Requirement::UUID],
         methods: ['GET'],
         priority: 2,
@@ -114,7 +114,7 @@ final class IncidentTaxonomyController
         $kinds = $this->kinds->forArea($area);
         $selected = $this->selectedKind($kinds, $request->query->getString('kind'));
 
-        return new Response($this->twig->render('@UhifadhiIncident/taxonomy/show.html.twig', [
+        return new Response($this->twig->render('@UhifadhiIncident/kinds/show.html.twig', [
             'area' => $area,
             'kinds' => $kinds,
             'selected' => $selected,
@@ -123,13 +123,36 @@ final class IncidentTaxonomyController
             'blockCatalogue' => BehaviorBlockEnum::inPickerOrder(),
             'colourKeys' => TaxonomyAdminService::COLOUR_KEYS,
             'moneyDirections' => MoneyDirectionEnum::cases(),
+            // The one page action this screen draws. The way back is the strip,
+            // the lit Configure and the crumb — never a button of its own.
+            'recordScreens' => $this->authorization->isGranted(IncidentReportController::RECORD_PERMISSION),
             'csrfToken' => $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue(),
         ]));
     }
 
+    /**
+     * THE OLD ADDRESS, KEPT ALIVE. The screen was `…/taxonomy` before the word a
+     * person reads became "kinds"; a link somebody saved, or a bookmark, must
+     * not become a 404 over a rename. Permanent, because the move is.
+     */
+    #[Route(
+        '/areas/{uuid}/modules/incidents/taxonomy',
+        name: 'incident_taxonomy',
+        requirements: ['uuid' => Requirement::UUID],
+        methods: ['GET'],
+        priority: 2,
+    )]
+    public function legacyTaxonomyAddress(#[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area): RedirectResponse
+    {
+        return new RedirectResponse(
+            $this->router->generate('incident_kinds', ['uuid' => $area->getUuidString()]),
+            Response::HTTP_MOVED_PERMANENTLY,
+        );
+    }
+
     // ── kinds ────────────────────────────────────────────────────────────────
 
-    #[Route('/areas/{uuid}/modules/incidents/taxonomy/kinds', name: 'incident_taxonomy_kind_create', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/areas/{uuid}/modules/incidents/kinds', name: 'incident_kinds_kind_create', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
     public function createKind(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area): Response
     {
         $this->guardWrite($request);
@@ -147,7 +170,7 @@ final class IncidentTaxonomyController
         }
     }
 
-    #[Route('/areas/{uuid}/modules/incidents/taxonomy/kinds/{kind}/rename', name: 'incident_taxonomy_kind_rename', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/areas/{uuid}/modules/incidents/kinds/{kind}/rename', name: 'incident_kinds_kind_rename', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
     public function renameKind(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $kind): Response
     {
         $this->guardWrite($request);
@@ -162,7 +185,7 @@ final class IncidentTaxonomyController
         return $this->backToManager($area, $entity);
     }
 
-    #[Route('/areas/{uuid}/modules/incidents/taxonomy/kinds/{kind}/colour', name: 'incident_taxonomy_kind_colour', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/areas/{uuid}/modules/incidents/kinds/{kind}/colour', name: 'incident_kinds_kind_colour', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
     public function recolourKind(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $kind): Response
     {
         $this->guardWrite($request);
@@ -172,7 +195,7 @@ final class IncidentTaxonomyController
         return $this->backToManager($area, $entity);
     }
 
-    #[Route('/areas/{uuid}/modules/incidents/taxonomy/kinds/{kind}/deactivate', name: 'incident_taxonomy_kind_deactivate', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/areas/{uuid}/modules/incidents/kinds/{kind}/deactivate', name: 'incident_kinds_kind_deactivate', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
     public function deactivateKind(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $kind): Response
     {
         $this->guardWrite($request);
@@ -182,7 +205,7 @@ final class IncidentTaxonomyController
         return $this->backToManager($area, $entity);
     }
 
-    #[Route('/areas/{uuid}/modules/incidents/taxonomy/kinds/{kind}/reactivate', name: 'incident_taxonomy_kind_reactivate', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/areas/{uuid}/modules/incidents/kinds/{kind}/reactivate', name: 'incident_kinds_kind_reactivate', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
     public function reactivateKind(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $kind): Response
     {
         $this->guardWrite($request);
@@ -194,7 +217,7 @@ final class IncidentTaxonomyController
 
     // ── sub-categories ─────────────────────────────────────────────────────────
 
-    #[Route('/areas/{uuid}/modules/incidents/taxonomy/kinds/{kind}/subcategories', name: 'incident_taxonomy_sub_create', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/areas/{uuid}/modules/incidents/kinds/{kind}/subcategories', name: 'incident_kinds_sub_create', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
     public function createSubcategory(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $kind): Response
     {
         $this->guardWrite($request);
@@ -209,7 +232,7 @@ final class IncidentTaxonomyController
         return $this->backToManager($area, $entity);
     }
 
-    #[Route('/areas/{uuid}/modules/incidents/taxonomy/subcategories/{sub}/rename', name: 'incident_taxonomy_sub_rename', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/rename', name: 'incident_kinds_sub_rename', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
     public function renameSubcategory(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
     {
         $this->guardWrite($request);
@@ -224,7 +247,7 @@ final class IncidentTaxonomyController
         return $this->backToManager($area, $entity->getKind());
     }
 
-    #[Route('/areas/{uuid}/modules/incidents/taxonomy/subcategories/{sub}/blocks', name: 'incident_taxonomy_sub_blocks', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/blocks', name: 'incident_kinds_sub_blocks', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
     public function setBlocks(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
     {
         $this->guardWrite($request);
@@ -250,7 +273,7 @@ final class IncidentTaxonomyController
         return $this->backToManager($area, $entity->getKind());
     }
 
-    #[Route('/areas/{uuid}/modules/incidents/taxonomy/subcategories/{sub}/deactivate', name: 'incident_taxonomy_sub_deactivate', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/deactivate', name: 'incident_kinds_sub_deactivate', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
     public function deactivateSubcategory(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
     {
         $this->guardWrite($request);
@@ -260,7 +283,7 @@ final class IncidentTaxonomyController
         return $this->backToManager($area, $entity->getKind());
     }
 
-    #[Route('/areas/{uuid}/modules/incidents/taxonomy/subcategories/{sub}/reactivate', name: 'incident_taxonomy_sub_reactivate', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
+    #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/reactivate', name: 'incident_kinds_sub_reactivate', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
     public function reactivateSubcategory(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
     {
         $this->guardWrite($request);
@@ -345,7 +368,7 @@ final class IncidentTaxonomyController
             $parameters['kind'] = $selected->getUuid()->toRfc4122();
         }
 
-        return new RedirectResponse($this->router->generate('incident_taxonomy', $parameters));
+        return new RedirectResponse($this->router->generate('incident_kinds', $parameters));
     }
 
     /** A refused write flashes why, beside where it happened, and returns to the manager. */
