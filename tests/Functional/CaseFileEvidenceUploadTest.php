@@ -81,6 +81,53 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
         self::assertGreaterThan(0, (int) $evidence->getByteSize());
     }
 
+    /**
+     * THE EVIDENCE CARD TAKES PHOTOGRAPHS AND DOCUMENTS, and the design says so
+     * in those words. The deployment's allowlist is wider than that — it carries
+     * GPX and the XML a GPX arrives as, for the modules that import boundaries —
+     * and a case file that inherited it unnarrowed would take a track and file it
+     * as a document.
+     *
+     * The refusal is STORAGE's own sentence, read back off the endpoint: the
+     * component prints what the target takes and the guard refuses in the same
+     * words, so a person is never told a rule the card did not state.
+     */
+    public function testATrackIsRefusedByTheEvidenceCardInStoragesOwnWords(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $incident = $this->anIncident($area, reportedBy: $this->aReporter());
+        $this->client->loginUser($this->aManager());
+
+        $this->postFile($incident, self::aTrack(), 'walk.gpx', $this->uploadToken($area, $incident));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
+        $body = $this->json();
+        self::assertIsString($body['error'] ?? null);
+        self::assertStringContainsString('not a photograph or document', (string) $body['error']);
+
+        // And nothing was written — no row, no bytes, no timeline line.
+        self::assertSame(0, $this->em->getRepository(IncidentEvidence::class)->count([]));
+        self::assertSame([], $this->timelineOf($incident));
+    }
+
+    /** The other half of the card's own sentence: a document is what it says it takes. */
+    public function testADocumentIsAcceptedByTheEvidenceCard(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $incident = $this->anIncident($area, reportedBy: $this->aReporter());
+        $this->client->loginUser($this->aManager());
+
+        $this->postFile($incident, self::aDocument(), 'assessment.pdf', $this->uploadToken($area, $incident));
+
+        self::assertResponseIsSuccessful();
+        $body = $this->json();
+        self::assertSame('assessment.pdf', $body['label']);
+
+        $evidence = $this->em->getRepository(IncidentEvidence::class)->findOneBy(['path' => $body['key']]);
+        self::assertInstanceOf(IncidentEvidence::class, $evidence);
+        self::assertSame('application/pdf', $evidence->getMimeType());
+    }
+
     /** Nothing happens on a case file without a line on its timeline saying so. */
     public function testAttachingWritesTheCaseAnEvidenceEvent(): void
     {
@@ -201,11 +248,16 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
 
     private function post(Incident $incident, string $name, string $token): void
     {
+        $this->postFile($incident, self::aPhotograph(), $name, $token);
+    }
+
+    private function postFile(Incident $incident, string $path, string $name, string $token): void
+    {
         $this->client->request(
             'POST',
             '/files/upload',
             ['target' => 'incident:'.$incident->getUuid()->toRfc4122()],
-            ['file' => new UploadedFile(self::aPhotograph(), $name, test: true)],
+            ['file' => new UploadedFile($path, $name, test: true)],
             ['HTTP_X-CSRF-Token' => $token],
         );
     }
@@ -259,6 +311,37 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
             true,
         ) ?: '');
+
+        return $path;
+    }
+
+    /**
+     * A REAL GPX ON DISK — the shape the deployment's wider allowlist carries and
+     * this card does not. Synthetic, and at nobody's coordinates.
+     */
+    private static function aTrack(): string
+    {
+        $path = tempnam(sys_get_temp_dir(), 'incident-upload').'.gpx';
+        file_put_contents($path, <<<'XML'
+            <?xml version="1.0" encoding="UTF-8"?>
+            <gpx version="1.1" creator="test fixture" xmlns="http://www.topografix.com/GPX/1/1">
+              <trk><name>a walk</name><trkseg>
+                <trkpt lat="-3.21" lon="-29.75"/><trkpt lat="-3.22" lon="-29.74"/>
+              </trkseg></trk>
+            </gpx>
+            XML);
+
+        return $path;
+    }
+
+    /** A REAL, minimal PDF on disk — the document half of what the card takes. */
+    private static function aDocument(): string
+    {
+        $path = tempnam(sys_get_temp_dir(), 'incident-upload').'.pdf';
+        file_put_contents($path, "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+            ."2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+            ."3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 99 99]>>endobj\n"
+            ."trailer<</Root 1 0 R>>\n%%EOF\n");
 
         return $path;
     }

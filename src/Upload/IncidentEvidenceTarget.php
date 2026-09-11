@@ -23,6 +23,7 @@ use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Service\IncidentEvidenceKey;
 use Uhifadhi\Incident\Service\IncidentEvidenceService;
+use Uhifadhi\Storage\Enum\FileKindEnum;
 use Uhifadhi\Storage\Model\EvidenceConstraints;
 use Uhifadhi\Storage\Model\StoredFile;
 use Uhifadhi\Storage\Model\UploadConstraints;
@@ -48,9 +49,15 @@ use Uhifadhi\Storage\Upload\UploadTargetInterface;
  *   claim rests on: filing a report is a cheap act and putting a photograph onto
  *   somebody else's case file is not.
  *
- *   WHAT AND HOW BIG — the deployment's own, unnarrowed. A case file takes
- *   whatever this installation accepts as evidence, and a module that hardcoded
- *   a shorter list would be overruling a decision that is the deployment's.
+ *   WHAT AND HOW BIG — the deployment's cap, and the deployment's allowlist
+ *   NARROWED TO THE TWO KINDS THE EVIDENCE CARD IS. The design names them:
+ *   "photographs and documents". The installation's own list is wider than that
+ *   — it carries GPX, and the XML a GPX arrives as, for the modules that import
+ *   boundaries — and a case file that inherited it whole would take a track and
+ *   file it as a document. Narrowing is a target's to do
+ *   ({@see UploadConstraints}); widening is not, so which photographs and which
+ *   documents stays the deployment's decision and only the KINDS are this
+ *   module's.
  *
  *   WHAT IT BECAME — evidence, and the chip on the finished tile says so.
  *
@@ -99,9 +106,49 @@ final readonly class IncidentEvidenceTarget implements UploadTargetInterface
             && $this->authorization->isGranted(IncidentDetailController::MANAGE_PERMISSION);
     }
 
+    /**
+     * The card's own rule, stated once and read by both halves of the platform's
+     * component: the zone prints it before anybody drops anything, and the
+     * endpoint refuses against it in storage's own words.
+     */
     public function constraints(object $record): UploadConstraints
     {
-        return UploadConstraints::from($this->deployment);
+        return new UploadConstraints($this->photographsAndDocuments(), $this->deployment->maxBytes);
+    }
+
+    /**
+     * The deployment's allowlist with everything that is not a photograph or a
+     * document taken out of it.
+     *
+     * IT ASKS {@see FileKindEnum::recognise()}, NOT `fromMimeType()`. The second
+     * answers Document for anything it cannot place, which would keep
+     * `application/xml` and `text/xml` — the types a GPX's bytes actually detect
+     * as — and the card would be back to accepting tracks under another name.
+     * `recognise()` names only what the platform names positively, so a carrier
+     * falls out of the list on its own.
+     *
+     * @return list<string>
+     *
+     * @throws \LogicException when the deployment accepts neither kind, which is
+     *                         an installation whose case files could take no evidence at all
+     */
+    private function photographsAndDocuments(): array
+    {
+        $allowed = [];
+        foreach ($this->deployment->allowedMimeTypes as $mimeType) {
+            if (\in_array(FileKindEnum::recognise($mimeType), [FileKindEnum::Photo, FileKindEnum::Document], true)) {
+                $allowed[] = $mimeType;
+            }
+        }
+
+        if ([] === $allowed) {
+            // Loud, because the alternative is a card that silently offers a
+            // door nothing can come through, or one that widens past what the
+            // storage would accept and promises a refusal.
+            throw new \LogicException('This installation accepts no photographs and no documents, so a case file has nothing it could take as evidence. Widen the storage evidence allowlist.');
+        }
+
+        return $allowed;
     }
 
     public function received(object $record, StoredFile $file, UserInterface $user): UploadReceipt
