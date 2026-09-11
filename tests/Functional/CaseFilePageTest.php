@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Functional;
 
+use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Incident\Entity\IncidentMoney;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
@@ -320,6 +321,89 @@ final class CaseFilePageTest extends FunctionalTestCase
             ->filter('.i-fieldset')->text();
         self::assertStringContainsString('Road segment', $second);
         self::assertStringNotContainsString('Enclosure', $second);
+    }
+
+    /**
+     * THE CASE FILE IS THREE ROWS OF THE RECORD GRID, and the grid is the
+     * shell's.
+     *
+     * A record page's rows share one column template so a card is exactly as
+     * wide as the card above it, and each row is the height of its OWN content.
+     * The membership is the design's: the plate beside the money, the timeline
+     * beside the parties and the provenance, the evidence beside the narrative.
+     *
+     * THE PLATE IS A DIRECT CHILD OF THE ROW, never wrapped in a column that
+     * stacks cards: the card refuses to stretch, and in a flex column that
+     * refusal reads across the other axis and shrinks it to its content.
+     */
+    public function testTheCaseFileIsThreeRowsOfTheRecordGrid(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $incident = $this->anIncident($area, 'livestock-depredation');
+        new IncidentMoney($incident, MoneyDirectionEnum::Compensation)->setClaimed(1_600_000)->setApproved(1_200_000);
+        $this->em->flush();
+        $this->client->loginUser($this->aReporter());
+
+        $rows = $this->client->request('GET', \sprintf(
+            '/areas/%s/modules/incidents/%s',
+            $this->uuidOf($area),
+            $incident->getReference(),
+        ))->filter('.recgrid');
+
+        self::assertCount(3, $rows, 'The design composes the case file as three rows of the record grid.');
+
+        self::assertSame(['Where'], self::cardsIn($rows->eq(0)->children()->eq(0)));
+        self::assertSame(['Money'], self::cardsIn($rows->eq(0)->children()->eq(1)));
+        self::assertSame(['Timeline'], self::cardsIn($rows->eq(1)->children()->eq(0)));
+        self::assertSame(['Involved parties', 'Provenance & links'], self::cardsIn($rows->eq(1)->children()->eq(1)));
+        self::assertSame(['Evidence'], self::cardsIn($rows->eq(2)->children()->eq(0)));
+        self::assertSame(['Narrative'], self::cardsIn($rows->eq(2)->children()->eq(1)));
+
+        // The two rows whose right-hand cell stacks more than one card say so;
+        // the row that holds one card on each side needs no column at all.
+        self::assertCount(2, $rows->filter('.col'));
+
+        self::assertCount(
+            1,
+            $rows->eq(0)->children('.plate-fill'),
+            'The plate card sits straight in the row, so its refusal to stretch stays on the vertical axis.',
+        );
+    }
+
+    /**
+     * A ROW WITH NOTHING BESIDE IT DRAWS NOTHING BESIDE IT. The money cell of the
+     * design exists only where there is money to put in it; an empty cell in a
+     * stretch row is a box as tall as the plate and as empty as the reason for it.
+     */
+    public function testARowWhoseSecondCellHasNothingInItDrawsNoSecondCell(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $incident = $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass, no injury pattern');
+        $this->client->loginUser($this->aReporter());
+
+        $rows = $this->client->request('GET', \sprintf(
+            '/areas/%s/modules/incidents/%s',
+            $this->uuidOf($area),
+            $incident->getReference(),
+        ))->filter('.recgrid');
+
+        self::assertCount(1, $rows->eq(0)->children(), 'A category that carries no money leaves the plate alone in its row.');
+        self::assertSame(['Where'], self::cardsIn($rows->eq(0)->children()->eq(0)));
+    }
+
+    /**
+     * The cards a grid cell holds, named by the words in their tab — a cell that
+     * IS a card counts as itself.
+     *
+     * @return list<string>
+     */
+    private static function cardsIn(Crawler $cell): array
+    {
+        $tabs = $cell->filter('span.tab')->each(
+            static fn (Crawler $tab) => trim(explode('·', $tab->text())[0]),
+        );
+
+        return array_values(array_filter($tabs, static fn (string $tab) => '' !== $tab));
     }
 
     /** The timeline is the spine, and the filing itself is its first entry. */

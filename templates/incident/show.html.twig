@@ -72,8 +72,20 @@
         csrfToken: csrfToken,
     }, with_context: false) }}
 
-    <div class="i-cols">
-        <div class="c plate-fill wide">
+    {# THE CASE FILE IS THREE ROWS OF THE RECORD GRID — the shell's own .recgrid,
+       the same two columns every record page in the product shares, so a card is
+       exactly as wide as the card above it and each row is the height of its OWN
+       content. A cell that stacks more than one card is a .col; a cell that IS a
+       card sits straight in the row, which is what keeps the plate's refusal to
+       stretch on the vertical axis where it was written.
+
+       A CELL WITH NOTHING IN IT IS NOT DRAWN. The money cell exists where there
+       is money; on a category that carries none the plate has the row to itself
+       rather than a stretched empty box beside it. #}
+    {% set canRecordMoney = canManage and incident.subcategory.carriesMoney
+        and incident.status.hasReached(incident.subcategory.moneyDirection.recordableFrom) %}
+    <div class="recgrid i-caselead">
+        <div class="c plate-fill">
             <span class="tab">Where<span class="src">· {{ incident.zoneLabel }}</span></span>
             {# The SAME plate the dashboard maps draw, stating this incident's
                own category alone: one mark, one meaning, wherever it is drawn.
@@ -82,7 +94,8 @@
             {{ render_map(map, {'role': 'img', 'aria-label': 'Where this incident was filed'}) }}
         </div>
 
-        <div class="side">
+        {% if money or canRecordMoney %}
+        <div class="col">
             {# The identity facts moved up to the .factband below the head; this
                column now leads with the money card. #}
             {# THE MONEY CARD EXISTS ONLY WHERE THE CATEGORY CARRIES MONEY. On a
@@ -114,8 +127,7 @@
                from the category), never a choice made here. The row is born on the
                first amount, which is when the read-only card above appears. → POST
                incident_money / incident_money/waive, guarded by "incidents.manage". #}
-            {% if canManage and incident.subcategory.carriesMoney
-                and incident.status.hasReached(incident.subcategory.moneyDirection.recordableFrom) %}
+            {% if canRecordMoney %}
                 {% set dir = incident.subcategory.moneyDirection %}
                 <div class="c i-moneyedit">
                     <span class="tab">Record money<span class="src">· {{ dir.value }} · direction is fixed</span></span>
@@ -143,10 +155,11 @@
                 </div>
             {% endif %}
         </div>
+        {% endif %}
     </div>
 
-    <div class="i-cols">
-        <div class="c wide">
+    <div class="recgrid">
+        <div class="c">
             <span class="tab">Timeline<span class="src">· {{ incident.events|length }} events · append-only</span></span>
             <div class="i-tl">
                 {% for event in incident.events %}
@@ -160,7 +173,7 @@
                 was corrected — which is what makes the record worth anything in a hearing.</div>
         </div>
 
-        <div class="side">
+        <div class="col">
             <div class="c">
                 <span class="tab">Involved parties<span class="src">· {{ incident.parties|length }}</span></span>
                 {% for party in incident.parties %}
@@ -201,8 +214,8 @@
         </div>
     </div>
 
-    <div class="i-cols">
-        <div class="c wide">
+    <div class="recgrid">
+        <div class="c">
             <span class="tab">Evidence<span class="src">· {{ incident.evidence|length }} attached</span></span>
             {# ONE GRID, ONE TILE. A file already attached and a file that arrived
                a second ago must be the same box, or the card shows two kinds of
@@ -231,7 +244,7 @@
                 uploaded — so the map above places them where they were taken.</div>
         </div>
 
-        <div class="c side">
+        <div class="c">
             <span class="tab">Narrative<span class="src">· as taken · verbatim</span></span>
             {% if incident.narrative %}
                 <div class="i-quote">“{{ incident.narrative }}”</div>
