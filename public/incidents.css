@@ -457,7 +457,7 @@ html.light{
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;color:var(--dim)}
 .i-feed .rt{flex:none;align-self:center}
 /* The case file's "Where" plate, sized by THIS screen's design: on
-   incidents/detail.html the map is 400px and the card ends where the map ends.
+   incidents/detail.html the IMAGERY is 400px and the card ends where the map ends.
    Sizing it against a sibling module's screen is how a port drifts while every
    test stays green, so the rule is this screen's own and CaseFilePlateSizingTest
    holds it there.
@@ -466,10 +466,19 @@ html.light{
    is a fixed plate, and the column of facts beside it runs as long as it needs to
    without dragging the map down with it.
 
+   --map-plate-height sizes the PLATE, and the plate is the imagery plus whatever
+   is stacked above it inside — here, the offset the atlas sets the imagery frame
+   at. So the height adds both, each part named, and 400px of design is 400px of
+   map rather than 400px of plate.
+
    THE RULE IS ALL THIS MODULE STATES. The plate's column, its imagery frame, its
    floating legend, its control stack, its fullscreen and its refusal to invent a
    height are the atlas's. */
-.c.plate-fill{display:flex;flex-direction:column;align-self:start;--map-plate-height:400px}
+.c.plate-fill{display:flex;flex-direction:column;align-self:start;
+  --i-plate-imagery:400px;
+  /* The atlas sets the imagery frame 8px below whatever precedes it. */
+  --i-plate-frame-offset:8px;
+  --map-plate-height:calc(var(--i-plate-imagery) + var(--i-plate-frame-offset))}
 
 /* ── DIRECTION C · FEED ───────────────────────────────────────────────────
    Reverse-chronological, grouped by day.

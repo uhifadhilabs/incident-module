@@ -30,7 +30,9 @@ use PHPUnit\Framework\TestCase;
  * wrongly for some other reason. Rendered fidelity is a sweep, not a unit test.
  *
  * THE HEIGHT IS STATED ON THE PLATE ROOT, which is the only thing about a map
- * this module says. The plate's column, its imagery frame, its floating legend
+ * this module says. It sizes the plate, not the imagery, so it is the sum of the
+ * imagery the design draws and what the plate stacks above it — each part named,
+ * so 400px of design is 400px of map rather than 400px of plate. The plate's column, its imagery frame, its floating legend
  * and its fullscreen are the atlas's; a module that restated any of them would
  * be the one map in the product that reads differently.
  *
@@ -41,15 +43,46 @@ use PHPUnit\Framework\TestCase;
  */
 final class CaseFilePlateSizingTest extends TestCase
 {
-    /** The height the design's own "Where" card states for its map. */
-    private const string DESIGN_HEIGHT = '400px';
+    /** The height the design's own "Where" card draws its IMAGERY at. */
+    private const string DESIGN_IMAGERY_HEIGHT = '400px';
 
-    public function testThePlateIsTheHeightTheDesignStates(): void
+    /** What the atlas offsets that imagery frame by inside the plate. */
+    private const string ATLAS_FRAME_OFFSET = '8px';
+
+    /**
+     * `--map-plate-height` sizes the PLATE, and the plate is the imagery plus
+     * everything stacked above it inside — here, the offset the atlas sets the
+     * imagery frame at. So the height is that sum, each part named, and a bare
+     * 400px is 400px of plate and eight pixels less of map.
+     */
+    public function testThePlateIsTheSumThatLeavesTheImageryTheDesignsHeight(): void
     {
+        $rule = self::plateFillRule();
+
         self::assertMatchesRegularExpression(
-            '/\\.c\\.plate-fill\\{[^}]*--map-plate-height:'.preg_quote(self::DESIGN_HEIGHT, '/').'/',
-            self::stylesheet(),
+            '/--i-plate-imagery:'.preg_quote(self::DESIGN_IMAGERY_HEIGHT, '/').'/',
+            $rule,
             'The case file map is a fixed plate of imagery, as incidents/detail.html draws it.',
+        );
+        self::assertMatchesRegularExpression(
+            '/--i-plate-frame-offset:'.preg_quote(self::ATLAS_FRAME_OFFSET, '/').'/',
+            $rule,
+            "The atlas's own map.css offsets the imagery frame by this much.",
+        );
+        self::assertMatchesRegularExpression(
+            '/--map-plate-height:calc\\(\\s*var\\(--i-plate-imagery\\)\\s*\\+\\s*var\\(--i-plate-frame-offset\\)\\s*\\)/',
+            $rule,
+            'The plate height is the sum of its named parts, so a reader sees what it is made of.',
+        );
+    }
+
+    /** And the bare design number is never the plate height on its own. */
+    public function testTheDesignsImageryHeightIsNotStatedAsThePlateHeight(): void
+    {
+        self::assertDoesNotMatchRegularExpression(
+            '/--map-plate-height:'.preg_quote(self::DESIGN_IMAGERY_HEIGHT, '/').'/',
+            self::plateFillRule(),
+            'That sizes the plate to the imagery and the imagery to less than the design.',
         );
     }
 
@@ -105,6 +138,15 @@ final class CaseFilePlateSizingTest extends TestCase
         self::assertMatchesRegularExpression('/\\.c\\.plate-fill\\{[^}]*flex-direction:column/', $sheet);
         self::assertDoesNotMatchRegularExpression('/\\.plate-fill \\.map-plate\\{[^}]*min-height/', $sheet);
         self::assertDoesNotMatchRegularExpression('/\\.plate-fill \\.map-plate\\{[^}]*flex:1/', $sheet);
+    }
+
+    /** The one rule this screen states about its plate. */
+    private static function plateFillRule(): string
+    {
+        $matched = preg_match('/\\.c\\.plate-fill\\{[^}]*\\}/', self::stylesheet(), $m);
+        self::assertSame(1, $matched, 'The case file states a .c.plate-fill rule.');
+
+        return $m[0];
     }
 
     private static function stylesheet(): string
