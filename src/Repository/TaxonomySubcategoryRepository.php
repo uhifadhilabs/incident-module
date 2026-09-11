@@ -53,6 +53,28 @@ final class TaxonomySubcategoryRepository extends ServiceEntityRepository
         return $subcategory;
     }
 
+    /**
+     * One of THIS area's sub-categories by its wire-code — what a filed form, a
+     * saved filter and a handset all carry. Another area's word with the same
+     * code is a different word and is never answered with here.
+     */
+    public function findOneByAreaAndCode(AreaOfInterest $area, string $code): ?TaxonomySubcategory
+    {
+        if ('' === $code) {
+            return null;
+        }
+
+        /** @var TaxonomySubcategory|null $subcategory */
+        $subcategory = $this->createQueryBuilder('s')
+            ->join('s.kind', 'k')
+            ->andWhere('k.area = :area')->setParameter('area', $area)
+            ->andWhere('s.code = :code')->setParameter('code', $code)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $subcategory;
+    }
+
     /** The largest position among a kind's sub-categories, or -1 when it has none. */
     public function maxPositionForKind(TaxonomyKind $kind): int
     {

@@ -117,7 +117,7 @@ final class IncidentDetailController
             // The SAME builder the dashboard's maps use: one marker, one meaning,
             // wherever it is drawn. The legend states this incident's category
             // alone, because that is the only kind on the plate.
-            'map' => $this->map->forArea($area, [$incident], [$incident->getCategory()]),
+            'map' => $this->map->forArea($area, [$incident], [$incident->getKind()]),
             'canManage' => $this->canManage(),
             'csrfToken' => $this->csrfTokenManager?->getToken(self::csrfTokenId($area))->getValue(),
         ]));

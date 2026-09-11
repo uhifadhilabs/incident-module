@@ -34,7 +34,7 @@
       {{ stimulus_controller('@uhifadhi/incident-module/incident-filters') }}>
     {# The current choices ride along in the search form, so pressing Enter on a
        query keeps the category, status, zone, lens and month already chosen. #}
-    {% if filter.categorySlugs is not empty %}<input type="hidden" name="category" value="{{ filter.categorySlugs|join(',') }}">{% endif %}
+    {% if filter.kindCodes is not empty %}<input type="hidden" name="category" value="{{ filter.kindCodes|join(',') }}">{% endif %}
     {% if filter.statuses is not empty %}<input type="hidden" name="status" value="{{ filter.statuses|map(s => s.value)|join(',') }}">{% endif %}
     {% if filter.zoneName %}<input type="hidden" name="zone" value="{{ filter.zoneName }}">{% endif %}
     {% if filter.lens != 'all' %}<input type="hidden" name="lens" value="{{ filter.lens }}">{% endif %}
@@ -43,10 +43,10 @@
     {# CATEGORY — the all/kind chips collapsed into one dropdown. Each option is a
        real link driving ?category=, with its own hue dot and its count. #}
     {% set catLabel = 'all categories · ' ~ dashboard.filedCount %}
-    {% if filter.categorySlugs|length == 1 %}
-        {% for c in dashboard.categories|filter(c => c.slug in filter.categorySlugs) %}{% set catLabel = c.label|lower ~ ' · ' ~ dashboard.categoryCount(c) %}{% endfor %}
-    {% elseif filter.categorySlugs|length > 1 %}
-        {% set catLabel = filter.categorySlugs|length ~ ' categories' %}
+    {% if filter.kindCodes|length == 1 %}
+        {% for c in dashboard.kinds|filter(c => c.code in filter.kindCodes) %}{% set catLabel = c.label|lower ~ ' · ' ~ dashboard.kindCount(c) %}{% endfor %}
+    {% elseif filter.kindCodes|length > 1 %}
+        {% set catLabel = filter.kindCodes|length ~ ' categories' %}
     {% endif %}
     <span class="i-dd" data-dd>
         <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
@@ -55,12 +55,12 @@
         </button>
         <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by category">
             <span class="i-ddhead">category</span>
-            <a class="i-ddopt{{ filter.categorySlugs is empty ? ' on' }}" role="option" data-dd-opt
-               href="{{ path(here, {uuid: area.uuid}|merge(filter.withoutCategories.toQuery)) }}"><span class="i-dot"></span><span class="i-ddopt-l">All categories</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
+            <a class="i-ddopt{{ filter.kindCodes is empty ? ' on' }}" role="option" data-dd-opt
+               href="{{ path(here, {uuid: area.uuid}|merge(filter.withoutKinds.toQuery)) }}"><span class="i-dot"></span><span class="i-ddopt-l">All categories</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
             <span class="i-ddsep"></span>
-            {% for category in dashboard.categories %}
-                <a class="i-ddopt{{ category.slug in filter.categorySlugs ? ' on' }}" role="option" data-dd-opt
-                   href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyCategory(category.slug).toQuery)) }}"><span class="i-dot {{ category.colourKey }}"></span><span class="i-ddopt-l">{{ category.label|lower }}</span><span class="i-ddopt-n">{{ dashboard.categoryCount(category) }}</span></a>
+            {% for kind in dashboard.kinds %}
+                <a class="i-ddopt{{ kind.code in filter.kindCodes ? ' on' }}" role="option" data-dd-opt
+                   href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyKind(kind.code).toQuery)) }}"><span class="i-dot {{ kind.colourKey }}"></span><span class="i-ddopt-l">{{ kind.label|lower }}</span><span class="i-ddopt-n">{{ dashboard.kindCount(kind) }}</span></a>
             {% endfor %}
         </div>
     </span>
@@ -128,8 +128,8 @@
        it never fences, and "Every category" is always here, so nothing is out of
        reach through it. #}
     {% set lenses = {} %}
-    {% for category in dashboard.categories %}
-        {% for lead in category.leads %}
+    {% for kind in dashboard.kinds %}
+        {% for lead in kind.leads %}
             {% set lenses = lenses|merge({(lead|lower|split(' ')|first): lead}) %}
         {% endfor %}
     {% endfor %}

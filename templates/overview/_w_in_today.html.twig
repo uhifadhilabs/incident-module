@@ -25,10 +25,10 @@
             <span class="sub">resolved or closed today</span>
         </div>
     </div>
-    {% for category in o.categories %}
-        {% set filed = o.todayFor(category) %}
+    {% for kind in o.kinds %}
+        {% set filed = o.todayFor(kind) %}
         <div class="rln">
-            <span>{{ ui.cat(category, category.slug) }}</span>
+            <span>{{ ui.cat(kind, kind.code) }}</span>
             {% if filed is empty %}
                 <span class="mono d" style="font-size:11px">none today</span>
             {% else %}

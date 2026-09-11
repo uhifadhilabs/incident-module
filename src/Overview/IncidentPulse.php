@@ -77,7 +77,7 @@ final readonly class IncidentPulse implements PulseProviderInterface
                 ]),
                 // The kind of incident, as a colour — the same hue its pin wears
                 // on the plate above and its chip wears on the card beside it.
-                swatch: IncidentHues::of($incident->getCategory()->getColourKey()),
+                swatch: IncidentHues::of($incident->getKind()->getColourKey()),
                 state: $landed?->label(),
                 stateClass: $landed?->cssClass(),
                 meta: array_values(array_filter([

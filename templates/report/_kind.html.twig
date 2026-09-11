@@ -5,19 +5,19 @@
    room for them, so nothing has to hide. Choosing a kind selects its FIRST
    sub-category; step 2 then offers the siblings, exactly as the design draws it.
 
-   Parameters: controller, categories, chosen
+   Parameters: controller, kinds, chosen
    ========================================================================== #}
 <div class="i-catpick">
-    {% for category in categories %}
-        {% set slugs = [] %}
-        {% for sub in category.subcategories %}{% set slugs = slugs|merge([sub.slug]) %}{% endfor %}
-        {% set lit = chosen and chosen.category.slug == category.slug %}
+    {% for kind in kinds %}
+        {% set codes = [] %}
+        {% for sub in kind.subcategories %}{% set codes = codes|merge([sub.code]) %}{% endfor %}
+        {% set lit = chosen and chosen.kind.code == kind.code %}
         <label class="i-catopt{{ lit ? ' on' }}"
                {{ stimulus_target(controller, 'category')|stimulus_action(controller, 'choose', 'click') }}
-               data-subcategory="{{ slugs|first }}"
-               data-subcategories="{{ slugs|join(',') }}">
-            <span class="r"><i class="i-hue-{{ category.colourKey }}"></i><b>{{ category.label }}</b></span>
-            <span class="d">{% for sub in category.subcategories %}{{ sub.label }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
+               data-subcategory="{{ codes|first }}"
+               data-subcategories="{{ codes|join(',') }}">
+            <span class="r"><i class="i-hue-{{ kind.colourKey }}"></i><b>{{ kind.label }}</b></span>
+            <span class="d">{% for sub in kind.subcategories %}{{ sub.label }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
         </label>
     {% endfor %}
 </div>

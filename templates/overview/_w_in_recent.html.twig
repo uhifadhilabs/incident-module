@@ -14,7 +14,7 @@
     <span class="ao-by incidents"><i></i>incidents</span>
     {% for incident in o.latest %}
         <a class="i-hit" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
-            <span class="r1"><span class="id">{{ incident.reference }}</span>{{ ui.cat(incident.category, incident.subcategory.label) }}{{ ui.status(incident.status) }}</span>
+            <span class="r1"><span class="id">{{ incident.reference }}</span>{{ ui.cat(incident.kind, incident.subcategory.label) }}{{ ui.status(incident.status) }}</span>
             <span class="r2">{{ incident.headline }}</span>
             <span class="r3">
                 {{ ui.zone(incident) }}

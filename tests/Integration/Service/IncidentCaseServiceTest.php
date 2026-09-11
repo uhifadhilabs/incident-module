@@ -245,7 +245,7 @@ final class IncidentCaseServiceTest extends IntegrationTestCase
     {
         $here = $this->anAreaWithTaxonomy();
         $incident = $this->anIncident($here);
-        $elsewhere = $this->anIncident($this->anArea('Tembo Sector'));
+        $elsewhere = $this->anIncident($this->anAreaWithKinds('Tembo Sector'));
 
         $this->expectException(IncidentCaseException::class);
 
@@ -254,9 +254,7 @@ final class IncidentCaseServiceTest extends IntegrationTestCase
 
     private function anAreaWithTaxonomy(string $name = 'Kifaru Sector'): AreaOfInterest
     {
-        $this->installTaxonomy();
-
-        return $this->anArea($name);
+        return $this->anAreaWithKinds($name);
     }
 
     private function cases(): IncidentCaseService
@@ -269,9 +267,7 @@ final class IncidentCaseServiceTest extends IntegrationTestCase
 
     private function filedIncident(): Incident
     {
-        $this->installTaxonomy();
-
-        return $this->anIncident($this->anArea('Kifaru Sector'));
+        return $this->anIncident($this->anAreaWithKinds('Kifaru Sector'));
     }
 
     /** The row as the database holds it, with nothing of this request's in the way. */

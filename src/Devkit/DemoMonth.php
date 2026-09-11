@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Devkit;
 
-use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 
 /**
  * THE DESIGN'S SAMPLE MONTH, as data — the forty-seven incidents every widget in
@@ -47,6 +47,183 @@ use Uhifadhi\Incident\Entity\IncidentSubcategory;
  */
 final class DemoMonth
 {
+    /** The department names the sample month's kinds lead with, in the design's own words. */
+    public const string PROTECTION = 'Protection Service';
+    public const string ECOLOGY = 'Ecology & Wildlife Mgmt';
+
+    /**
+     * THE VOCABULARY THE SAMPLE MONTH IS FILED AGAINST — the design's reference
+     * card (IN·09), as data: four kinds and the sixteen sub-categories under
+     * them, with the colour each wears, the departments its lens leads with, which
+     * way money runs on it, what it promises and what it asks for.
+     *
+     * IT IS DEMO CONTENT, NOT A DEFAULT. The module ships no taxonomy and seeds
+     * none: a new area starts empty and writes its own words in the kinds editor.
+     * This table exists so that `fixtures:demo` produces an area whose editor,
+     * register and dashboard all agree, and it reaches a database only through
+     * devkit — which installs via `require-dev`.
+     *
+     * THREE RULINGS ARE WRITTEN INTO IT, and each is a decision that would
+     * otherwise be argued again every time somebody reads the code:
+     *
+     *  1. **Roadkill is ONE entry that carries a FINE.** Not a pair of linked
+     *     incidents, one ecological and one for the driver. A vehicle killing a
+     *     zebra is one event; whether a driver was fined is a fact about that
+     *     event, and the money field is how it is recorded.
+     *  2. **Money is per SUB-category, never per kind.** Roadkill carries a fine
+     *     while natural mortality beside it carries nothing, so the money block is
+     *     absent from one form and present in the other.
+     *  3. **Each sub-category promises its OWN term.** A human injury is 72 hours;
+     *     a construction notice is 14 days; a compensation claim is 30. One global
+     *     term would be a lie about all three.
+     *
+     * The conflict kind deliberately names BOTH departments in `leads`: it sits in
+     * both lenses, and the design says so on the reference card.
+     *
+     * The key of each entry is the WIRE-CODE the row is created with, so the codes
+     * the incident rows below name are the codes the seeded sub-categories hold.
+     *
+     * @return array<string, array{
+     *     label: string,
+     *     colour: string,
+     *     leads: list<string>,
+     *     subcategories: array<string, array{label: string, money: string|null, term_hours: int, fields: list<string>}>
+     * }>
+     */
+    public static function kinds(): array
+    {
+        return [
+            'poaching' => [
+                'label' => 'Poaching & wildlife crime',
+                'colour' => 'poach',
+                'leads' => [self::PROTECTION],
+                'subcategories' => [
+                    'snaring' => [
+                        'label' => 'snaring',
+                        'money' => 'fine',
+                        'term_hours' => 72,
+                        'fields' => ['Species', 'Snares lifted', 'Method', 'Suspects', 'Seizures'],
+                    ],
+                    'bushmeat' => [
+                        'label' => 'bushmeat',
+                        'money' => 'fine',
+                        'term_hours' => 72,
+                        'fields' => ['Species', 'Quantity', 'Method', 'Suspects', 'Seizures'],
+                    ],
+                    'ivory-trophy' => [
+                        'label' => 'ivory & trophy',
+                        'money' => 'fine',
+                        'term_hours' => 72,
+                        'fields' => ['Species', 'Trophy', 'Method', 'Suspects', 'Seizures'],
+                    ],
+                    'illegal-fishing' => [
+                        'label' => 'illegal fishing',
+                        'money' => 'fine',
+                        'term_hours' => 168,
+                        'fields' => ['Water body', 'Gear', 'Catch', 'Suspects', 'Seizures'],
+                    ],
+                ],
+            ],
+            'conflict' => [
+                'label' => 'Human–wildlife conflict',
+                'colour' => 'hwc',
+                // BOTH lenses lead with conflict — the design's reference card
+                // prints "leads: Protection · Ecology" against this one row.
+                'leads' => [self::PROTECTION, self::ECOLOGY],
+                'subcategories' => [
+                    'livestock-depredation' => [
+                        'label' => 'livestock depredation',
+                        'money' => 'compensation',
+                        'term_hours' => 720,
+                        'fields' => ['Species', 'Livestock lost', 'Enclosure', 'Household', 'Retaliation risk'],
+                    ],
+                    'crop-raiding' => [
+                        'label' => 'crop raiding',
+                        'money' => 'compensation',
+                        'term_hours' => 72,
+                        'fields' => ['Species', 'Crop', 'Area affected', 'Household', 'Deterrents in place'],
+                    ],
+                    'human-injury' => [
+                        'label' => 'human injury',
+                        'money' => 'compensation',
+                        'term_hours' => 72,
+                        'fields' => ['Species', 'Injuries', 'Treatment', 'Household', 'Circumstances'],
+                    ],
+                    'property-damage' => [
+                        'label' => 'property damage',
+                        'money' => 'compensation',
+                        'term_hours' => 336,
+                        'fields' => ['Species', 'Property', 'Extent', 'Household', 'Circumstances'],
+                    ],
+                ],
+            ],
+            'compliance' => [
+                'label' => 'Compliance & encroachment',
+                'colour' => 'comp',
+                'leads' => [self::PROTECTION],
+                'subcategories' => [
+                    'unauthorized-construction' => [
+                        'label' => 'unauthorized construction',
+                        'money' => 'fine',
+                        'term_hours' => 336,
+                        'fields' => ['Structures', 'Footprint', 'Permit status', 'Occupier', 'Notice served'],
+                    ],
+                    'illegal-grazing' => [
+                        'label' => 'illegal grazing',
+                        'money' => 'fine',
+                        'term_hours' => 336,
+                        'fields' => ['Herd size', 'Livestock type', 'Owner', 'Duration', 'Notice served'],
+                    ],
+                    'boundary-encroachment' => [
+                        'label' => 'boundary encroachment',
+                        'money' => 'fine',
+                        'term_hours' => 336,
+                        'fields' => ['Extent', 'Land use', 'Occupier', 'Boundary marker', 'Notice served'],
+                    ],
+                    'unlicensed-operation' => [
+                        'label' => 'unlicensed operation',
+                        'money' => 'fine',
+                        'term_hours' => 336,
+                        'fields' => ['Activity', 'Operator', 'Licence status', 'Vehicles', 'Notice served'],
+                    ],
+                ],
+            ],
+            'mortality' => [
+                'label' => 'Wildlife mortality',
+                'colour' => 'mort',
+                'leads' => [self::ECOLOGY],
+                'subcategories' => [
+                    // THE ROADKILL RULING, as one row: one entry, and it may carry
+                    // a fine. See the class docblock.
+                    'roadkill' => [
+                        'label' => 'roadkill',
+                        'money' => 'fine',
+                        'term_hours' => 168,
+                        'fields' => ['Species', 'Sex', 'Age class', 'Road segment', 'Carcass disposition', 'Vehicle'],
+                    ],
+                    'natural-mortality' => [
+                        'label' => 'natural mortality',
+                        'money' => null,
+                        'term_hours' => 168,
+                        'fields' => ['Species', 'Sex', 'Age class', 'Condition', 'Carcass disposition'],
+                    ],
+                    'disease-die-off' => [
+                        'label' => 'disease die-off',
+                        'money' => null,
+                        'term_hours' => 72,
+                        'fields' => ['Species', 'Individuals affected', 'Signs', 'Samples taken', 'Carcass disposition'],
+                    ],
+                    'poisoning' => [
+                        'label' => 'poisoning',
+                        'money' => null,
+                        'term_hours' => 168,
+                        'fields' => ['Species', 'Individuals affected', 'Suspected agent', 'Samples taken', 'Carcass disposition'],
+                    ],
+                ],
+            ],
+        ];
+    }
+
     /**
      * HOW FAR BACK THE SAMPLE REACHES, in days, ending TODAY.
      *
@@ -1166,9 +1343,9 @@ final class DemoMonth
      *
      * @return array<string, string>
      */
-    public static function detailsFor(IncidentSubcategory $subcategory, int $index): array
+    public static function detailsFor(TaxonomySubcategory $subcategory, int $index): array
     {
-        $answers = self::ANSWERS[$subcategory->getSlug()] ?? [];
+        $answers = self::ANSWERS[$subcategory->getCode()] ?? [];
         $details = [];
         foreach ($subcategory->getFieldSet() as $field) {
             $value = $answers[$field['key']] ?? null;

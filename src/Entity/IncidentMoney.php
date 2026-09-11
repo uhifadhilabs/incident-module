@@ -28,7 +28,7 @@ use Uhifadhi\Incident\Repository\IncidentMoneyRepository;
  * The DIRECTION is the sub-category's, never a choice made here: a fine is owed
  * TO the authority, a compensation claim is owed BY it, and the design refuses to
  * add the two together anywhere. A row exists only where
- * {@see IncidentSubcategory::carriesMoney()} — no row is how "this category
+ * {@see TaxonomySubcategory::carriesMoney()} — no row is how "this kind
  * carries no money" is stored, which is why the card is ABSENT rather than empty.
  *
  * AMOUNTS ARE WHOLE UNITS OF THE CURRENCY (shillings), as integers. TZS has no

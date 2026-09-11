@@ -31,7 +31,7 @@ final class IncidentListPageTest extends FunctionalTestCase
 
     public function testItListsEveryIncidentWithTheDesignsColumns(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->aZone($area, 'North Gate');
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
@@ -49,7 +49,7 @@ final class IncidentListPageTest extends FunctionalTestCase
     /** The shell draws the strip from this module's declaration, list tab lit. */
     public function testTheShellDrawsTheModulesThreeDataPlaces(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->url($area));
@@ -64,7 +64,7 @@ final class IncidentListPageTest extends FunctionalTestCase
     /** The same filter row the dashboard wears, with the lens among its chips. */
     public function testTheListWearsTheSameFilterRowAsTheDashboard(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -81,7 +81,7 @@ final class IncidentListPageTest extends FunctionalTestCase
     /** Twenty rows a page, and the pager carries the rest of the answer. */
     public function testAPageHoldsTwentyRowsAndThePagerCarriesTheRest(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $reporter = $this->aReporter();
         for ($i = 0; $i < IncidentListService::PER_PAGE + 3; ++$i) {
             $this->anIncident($area, 'livestock-depredation', 'Filed report number '.$i, $reporter);
@@ -102,7 +102,7 @@ final class IncidentListPageTest extends FunctionalTestCase
     /** The search narrows the list, and the caption counts what it narrowed to. */
     public function testTheSearchNarrowsTheListAndItsCount(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $reporter = $this->aReporter();
         $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside', $reporter);
         $this->anIncident($area, 'roadkill', 'Zebra roadkill on the C-road, km 12', $reporter);
@@ -118,7 +118,7 @@ final class IncidentListPageTest extends FunctionalTestCase
     /** An empty answer says so rather than drawing an empty table. */
     public function testAnAnswerWithNoRowsSaysSo(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->url($area, 'q=nothing-here-at-all'));
@@ -133,7 +133,7 @@ final class IncidentListPageTest extends FunctionalTestCase
      */
     public function testNothingOnThePageSaysRegister(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 

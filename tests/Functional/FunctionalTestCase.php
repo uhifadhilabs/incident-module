@@ -23,11 +23,11 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Incident\Entity\Incident;
-use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Service\IncidentReportService;
-use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\AreaVocabulary;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 
 /**
@@ -71,10 +71,6 @@ abstract class FunctionalTestCase extends WebTestCase
         // @see vendor/doctrine/orm/src/Tools/SchemaTool.php — getDropSchemaSQL(), dropSchema()
         $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
-
-        /** @var IncidentTaxonomyInstaller $installer */
-        $installer = static::getContainer()->get('test_public.incident.taxonomy_installer');
-        $installer->install();
 
         // THE HALF A DEPLOY ALREADY DOES. In an installation the registry
         // reconciles itself on a cache warm-up, so the catalogue holds this
@@ -206,12 +202,39 @@ abstract class FunctionalTestCase extends WebTestCase
         return $user;
     }
 
-    protected function subcategory(string $slug): IncidentSubcategory
+    /**
+     * AN AREA WITH THE MODULE ON AND WORDS TO FILE AGAINST. The module ships
+     * no taxonomy and seeds none, so an area is not fileable until somebody
+     * has written its kinds — {@see anArea()} is the empty one the kinds
+     * editor's own tests need, and this is the one every other test wants.
+     *
+     * The words are written through the kinds editor's own service, so no test
+     * can file against a vocabulary the editor could not have produced. See
+     * {@see AreaVocabulary}.
+     */
+    protected function anAreaWithKinds(string $name = 'Sample Area'): AreaOfInterest
     {
-        $subcategory = $this->em->getRepository(IncidentSubcategory::class)->findOneBy(['slug' => $slug]);
-        self::assertNotNull($subcategory, \sprintf('No sub-category "%s".', $slug));
+        $area = $this->anArea($name);
+        $this->vocabulary()->write($area);
+        $this->em->flush();
+
+        return $area;
+    }
+
+    protected function subcategory(AreaOfInterest $area, string $code): TaxonomySubcategory
+    {
+        $subcategory = $this->vocabulary()->subcategory($area, $code);
+        self::assertNotNull($subcategory, \sprintf('This area has no sub-category "%s" — were its kinds written?', $code));
 
         return $subcategory;
+    }
+
+    private function vocabulary(): AreaVocabulary
+    {
+        /** @var AreaVocabulary $vocabulary */
+        $vocabulary = static::getContainer()->get(AreaVocabulary::class);
+
+        return $vocabulary;
     }
 
     protected function anIncident(
@@ -226,7 +249,7 @@ abstract class FunctionalTestCase extends WebTestCase
 
         return $reports->file(
             area: $area,
-            subcategory: $this->subcategory($subcategory),
+            subcategory: $this->subcategory($area, $subcategory),
             title: $title,
             position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable(),

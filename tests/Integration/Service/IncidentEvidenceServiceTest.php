@@ -168,9 +168,7 @@ final class IncidentEvidenceServiceTest extends IntegrationTestCase
 
     private function filedIncident(): Incident
     {
-        $this->installTaxonomy();
-
-        return $this->anIncident($this->anArea('Kifaru Sector'));
+        return $this->anIncident($this->anAreaWithKinds('Kifaru Sector'));
     }
 
     /** The one stored row, as the database holds it. */

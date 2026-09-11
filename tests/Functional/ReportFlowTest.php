@@ -90,7 +90,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testStandaloneFilingRendersTheFullPageAtItsOwnRoute(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
@@ -116,7 +116,7 @@ final class ReportFlowTest extends FunctionalTestCase
     /** An honest back link, not a dismissal: it says where it goes. */
     public function testTheFullPageOffersAWayBackToTheRegister(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
@@ -143,7 +143,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testFilingFromARecordRendersTheSameFullPageAndNeverADrawer(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
@@ -162,7 +162,7 @@ final class ReportFlowTest extends FunctionalTestCase
     /** The source card rides at the head of the full page, above the questions. */
     public function testTheSourceCardRidesAtTheHeadOfTheFullPage(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
@@ -182,7 +182,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testTheLineIsPrefilledFromTheRecordsNoteAndTheCardKeepsTheOriginal(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
@@ -211,7 +211,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testAFilingThatArrivedCompleteShipsWithTheControlAlive(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $url = $this->fromARecordUrl($this->uuidOf($area)).'&category=livestock-depredation';
@@ -229,7 +229,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testALineLongerThanTheRegisterCanPrintIsStoredShortRatherThanRefused(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $html = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)))->html();
@@ -255,7 +255,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testAPartialPrefillRendersTheFullPageWithNoSourceCard(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         // Everything the hand-off sends EXCEPT the record.
@@ -281,7 +281,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testEveryEntryPointShipsTheSameDeadFileControlAndGate(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         // A record that carried nothing but its identity, so it is asked for
@@ -320,7 +320,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testTheFullPageRendersEveryStepWiredToTheController(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $standalone = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
@@ -363,7 +363,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testTheQuickFileDisciplineIsOneLineAndNotASection(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $standalone = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
@@ -396,7 +396,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testOnlyCategoriesThatCarryMoneyHaveAMoneyRow(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
@@ -423,7 +423,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testStepTwoOffersTheSiblingsUnderTheChosenKind(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
@@ -439,7 +439,7 @@ final class ReportFlowTest extends FunctionalTestCase
     /** Filing writes an incident, at `reported`, and lands on its case file. */
     public function testFilingCreatesAReportedIncidentAndOpensIt(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->aZone($area, 'North Gate');
         $reporter = $this->aReporter();
         $this->client->loginUser($reporter);
@@ -477,7 +477,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testAReportWithNoCategoryOrPlaceIsRefusedWithItsFormBack(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $html = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)))->html();
@@ -501,7 +501,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testAReportWithAPlaceButNothingSaidIsRefused(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $html = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)))->html();
@@ -526,7 +526,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testARefusedFilingFromARecordComesBackOnTheFullPage(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $query = http_build_query(self::FROM_A_RECORD + ['record' => Uuid::v7()->toRfc4122()]);
@@ -556,7 +556,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testTheSourceCardShowsTheObservationThisFilingCameFrom(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $query = http_build_query([
@@ -600,7 +600,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testTheSourceCardShowsTheRecordsPhotographs(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->fromAStubbedRecordUrl($this->uuidOf($area)));
@@ -633,7 +633,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testThePhotographsOpenInTheSharedPreviewComponent(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->fromAStubbedRecordUrl($this->uuidOf($area)));
@@ -659,7 +659,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testACardWithNoPhotographsSimplyHasNoStrip(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         // Same shape, a record the owning module has never heard of.
@@ -676,7 +676,7 @@ final class ReportFlowTest extends FunctionalTestCase
     /** Nothing came from anywhere, so there is no card claiming otherwise. */
     public function testThereIsNoSourceCardOnAFilingThatCameFromNowhere(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
@@ -692,7 +692,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testAReportArrivingFromAnObservationCarriesItsProvenance(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $observation = Uuid::v7();
         $this->client->loginUser($this->aReporter());
 
@@ -735,7 +735,7 @@ final class ReportFlowTest extends FunctionalTestCase
     /** A bad link opens an EMPTY form — as a page, since nothing came with it. */
     public function testAnUnreadablePrefillJustOpensAnEmptyForm(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)).'?record=not-a-uuid&lat=999&at=nonsense');
@@ -748,7 +748,7 @@ final class ReportFlowTest extends FunctionalTestCase
     /** Filing needs "incidents.record". Signed in is not the same as permitted. */
     public function testFilingIsRefusedWithoutTheRecordPermission(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aUser('bystander@example.test', 'No', 'Rights'));
 
         $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
@@ -759,7 +759,7 @@ final class ReportFlowTest extends FunctionalTestCase
     /** And a write with no token is refused, whoever is signed in. */
     public function testAWriteWithoutACsrfTokenIsRefused(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $this->client->request('POST', $this->createUrl($this->uuidOf($area)), [
@@ -780,7 +780,7 @@ final class ReportFlowTest extends FunctionalTestCase
      */
     public function testTheDashboardReportButtonNavigatesToTheFullPage(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $dashboard = $this->client->request('GET', $this->createUrl($this->uuidOf($area)));

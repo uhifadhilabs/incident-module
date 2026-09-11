@@ -64,8 +64,7 @@ final class CloseDueCommandTest extends IntegrationTestCase
 
     public function testItClosesOnlyTheIncidentsThatAreActuallyDue(): void
     {
-        $this->installTaxonomy();
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
 
         $due = $this->resolvedDaysAgo($area, IncidentWorkflow::CLOSE_AFTER_DAYS + 1);
         $notYet = $this->resolvedDaysAgo($area, IncidentWorkflow::CLOSE_AFTER_DAYS - 5);
@@ -90,9 +89,8 @@ final class CloseDueCommandTest extends IntegrationTestCase
     /** It sweeps every area — the clock keeps nobody's hours, and a boundary is not a thing time respects. */
     public function testItClosesDueIncidentsAcrossEveryArea(): void
     {
-        $this->installTaxonomy();
-        $here = $this->resolvedDaysAgo($this->anArea('Here'), IncidentWorkflow::CLOSE_AFTER_DAYS + 2);
-        $there = $this->resolvedDaysAgo($this->anArea('There'), IncidentWorkflow::CLOSE_AFTER_DAYS + 2);
+        $here = $this->resolvedDaysAgo($this->anAreaWithKinds('Here'), IncidentWorkflow::CLOSE_AFTER_DAYS + 2);
+        $there = $this->resolvedDaysAgo($this->anAreaWithKinds('There'), IncidentWorkflow::CLOSE_AFTER_DAYS + 2);
 
         $this->sweep();
         $this->em->clear();
@@ -105,8 +103,7 @@ final class CloseDueCommandTest extends IntegrationTestCase
     /** Idempotent: a second run closes nothing and does not fail. */
     public function testASecondRunClosesNothingMore(): void
     {
-        $this->installTaxonomy();
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->resolvedDaysAgo($area, IncidentWorkflow::CLOSE_AFTER_DAYS + 1);
 
         $this->sweep();
@@ -120,8 +117,7 @@ final class CloseDueCommandTest extends IntegrationTestCase
     /** With nothing resolved at all it succeeds and says so, rather than doing anything. */
     public function testWithNothingResolvedItSaysSo(): void
     {
-        $this->installTaxonomy();
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area); // filed, never moved
 
         $tester = $this->sweep();

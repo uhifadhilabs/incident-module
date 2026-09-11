@@ -79,7 +79,6 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->installTaxonomy();
     }
 
     /** The slug must match the module's, or the host never asks this provider anything. */
@@ -102,7 +101,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
 
     public function testItCountsWhatThisDepartmentsPeopleRecorded(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
         $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
@@ -123,7 +122,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
      */
     public function testTwoDepartmentsReadTheSameRowsAndGetDifferentNumbers(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $protection = $this->aDepartment('Protection Service');
         $ecology = $this->aDepartment('Ecology');
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
@@ -142,7 +141,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     /** An incident nobody's department can claim belongs to nobody's figures. */
     public function testAnIncidentWithNoRecorderBelongsToNoDepartment(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
         $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
@@ -161,7 +160,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
      */
     public function testTheWithinTermShareIsNullUntilSomethingIsResolved(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
         $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
@@ -176,7 +175,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
 
     public function testResolvedWorkIsScoredAgainstItsOwnCategorysTerm(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
         $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
@@ -201,7 +200,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
      */
     public function testFinesAndCompensationAreTwoPlatesAndAreNeverSummed(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
         $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
@@ -225,7 +224,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
      */
     public function testADepartmentThatTouchesNoMoneyGetsNoMoneyPlates(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
         $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
@@ -241,7 +240,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     /** Last month's figure travels with this month's, for the move the host prints. */
     public function testItCarriesLastMonthForTheMonthOverMonthMove(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
         $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');

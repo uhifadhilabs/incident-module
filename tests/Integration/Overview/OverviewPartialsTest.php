@@ -72,8 +72,7 @@ final class OverviewPartialsTest extends OverviewTestCase
      */
     public function testAnUnverifiedAreaDrawsAnEmDashAndSaysWhy(): void
     {
-        $area = $this->anArea('Quiet Area');
-        $this->installTaxonomy();
+        $area = $this->anAreaWithKinds('Quiet Area');
         $this->anIncident($area, 'snaring', 'Snare line at the forest edge', self::now()->modify('-2 hours'));
 
         $html = $this->render('in_flow', $area);
@@ -130,9 +129,7 @@ final class OverviewPartialsTest extends OverviewTestCase
 
     public function testTheMoneyCardDrawsAnEmDashWhereNothingIsOwed(): void
     {
-        $area = $this->anArea('Quiet Area');
-        $this->installTaxonomy();
-
+        $area = $this->anAreaWithKinds('Quiet Area');
         $html = $this->render('in_money', $area);
 
         self::assertStringContainsString('— · no compensation is outstanding', $html);

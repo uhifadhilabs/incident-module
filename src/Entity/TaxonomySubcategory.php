@@ -22,7 +22,8 @@ use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 
 /**
  * A SUB-CATEGORY under one area's kind — the second (and last) level of the
- * area-scoped taxonomy the design rules (two levels, no deeper).
+ * area-scoped taxonomy the design rules (two levels, no deeper), and the one
+ * thing an incident is filed against.
  *
  * WHAT A SUB-CATEGORY DECIDES is which of the platform's coded BEHAVIOUR BLOCKS
  * the filing form switches on for it ({@see $blocks}). Blocks are composed, not
@@ -34,6 +35,17 @@ use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
  * the block present means "not yet decided", and the block absent means the money
  * row is absent from the form entirely.
  *
+ * THE CLOCK IS THIS ROW'S TOO. {@see $termHours} is what THIS word promises: a
+ * human injury is 72 hours, a construction notice is 14 days, a compensation
+ * claim is 30. One term for a whole area would be a lie about all three, which is
+ * why the ageing widget reads the term off the row rather than off a setting.
+ *
+ * SO ARE THE QUESTIONS. {@see $fieldSet} is what the filing form asks for under
+ * this word, in the order it draws them — a conflict asks for species, livestock
+ * lost, enclosure and household; a roadkill asks for species, sex, age class and
+ * road segment. One incident table, one form component, a field set per
+ * sub-category.
+ *
  * WIRE-CODE, RETIREMENT, RENAMING — the same rules as {@see TaxonomyKind}: the
  * code never changes, retirement dims but keeps, nothing is deleted. Labels are
  * unique within the parent kind; codes are unique within the area.
@@ -44,6 +56,9 @@ use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 class TaxonomySubcategory
 {
     use TimestampableTrait;
+
+    /** What a term reads as when an area has not promised one. */
+    public const int DEFAULT_TERM_HOURS = 72;
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -79,6 +94,18 @@ class TaxonomySubcategory
      */
     #[ORM\Column(enumType: MoneyDirectionEnum::class, nullable: true)]
     private ?MoneyDirectionEnum $moneyDirection = null;
+
+    /** The term THIS word promises, in hours. See the class docblock. */
+    #[ORM\Column(options: ['default' => self::DEFAULT_TERM_HOURS])]
+    private int $termHours = self::DEFAULT_TERM_HOURS;
+
+    /**
+     * The fields this kind of incident asks for, in the order the form draws them.
+     *
+     * @var list<array{key: string, label: string}>
+     */
+    #[ORM\Column(type: 'json')]
+    private array $fieldSet = [];
 
     #[ORM\Column(options: ['default' => 0])]
     private int $position = 0;
@@ -188,6 +215,49 @@ class TaxonomySubcategory
     public function carriesMoney(): bool
     {
         return $this->hasBlock(BehaviorBlockEnum::Money);
+    }
+
+    public function getTermHours(): int
+    {
+        return $this->termHours;
+    }
+
+    public function setTermHours(int $termHours): static
+    {
+        $this->termHours = max(1, $termHours);
+
+        return $this;
+    }
+
+    /**
+     * The term as the design writes it on a chip: "72 h" under four days, "14 d"
+     * beyond — nobody reads 336 h as a fortnight.
+     */
+    public function termLabel(): string
+    {
+        return $this->termHours < 96
+            ? \sprintf('%d h', $this->termHours)
+            : \sprintf('%d d', intdiv($this->termHours, 24));
+    }
+
+    /** @return list<array{key: string, label: string}> */
+    public function getFieldSet(): array
+    {
+        return $this->fieldSet;
+    }
+
+    /** @param list<array{key: string, label: string}> $fieldSet */
+    public function setFieldSet(array $fieldSet): static
+    {
+        $this->fieldSet = $fieldSet;
+
+        return $this;
+    }
+
+    /** "conflict › livestock depredation" — the path chip on the detail page. */
+    public function path(): string
+    {
+        return $this->kind->getLabel().' › '.$this->label;
     }
 
     public function getPosition(): int

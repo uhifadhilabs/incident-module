@@ -41,8 +41,7 @@ final class EmptyDatabaseRebuildTest extends IntegrationTestCase
 
     public function testTheSchemaComesBackAndPostgisAnswers(): void
     {
-        $this->installTaxonomy();
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $zone = $this->aZone($area, 'North Gate');
 
         $incident = $this->anIncident($area);

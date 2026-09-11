@@ -19,18 +19,22 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Enum\BehaviorBlockEnum;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Enum\PartyRoleEnum;
 use Uhifadhi\Incident\Exception\IncidentEvidenceException;
-use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
+use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
+use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentEvidenceService;
 use Uhifadhi\Incident\Service\IncidentMoneyService;
 use Uhifadhi\Incident\Service\IncidentReportService;
-use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Service\TaxonomyAdminService;
 
 /**
  * A MONTH OF INCIDENTS TO LOOK AT — the sample month {@see DemoMonth} describes,
@@ -130,8 +134,10 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
 
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private IncidentTaxonomyInstaller $taxonomy,
-        private IncidentSubcategoryRepository $subcategories,
+        private TaxonomyAdminService $taxonomy,
+        private TaxonomyKindRepository $kinds,
+        private TaxonomySubcategoryRepository $subcategories,
+        private IncidentRepository $incidents,
         private IncidentReportService $reports,
         private IncidentMoneyService $money,
         private IncidentCaseService $cases,
@@ -171,15 +177,23 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
 
     public function load(): void
     {
-        // The taxonomy first: there is nothing to file an incident against
-        // without it, and a seeder that failed for that reason would send
-        // somebody hunting for a bug that is really a missing install step.
-        $this->taxonomy->install();
-
         $area = $this->firstArea();
         if (null === $area) {
             // An installation with no area is one with nowhere to file, and that
             // is a state rather than a failure.
+            return;
+        }
+
+        // THE AREA'S OWN WORDS FIRST, through the kinds editor's own service, so
+        // everything this seeder files appears in that editor. There is nothing to
+        // file an incident against until they exist, and a seeder that failed for
+        // that reason would send somebody hunting for a bug that is really a
+        // missing vocabulary.
+        $this->seedTheVocabulary($area);
+
+        if ($this->incidents->countFor($area) > 0) {
+            // SEEDED ONCE. A second run would file forty-seven more incidents and
+            // every total the gallery states would stop being true.
             return;
         }
 
@@ -196,7 +210,7 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
         $recorders = $this->recorders();
 
         foreach ($rows as $index => $row) {
-            $subcategory = $this->subcategories->findOneBySlug($row['subcategory']);
+            $subcategory = $this->subcategories->findOneByAreaAndCode($area, $row['subcategory']);
             if (null === $subcategory) {
                 continue;
             }
@@ -232,6 +246,43 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
                 [] === $recorders ? null : $recorders[($index + 1) % \count($recorders)],
                 $row['money'],
             );
+        }
+    }
+
+    /**
+     * THE SAMPLE MONTH'S KINDS, WRITTEN INTO THE AREA — through
+     * {@see TaxonomyAdminService}, the same door the kinds editor uses, so every
+     * word this seeder files against is a word an administrator can see, rename
+     * and retire.
+     *
+     * SEEDED ONCE. An area that already has a kind is left exactly as it is: its
+     * words are its own, and a demo seeder is not entitled to add to them.
+     */
+    private function seedTheVocabulary(AreaOfInterest $area): void
+    {
+        if ($this->kinds->areaHasAny($area)) {
+            return;
+        }
+
+        foreach (DemoMonth::kinds() as $code => $definition) {
+            $kind = $this->taxonomy->createKind($area, $definition['label'], $definition['colour'], $code);
+            $this->taxonomy->setKindLeads($kind, $definition['leads']);
+
+            foreach ($definition['subcategories'] as $subCode => $sub) {
+                $subcategory = $this->taxonomy->createSubcategory($kind, $sub['label'], $subCode);
+
+                // The money block, and only where the design says money runs.
+                // A word with no direction gets no block, which is what makes the
+                // money row ABSENT from its form rather than empty on it.
+                $direction = null === $sub['money'] ? null : MoneyDirectionEnum::from($sub['money']);
+                $this->taxonomy->setBlocks(
+                    $subcategory,
+                    null === $direction ? [] : [BehaviorBlockEnum::Money],
+                    $direction,
+                );
+                $this->taxonomy->setTermHours($subcategory, $sub['term_hours']);
+                $this->taxonomy->setFieldSet($subcategory, $sub['fields']);
+            }
         }
     }
 

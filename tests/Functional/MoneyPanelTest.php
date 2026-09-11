@@ -72,7 +72,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** GATED: no write panel before response has started. */
     public function testThePanelIsAbsentBeforeInProgress(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->client->loginUser($this->aManager());
 
@@ -82,7 +82,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** GATED: no write panel where the sub-category carries no money, even at in progress. */
     public function testThePanelIsAbsentWhereTheCategoryCarriesNoMoney(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->inProgress($area, 'natural-mortality');
         $this->client->loginUser($this->aManager());
 
@@ -92,7 +92,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** …and it appears at in progress on a category that does carry money. */
     public function testThePanelAppearsAtInProgressOnACategoryThatCarriesMoney(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->inProgress($area);
         $this->client->loginUser($this->aManager());
 
@@ -109,7 +109,7 @@ final class MoneyPanelTest extends FunctionalTestCase
      */
     public function testTheCompensationPanelAppearsAtVerified(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->verified($area, 'livestock-depredation');
         $this->client->loginUser($this->aManager());
 
@@ -121,7 +121,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** …and a FINE is not: enforcement starts at `in progress`, so the panel waits. */
     public function testTheFinePanelIsStillShutAtVerified(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->verified($area, 'illegal-grazing');
         $this->client->loginUser($this->aManager());
 
@@ -131,7 +131,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** A reporter, who cannot manage, is never shown the write panel. */
     public function testAReporterNeverSeesTheWritePanel(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->inProgress($area);
         $this->client->loginUser($this->aReporter());
 
@@ -141,7 +141,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** THE FIRST SAVE CREATES THE ROW and lights the read-only card. */
     public function testRecordingMoneyCreatesTheRowAndTheCardAppears(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->inProgress($area);
         $this->client->loginUser($this->aManager());
 
@@ -172,7 +172,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** THE WAIVE PATH — money given up on, with a reason, over HTTP. */
     public function testWaivingMoneyWithAReason(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->inProgress($area);
         $this->client->loginUser($this->aManager());
 
@@ -191,7 +191,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** A waiver with no reason is refused — a waiver without a reason is a deletion. */
     public function testAWaiverWithNoReasonIs422(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->inProgress($area);
         $this->client->loginUser($this->aManager());
 
@@ -206,7 +206,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** RESOLVE UNLOCKS ONCE THE MONEY IS SETTLED — the guard the whole panel exists to satisfy. */
     public function testSettlingTheMoneyUnlocksResolve(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->inProgress($area);
         $this->client->loginUser($this->aManager());
 
@@ -258,7 +258,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** Recording money needs "incidents.manage" — a reporter is refused. */
     public function testAReporterCannotRecordMoney(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->inProgress($area);
         $this->client->loginUser($this->aManager());
         $token = $this->csrfFor($area);
@@ -275,7 +275,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** A money write with no token is refused, whoever is signed in. */
     public function testAMoneyWriteWithoutACsrfTokenIsRefused(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->inProgress($area);
         $this->client->loginUser($this->aManager());
 
@@ -287,7 +287,7 @@ final class MoneyPanelTest extends FunctionalTestCase
     /** Posting money before response has started is refused, even directly. */
     public function testRecordingBeforeInProgressIs422(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area); // still reported
         $this->client->loginUser($this->aManager());
 

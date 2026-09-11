@@ -7,13 +7,13 @@
    ONE MARK FOR MONEY, never a second chip: a sub-category that carries a fine or
    a claim wears "¤" and nothing else. #}
 <div class="c" data-incident-kinds>
-    <span class="tab">Incident kinds<span class="src">· {{ dashboard.categories|length }} {{ dashboard.categories|length == 1 ? 'kind' : 'kinds' }} · {{ dashboard.categories|reduce((total, c) => total + c.subcategories|length, 0) }} sub-categories</span></span>
+    <span class="tab">Incident kinds<span class="src">· {{ dashboard.kinds|length }} {{ dashboard.kinds|length == 1 ? 'kind' : 'kinds' }} · {{ dashboard.kinds|reduce((total, c) => total + c.subcategories|length, 0) }} sub-categories</span></span>
     <div class="kx">
-        {% for category in dashboard.categories %}
+        {% for kind in dashboard.kinds %}
             <div class="kx-k">
-                <div class="kx-h"><i class="dot i-hue-{{ category.colourKey }}"></i><b>{{ category.label }}</b><span class="n">{{ dashboard.categoryCount(category) }}<em>this month</em></span></div>
+                <div class="kx-h"><i class="dot i-hue-{{ kind.colourKey }}"></i><b>{{ kind.label }}</b><span class="n">{{ dashboard.kindCount(kind) }}<em>this month</em></span></div>
                 <div class="kx-s">
-                    {%- for subcategory in category.subcategories -%}
+                    {%- for subcategory in kind.subcategories -%}
                         {% if not loop.first %} · {% endif %}<i class="{{ subcategory.moneyDirection ? 'm' }}">{{ subcategory.label|lower }}</i>
                     {%- endfor -%}
                 </div>

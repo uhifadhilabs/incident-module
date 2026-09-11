@@ -24,7 +24,7 @@
             <div class="i-col" data-place="{{ place.value }}">
                 <div class="i-colhd">{{ ui.status(place) }}<span class="n">{{ dashboard.statusCount(place) }}</span></div>
                 {% for incident in dashboard.column(place)|slice(0, colCap) %}
-                    <a class="i-card {{ incident.category.colourKey }}" draggable="true"
+                    <a class="i-card {{ incident.kind.colourKey }}" draggable="true"
                        data-reference="{{ incident.reference }}"
                        href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
                         {# The age goes red (.old) once the card is past its category's own term. #}

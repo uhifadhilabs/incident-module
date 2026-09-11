@@ -41,13 +41,12 @@ final class IncidentReportServiceTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->installTaxonomy();
     }
 
     /** EVERY source lands on `reported`. There is no way to file something verified. */
     public function testAFiledIncidentStartsAtReported(): void
     {
-        $incident = $this->anIncident($this->anArea());
+        $incident = $this->anIncident($this->anAreaWithKinds());
 
         self::assertSame(IncidentStatusEnum::Reported, $incident->getStatus());
         self::assertSame('INC-0001', $incident->getReference());
@@ -59,7 +58,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
     /** Case numbers are issued in order and never reused. */
     public function testCaseNumbersRunInOrder(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
 
         self::assertSame('INC-0001', $this->anIncident($area)->getReference());
         self::assertSame('INC-0002', $this->anIncident($area)->getReference());
@@ -73,7 +72,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
      */
     public function testTheZoneIsResolvedFromTheRealGeometry(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $west = $this->aZone($area, 'North Gate', -30.0, -29.5);
         $this->aZone($area, 'South Gate', -29.5, -29.0);
 
@@ -87,7 +86,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
     /** UNZONED IS A FIRST-CLASS ANSWER — an org with no zones is the normal state. */
     public function testAnAreaWithNoZonesFilesPerfectlyWell(): void
     {
-        $incident = $this->anIncident($this->anArea());
+        $incident = $this->anIncident($this->anAreaWithKinds());
 
         self::assertNull($incident->getZone());
         self::assertSame('unzoned', $incident->zoneLabel());
@@ -103,7 +102,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
      */
     public function testFilingOpensNoMoneyRecord(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
 
         $conflict = $this->anIncident($area, 'livestock-depredation');
         self::assertNull($conflict->getMoney());
@@ -119,7 +118,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
     /** Roadkill is the ruling made real: one entry, and it MAY carry a FINE. */
     public function testRoadkillMayCarryAFineRatherThanBeingTwoLinkedIncidents(): void
     {
-        $roadkill = $this->anIncident($this->anArea(), 'roadkill', 'Zebra roadkill on the C-road, km 12');
+        $roadkill = $this->anIncident($this->anAreaWithKinds(), 'roadkill', 'Zebra roadkill on the C-road, km 12');
 
         self::assertTrue($roadkill->carriesMoney());
         self::assertSame(MoneyDirectionEnum::Fine, $roadkill->getSubcategory()->getMoneyDirection());
@@ -135,9 +134,10 @@ final class IncidentReportServiceTest extends IntegrationTestCase
     public function testAnIncidentFiledFromAnObservationKeepsThatLinkForever(): void
     {
         $observation = Uuid::v7();
+        $area = $this->anAreaWithKinds();
         $incident = $this->reports()->file(
-            area: $this->anArea(),
-            subcategory: $this->subcategory('livestock-depredation'),
+            area: $area,
+            subcategory: $this->subcategory($area, 'livestock-depredation'),
             title: 'Fresh lion tracks 400 m from North Gate bomas',
             position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable('2026-08-22 08:15:00'),
@@ -163,9 +163,10 @@ final class IncidentReportServiceTest extends IntegrationTestCase
      */
     public function testAnSmsFromAVillageEntersLikeEverythingElse(): void
     {
+        $area = $this->anAreaWithKinds();
         $incident = $this->reports()->file(
-            area: $this->anArea(),
-            subcategory: $this->subcategory('crop-raiding'),
+            area: $area,
+            subcategory: $this->subcategory($area, 'crop-raiding'),
             title: 'Elephants in the gardens at Spring Basin',
             position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable('2026-08-22 06:00:00'),
@@ -184,9 +185,10 @@ final class IncidentReportServiceTest extends IntegrationTestCase
      */
     public function testOnlyTheFieldsTheCategoryAsksForAreStored(): void
     {
+        $area = $this->anAreaWithKinds();
         $incident = $this->reports()->file(
-            area: $this->anArea(),
-            subcategory: $this->subcategory('roadkill'),
+            area: $area,
+            subcategory: $this->subcategory($area, 'roadkill'),
             title: 'Zebra roadkill on the C-road',
             position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable('2026-08-21 16:20:00'),
@@ -200,7 +202,7 @@ final class IncidentReportServiceTest extends IntegrationTestCase
     public function testTheFilerIsNamedAsAPartyToTheirOwnReport(): void
     {
         $user = $this->aUser('ranger@example.test', 'Joseph', 'Mollel');
-        $incident = $this->anIncident($this->anArea(), reportedBy: $user);
+        $incident = $this->anIncident($this->anAreaWithKinds(), reportedBy: $user);
 
         $parties = $incident->getParties()->toArray();
         self::assertCount(1, $parties);

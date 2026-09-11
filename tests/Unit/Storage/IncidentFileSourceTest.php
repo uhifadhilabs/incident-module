@@ -17,9 +17,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\Incident;
-use Uhifadhi\Incident\Entity\IncidentCategory;
 use Uhifadhi\Incident\Entity\IncidentEvidence;
-use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Entity\TaxonomyKind;
+use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\EvidenceKindEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Storage\IncidentFileSource;
@@ -210,8 +210,8 @@ final class IncidentFileSourceTest extends TestCase
         $area = new AreaOfInterest()->setSource('test fixture');
         $area->setName('Kifaru Sector');
 
-        $category = new IncidentCategory('conflict', 'Human–wildlife conflict', 'hwc');
-        $subcategory = new IncidentSubcategory($category, 'livestock-depredation', 'livestock depredation');
+        $kind = new TaxonomyKind($area, 'conflict', 'Human–wildlife conflict', 'hwc');
+        $subcategory = new TaxonomySubcategory($kind, 'livestock-depredation', 'livestock depredation');
 
         $incident = new Incident(
             $area,

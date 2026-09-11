@@ -117,6 +117,28 @@ final class TaxonomyAdminService
         return $kind;
     }
 
+    /**
+     * The departments whose lens puts this kind first. ORDERING ONLY — it can
+     * never gate who may read a row; see {@see TaxonomyKind}.
+     *
+     * @param list<string> $leads
+     */
+    public function setKindLeads(TaxonomyKind $kind, array $leads): TaxonomyKind
+    {
+        $cleaned = [];
+        foreach ($leads as $lead) {
+            $lead = $this->cleanLabel($lead);
+            if ('' !== $lead && !\in_array($lead, $cleaned, true)) {
+                $cleaned[] = $lead;
+            }
+        }
+
+        $kind->setLeads($cleaned);
+        $this->em->flush();
+
+        return $kind;
+    }
+
     public function deactivateKind(TaxonomyKind $kind): TaxonomyKind
     {
         $kind->deactivate();
@@ -187,6 +209,52 @@ final class TaxonomyAdminService
         if ($subcategory->carriesMoney()) {
             $subcategory->setMoneyDirection($moneyDirection);
         }
+        $this->em->flush();
+
+        return $subcategory;
+    }
+
+    /**
+     * What this word promises, in hours — the clock the ageing widget and the
+     * case file read. Below an hour is not a promise; the entity clamps it.
+     */
+    public function setTermHours(TaxonomySubcategory $subcategory, int $hours): TaxonomySubcategory
+    {
+        $subcategory->setTermHours($hours);
+        $this->em->flush();
+
+        return $subcategory;
+    }
+
+    /**
+     * The questions this word asks, in the order the form draws them. Given as
+     * LABELS, because a label is what an administrator types and reads back; the
+     * key an answer is stored under is derived from it here.
+     *
+     * THE KEY IS THE LABEL, SLUGGED — so renaming a field IS renaming the field,
+     * and answers recorded under the old wording stop being asked for. That is the
+     * honest behaviour: "Livestock lost" becoming "Animals lost" is a change of
+     * question, and silently carrying the old answers under the new one would put
+     * words in a witness's mouth.
+     *
+     * @param list<string> $labels
+     */
+    public function setFieldSet(TaxonomySubcategory $subcategory, array $labels): TaxonomySubcategory
+    {
+        $fields = [];
+        foreach ($labels as $label) {
+            $label = $this->cleanLabel($label);
+            if ('' === $label) {
+                continue;
+            }
+
+            $key = trim(strtolower((string) preg_replace('/[^a-z0-9]+/i', '_', $label)), '_');
+            if ('' !== $key && !isset($fields[$key])) {
+                $fields[$key] = ['key' => $key, 'label' => $label];
+            }
+        }
+
+        $subcategory->setFieldSet(array_values($fields));
         $this->em->flush();
 
         return $subcategory;

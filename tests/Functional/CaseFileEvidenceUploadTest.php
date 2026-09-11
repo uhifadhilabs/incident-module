@@ -42,7 +42,7 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
 {
     public function testTheCaseFileDrawsTheAddTileInTheEvidenceGrid(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
         $this->client->loginUser($this->aManager());
 
@@ -59,7 +59,7 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
 
     public function testAPhotographIsAttachedToTheCase(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
         $this->client->loginUser($this->aManager());
 
@@ -84,7 +84,7 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
     /** Nothing happens on a case file without a line on its timeline saying so. */
     public function testAttachingWritesTheCaseAnEvidenceEvent(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
         $this->client->loginUser($this->aManager());
 
@@ -104,7 +104,7 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
      */
     public function testSomebodyWithoutManageMayNotAttachAnything(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
 
         // The token has to come from somebody the card was drawn for — the
@@ -128,7 +128,7 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
     /** The add tile is not drawn for somebody who may not use it. */
     public function testTheCaseFileOffersNoAddTileToSomebodyWhoMayNotAttach(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
         $this->client->loginUser($this->aReporter());
 
@@ -137,7 +137,7 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
 
     public function testEvidenceIsTakenBackOffTheCaseAndTheTrailSaysSo(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
         $this->client->loginUser($this->aManager());
         $this->upload($area, $incident, 'IMG_1204.png');
@@ -155,7 +155,7 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
 
     public function testSomebodyWithoutManageMayNotTakeEvidenceOff(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
         $this->client->loginUser($this->aManager());
         $this->upload($area, $incident, 'IMG_1204.png');
@@ -173,7 +173,7 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
     /** A tile the page drew itself carries the key its removal will name. */
     public function testAKeptTileCarriesAWorkingRemove(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
         $this->client->loginUser($this->aManager());
         $this->upload($area, $incident, 'IMG_1204.png');

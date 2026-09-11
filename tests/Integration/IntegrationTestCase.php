@@ -22,8 +22,8 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Incident\Entity\Incident;
-use Uhifadhi\Incident\Entity\IncidentSubcategory;
-use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
+use Uhifadhi\Incident\Entity\TaxonomySubcategory;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\AreaVocabulary;
 
 /**
  * Symfony-standard kernel testing: KernelTestCase + KERNEL_CLASS (phpunit.dist.xml)
@@ -153,20 +153,39 @@ abstract class IntegrationTestCase extends KernelTestCase
         return $department;
     }
 
-    /** The shipped taxonomy, installed — most tests need something to file against. */
-    protected function installTaxonomy(): void
+    /**
+     * AN AREA WITH WORDS TO FILE AGAINST. The module ships no taxonomy and
+     * seeds none, so an area is not fileable until somebody has written its
+     * kinds — {@see anArea()} is the empty one the kinds editor's own tests
+     * need, and this is the one every other test wants.
+     *
+     * The words are written through the kinds editor's own service, so no test
+     * can file against a vocabulary the editor could not have produced. See
+     * {@see AreaVocabulary}.
+     */
+    protected function anAreaWithKinds(string $name = 'Sample Area'): AreaOfInterest
     {
-        /** @var IncidentTaxonomyInstaller $installer */
-        $installer = static::getContainer()->get('test_public.incident.taxonomy_installer');
-        $installer->install();
+        $area = $this->anArea($name);
+        $this->vocabulary()->write($area);
+        $this->em->flush();
+
+        return $area;
     }
 
-    protected function subcategory(string $slug): IncidentSubcategory
+    protected function subcategory(AreaOfInterest $area, string $code): TaxonomySubcategory
     {
-        $subcategory = $this->em->getRepository(IncidentSubcategory::class)->findOneBy(['slug' => $slug]);
-        self::assertNotNull($subcategory, \sprintf('No sub-category "%s" — was the taxonomy installed?', $slug));
+        $subcategory = $this->vocabulary()->subcategory($area, $code);
+        self::assertNotNull($subcategory, \sprintf('This area has no sub-category "%s" — were its kinds written?', $code));
 
         return $subcategory;
+    }
+
+    private function vocabulary(): AreaVocabulary
+    {
+        /** @var AreaVocabulary $vocabulary */
+        $vocabulary = static::getContainer()->get(AreaVocabulary::class);
+
+        return $vocabulary;
     }
 
     /**
@@ -185,7 +204,7 @@ abstract class IntegrationTestCase extends KernelTestCase
 
         return $reports->file(
             area: $area,
-            subcategory: $this->subcategory($subcategory),
+            subcategory: $this->subcategory($area, $subcategory),
             title: $title,
             position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: $at ?? new \DateTimeImmutable('2026-08-20 05:41:00'),

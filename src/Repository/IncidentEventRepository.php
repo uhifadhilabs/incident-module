@@ -52,7 +52,7 @@ final class IncidentEventRepository extends ServiceEntityRepository
         $events = $this->createQueryBuilder('e')
             ->join('e.incident', 'i')->addSelect('i')
             ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.category', 'c')->addSelect('c')
+            ->join('s.kind', 'k')->addSelect('k')
             ->leftJoin('i.zone', 'z')->addSelect('z')
             ->andWhere('i.area = :area')->setParameter('area', $area)
             ->andWhere('e.occurredAt >= :since')->setParameter('since', $since)

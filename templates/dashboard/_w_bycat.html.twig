@@ -9,14 +9,14 @@
    The drawing is the chart layer's ({@see _charts.html.twig}); this partial turns
    the shares into labelled segments and centres the month's total. #}
 {% import '@UhifadhiIncident/dashboard/_charts.html.twig' as charts %}
-{% set shares = dashboard.categoryShares %}
+{% set shares = dashboard.kindShares %}
 <div class="c chartcard" data-w="bycat">
     <span class="tab">By category<span class="src">{% if dashboard.filter.from %}· {{ dashboard.filter.from|date('F Y')|lower }} {% endif %}· {{ dashboard.filedCount }} filed</span></span>
     {% set segments = [] %}
     {% for share in shares %}
         {% set segments = segments|merge([{
-            label: share.category.label,
-            class: share.category.colourKey,
+            label: share.kind.label,
+            class: share.kind.colourKey,
             count: share.count,
         }]) %}
     {% endfor %}

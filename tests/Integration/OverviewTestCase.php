@@ -55,11 +55,9 @@ abstract class OverviewTestCase extends IntegrationTestCase
      */
     protected function aRegister(): AreaOfInterest
     {
-        $area = $this->anArea('one area');
+        $area = $this->anAreaWithKinds('one area');
         $this->aZone($area, 'North Gate', -30.0, -29.7);
         $this->aZone($area, 'West Plains', -29.7, -29.5);
-        $this->installTaxonomy();
-
         $northGate = '{"type":"Point","coordinates":[-29.75,-3.21]}';
         $westPlains = '{"type":"Point","coordinates":[-29.60,-3.21]}';
 
@@ -136,7 +134,7 @@ abstract class OverviewTestCase extends IntegrationTestCase
 
         return $reports->file(
             area: $area,
-            subcategory: $this->subcategory($subcategory),
+            subcategory: $this->subcategory($area, $subcategory),
             title: $title,
             position: $position,
             now: new \DateTimeImmutable($at),

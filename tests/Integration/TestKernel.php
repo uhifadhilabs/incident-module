@@ -39,6 +39,8 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\AreaVocabulary;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedContentProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
@@ -268,6 +270,14 @@ final class TestKernel extends Kernel
             ->args([tagged_iterator('uhifadhi.devkit.content_provider')])->public();
         $services->alias('test_public.devkit.content_providers', CollectedContentProviders::class)->public();
 
+        // AN AREA'S WORDS, for the suites that need something to file against.
+        // The module ships no taxonomy, so this is the fixture that replaced
+        // "install the shipped one" — and it writes through the kinds editor's
+        // own service, which is why it is built here rather than hand-rolled.
+        $services->set(AreaVocabulary::class)
+            ->args([service('incident.taxonomy_admin'), service(TaxonomySubcategoryRepository::class)])
+            ->public();
+
         // The migrations bundle's dependency factory, which is private — the
         // locks read the configured paths off it and run the plans through it.
         $services->alias('test_public.doctrine.migrations.dependency_factory', 'doctrine.migrations.dependency_factory')
@@ -276,9 +286,8 @@ final class TestKernel extends Kernel
         // Public aliases so tests can reach private services, keyed by service id
         // for readability (see IntegrationTestCase::service()).
         foreach ([
-            'incident.taxonomy_installer',
             // The area-scoped taxonomy admin's logic, reached directly by its
-            // integration test.
+            // integration test and by the fixture that writes an area its words.
             'incident.taxonomy_admin',
             'incident.report',
             'incident.money',

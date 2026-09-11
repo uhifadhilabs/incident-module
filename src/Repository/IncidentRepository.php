@@ -21,7 +21,7 @@ use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
-use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\IncidentFilter;
@@ -166,7 +166,7 @@ final class IncidentRepository extends ServiceEntityRepository
 
         $qb = $this->createQueryBuilder('i')
             ->join('i.subcategory', 's')
-            ->join('s.category', 'c')
+            ->join('s.kind', 'k')
             ->select('i.reportedAt AS reportedAt');
         $this->applyFilter($qb, $filter->inWindow($start, $end));
 
@@ -202,7 +202,7 @@ final class IncidentRepository extends ServiceEntityRepository
         /** @var list<Incident> $incidents */
         $incidents = $this->createQueryBuilder('i')
             ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.category', 'c')->addSelect('c')
+            ->join('s.kind', 'k')->addSelect('k')
             // The zone comes with it: every row that prints one prints it, and a
             // lazy association here is one query per row on a list of rows.
             ->leftJoin('i.zone', 'z')->addSelect('z')
@@ -293,7 +293,7 @@ final class IncidentRepository extends ServiceEntityRepository
         /** @var list<Incident> $incidents */
         $incidents = $this->createQueryBuilder('i')
             ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.category', 'c')->addSelect('c')
+            ->join('s.kind', 'k')->addSelect('k')
             ->leftJoin('i.zone', 'z')->addSelect('z')
             ->andWhere('i.area = :area')->setParameter('area', $area)
             ->andWhere('i.status IN (:open)')
@@ -310,21 +310,21 @@ final class IncidentRepository extends ServiceEntityRepository
     }
 
     /**
-     * HOW MANY WERE FILED AGAINST EACH SUB-CATEGORY, by the sub-category's slug.
+     * HOW MANY WERE FILED AGAINST EACH SUB-CATEGORY, by its wire-code.
      *
-     * Keyed by SLUG rather than by id because the reader of this answer is the
-     * area's own vocabulary, whose sub-categories are told apart by a wire-code
-     * and not by a row of this table.
+     * Keyed by the CODE rather than by id because the reader of this answer is
+     * the area's own vocabulary, whose sub-categories are told apart by a
+     * wire-code and not by a row id.
      *
-     * @return array<string, int> sub-category slug => how many the window holds
+     * @return array<string, int> sub-category wire-code => how many the window holds
      */
-    public function countsBySubcategorySlug(AreaOfInterest $area, ?\DateTimeImmutable $from = null, ?\DateTimeImmutable $to = null): array
+    public function countsBySubcategoryCode(AreaOfInterest $area, ?\DateTimeImmutable $from = null, ?\DateTimeImmutable $to = null): array
     {
         $qb = $this->createQueryBuilder('i')
-            ->select('s.slug AS slug, COUNT(i.id) AS n')
+            ->select('s.code AS code, COUNT(i.id) AS n')
             ->join('i.subcategory', 's')
             ->andWhere('i.area = :area')->setParameter('area', $area)
-            ->groupBy('s.slug');
+            ->groupBy('s.code');
 
         if (null !== $from) {
             $qb->andWhere('i.reportedAt >= :from')->setParameter('from', $from);
@@ -333,12 +333,12 @@ final class IncidentRepository extends ServiceEntityRepository
             $qb->andWhere('i.reportedAt < :to')->setParameter('to', $to);
         }
 
-        /** @var list<array{slug: string, n: int|string}> $rows */
+        /** @var list<array{code: string, n: int|string}> $rows */
         $rows = $qb->getQuery()->getScalarResult();
 
         $counts = [];
         foreach ($rows as $row) {
-            $counts[$row['slug']] = (int) $row['n'];
+            $counts[$row['code']] = (int) $row['n'];
         }
 
         return $counts;
@@ -354,7 +354,7 @@ final class IncidentRepository extends ServiceEntityRepository
         /** @var list<Incident> $incidents */
         $incidents = $this->createQueryBuilder('i')
             ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.category', 'c')->addSelect('c')
+            ->join('s.kind', 'k')->addSelect('k')
             ->leftJoin('i.zone', 'z')->addSelect('z')
             ->andWhere('i.area = :area')->setParameter('area', $area)
             ->andWhere('i.reportedAt >= :from')->setParameter('from', $from)
@@ -396,7 +396,7 @@ final class IncidentRepository extends ServiceEntityRepository
         /** @var list<Incident> $incidents */
         $incidents = $this->closedOut($area, $from, $to)
             ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.category', 'c')->addSelect('c')
+            ->join('s.kind', 'k')->addSelect('k')
             ->leftJoin('i.zone', 'z')->addSelect('z')
             ->orderBy('i.reportedAt', 'DESC')
             ->addOrderBy('i.id', 'DESC')
@@ -437,7 +437,7 @@ final class IncidentRepository extends ServiceEntityRepository
         /** @var list<Incident> $incidents */
         $incidents = $this->createQueryBuilder('i')
             ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.category', 'c')->addSelect('c')
+            ->join('s.kind', 'k')->addSelect('k')
             ->leftJoin('i.zone', 'z')->addSelect('z')
             ->join('i.money', 'm')->addSelect('m')
             ->andWhere('i.area = :area')->setParameter('area', $area)
@@ -514,19 +514,19 @@ final class IncidentRepository extends ServiceEntityRepository
     /**
      * THE TERMS THIS AREA ACTUALLY WORKS TO, shortest promise first.
      *
-     * Read from the register rather than from the taxonomy as configured: the
-     * card names the shortest and the longest term an incident HERE is held to,
-     * and a deployment with a two-hour category nobody in this area has ever
-     * filed under would otherwise be quoted a term it does not keep.
+     * Read from the register rather than from the whole vocabulary: the card
+     * names the shortest and the longest term an incident HERE is held to, and a
+     * two-hour word nobody in this area has ever filed under would otherwise be
+     * quoted as a term it does not keep.
      *
-     * @return list<IncidentSubcategory>
+     * @return list<TaxonomySubcategory>
      */
     public function termsInUseFor(AreaOfInterest $area): array
     {
-        /** @var list<IncidentSubcategory> $subcategories */
+        /** @var list<TaxonomySubcategory> $subcategories */
         $subcategories = $this->getEntityManager()->createQueryBuilder()
             ->select('s')
-            ->from(IncidentSubcategory::class, 's')
+            ->from(TaxonomySubcategory::class, 's')
             ->join(Incident::class, 'i', Join::WITH, 'i.subcategory = s')
             ->andWhere('i.area = :area')->setParameter('area', $area)
             ->groupBy('s.id')
@@ -549,7 +549,7 @@ final class IncidentRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('i')
             ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.category', 'c')->addSelect('c')
+            ->join('s.kind', 'k')->addSelect('k')
             ->andWhere('i.status IN (:open)')
             ->setParameter('open', ['reported', 'verified', 'in_progress'])
             ->andWhere('i.assignedTo = :user OR (i.reportedBy = :user AND i.status = :reported)')
@@ -630,7 +630,7 @@ final class IncidentRepository extends ServiceEntityRepository
         /** @var list<Incident> $incidents */
         $incidents = $scoped
             ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.category', 'c')->addSelect('c')
+            ->join('s.kind', 'k')->addSelect('k')
             ->leftJoin('i.money', 'm')->addSelect('m')
             ->orderBy('i.reportedAt', 'ASC')
             ->getQuery()
@@ -688,7 +688,7 @@ final class IncidentRepository extends ServiceEntityRepository
             ->from(\Uhifadhi\Incident\Entity\IncidentEvidence::class, 'ev')
             ->join('ev.incident', 'i')->addSelect('i')
             ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.category', 'c')->addSelect('c')
+            ->join('s.kind', 'k')->addSelect('k')
             ->orderBy('ev.capturedAt', 'DESC')
             ->addOrderBy('ev.id', 'DESC')
             ->setMaxResults($limit);
@@ -701,13 +701,13 @@ final class IncidentRepository extends ServiceEntityRepository
 
     /**
      * THE ONE QUERY EVERYTHING ELSE IS BUILT ON: the filter, applied once, with
-     * the taxonomy joined because every screen prints the category beside the row.
+     * the taxonomy joined because every screen prints the kind beside the row.
      */
     private function filtered(IncidentFilter $filter): QueryBuilder
     {
         $qb = $this->createQueryBuilder('i')
             ->join('i.subcategory', 's')
-            ->join('s.category', 'c');
+            ->join('s.kind', 'k');
 
         return $this->applyFilter($qb, $filter);
     }
@@ -721,7 +721,7 @@ final class IncidentRepository extends ServiceEntityRepository
     {
         return $this->filtered($filter)
             ->addSelect('s')
-            ->addSelect('c')
+            ->addSelect('k')
             ->leftJoin('i.money', 'm')->addSelect('m')
             ->leftJoin('i.zone', 'lz')->addSelect('lz');
     }
@@ -736,8 +736,8 @@ final class IncidentRepository extends ServiceEntityRepository
         if (null !== $filter->to) {
             $qb->andWhere('i.reportedAt < :to')->setParameter('to', $filter->to);
         }
-        if ([] !== $filter->categorySlugs) {
-            $qb->andWhere('c.slug IN (:categorySlugs)')->setParameter('categorySlugs', $filter->categorySlugs);
+        if ([] !== $filter->kindCodes) {
+            $qb->andWhere('k.code IN (:kindCodes)')->setParameter('kindCodes', $filter->kindCodes);
         }
         if ([] !== $filter->statuses) {
             $qb->andWhere('i.status IN (:statuses)')
@@ -749,11 +749,11 @@ final class IncidentRepository extends ServiceEntityRepository
         if (null !== $filter->search && '' !== $filter->search) {
             // Matched against what a person can READ on a row — the reference (its
             // id), the title (its name), the narrative (what was reported) and the
-            // category it was filed under — the same fields the patrols library
-            // searches. `c` is always joined (see filtered()/latestEvidence());
+            // kind it was filed under — the same fields the patrols library
+            // searches. `k` is always joined (see filtered()/latestEvidence());
             // the zone is not, so "place" is left to its own chip rather than a
             // join that would break the callers that never join it.
-            $qb->andWhere('LOWER(i.reference) LIKE :search OR LOWER(i.title) LIKE :search OR LOWER(i.narrative) LIKE :search OR LOWER(c.label) LIKE :search')
+            $qb->andWhere('LOWER(i.reference) LIKE :search OR LOWER(i.title) LIKE :search OR LOWER(i.narrative) LIKE :search OR LOWER(k.label) LIKE :search')
                 ->setParameter('search', '%'.mb_strtolower($filter->search).'%');
         }
 

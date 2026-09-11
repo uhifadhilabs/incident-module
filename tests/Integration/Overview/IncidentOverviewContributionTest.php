@@ -135,9 +135,7 @@ final class IncidentOverviewContributionTest extends OverviewTestCase
      */
     public function testAnAreaWithNoRegisterPutsNoTileInTheStripAtAll(): void
     {
-        $area = $this->anArea('Quiet Area');
-        $this->installTaxonomy();
-
+        $area = $this->anAreaWithKinds('Quiet Area');
         self::assertSame([], $this->tiles()->nowTilesFor($area, self::now()));
     }
 
@@ -176,9 +174,7 @@ final class IncidentOverviewContributionTest extends OverviewTestCase
     /** A good day is allowed to look like one. */
     public function testAQuietAreaRaisesNothing(): void
     {
-        $area = $this->anArea('Quiet Area');
-        $this->installTaxonomy();
-
+        $area = $this->anAreaWithKinds('Quiet Area');
         self::assertSame([], $this->attention()->attentionFor($area, self::now()));
     }
 
@@ -206,9 +202,7 @@ final class IncidentOverviewContributionTest extends OverviewTestCase
      */
     public function testALayerWithNothingToDrawIsStillOnThePlate(): void
     {
-        $area = $this->anArea('Quiet Area');
-        $this->installTaxonomy();
-
+        $area = $this->anAreaWithKinds('Quiet Area');
         $layers = $this->layers()->mapLayersFor($area, self::now());
 
         self::assertCount(2, $layers);

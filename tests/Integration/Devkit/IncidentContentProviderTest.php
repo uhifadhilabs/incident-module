@@ -76,14 +76,20 @@ final class IncidentContentProviderTest extends IntegrationTestCase
         self::assertSame(47, $this->em->getRepository(Incident::class)->count([]));
     }
 
-    /** It installs the taxonomy itself: seeding that failed for a missing install step sends people bug-hunting. */
-    public function testItInstallsTheTaxonomyBeforeFilingAnything(): void
+    /**
+     * IT WRITES THE AREA'S OWN WORDS FIRST. Nothing is seeded on install, so a
+     * demo that filed before writing them would fail for a reason that looks like
+     * a bug and is really an empty vocabulary — and the words it writes are the
+     * ones the kinds editor shows, because it writes them through that editor's
+     * own service.
+     */
+    public function testItWritesTheAreasKindsBeforeFilingAnything(): void
     {
-        $this->anArea();
+        $area = $this->anArea();
 
         $this->provider()->load();
 
-        self::assertSame('livestock depredation', $this->subcategory('livestock-depredation')->getLabel());
+        self::assertSame('livestock depredation', $this->subcategory($area, 'livestock-depredation')->getLabel());
     }
 
     /**
@@ -409,10 +415,10 @@ final class IncidentContentProviderTest extends IntegrationTestCase
         self::assertSame(11, $dashboard->statusCount(IncidentStatusEnum::InProgress));
 
         // 18 conflict · 12 poaching · 9 compliance · 8 mortality.
-        self::assertSame(18, $dashboard->categoryCounts['conflict']);
-        self::assertSame(12, $dashboard->categoryCounts['poaching']);
-        self::assertSame(9, $dashboard->categoryCounts['compliance']);
-        self::assertSame(8, $dashboard->categoryCounts['mortality']);
+        self::assertSame(18, $dashboard->kindCounts['conflict']);
+        self::assertSame(12, $dashboard->kindCounts['poaching']);
+        self::assertSame(9, $dashboard->kindCounts['compliance']);
+        self::assertSame(8, $dashboard->kindCounts['mortality']);
 
         // And the funnel: 16 reached resolved, 5 reached closed.
         $reached = $dashboard->reachedCounts();

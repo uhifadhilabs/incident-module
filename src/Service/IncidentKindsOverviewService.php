@@ -14,25 +14,21 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Service;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
-use Uhifadhi\Incident\Entity\IncidentSubcategory;
 use Uhifadhi\Incident\Entity\TaxonomyKind;
 use Uhifadhi\Incident\Model\IncidentKindFigures;
 use Uhifadhi\Incident\Model\IncidentKinds;
 use Uhifadhi\Incident\Model\IncidentSubcategoryFigures;
 use Uhifadhi\Incident\Repository\IncidentRepository;
-use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 
 /**
  * THE AREA'S OWN VOCABULARY, WITH WHAT HAS BEEN FILED AGAINST EACH WORD.
  *
- * THE LIST IS THE AREA'S — {@see TaxonomyKind}, the model the kinds editor
- * writes, money direction and retirement included. The COUNTS are the filed
- * register's, which is still organised by the installation-wide
- * {@see IncidentSubcategory}; until the two models converge, a taxonomy
- * sub-category's counts are the incidents whose filed sub-category has the SAME
- * SLUG as the taxonomy sub-category's wire-code, and a word nothing matches
- * counts zero.
+ * THE LIST IS THE AREA'S, AND SO ARE THE COUNTS. Both sides are
+ * {@see TaxonomyKind} and {@see \Uhifadhi\Incident\Entity\TaxonomySubcategory}
+ * now: an incident is filed against one of these rows, so a word's count is the
+ * incidents filed against it and a word nothing has been filed against counts
+ * zero.
  *
  * THREE QUERIES, NOT THREE PER ROW. The month, the month before it and all time
  * are each one grouped count over the area, read here against the vocabulary.
@@ -41,7 +37,6 @@ final readonly class IncidentKindsOverviewService
 {
     public function __construct(
         private TaxonomyKindRepository $kinds,
-        private IncidentSubcategoryRepository $filedSubcategories,
         private IncidentRepository $incidents,
     ) {
     }
@@ -52,27 +47,24 @@ final readonly class IncidentKindsOverviewService
         $nextMonth = $thisMonth->modify('+1 month');
         $lastMonth = $thisMonth->modify('-1 month');
 
-        $inMonth = $this->incidents->countsBySubcategorySlug($area, $thisMonth, $nextMonth);
-        $inLastMonth = $this->incidents->countsBySubcategorySlug($area, $lastMonth, $thisMonth);
-        $ever = $this->incidents->countsBySubcategorySlug($area);
-
-        $terms = $this->termsBySlug();
+        $inMonth = $this->incidents->countsBySubcategoryCode($area, $thisMonth, $nextMonth);
+        $inLastMonth = $this->incidents->countsBySubcategoryCode($area, $lastMonth, $thisMonth);
+        $ever = $this->incidents->countsBySubcategoryCode($area);
 
         $figures = [];
         foreach ($this->kinds->forArea($area) as $entity) {
-            $figures[] = $this->figuresFor($entity, $inMonth, $inLastMonth, $ever, $terms);
+            $figures[] = $this->figuresFor($entity, $inMonth, $inLastMonth, $ever);
         }
 
         return new IncidentKinds($figures, $this->select($figures, $kind));
     }
 
     /**
-     * @param array<string, int>    $inMonth
-     * @param array<string, int>    $inLastMonth
-     * @param array<string, int>    $ever
-     * @param array<string, string> $terms
+     * @param array<string, int> $inMonth
+     * @param array<string, int> $inLastMonth
+     * @param array<string, int> $ever
      */
-    private function figuresFor(TaxonomyKind $kind, array $inMonth, array $inLastMonth, array $ever, array $terms): IncidentKindFigures
+    private function figuresFor(TaxonomyKind $kind, array $inMonth, array $inLastMonth, array $ever): IncidentKindFigures
     {
         $busiest = 0;
         foreach ($kind->getSubcategories() as $subcategory) {
@@ -93,7 +85,7 @@ final readonly class IncidentKindsOverviewService
                 allTime: $ever[$code] ?? 0,
                 heat: 0 === $busiest ? 0.0 : round(($inMonth[$code] ?? 0) / $busiest, 2),
                 moneyDirection: $subcategory->getMoneyDirection(),
-                termLabel: $terms[$code] ?? null,
+                termLabel: $subcategory->termLabel(),
                 active: $subcategory->isActive(),
             );
             $month += $inMonth[$code] ?? 0;
@@ -111,22 +103,6 @@ final readonly class IncidentKindsOverviewService
             lastMonth: $previous,
             allTime: $allTime,
         );
-    }
-
-    /**
-     * The term the matched filed sub-category promises, by its slug — the one
-     * property of a word this area's model does not carry itself.
-     *
-     * @return array<string, string>
-     */
-    private function termsBySlug(): array
-    {
-        $terms = [];
-        foreach ($this->filedSubcategories->findAll() as $subcategory) {
-            $terms[$subcategory->getSlug()] = $subcategory->termLabel();
-        }
-
-        return $terms;
     }
 
     /**

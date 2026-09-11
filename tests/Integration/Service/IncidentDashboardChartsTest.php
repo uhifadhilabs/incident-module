@@ -40,7 +40,6 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->installTaxonomy();
     }
 
     private function fileWithSeverity(
@@ -54,7 +53,7 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
         $reports = static::getContainer()->get('test_public.incident.report');
         $reports->file(
             area: $area,
-            subcategory: $this->subcategory($subcategory),
+            subcategory: $this->subcategory($area, $subcategory),
             title: $title,
             position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: $at,
@@ -65,7 +64,7 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
     /** The category donut reads the month's mix, biggest share first, zeroes dropped. */
     public function testCategorySharesAreBiggestFirstAndCarryTheirColour(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $august = new \DateTimeImmutable('2026-08-10 08:00:00');
         // Two conflict, one poaching — HWC is the larger share.
         $this->anIncident($area, 'livestock-depredation', 'Goats taken', at: $august);
@@ -77,9 +76,9 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
             from: new \DateTimeImmutable('2026-08-01'),
             to: new \DateTimeImmutable('2026-09-01'),
         );
-        $shares = $this->dashboard()->build($window, new \DateTimeImmutable(self::ANCHOR))->categoryShares();
+        $shares = $this->dashboard()->build($window, new \DateTimeImmutable(self::ANCHOR))->kindShares();
 
-        self::assertSame(['hwc', 'poach'], array_map(static fn (array $s) => $s['category']->getColourKey(), $shares));
+        self::assertSame(['hwc', 'poach'], array_map(static fn (array $s) => $s['kind']->getColourKey(), $shares));
         self::assertSame([2, 1], array_map(static fn (array $s) => $s['count'], $shares));
     }
 
@@ -90,7 +89,7 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
      */
     public function testSeverityCountsCoverTheModelsFourLevels(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $august = new \DateTimeImmutable('2026-08-10 08:00:00');
         $this->fileWithSeverity($area, 'snaring', 'A', IncidentSeverityEnum::Critical, $august);
         $this->fileWithSeverity($area, 'snaring', 'B', IncidentSeverityEnum::High, $august);
@@ -120,7 +119,7 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
     /** The trend carries its own six months, not the page's one. */
     public function testTheTrendCarriesSixMonths(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area, at: new \DateTimeImmutable('2026-08-10 08:00:00'));
 
         $window = new IncidentFilter(

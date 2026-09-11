@@ -95,8 +95,8 @@ final class IncidentOverviewFiguresTest extends OverviewTestCase
         $overview = $this->figures()->for($area, self::now());
 
         $byCategory = [];
-        foreach ($overview->categories as $category) {
-            $byCategory[$category->getSlug()] = \count($overview->todayFor($category));
+        foreach ($overview->kinds as $category) {
+            $byCategory[$category->getCode()] = \count($overview->todayFor($category));
         }
         self::assertSame(
             ['poaching' => 1, 'conflict' => 1, 'compliance' => 0, 'mortality' => 1],
@@ -147,8 +147,7 @@ final class IncidentOverviewFiguresTest extends OverviewTestCase
      */
     public function testTheMedianTimeToVerifyIsAbsentRatherThanZeroWhenNothingHasBeenVerified(): void
     {
-        $area = $this->anArea();
-        $this->installTaxonomy();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area, 'snaring', 'Snare line at the forest edge', self::now()->modify('-2 hours'));
 
         $overview = $this->figures()->for($area, self::now());
@@ -189,9 +188,7 @@ final class IncidentOverviewFiguresTest extends OverviewTestCase
      */
     public function testAnAreaWithNoRegisterAtAllReportsItselfEmpty(): void
     {
-        $area = $this->anArea('Quiet Area');
-        $this->installTaxonomy();
-
+        $area = $this->anAreaWithKinds('Quiet Area');
         $overview = $this->figures()->for($area, self::now());
 
         self::assertSame(0, $overview->total);

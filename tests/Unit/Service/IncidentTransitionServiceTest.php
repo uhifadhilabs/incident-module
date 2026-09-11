@@ -16,9 +16,10 @@ namespace Uhifadhi\Incident\Tests\Unit\Service;
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\Incident;
-use Uhifadhi\Incident\Entity\IncidentCategory;
 use Uhifadhi\Incident\Entity\IncidentMoney;
-use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Entity\TaxonomyKind;
+use Uhifadhi\Incident\Entity\TaxonomySubcategory;
+use Uhifadhi\Incident\Enum\BehaviorBlockEnum;
 use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
@@ -49,14 +50,17 @@ final class IncidentTransitionServiceTest extends TestCase
     /** A conflict incident: its sub-category carries compensation. */
     private function incident(bool $withMoney = false): Incident
     {
-        $category = new IncidentCategory('conflict', 'Human–wildlife conflict', 'hwc');
-        $subcategory = new IncidentSubcategory($category, 'livestock-depredation', 'livestock depredation');
+        $area = new AreaOfInterest()->setSource('test fixture');
+        $kind = new TaxonomyKind($area, 'conflict', 'Human–wildlife conflict', 'hwc');
+        $subcategory = new TaxonomySubcategory($kind, 'livestock-depredation', 'livestock depredation');
         if ($withMoney) {
-            $subcategory->setMoneyDirection(MoneyDirectionEnum::Compensation);
+            // The money block is what makes the row exist at all; the direction
+            // says which way it runs once it does.
+            $subcategory->setBlocks([BehaviorBlockEnum::Money])->setMoneyDirection(MoneyDirectionEnum::Compensation);
         }
 
         return new Incident(
-            new AreaOfInterest()->setSource('test fixture'),
+            $area,
             $subcategory,
             'INC-0313',
             'Lion killed four goats at Riverside',

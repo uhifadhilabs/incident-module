@@ -52,7 +52,7 @@ final class TransitionEndpointTest extends FunctionalTestCase
 
     public function testVerifyingMovesTheIncidentAndLeavesATrace(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $manager = $this->aManager();
         $this->client->loginUser($manager);
@@ -83,7 +83,7 @@ final class TransitionEndpointTest extends FunctionalTestCase
      */
     public function testAMoveThatWouldSkipVerificationIsRefused(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->client->loginUser($this->aManager());
 
@@ -108,7 +108,7 @@ final class TransitionEndpointTest extends FunctionalTestCase
      */
     public function testResolvingIsRefusedWhileTheClaimIsOutstanding(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $manager = $this->aManager();
         $this->client->loginUser($manager);
@@ -134,7 +134,7 @@ final class TransitionEndpointTest extends FunctionalTestCase
     /** …and settling it lets the same move through, unchanged. */
     public function testPayingTheClaimUnblocksTheSameMove(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->client->loginUser($this->aManager());
 
@@ -163,7 +163,7 @@ final class TransitionEndpointTest extends FunctionalTestCase
      */
     public function testNobodyCanCloseAnIncidentByPostingTheUrl(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass, no injury pattern');
         $this->client->loginUser($this->aManager());
 
@@ -187,7 +187,7 @@ final class TransitionEndpointTest extends FunctionalTestCase
     /** Moving an incident needs "incidents.manage". Filing one is not enough. */
     public function testAReporterMayFileAndMayNotMove(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $manager = $this->aManager();
         $this->client->loginUser($manager);
@@ -204,7 +204,7 @@ final class TransitionEndpointTest extends FunctionalTestCase
     /** A state-changing write with no token is refused, whoever is signed in. */
     public function testAMoveWithoutACsrfTokenIsRefused(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->client->loginUser($this->aManager());
 
@@ -216,7 +216,7 @@ final class TransitionEndpointTest extends FunctionalTestCase
     /** A transition the workflow has never heard of is a 404, not a 500. */
     public function testAnInventedTransitionIsNotFound(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->client->loginUser($this->aManager());
 

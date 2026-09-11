@@ -27,10 +27,17 @@ use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
  * every area owns its own. Northern Reserve's kinds are a different list from
  * Southern Reserve's; the two never merge, and nothing here is shared with another area.
  *
- * THIS IS THE ADMIN'S MODEL, distinct from {@see IncidentCategory} — which is the
- * bundle's older organisation-wide seeded taxonomy. The two coexist while the
- * platform converges on one; this one is what the area-scoped taxonomy admin
- * ({@see \Uhifadhi\Incident\Controller\IncidentTaxonomyController}) writes.
+ * THIS IS THE ONLY TAXONOMY THE MODULE HAS. Incidents are filed against the
+ * area's own words; there is no installation-wide vocabulary behind it, nothing
+ * is seeded on install, and the kinds editor
+ * ({@see \Uhifadhi\Incident\Controller\IncidentTaxonomyController}) is where every
+ * one of them is written.
+ *
+ * "LEADS" IS ORDERING, NOT ACCESS. {@see $leads} names the departments a lens
+ * puts first — and that is the whole of its power. Every department can open
+ * every kind; a lens changes one query parameter and no permission. Code that
+ * turned this field into a filter on WHO MAY READ would be the one thing this
+ * module's charter forbids.
  *
  * EMPTY-START, DEACTIVATE-NEVER-DELETE. An area begins with NO kinds — the
  * platform ships none and suggests none. A kind is created, renamed and RETIRED
@@ -83,6 +90,15 @@ class TaxonomyKind
      */
     #[ORM\Column(length: 16)]
     private string $colourKey;
+
+    /**
+     * The departments whose lens puts this kind first. Emphasis only — see the
+     * class docblock.
+     *
+     * @var list<string>
+     */
+    #[ORM\Column(type: 'json')]
+    private array $leads = [];
 
     #[ORM\Column(options: ['default' => 0])]
     private int $position = 0;
@@ -151,6 +167,26 @@ class TaxonomyKind
         return $this;
     }
 
+    /** @return list<string> */
+    public function getLeads(): array
+    {
+        return $this->leads;
+    }
+
+    /** @param list<string> $leads */
+    public function setLeads(array $leads): static
+    {
+        $this->leads = $leads;
+
+        return $this;
+    }
+
+    /** The card's own line: "leads: Protection · Ecology". */
+    public function leadsLine(): string
+    {
+        return implode(' · ', $this->leads);
+    }
+
     public function getPosition(): int
     {
         return $this->position;
@@ -195,6 +231,23 @@ class TaxonomyKind
         }
 
         return $this;
+    }
+
+    /**
+     * Whether ANY of this kind's sub-categories carries money. The taxonomy card
+     * and the report flow ask it before drawing a money row at all — and the
+     * answer is genuinely per sub-category, which is how roadkill can carry a fine
+     * while natural mortality beside it carries nothing.
+     */
+    public function carriesMoney(): bool
+    {
+        foreach ($this->subcategories as $subcategory) {
+            if ($subcategory->carriesMoney()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** How many sub-categories are still live under this kind. */

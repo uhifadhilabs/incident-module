@@ -27,7 +27,7 @@
 
 {% block shell_page_title %}{{ incident.reference }} — {{ incident.title }}{% endblock %}
 
-{% block shell_page_subtitle %}{% set money = incident.money %}{{ incident.category.label }} · {{ incident.subcategory.label }} · <b>{{ incident.status.label }}</b>
+{% block shell_page_subtitle %}{% set money = incident.money %}{{ incident.kind.label }} · {{ incident.subcategory.label }} · <b>{{ incident.status.label }}</b>
     · {{ incident.zoneLabel }} · filed {{ incident.reportedAt|date('D j M H:i')|lower }}{% if incident.events|first and incident.events|first.actorName %} by {{ incident.events|first.actorName }}{% endif %}
     {%- if money and money.isAssessed %} · {{ incident.money.currency }} {{ money.payable|number_format(0, '.', ',') }} {{ money.direction.assessedWord }}, {{ money.settled|number_format(0, '.', ',') }} {{ money.direction.settledWord }}{% endif %}
     · {{ incident.evidence|length }} pieces of evidence · {{ incident.parties|length }} parties.{% endblock %}
@@ -47,7 +47,7 @@
        never rendered empty. #}
     <div class="factband">
         <span class="f"><span class="k">Id</span><span class="v">{{ incident.reference }}</span></span>
-        <span class="f"><span class="k">Category</span><span class="v">{{ incident.category.label }}<em>{{ incident.subcategory.label }}</em></span></span>
+        <span class="f"><span class="k">Category</span><span class="v">{{ incident.kind.label }}<em>{{ incident.subcategory.label }}</em></span></span>
         <span class="f"><span class="k">Status</span><span class="v">{{ incident.status.label }}</span></span>
         <span class="f"><span class="k">Severity</span><span class="v">{{ incident.severity.label }}</span></span>
         <span class="f"><span class="k">Zone</span><span class="v">{{ incident.zoneLabel }}</span></span>
@@ -59,7 +59,7 @@
     </div>
 
     <div class="i-headchips">
-        <span class="i-path">{{ ui.cat(incident.category) }}<span class="sep">›</span><span class="i-sub">{{ incident.subcategory.label }}</span></span>
+        <span class="i-path">{{ ui.cat(incident.kind) }}<span class="sep">›</span><span class="i-sub">{{ incident.subcategory.label }}</span></span>
         {{ ui.status(incident.status) }}
         {{ ui.severity(incident.severity) }}
         {{ ui.zone(incident) }}

@@ -22,7 +22,6 @@ use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 use Uhifadhi\Incident\Controller\IncidentController;
 use Uhifadhi\Incident\Controller\IncidentKindsOverviewController;
 use Uhifadhi\Incident\Controller\IncidentListController;
-use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 use Uhifadhi\Incident\Repository\IncidentLinkRepository;
@@ -30,7 +29,6 @@ use Uhifadhi\Incident\Repository\IncidentMoneyRepository;
 use Uhifadhi\Incident\Repository\IncidentPartyRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\IncidentSettingsRepository;
-use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
@@ -44,7 +42,6 @@ use Uhifadhi\Incident\Service\IncidentMoneyService;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Incident\Service\IncidentSettingsService;
-use Uhifadhi\Incident\Service\IncidentTaxonomyInstaller;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
 use Uhifadhi\Incident\Service\TaxonomyAdminService;
@@ -58,7 +55,7 @@ use Uhifadhi\Incident\Twig\IncidentTrailExtension;
  * PHP (not YAML) on purpose: a reusable bundle must not force symfony/yaml onto
  * hosts, and FQCN references stay refactor-safe and phpstan-checked. Imported by
  * UhifadhiIncidentBundle::loadExtension(), which keeps only the config-DRIVEN
- * definitions (module category, taxonomy, currency, dev tooling).
+ * definitions (module category, currency, dev tooling).
  *
  * Everything below is defined EXPLICITLY — no autowire(), no autoconfigure(), and
  * ids prefixed with the bundle alias — because this bundle is installed by other
@@ -106,7 +103,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set('incident.dashboard', IncidentDashboardService::class)
         ->args([
             service(IncidentRepository::class),
-            service(IncidentCategoryRepository::class),
+            service(TaxonomyKindRepository::class),
             service('incident.transitions'),
             service('incident.map'),
             param('incident.currency'),
@@ -121,7 +118,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set('incident.overview.figures', IncidentOverviewFigures::class)
         ->args([
             service(IncidentRepository::class),
-            service(IncidentCategoryRepository::class),
+            service(TaxonomyKindRepository::class),
             service('router'),
             param('incident.currency'),
         ]);
@@ -188,17 +185,6 @@ return static function (ContainerConfigurator $container): void {
             service(TaxonomySubcategoryRepository::class),
         ]);
 
-    // The taxonomy the deployment records against. Registered unconditionally:
-    // without it there is nothing to file an incident against, so it is not dev
-    // tooling — see IncidentTaxonomyInstaller.
-    $services->set('incident.taxonomy_installer', IncidentTaxonomyInstaller::class)
-        ->args([
-            service('doctrine.orm.entity_manager'),
-            service(IncidentCategoryRepository::class),
-            service(IncidentSubcategoryRepository::class),
-            param('incident.taxonomy'),
-        ]);
-
     /*
      * Repositories keep FQCN ids — the one place the bundle-alias prefix cannot
      * be used: ServiceRepositoryCompilerPass keys its locator by SERVICE ID over
@@ -209,8 +195,6 @@ return static function (ContainerConfigurator $container): void {
      */
     foreach ([
         IncidentRepository::class,
-        IncidentCategoryRepository::class,
-        IncidentSubcategoryRepository::class,
         IncidentEventRepository::class,
         IncidentEvidenceRepository::class,
         IncidentPartyRepository::class,
@@ -251,7 +235,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('twig'),
             service('incident.dashboard'),
-            service(IncidentCategoryRepository::class),
+            service(TaxonomyKindRepository::class),
             // The HOST's widget framework, by its own service id: the module
             // ships a catalogue, never a copy of the algebra that resolves it.
             service(WidgetService::class),
@@ -288,7 +272,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('twig'),
             service('incident.dashboard'),
-            service(IncidentCategoryRepository::class),
+            service(TaxonomyKindRepository::class),
             service('incident.list'),
             param('incident.record_screens'),
             service('security.token_storage')->nullOnInvalid(),
@@ -300,13 +284,12 @@ return static function (ContainerConfigurator $container): void {
 
     /*
      * THE AREA'S OWN VOCABULARY, WITH WHAT HAS BEEN FILED AGAINST EACH WORD.
-     * The list is the area's taxonomy; the counts are the filed register's, read
-     * across by wire-code — see the service for the matching rule.
+     * Both sides are the area's own model, so a word's count is the incidents
+     * filed against that very row.
      */
     $services->set('incident.kinds_overview', IncidentKindsOverviewService::class)
         ->args([
             service(TaxonomyKindRepository::class),
-            service(IncidentSubcategoryRepository::class),
             service(IncidentRepository::class),
         ]);
 

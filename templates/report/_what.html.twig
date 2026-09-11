@@ -36,7 +36,7 @@
    The page writes the one line on a labelled row, in the same field set as where,
    when and how bad — one column with room for a caption under each answer.
 
-   Parameters: controller, categories, chosen, prefill
+   Parameters: controller, kinds, chosen, prefill
    ========================================================================== #}
 <div class="i-fieldset">
     <div class="i-fld"><label for="report-title">What happened</label>
@@ -81,11 +81,11 @@
 </div>
 
 {# THE SUB-CATEGORY'S OWN QUESTIONS, one set per sub-category. #}
-{% for category in categories %}
-    {% for subcategory in category.subcategories %}
-        {% set isChosen = chosen and chosen.slug == subcategory.slug %}
+{% for kind in kinds %}
+    {% for subcategory in kind.subcategories %}
+        {% set isChosen = chosen and chosen.code == subcategory.code %}
         <div class="i-fieldset" {{ stimulus_target(controller, 'fieldset') }}
-             data-subcategory="{{ subcategory.slug }}"{{ isChosen ? '' : ' hidden' }}>
+             data-subcategory="{{ subcategory.code }}"{{ isChosen ? '' : ' hidden' }}>
             <div class="hd">the fields {{ subcategory.label }} asks for</div>
 
             {# The siblings under this kind. Choosing one swaps the whole field
@@ -93,17 +93,17 @@
                whether there is a money row at all. #}
             <div class="i-fld"><label>Sub-category</label>
                 <span><span class="i-taxsub">
-                    {%- for sibling in category.subcategories -%}
-                        <a href="#" class="{{ sibling.slug == subcategory.slug ? 'on' }}"
+                    {%- for sibling in kind.subcategories -%}
+                        <a href="#" class="{{ sibling.code == subcategory.code ? 'on' }}"
                            {{ stimulus_target(controller, 'category')|stimulus_action(controller, 'choose', 'click') }}
-                           data-subcategory="{{ sibling.slug }}"
-                           data-subcategories="{{ sibling.slug }}">{{ sibling.label }}</a>
+                           data-subcategory="{{ sibling.code }}"
+                           data-subcategories="{{ sibling.code }}">{{ sibling.label }}</a>
                     {%- endfor -%}
                 </span></span></div>
 
             {% for field in subcategory.fieldSet %}
-                <div class="i-fld"><label for="d-{{ subcategory.slug }}-{{ field.key }}">{{ field.label }}</label>
-                    <span><input type="text" id="d-{{ subcategory.slug }}-{{ field.key }}"
+                <div class="i-fld"><label for="d-{{ subcategory.code }}-{{ field.key }}">{{ field.label }}</label>
+                    <span><input type="text" id="d-{{ subcategory.code }}-{{ field.key }}"
                                  name="details_{{ field.key }}"{{ isChosen ? '' : ' disabled' }}></span></div>
             {% endfor %}
 
@@ -119,14 +119,14 @@
 
 {# The chosen sub-category, as one value. The picker writes into it; without
    JavaScript the radios below carry it. #}
-<input type="hidden" name="subcategory" value="{{ chosen ? chosen.slug }}" data-incident-report-subcategory>
+<input type="hidden" name="subcategory" value="{{ chosen ? chosen.code }}" data-incident-report-subcategory>
 <noscript>
     <div class="i-fieldset">
         <div class="hd">what kind of incident</div>
-        {% for category in categories %}
-            {% for subcategory in category.subcategories %}
-                <div class="i-fld"><label><input type="radio" name="subcategory" value="{{ subcategory.slug }}"
-                    {{ chosen and chosen.slug == subcategory.slug ? 'checked' }}> {{ subcategory.path }}</label><span></span></div>
+        {% for kind in kinds %}
+            {% for subcategory in kind.subcategories %}
+                <div class="i-fld"><label><input type="radio" name="subcategory" value="{{ subcategory.code }}"
+                    {{ chosen and chosen.code == subcategory.code ? 'checked' }}> {{ subcategory.path }}</label><span></span></div>
             {% endfor %}
         {% endfor %}
     </div>

@@ -40,7 +40,7 @@
         {% for incident in list.incidents %}
             <tr>
                 <td><a href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">{{ ui.id(incident.reference) }}</a></td>
-                <td>{{ ui.cat(incident.category, incident.subcategory.label) }}</td>
+                <td>{{ ui.cat(incident.kind, incident.subcategory.label) }}</td>
                 <td class="i-what">{{ incident.headline }}
                     <em>{{ incident.sourceRecordLabel ?? incident.source.badge }}</em></td>
                 <td>{{ ui.zone(incident) }}</td>

@@ -21,8 +21,8 @@ use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\IncidentDashboard;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Model\IncidentRail;
-use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 
 /**
  * BUILDS THE DASHBOARD, once per request.
@@ -57,7 +57,7 @@ final readonly class IncidentDashboardService
 
     public function __construct(
         private IncidentRepository $incidents,
-        private IncidentCategoryRepository $categories,
+        private TaxonomyKindRepository $kinds,
         private IncidentTransitionService $transitions,
         private IncidentMapService $map,
         private string $currency,
@@ -67,18 +67,18 @@ final readonly class IncidentDashboardService
     public function build(IncidentFilter $filter, \DateTimeImmutable $now, ?UserInterface $viewer = null): IncidentDashboard
     {
         $incidents = $this->incidents->findFiltered($filter);
-        $categories = $this->categories->allInOrder();
+        $kinds = $this->kinds->forArea($filter->area);
 
         return new IncidentDashboard(
             filter: $filter,
             now: $now,
-            categories: $categories,
+            kinds: $kinds,
             filedCount: \count($incidents),
-            categoryCounts: self::byCategory($incidents),
+            kindCounts: self::byKind($incidents),
             statusCounts: self::byStatus($incidents),
             severityCounts: self::bySeverity($incidents),
             monthlyCounts: $this->incidents->monthlyFiledCounts($filter, $now),
-            matrix: self::byCategoryAndStatus($incidents),
+            matrix: self::byKindAndStatus($incidents),
             zoneCounts: self::byZone($incidents),
             dailyCounts: self::byDay($incidents, $filter),
             money: self::money($incidents),
@@ -92,9 +92,9 @@ final readonly class IncidentDashboardService
             pastTermCount: self::pastTermCount($incidents, $now),
             rail: $this->rail($filter, $now, $viewer),
             currency: $this->currency,
-            // Every category the taxonomy carries states a row, so a legend
-            // reads the same on a quiet month as on a busy one.
-            map: $this->map->forArea($filter->area, $incidents, $categories),
+            // Every kind this area keeps states a row, so a legend reads the
+            // same on a quiet month as on a busy one.
+            map: $this->map->forArea($filter->area, $incidents, $kinds),
         );
     }
 
@@ -140,12 +140,12 @@ final readonly class IncidentDashboardService
      *
      * @return array<string, int>
      */
-    private static function byCategory(array $incidents): array
+    private static function byKind(array $incidents): array
     {
         $counts = [];
         foreach ($incidents as $incident) {
-            $slug = $incident->getCategory()->getSlug();
-            $counts[$slug] = ($counts[$slug] ?? 0) + 1;
+            $code = $incident->getKind()->getCode();
+            $counts[$code] = ($counts[$code] ?? 0) + 1;
         }
 
         return $counts;
@@ -200,13 +200,13 @@ final readonly class IncidentDashboardService
      *
      * @return array<string, array<string, int>>
      */
-    private static function byCategoryAndStatus(array $incidents): array
+    private static function byKindAndStatus(array $incidents): array
     {
         $matrix = [];
         foreach ($incidents as $incident) {
-            $slug = $incident->getCategory()->getSlug();
+            $code = $incident->getKind()->getCode();
             $status = $incident->getStatus()->value;
-            $matrix[$slug][$status] = ($matrix[$slug][$status] ?? 0) + 1;
+            $matrix[$code][$status] = ($matrix[$code][$status] ?? 0) + 1;
         }
 
         return $matrix;

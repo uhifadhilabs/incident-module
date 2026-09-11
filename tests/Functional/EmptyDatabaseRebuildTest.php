@@ -37,7 +37,7 @@ final class EmptyDatabaseRebuildTest extends FunctionalTestCase
 
     public function testTheDashboardRendersOnARebuiltDatabase(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->aZone($area, 'North Gate');
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());

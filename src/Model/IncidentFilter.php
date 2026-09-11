@@ -15,7 +15,7 @@ namespace Uhifadhi\Incident\Model;
 
 use Symfony\Component\HttpFoundation\Request;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
-use Uhifadhi\Incident\Entity\IncidentCategory;
+use Uhifadhi\Incident\Entity\TaxonomyKind;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 
 /**
@@ -29,8 +29,8 @@ use Uhifadhi\Incident\Enum\IncidentStatusEnum;
  * must return a wider list, never a stack trace.
  *
  * THE LENS IS PART OF IT, AND IS ONLY EVER AN ORDERING. `lens=protection` selects
- * the category slugs that department leads; `lens=all` selects none, which is the
- * whole register. A lens can therefore be widened to everything with one click
+ * the wire-codes of the kinds that department leads IN THIS AREA; `lens=all`
+ * selects none, which is the whole register. A lens can therefore be widened to everything with one click
  * and can never hide a row from anybody — which is the module's charter, enforced
  * by the shape of this object rather than by a promise in a docblock.
  */
@@ -40,14 +40,14 @@ final readonly class IncidentFilter
     public const string LENS_ALL = 'all';
 
     /**
-     * @param list<string>             $categorySlugs empty means every kind
-     * @param list<IncidentStatusEnum> $statuses      empty means every place
+     * @param list<string>             $kindCodes empty means every kind
+     * @param list<IncidentStatusEnum> $statuses  empty means every place
      */
     public function __construct(
         public AreaOfInterest $area,
         public ?\DateTimeImmutable $from = null,
         public ?\DateTimeImmutable $to = null,
-        public array $categorySlugs = [],
+        public array $kindCodes = [],
         public array $statuses = [],
         public ?string $zoneName = null,
         public ?string $search = null,
@@ -61,49 +61,49 @@ final readonly class IncidentFilter
      */
     public function inWindow(?\DateTimeImmutable $from, ?\DateTimeImmutable $to): self
     {
-        return new self($this->area, $from, $to, $this->categorySlugs, $this->statuses, $this->zoneName, $this->search, $this->lens);
+        return new self($this->area, $from, $to, $this->kindCodes, $this->statuses, $this->zoneName, $this->search, $this->lens);
     }
 
-    /** The same filter with the category chips cleared — what an "all · 47" chip links to. */
-    public function withoutCategories(): self
+    /** The same filter with the kind chips cleared — what an "all · 47" chip links to. */
+    public function withoutKinds(): self
     {
         return new self($this->area, $this->from, $this->to, [], $this->statuses, $this->zoneName, $this->search, $this->lens);
     }
 
-    /** The same filter narrowed to one kind — what a category chip links to. */
-    public function onlyCategory(string $slug): self
+    /** The same filter narrowed to one kind — what a kind chip links to. */
+    public function onlyKind(string $code): self
     {
-        return new self($this->area, $this->from, $this->to, [$slug], $this->statuses, $this->zoneName, $this->search, $this->lens);
+        return new self($this->area, $this->from, $this->to, [$code], $this->statuses, $this->zoneName, $this->search, $this->lens);
     }
 
     /** The same filter narrowed to one place — what a matrix cell links to. */
     public function onlyStatus(IncidentStatusEnum $status): self
     {
-        return new self($this->area, $this->from, $this->to, $this->categorySlugs, [$status], $this->zoneName, $this->search, $this->lens);
+        return new self($this->area, $this->from, $this->to, $this->kindCodes, [$status], $this->zoneName, $this->search, $this->lens);
     }
 
     /** The same filter with the status cleared — what the status dropdown's "All statuses" links to. */
     public function withoutStatuses(): self
     {
-        return new self($this->area, $this->from, $this->to, $this->categorySlugs, [], $this->zoneName, $this->search, $this->lens);
+        return new self($this->area, $this->from, $this->to, $this->kindCodes, [], $this->zoneName, $this->search, $this->lens);
     }
 
     /** The same filter narrowed to one zone — what a zone dropdown option links to. */
     public function onlyZone(string $name): self
     {
-        return new self($this->area, $this->from, $this->to, $this->categorySlugs, $this->statuses, $name, $this->search, $this->lens);
+        return new self($this->area, $this->from, $this->to, $this->kindCodes, $this->statuses, $name, $this->search, $this->lens);
     }
 
     /** The same filter with the zone cleared — what the zone dropdown's "All zones" links to. */
     public function withoutZone(): self
     {
-        return new self($this->area, $this->from, $this->to, $this->categorySlugs, $this->statuses, null, $this->search, $this->lens);
+        return new self($this->area, $this->from, $this->to, $this->kindCodes, $this->statuses, null, $this->search, $this->lens);
     }
 
     /** Whether anything at all is narrowing the register beyond its window. */
     public function isNarrowed(): bool
     {
-        return [] !== $this->categorySlugs
+        return [] !== $this->kindCodes
             || [] !== $this->statuses
             || null !== $this->zoneName
             || (null !== $this->search && '' !== $this->search);
@@ -120,8 +120,11 @@ final readonly class IncidentFilter
     public function toQuery(): array
     {
         $query = [];
-        if ([] !== $this->categorySlugs) {
-            $query['category'] = implode(',', $this->categorySlugs);
+        if ([] !== $this->kindCodes) {
+            // The key stays `category`: it is what saved links and an offline
+            // handset already hold, and a wire name is not renamed to follow a
+            // class name.
+            $query['category'] = implode(',', $this->kindCodes);
         }
         if ([] !== $this->statuses) {
             $query['status'] = implode(',', array_map(static fn (IncidentStatusEnum $s) => $s->value, $this->statuses));
@@ -135,7 +138,7 @@ final readonly class IncidentFilter
         if (self::LENS_ALL !== $this->lens) {
             $query['lens'] = $this->lens;
         }
-        // THE WINDOW RIDES ALONG as `month=YYYY-MM`, so choosing a category, status
+        // THE WINDOW RIDES ALONG as `month=YYYY-MM`, so choosing a kind, status
         // or zone keeps the month the person is looking at, and the month dropdown
         // can switch it while keeping everything else. This is the one exception to
         // "the window is the page's, not the chip's": now the month IS a chip.
@@ -150,25 +153,25 @@ final readonly class IncidentFilter
      * READ A REQUEST. Everything here is untrusted, so an unknown status is
      * dropped rather than refused and an unknown lens simply shows everything.
      *
-     * @param list<IncidentCategory> $categories the taxonomy, for resolving a lens to the slugs it leads
+     * @param list<TaxonomyKind> $kinds this area's kinds, for resolving a lens to the codes it leads
      */
     public static function fromRequest(
         Request $request,
         AreaOfInterest $area,
-        array $categories,
+        array $kinds,
         ?\DateTimeImmutable $from = null,
         ?\DateTimeImmutable $to = null,
     ): self {
         $lens = $request->query->getString('lens', self::LENS_ALL);
         $lens = '' === $lens ? self::LENS_ALL : $lens;
 
-        $slugs = self::splitSlugs($request->query->getString('category'));
-        if ([] === $slugs && self::LENS_ALL !== $lens) {
-            $slugs = self::categoriesLedBy($categories, $lens);
+        $codes = self::splitCodes($request->query->getString('category'));
+        if ([] === $codes && self::LENS_ALL !== $lens) {
+            $codes = self::kindsLedBy($kinds, $lens);
         }
 
         $statuses = [];
-        foreach (self::splitSlugs($request->query->getString('status')) as $value) {
+        foreach (self::splitCodes($request->query->getString('status')) as $value) {
             $status = IncidentStatusEnum::tryFrom($value);
             if (null !== $status) {
                 $statuses[] = $status;
@@ -182,7 +185,7 @@ final readonly class IncidentFilter
             $area,
             $from,
             $to,
-            $slugs,
+            $codes,
             $statuses,
             '' !== $zone ? $zone : null,
             '' !== $search ? $search : null,
@@ -199,32 +202,32 @@ final readonly class IncidentFilter
      * and on a prefix, because the lens in the URL is a short word ("protection")
      * and the taxonomy's own words are the full ones ("Protection Service").
      *
-     * @param list<IncidentCategory> $categories
+     * @param list<TaxonomyKind> $kinds
      *
      * @return list<string>
      */
-    public static function categoriesLedBy(array $categories, string $lens): array
+    public static function kindsLedBy(array $kinds, string $lens): array
     {
         $needle = mb_strtolower(trim($lens));
         if ('' === $needle || self::LENS_ALL === $needle) {
             return [];
         }
 
-        $slugs = [];
-        foreach ($categories as $category) {
-            foreach ($category->getLeads() as $lead) {
+        $codes = [];
+        foreach ($kinds as $kind) {
+            foreach ($kind->getLeads() as $lead) {
                 if (str_starts_with(mb_strtolower($lead), $needle)) {
-                    $slugs[] = $category->getSlug();
+                    $codes[] = $kind->getCode();
                     break;
                 }
             }
         }
 
-        return $slugs;
+        return $codes;
     }
 
     /** @return list<string> */
-    private static function splitSlugs(string $raw): array
+    private static function splitCodes(string $raw): array
     {
         $parts = [];
         foreach (explode(',', $raw) as $part) {

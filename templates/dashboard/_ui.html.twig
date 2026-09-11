@@ -13,8 +13,8 @@
 
 {# The kind of incident: a dot in the category's own hue, and a name. `sub` prints
    the sub-category instead of the kind, which is what the register's rows show. #}
-{% macro cat(category, label, ghost) %}
-    <span class="i-cat {{ category.colourKey }}{{ ghost ? ' ghost' }}"><i></i>{{ label ?? category.label }}</span>
+{% macro cat(kind, label, ghost) %}
+    <span class="i-cat {{ kind.colourKey }}{{ ghost ? ' ghost' }}"><i></i>{{ label ?? kind.label }}</span>
 {% endmacro %}
 
 {# Where an incident is. Never a dropdown — see IncidentTransitionService. #}

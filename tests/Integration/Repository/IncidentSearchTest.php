@@ -39,7 +39,6 @@ final class IncidentSearchTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->installTaxonomy();
     }
 
     /** @return list<string> the titles the search returned, so order and set are both asserted */
@@ -56,7 +55,7 @@ final class IncidentSearchTest extends IntegrationTestCase
     /** A search on the TITLE narrows to the incidents whose name carries the words. */
     public function testSearchMatchesTheTitle(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area, title: 'Lion took four goats at Riverside');
         $this->anIncident($area, subcategory: 'snaring', title: 'Wire trap by the ford');
 
@@ -66,7 +65,7 @@ final class IncidentSearchTest extends IntegrationTestCase
     /** A search on the REFERENCE narrows to the one incident that carries that id. */
     public function testSearchMatchesTheReference(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $one = $this->anIncident($area, title: 'First filing');
         $this->anIncident($area, subcategory: 'snaring', title: 'Second filing');
 
@@ -76,7 +75,7 @@ final class IncidentSearchTest extends IntegrationTestCase
     /** A search on the CATEGORY it was filed under finds every incident of that kind. */
     public function testSearchMatchesTheCategoryLabel(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         // 'snaring' lives under the "Poaching & wildlife crime" category.
         $this->anIncident($area, subcategory: 'snaring', title: 'Snare line lifted');
         // 'livestock-depredation' lives under "Human–wildlife conflict".
@@ -88,12 +87,12 @@ final class IncidentSearchTest extends IntegrationTestCase
     /** A search on the NARRATIVE — what was actually reported — finds it too. */
     public function testSearchMatchesTheNarrative(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         /** @var IncidentReportService $reports */
         $reports = static::getContainer()->get('test_public.incident.report');
         $reports->file(
             area: $area,
-            subcategory: $this->subcategory('snaring'),
+            subcategory: $this->subcategory($area, 'snaring'),
             title: 'Report with detail',
             position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable('2026-08-20 05:41:00'),
@@ -107,7 +106,7 @@ final class IncidentSearchTest extends IntegrationTestCase
     /** Search is case-insensitive: a ranger types however they type. */
     public function testSearchIsCaseInsensitive(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area, subcategory: 'snaring', title: 'Snare line lifted');
 
         self::assertSame(['Snare line lifted'], $this->titlesMatching('POACHING', $area));
@@ -116,7 +115,7 @@ final class IncidentSearchTest extends IntegrationTestCase
     /** A query that matches nothing returns an empty register, not everything. */
     public function testSearchThatMatchesNothingReturnsNothing(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area, title: 'Lion took four goats');
 
         self::assertSame([], $this->titlesMatching('helicopter', $area));

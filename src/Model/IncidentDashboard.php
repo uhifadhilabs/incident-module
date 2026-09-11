@@ -15,8 +15,8 @@ namespace Uhifadhi\Incident\Model;
 
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 use Uhifadhi\Incident\Entity\Incident;
-use Uhifadhi\Incident\Entity\IncidentCategory;
 use Uhifadhi\Incident\Entity\IncidentEvidence;
+use Uhifadhi\Incident\Entity\TaxonomyKind;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
@@ -41,12 +41,12 @@ use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 final readonly class IncidentDashboard
 {
     /**
-     * @param list<IncidentCategory>                                                                           $categories     the taxonomy, in its own order
-     * @param array<string, int>                                                                               $categoryCounts category slug => count in the window
+     * @param list<TaxonomyKind>                                                                               $kinds          this area's kinds, in its own order
+     * @param array<string, int>                                                                               $kindCounts     kind wire-code => count in the window
      * @param array<string, int>                                                                               $statusCounts   status value => count, every place present
      * @param array<string, int>                                                                               $severityCounts severity value => count this window, every level present
      * @param array<string, int>                                                                               $monthlyCounts  'Y-m' => filings that month, six months, oldest first
-     * @param array<string, array<string, int>>                                                                $matrix         category slug => status value => count
+     * @param array<string, array<string, int>>                                                                $matrix         kind wire-code => status value => count
      * @param array<string, int>                                                                               $zoneCounts     zone name ('' = unzoned) => count
      * @param array<string, int>                                                                               $dailyCounts    Y-m-d => count, every day of the window present
      * @param array<string, array{claimed: int, assessed: int, approved: int, settled: int, outstanding: int}> $money          keyed by {@see MoneyDirectionEnum} value
@@ -61,9 +61,9 @@ final readonly class IncidentDashboard
     public function __construct(
         public IncidentFilter $filter,
         public \DateTimeImmutable $now,
-        public array $categories,
+        public array $kinds,
         public int $filedCount,
-        public array $categoryCounts,
+        public array $kindCounts,
         public array $statusCounts,
         public array $severityCounts,
         public array $monthlyCounts,
@@ -115,9 +115,9 @@ final readonly class IncidentDashboard
     }
 
     /** How many of one kind reached one place — the matrix's cells. */
-    public function matrixCount(IncidentCategory $category, IncidentStatusEnum $place): int
+    public function matrixCount(TaxonomyKind $kind, IncidentStatusEnum $place): int
     {
-        return $this->matrix[$category->getSlug()][$place->value] ?? 0;
+        return $this->matrix[$kind->getCode()][$place->value] ?? 0;
     }
 
     /** How many are still somebody's work — the design's "31 open". */
@@ -210,28 +210,28 @@ final readonly class IncidentDashboard
         return $grouped;
     }
 
-    /** The count against one category, zero where nothing of that kind was filed. */
-    public function categoryCount(IncidentCategory $category): int
+    /** The count against one kind, zero where nothing of that kind was filed. */
+    public function kindCount(TaxonomyKind $kind): int
     {
-        return $this->categoryCounts[$category->getSlug()] ?? 0;
+        return $this->kindCounts[$kind->getCode()] ?? 0;
     }
 
     /**
      * THE MONTH'S MIX BY KIND, biggest share first — what the donut draws an arc
      * per, and its legend a row per. A kind with nothing filed this month is left
      * out: a zero-length arc is not an arc, and a legend row reading "0 · 0%" is
-     * noise. Each share carries its own category, so the arc and the swatch read
-     * the same four hues the map paints.
+     * noise. Each share carries its own kind, so the arc and the swatch read the
+     * same hues the map paints.
      *
-     * @return list<array{category: IncidentCategory, count: int}>
+     * @return list<array{kind: TaxonomyKind, count: int}>
      */
-    public function categoryShares(): array
+    public function kindShares(): array
     {
         $shares = [];
-        foreach ($this->categories as $category) {
-            $count = $this->categoryCount($category);
+        foreach ($this->kinds as $kind) {
+            $count = $this->kindCount($kind);
             if ($count > 0) {
-                $shares[] = ['category' => $category, 'count' => $count];
+                $shares[] = ['kind' => $kind, 'count' => $count];
             }
         }
 

@@ -86,9 +86,15 @@ class Incident
     #[ORM\JoinColumn(name: 'area_id', nullable: false, onDelete: 'CASCADE')]
     private AreaOfInterest $area;
 
-    #[ORM\ManyToOne(targetEntity: IncidentSubcategory::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'RESTRICT')]
-    private IncidentSubcategory $subcategory;
+    /**
+     * The area's own word for what happened. The join column is
+     * `taxonomy_subcategory_id`: the column the installation-wide model used is
+     * still on the table for one release, holding the answer this one was
+     * migrated from.
+     */
+    #[ORM\ManyToOne(targetEntity: TaxonomySubcategory::class)]
+    #[ORM\JoinColumn(name: 'taxonomy_subcategory_id', nullable: false, onDelete: 'RESTRICT')]
+    private TaxonomySubcategory $subcategory;
 
     #[ORM\Column(length: 200)]
     private string $title;
@@ -199,7 +205,7 @@ class Incident
     private ?string $sourceRecordUrl = null;
 
     /**
-     * The answers to {@see IncidentSubcategory::getFieldSet()}, keyed by field.
+     * The answers to {@see TaxonomySubcategory::getFieldSet()}, keyed by field.
      * A field the sub-category does not ask for is not stored, so changing a
      * deployment's field set never leaves ghosts on old records.
      *
@@ -238,7 +244,7 @@ class Incident
 
     public function __construct(
         AreaOfInterest $area,
-        IncidentSubcategory $subcategory,
+        TaxonomySubcategory $subcategory,
         string $reference,
         string $title,
         string $position,
@@ -278,17 +284,17 @@ class Incident
         return $this->area;
     }
 
-    public function getSubcategory(): IncidentSubcategory
+    public function getSubcategory(): TaxonomySubcategory
     {
         return $this->subcategory;
     }
 
-    public function getCategory(): IncidentCategory
+    public function getKind(): TaxonomyKind
     {
-        return $this->subcategory->getCategory();
+        return $this->subcategory->getKind();
     }
 
-    public function setSubcategory(IncidentSubcategory $subcategory): static
+    public function setSubcategory(TaxonomySubcategory $subcategory): static
     {
         $this->subcategory = $subcategory;
 

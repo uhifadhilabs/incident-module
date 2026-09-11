@@ -6,15 +6,15 @@
    card says so, because a label nobody explains is a label people assume the
    worst about. #}
 <div class="c" data-w="categories">
-    <span class="tab">What the categories are<span class="src">· the reference card · {{ dashboard.categories|length }} kinds</span></span>
+    <span class="tab">What the categories are<span class="src">· the reference card · {{ dashboard.kinds|length }} kinds</span></span>
     <div class="i-tax">
-        {% for category in dashboard.categories %}
-            <div class="i-taxg{{ category.slug in dashboard.filter.categorySlugs ? ' on' }}">
-                <a class="r" href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyCategory(category.slug).toQuery)) }}">
-                    <i class="i-hue-{{ category.colourKey }}"></i><b>{{ category.label }}</b><span class="n">{{ dashboard.categoryCount(category) }}</span>
+        {% for kind in dashboard.kinds %}
+            <div class="i-taxg{{ kind.code in dashboard.filter.kindCodes ? ' on' }}">
+                <a class="r" href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyKind(kind.code).toQuery)) }}">
+                    <i class="i-hue-{{ kind.colourKey }}"></i><b>{{ kind.label }}</b><span class="n">{{ dashboard.kindCount(kind) }}</span>
                 </a>
-                <span class="lens">leads: {{ category.leadsLine }}</span>
-                <span class="i-taxrun">{% for subcategory in category.subcategories %}<span>{{ subcategory.label }}</span>{% endfor %}</span>
+                <span class="lens">leads: {{ kind.leadsLine }}</span>
+                <span class="i-taxrun">{% for subcategory in kind.subcategories %}<span>{{ subcategory.label }}</span>{% endfor %}</span>
             </div>
         {% endfor %}
     </div>

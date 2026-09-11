@@ -69,8 +69,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
 
     public function testNoRowExistsUntilAnAmountIsRecorded(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->inProgress($this->anArea());
+        $incident = $this->inProgress($this->anAreaWithKinds());
 
         self::assertNull($incident->getMoney(), 'Reaching in progress opens no money row on its own.');
 
@@ -85,8 +84,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
 
     public function testRecordingWithNothingOnItCreatesNoRow(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->inProgress($this->anArea());
+        $incident = $this->inProgress($this->anAreaWithKinds());
 
         $this->expectException(IncidentMoneyException::class);
         try {
@@ -98,8 +96,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
 
     public function testAmountsAdvanceAcrossSavesAndReachSettled(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->inProgress($this->anArea());
+        $incident = $this->inProgress($this->anAreaWithKinds());
         $service = $this->money();
 
         $service->record($incident, 1_600_000, 1_200_000, 1_200_000, 0, new \DateTimeImmutable());
@@ -113,8 +110,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
 
     public function testWaivingSettlesTheMoneyWithAReason(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->inProgress($this->anArea());
+        $incident = $this->inProgress($this->anAreaWithKinds());
 
         $money = $this->money()->waive($incident, 'Household withdrew the claim in writing.', new \DateTimeImmutable());
 
@@ -125,8 +121,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
 
     public function testAWaiverWithNoReasonIsRefused(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->inProgress($this->anArea());
+        $incident = $this->inProgress($this->anAreaWithKinds());
 
         $this->expectException(IncidentMoneyException::class);
         $this->money()->waive($incident, '   ', new \DateTimeImmutable());
@@ -134,8 +129,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
 
     public function testEveryWriteLeavesATimelineEvent(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->inProgress($this->anArea());
+        $incident = $this->inProgress($this->anAreaWithKinds());
         $before = $incident->getEvents()->count();
 
         $this->money()->record($incident, null, 1_200_000, null, null, new \DateTimeImmutable());
@@ -149,8 +143,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
     /** A sub-category that carries no money grows none — the direction is absent, so the surface refuses. */
     public function testAnIncidentThatCarriesNoMoneyIsRefused(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->inProgress($this->anArea(), 'natural-mortality');
+        $incident = $this->inProgress($this->anAreaWithKinds(), 'natural-mortality');
 
         $this->expectException(IncidentMoneyException::class);
         $this->money()->record($incident, 1_000_000, null, null, null, new \DateTimeImmutable());
@@ -164,8 +157,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
      */
     public function testACompensationClaimIsRecordedFromVerified(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->verified($this->anArea(), 'livestock-depredation');
+        $incident = $this->verified($this->anAreaWithKinds(), 'livestock-depredation');
 
         $money = $this->money()->record($incident, 900_000, null, null, null, new \DateTimeImmutable());
 
@@ -180,8 +172,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
      */
     public function testAFineIsRefusedUntilResponseHasStarted(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->verified($this->anArea(), 'illegal-grazing');
+        $incident = $this->verified($this->anAreaWithKinds(), 'illegal-grazing');
 
         $this->expectException(IncidentMoneyException::class);
         $this->expectExceptionMessage('A fine is assessed once response has started — this incident has not reached in progress yet.');
@@ -191,8 +182,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
     /** …and it is recorded the moment response does start. */
     public function testAFineIsRecordedFromInProgress(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->inProgress($this->anArea(), 'illegal-grazing');
+        $incident = $this->inProgress($this->anAreaWithKinds(), 'illegal-grazing');
 
         $money = $this->money()->record($incident, null, 750_000, 750_000, 750_000, new \DateTimeImmutable());
 
@@ -203,8 +193,7 @@ final class IncidentMoneyServiceTest extends IntegrationTestCase
     /** Neither direction is recorded on a bare report, and each says so its own way. */
     public function testNeitherDirectionIsRecordedOnABareReport(): void
     {
-        $this->installTaxonomy();
-        $incident = $this->anIncident($this->anArea()); // livestock-depredation, still `reported`
+        $incident = $this->anIncident($this->anAreaWithKinds()); // livestock-depredation, still `reported`
 
         $this->expectException(IncidentMoneyException::class);
         $this->expectExceptionMessage('A compensation claim is recorded once an incident is verified — this incident has not reached verified yet.');

@@ -29,7 +29,6 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Incident\Command\CloseDueCommand;
-use Uhifadhi\Incident\Command\SyncTaxonomyCommand;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
 use Uhifadhi\Incident\Controller\IncidentMoneyController;
 use Uhifadhi\Incident\Controller\IncidentReportController;
@@ -46,11 +45,9 @@ use Uhifadhi\Incident\Overview\IncidentNowTiles;
 use Uhifadhi\Incident\Overview\IncidentOverviewContributor;
 use Uhifadhi\Incident\Overview\IncidentOverviewCopy;
 use Uhifadhi\Incident\Overview\IncidentPulse;
-use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
-use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Security\IncidentEvidenceVoter;
@@ -74,10 +71,12 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
  * block needed), registers the dashboard and reaches the host's module catalogue
  * and its department-KPI contribution point. Spatial columns ride on fundistadi/postgis-bundle.
  *
- * ONE HOST STEP IS NOT AUTOMATIC, and cannot honestly be: run
- * `incidents:taxonomy:sync` once, so the deployment has kinds of incident to file
- * against. It is a data decision, and a bundle that wrote rows into a host's
- * database on boot would be making it for them.
+ * AN AREA STARTS EMPTY, and that is the design. The module ships no kinds of
+ * incident, seeds none and suggests none: an area writes its own in the kinds
+ * editor before the first incident is filed there. Naming somebody's
+ * classification scheme for them is a decision this bundle does not get to make,
+ * which is why the only place the design's four kinds still exist is the devkit
+ * demo content.
  */
 final class UhifadhiIncidentBundle extends AbstractBundle
 {
@@ -221,8 +220,6 @@ final class UhifadhiIncidentBundle extends AbstractBundle
             ->tag('uhifadhi.module');
 
         // The deployment's own vocabulary and money unit.
-        $taxonomy = $config['taxonomy'] ?? [];
-        $builder->setParameter('incident.taxonomy', \is_array($taxonomy) ? $taxonomy : []);
         $currency = \is_string($config['currency'] ?? null) ? $config['currency'] : 'TZS';
         $builder->setParameter('incident.currency', $currency);
 
@@ -346,7 +343,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('twig'),
                     service('router'),
                     service('incident.dashboard'),
-                    service(IncidentCategoryRepository::class),
+                    service(TaxonomyKindRepository::class),
                     service(WidgetService::class),
                     service('incident.widget_urls'),
                     service('incident.transition_token'),
@@ -396,8 +393,8 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('twig'),
                     service('router'),
                     service('incident.report'),
-                    service(IncidentCategoryRepository::class),
-                    service(IncidentSubcategoryRepository::class),
+                    service(TaxonomyKindRepository::class),
+                    service(TaxonomySubcategoryRepository::class),
                     service('security.authorization_checker'),
                     service('security.csrf.token_manager'),
                     service('security.token_storage'),
@@ -443,18 +440,11 @@ final class UhifadhiIncidentBundle extends AbstractBundle
             $services->alias(IncidentSettingsController::class, 'incident.controller.settings')->public();
         }
 
-        // THE TAXONOMY COMMAND IS NOT DEV TOOLING. Without a taxonomy there is
-        // nothing to file an incident against, so a production host runs it once
-        // on install — see the class docblock.
-        $services->set('incident.command.sync_taxonomy', SyncTaxonomyCommand::class)
-            ->args([service('incident.taxonomy_installer')])
-            ->tag('console.command');
-
         // THE CLOCK'S HAND. `closed` is reached by time, and this is the process
         // that turns the hand — a daily cron in production. Registered in every
-        // environment for the same reason the taxonomy sync is: a workflow whose
-        // last step never runs is not dev tooling, it is a broken workflow. See
-        // the class docblock for the cron line and the scheduler note.
+        // environment, because a workflow whose last step never runs is not dev
+        // tooling, it is a broken workflow. See the class docblock for the cron
+        // line and the scheduler note.
         $services->set('incident.command.close_due', CloseDueCommand::class)
             ->args([
                 service(IncidentRepository::class),
@@ -478,8 +468,10 @@ final class UhifadhiIncidentBundle extends AbstractBundle
         $services->set('incident.devkit.content', IncidentContentProvider::class)
             ->args([
                 service('doctrine.orm.entity_manager'),
-                service('incident.taxonomy_installer'),
-                service(IncidentSubcategoryRepository::class),
+                service('incident.taxonomy_admin'),
+                service(TaxonomyKindRepository::class),
+                service(TaxonomySubcategoryRepository::class),
+                service(IncidentRepository::class),
                 service('incident.report'),
                 service('incident.money'),
                 service('incident.case'),

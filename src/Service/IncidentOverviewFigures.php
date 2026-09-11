@@ -18,8 +18,8 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Model\IncidentOverview;
-use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 
 /**
  * BUILDS THIS MODULE'S READING OF ONE AREA'S MORNING, once per render.
@@ -54,7 +54,7 @@ final class IncidentOverviewFigures
 
     public function __construct(
         private readonly IncidentRepository $incidents,
-        private readonly IncidentCategoryRepository $categories,
+        private readonly TaxonomyKindRepository $kinds,
         private readonly UrlGeneratorInterface $router,
         private readonly string $currency,
     ) {
@@ -102,7 +102,7 @@ final class IncidentOverviewFigures
             currency: $this->currency,
             dashboardUrl: $dashboardUrl,
             total: $this->incidents->countFor($area),
-            categories: $this->categories->allInOrder(),
+            kinds: $this->kinds->forArea($area),
             statusTally: $this->incidents->statusTallyFor($area),
             pastTerm: self::pastTerm($open, $now),
             medianHoursToVerify: self::median($this->incidents->hoursToVerifyFor($area)),

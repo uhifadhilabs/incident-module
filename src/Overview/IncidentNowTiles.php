@@ -108,18 +108,18 @@ final readonly class IncidentNowTiles implements NowTileProviderInterface
     }
 
     /**
-     * Today's filings by kind, busiest first, in the taxonomy's OWN short word —
-     * the category slug, which is what the design prints and what the chips on
-     * the card beneath print. A kind nothing was filed under is left out: this is
-     * one line under a number, not a breakdown.
+     * Today's filings by kind, busiest first, in the area's OWN short word — the
+     * kind's wire-code, which is what the design prints and what the chips on the
+     * card beneath print. A kind nothing was filed under is left out: this is one
+     * line under a number, not a breakdown.
      */
     private static function todaySubline(IncidentOverview $overview): string
     {
         $counts = [];
-        foreach ($overview->categories as $category) {
-            $count = \count($overview->todayFor($category));
+        foreach ($overview->kinds as $kind) {
+            $count = \count($overview->todayFor($kind));
             if ($count > 0) {
-                $counts[$category->getSlug()] = $count;
+                $counts[$kind->getCode()] = $count;
             }
         }
         // Stable, so equal counts keep the taxonomy's own order rather than
@@ -127,8 +127,8 @@ final readonly class IncidentNowTiles implements NowTileProviderInterface
         arsort($counts, \SORT_NUMERIC);
 
         $parts = [];
-        foreach ($counts as $slug => $count) {
-            $parts[] = \sprintf('%d %s', $count, $slug);
+        foreach ($counts as $code => $count) {
+            $parts[] = \sprintf('%d %s', $count, $code);
         }
 
         return implode(' · ', $parts);

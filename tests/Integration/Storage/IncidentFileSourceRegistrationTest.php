@@ -140,9 +140,7 @@ final class IncidentFileSourceRegistrationTest extends IntegrationTestCase
     /** A real filed incident, through the module's own door. */
     private function incident(): Incident
     {
-        $this->installTaxonomy();
-
-        return $this->anIncident($this->anArea('Kifaru Sector'));
+        return $this->anIncident($this->anAreaWithKinds('Kifaru Sector'));
     }
 
     private function registry(): FileRegistry

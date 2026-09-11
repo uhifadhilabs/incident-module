@@ -48,7 +48,7 @@ final class WidgetLibraryFlowTest extends FunctionalTestCase
 
     public function testTheLibraryDrawsTheFiveDirectionsAsSectionsAndPresets(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -72,7 +72,7 @@ final class WidgetLibraryFlowTest extends FunctionalTestCase
      */
     public function testAdoptingADirectionRecomposesTheDashboard(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -97,7 +97,7 @@ final class WidgetLibraryFlowTest extends FunctionalTestCase
     /** Reset puts the module's own composition back. */
     public function testResettingRestoresTheCompositionTheModuleShipsWith(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $this->client->request('POST', $this->url($this->uuidOf($area), '/preset/c'), [
@@ -120,8 +120,8 @@ final class WidgetLibraryFlowTest extends FunctionalTestCase
      */
     public function testArrangingOneAreaLeavesAnotherUntouched(): void
     {
-        $first = $this->anArea('First');
-        $second = $this->anArea('Second');
+        $first = $this->anAreaWithKinds('First');
+        $second = $this->anAreaWithKinds('Second');
         $this->client->loginUser($this->aReporter());
 
         $this->client->request('POST', $this->url($this->uuidOf($first), '/preset/e'), [
@@ -136,7 +136,7 @@ final class WidgetLibraryFlowTest extends FunctionalTestCase
     /** A design this surface does not ship is refused, not silently ignored. */
     public function testADesignThisSurfaceDoesNotShipIsRefused(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $this->client->request('POST', $this->url($this->uuidOf($area), '/preset/nonsense'), [
@@ -149,7 +149,7 @@ final class WidgetLibraryFlowTest extends FunctionalTestCase
     /** Every widget write carries a token; without one the host's endpoint refuses. */
     public function testAWriteWithoutATokenIsRefused(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $this->client->request('POST', $this->url($this->uuidOf($area), '/preset/a'));
@@ -160,7 +160,7 @@ final class WidgetLibraryFlowTest extends FunctionalTestCase
     /** The library is one person's, so it needs one — anonymous gets nothing. */
     public function testTheLibraryNeedsSomebodySignedIn(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
 
         $this->client->request('GET', $this->url($this->uuidOf($area)));
 
@@ -170,7 +170,7 @@ final class WidgetLibraryFlowTest extends FunctionalTestCase
     /** The token id is the host's, scoped per surface AND per area. */
     public function testTheTokenIsScopedToThisSurfaceAndThisArea(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
 
         self::assertSame(
             'widgets_incidents_'.$this->uuidOf($area),

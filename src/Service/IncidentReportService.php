@@ -19,7 +19,7 @@ use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvent;
 use Uhifadhi\Incident\Entity\IncidentParty;
-use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
@@ -65,7 +65,7 @@ final readonly class IncidentReportService
      */
     public function file(
         AreaOfInterest $area,
-        IncidentSubcategory $subcategory,
+        TaxonomySubcategory $subcategory,
         string $title,
         string $position,
         \DateTimeImmutable $now,

@@ -32,7 +32,7 @@ final class ExportPageTest extends FunctionalTestCase
      */
     public function testTheExportStreamsTheRegisterAsACsvAttachment(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -61,7 +61,7 @@ final class ExportPageTest extends FunctionalTestCase
      */
     public function testAFiledIncidentAppearsAsARow(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge');
         $this->client->loginUser($this->aReporter());
 
@@ -81,7 +81,7 @@ final class ExportPageTest extends FunctionalTestCase
      */
     public function testTheExportRespectsTheCategoryFilter(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside');
         $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge');
         $this->client->loginUser($this->aReporter());
@@ -101,7 +101,7 @@ final class ExportPageTest extends FunctionalTestCase
      */
     public function testTheExportRespectsTheSearchQuery(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside');
         $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge');
         $this->client->loginUser($this->aReporter());
@@ -122,7 +122,7 @@ final class ExportPageTest extends FunctionalTestCase
      */
     public function testTheExportIsReadableByAnyoneWhoCanReachTheDashboard(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         // A signed-in person holding neither incidents.record nor incidents.manage.
         $this->client->loginUser($this->aUser('bystander@example.test', 'Neema', 'Kimaro'));

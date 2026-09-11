@@ -15,7 +15,6 @@ namespace Uhifadhi\Incident\Tests\Unit\Devkit;
 
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Incident\Devkit\DemoMonth;
-use Uhifadhi\Incident\Model\IncidentTaxonomy;
 
 /**
  * THE SAMPLE MONTH ADDS UP TO WHAT THE GALLERY SAYS IT DOES.
@@ -144,7 +143,7 @@ final class DemoMonthTest extends TestCase
     public function testEveryRowFilesAgainstASubcategoryTheModuleShips(): void
     {
         $known = [];
-        foreach (IncidentTaxonomy::shipped() as $category) {
+        foreach (DemoMonth::kinds() as $category) {
             $known = [...$known, ...array_keys($category['subcategories'])];
         }
 
@@ -254,7 +253,7 @@ final class DemoMonthTest extends TestCase
 
     private static function kindOf(string $subcategory): string
     {
-        foreach (IncidentTaxonomy::shipped() as $slug => $category) {
+        foreach (DemoMonth::kinds() as $slug => $category) {
             if (isset($category['subcategories'][$subcategory])) {
                 return $slug;
             }
@@ -265,7 +264,7 @@ final class DemoMonthTest extends TestCase
 
     private static function directionOf(string $subcategory): ?string
     {
-        foreach (IncidentTaxonomy::shipped() as $category) {
+        foreach (DemoMonth::kinds() as $category) {
             if (isset($category['subcategories'][$subcategory])) {
                 return $category['subcategories'][$subcategory]['money'];
             }

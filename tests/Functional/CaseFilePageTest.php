@@ -40,7 +40,7 @@ final class CaseFilePageTest extends FunctionalTestCase
 
     public function testTheWholeRecordIsOnOnePage(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->aZone($area, 'North Gate');
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
         $this->client->loginUser($this->aReporter());
@@ -86,7 +86,7 @@ final class CaseFilePageTest extends FunctionalTestCase
      */
     public function testTheWayBackWearsTheShellsOwnControl(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -105,8 +105,8 @@ final class CaseFilePageTest extends FunctionalTestCase
     /** An incident of another area is a 404 — the same answer as one that never existed. */
     public function testAnIncidentFromAnotherAreaIsNotFound(): void
     {
-        $mine = $this->anArea('Mine');
-        $theirs = $this->anArea('Theirs');
+        $mine = $this->anAreaWithKinds('Mine');
+        $theirs = $this->anAreaWithKinds('Theirs');
         $incident = $this->anIncident($theirs);
         $this->client->loginUser($this->aReporter());
 
@@ -125,7 +125,7 @@ final class CaseFilePageTest extends FunctionalTestCase
      */
     public function testAnUnreachedStepHasNoPanelAtAll(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->client->loginUser($this->aManager());
 
@@ -145,7 +145,7 @@ final class CaseFilePageTest extends FunctionalTestCase
     /** …and the panel APPEARS once the step is reached, because it is the same rule read forwards. */
     public function testAPanelAppearsOnlyWhenItsStepIsReached(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->transitions()->apply($incident, IncidentTransitionEnum::Verify, new \DateTimeImmutable(), null, 'S. Laizer');
         $this->em->flush();
@@ -170,7 +170,7 @@ final class CaseFilePageTest extends FunctionalTestCase
      */
     public function testOnlyTheLegalMovesAreOfferedAndTheRestSayWhyNot(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->client->loginUser($this->aManager());
 
@@ -201,7 +201,7 @@ final class CaseFilePageTest extends FunctionalTestCase
      */
     public function testOnAResolvedIncidentTheRefusalIsTheClockItself(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass, no injury pattern');
         $at = new \DateTimeImmutable();
         foreach ([IncidentTransitionEnum::Verify, IncidentTransitionEnum::Respond, IncidentTransitionEnum::Resolve] as $step) {
@@ -228,7 +228,7 @@ final class CaseFilePageTest extends FunctionalTestCase
      */
     public function testAResolvedIncidentShowsItsAutomaticCloseDate(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass, no injury pattern');
         $at = new \DateTimeImmutable('2026-08-21 10:00:00');
         foreach ([IncidentTransitionEnum::Verify, IncidentTransitionEnum::Respond, IncidentTransitionEnum::Resolve] as $step) {
@@ -250,7 +250,7 @@ final class CaseFilePageTest extends FunctionalTestCase
     /** Somebody without "incidents.manage" sees the rail and is offered no move at all. */
     public function testAReporterSeesTheRailAndIsOfferedNoMoves(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -276,7 +276,7 @@ final class CaseFilePageTest extends FunctionalTestCase
      */
     public function testTheMoneyCardAppearsOnlyWhenThereIsMoney(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $claim = $this->anIncident($area, 'livestock-depredation');
         $mortality = $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass, no injury pattern');
         $this->client->loginUser($this->aManager());
@@ -306,7 +306,7 @@ final class CaseFilePageTest extends FunctionalTestCase
      */
     public function testTheFieldSetIsTheCategorysOwn(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $depredation = $this->anIncident($area, 'livestock-depredation');
         $roadkill = $this->anIncident($area, 'roadkill', 'Zebra roadkill on the C-road, km 12');
         $this->client->loginUser($this->aManager());
@@ -325,7 +325,7 @@ final class CaseFilePageTest extends FunctionalTestCase
     /** The timeline is the spine, and the filing itself is its first entry. */
     public function testTheTimelineStartsWithTheFiling(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area, reportedBy: $this->aReporter());
         $this->client->loginUser($this->aReporter());
 

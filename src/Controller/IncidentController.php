@@ -30,7 +30,7 @@ use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
-use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
@@ -152,7 +152,7 @@ final class IncidentController
         return [
             $incident->getReference(),
             $incident->getReportedAt()->format('Y-m-d'),
-            $incident->getCategory()->getLabel(),
+            $incident->getKind()->getLabel(),
             $incident->getSubcategory()->getLabel(),
             $incident->headline(),
             $incident->getZone()?->getName() ?? '',
@@ -169,7 +169,7 @@ final class IncidentController
     public function __construct(
         private readonly Environment $twig,
         private readonly IncidentDashboardService $dashboard,
-        private readonly IncidentCategoryRepository $categories,
+        private readonly TaxonomyKindRepository $kinds,
         private readonly WidgetService $widgets,
         private readonly IncidentWidgetUrls $widgetUrls,
         /**
@@ -202,7 +202,7 @@ final class IncidentController
         // every figure on the page is stated relative to the SAME instant.
         $now = new \DateTimeImmutable();
         $viewer = $this->viewer();
-        $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...self::windowFor($request, $now));
+        $filter = IncidentFilter::fromRequest($request, $area, $this->kinds->forArea($area), ...self::windowFor($request, $now));
 
         return new Response($this->twig->render('@UhifadhiIncident/dashboard/show.html.twig', [
             'area' => $area,
@@ -252,7 +252,7 @@ final class IncidentController
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
         $now = new \DateTimeImmutable();
-        $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...self::windowFor($request, $now));
+        $filter = IncidentFilter::fromRequest($request, $area, $this->kinds->forArea($area), ...self::windowFor($request, $now));
         // The SAME rows the register lists — findFiltered, read through the one
         // filter — so the file and the screen can never disagree.
         $incidents = $this->dashboard->build($filter, $now, $this->viewer())->recent;

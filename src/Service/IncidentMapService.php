@@ -26,7 +26,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerStyle;
 use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
 use Uhifadhi\Incident\Entity\Incident;
-use Uhifadhi\Incident\Entity\IncidentCategory;
+use Uhifadhi\Incident\Entity\TaxonomyKind;
 use Uhifadhi\Incident\Model\IncidentHues;
 
 /**
@@ -40,8 +40,8 @@ use Uhifadhi\Incident\Model\IncidentHues;
  * draws it: the deployment's imagery, the boundary's one treatment, the control
  * stack, the legend with a switch per row, and fullscreen.
  *
- * ONE LAYER PER CATEGORY, because a category is what a person switches on and
- * off. The hue is the category's own, read from {@see IncidentHues} — the same
+ * ONE LAYER PER KIND, because a kind is what a person switches on and off.
+ * The hue is the kind's own, read from {@see IncidentHues} — the same
  * value the chips are drawn in — so a marker and a chip cannot drift apart.
  *
  * AND A MARK MEANS WHAT THE LEGEND PROMISES: filled is still open, hollow is
@@ -61,7 +61,7 @@ use Uhifadhi\Incident\Model\IncidentHues;
  */
 final readonly class IncidentMapService
 {
-    /** The heading every category row sits under, so the plate reads as this module's. */
+    /** The heading every kind's row sits under, so the plate reads as this module's. */
     public const string GROUP = 'Incidents';
 
     /** The zones layer's id, which is also what its legend row switches. */
@@ -79,7 +79,7 @@ final readonly class IncidentMapService
     /**
      * WHAT A MARK MEANS, AND THE LEGEND SAYS EXACTLY THIS.
      *
-     *   hue          the category — the layer's own swatch
+     *   hue          the kind — the layer's own swatch
      *   filled       still open · hollow = resolved or closed
      *   dashed ring  the serious end: high OR critical, never high alone
      *
@@ -112,26 +112,26 @@ final readonly class IncidentMapService
 
     /**
      * The plate an incidents screen renders: the area, its zones, and the
-     * incidents handed in, split by category.
+     * incidents handed in, split by kind.
      *
-     * The categories are the CALLER's choice, not the whole taxonomy: a
-     * dashboard states every category it filed under, a case file states the
+     * The kinds are the CALLER's choice, not the whole vocabulary: a dashboard
+     * states every kind it filed under, a case file states the
      * one its incident belongs to.
      *
-     * @param list<Incident>         $incidents
-     * @param list<IncidentCategory> $categories
+     * @param list<Incident>     $incidents
+     * @param list<TaxonomyKind> $kinds
      */
-    public function forArea(AreaOfInterest $area, array $incidents, array $categories): AtlasMap
+    public function forArea(AreaOfInterest $area, array $incidents, array $kinds): AtlasMap
     {
         return self::compose(
             $this->maps,
             $area->hasBoundary() ? $area->getGeom() : null,
             self::featuresFor($incidents, $this->caseFiles($area, $incidents)),
-            array_map(static fn (IncidentCategory $category): array => [
-                'slug' => $category->getSlug(),
-                'label' => $category->getLabel(),
-                'colourKey' => $category->getColourKey(),
-            ], $categories),
+            array_map(static fn (TaxonomyKind $kind): array => [
+                'slug' => $kind->getCode(),
+                'label' => $kind->getLabel(),
+                'colourKey' => $kind->getColourKey(),
+            ], $kinds),
             array_map(static fn (Zone $zone): array => [
                 // A zone with no name is drawn without a label rather than left
                 // off the map: the outline is the fact, the name is the caption.
@@ -149,14 +149,14 @@ final readonly class IncidentMapService
      *
      * @param string|null                                                 $boundary   the area's geom as GeoJSON text
      * @param array<string, mixed>                                        $collection the FeatureCollection {@see featuresFor()} builds
-     * @param list<array{slug: string, label: string, colourKey: string}> $categories
+     * @param list<array{slug: string, label: string, colourKey: string}> $kinds
      * @param list<array{name: string, geom: string|null}>                $zones
      */
     public static function compose(
         MapBuilderInterface $maps,
         ?string $boundary,
         array $collection,
-        array $categories,
+        array $kinds,
         array $zones,
     ): AtlasMap {
         $map = $maps->createMap();
@@ -188,19 +188,19 @@ final readonly class IncidentMapService
         ));
 
         $features = $collection['features'] ?? [];
-        foreach ($categories as $category) {
+        foreach ($kinds as $kind) {
             $own = \is_array($features) ? array_values(array_filter(
                 $features,
                 static fn (mixed $feature): bool => \is_array($feature)
                     && \is_array($feature['properties'] ?? null)
-                    && ($feature['properties']['slug'] ?? null) === $category['slug'],
+                    && ($feature['properties']['slug'] ?? null) === $kind['slug'],
             )) : [];
 
             $map->addLayer(new GeoJsonLayer(
-                id: 'incident.'.$category['slug'],
-                label: $category['label'],
+                id: 'incident.'.$kind['slug'],
+                label: $kind['label'],
                 features: self::collection($own),
-                swatch: IncidentHues::of($category['colourKey']),
+                swatch: IncidentHues::of($kind['colourKey']),
                 shape: LayerShape::Point,
                 visible: [] !== $own,
                 count: \count($own),
@@ -212,7 +212,7 @@ final readonly class IncidentMapService
                 ),
                 rules: [
                     // HOLLOW once it is finished. The stroke stays, so a closed
-                    // case is still a mark in its category's hue — it has simply
+                    // case is still a mark in its kind's hue — it has simply
                     // stopped being something anybody is working on.
                     StyleRule::when('open', false)->fillOpacity(0.0),
                     // And the serious end wears a wider dashed ring, so it reads
@@ -246,7 +246,7 @@ final readonly class IncidentMapService
      * writes the markup; nothing here is ever a rendered string. The meaning is
      * exactly what the legend beside it promises:
      *
-     *   hue          = the category
+     *   hue          = the kind
      *   filled       = still open · hollow = resolved or closed
      *   dashed ring  = the serious end (high or critical)
      *
@@ -278,10 +278,10 @@ final readonly class IncidentMapService
                     // the same line the register does.
                     'title' => $incident->headline(),
                     // The key the plate's layers are split by: one layer per
-                    // category, so a legend row switches a category on and off.
-                    'slug' => $incident->getCategory()->getSlug(),
-                    'colour' => $incident->getCategory()->getColourKey(),
-                    'category' => $incident->getCategory()->getLabel(),
+                    // kind, so a legend row switches a kind on and off.
+                    'slug' => $incident->getKind()->getCode(),
+                    'colour' => $incident->getKind()->getColourKey(),
+                    'category' => $incident->getKind()->getLabel(),
                     'subcategory' => $incident->getSubcategory()->getLabel(),
                     'status' => $incident->getStatus()->value,
                     'statusLabel' => $incident->getStatus()->label(),

@@ -26,7 +26,7 @@ use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
-use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentListService;
 
@@ -56,7 +56,7 @@ final readonly class IncidentListController
     public function __construct(
         private Environment $twig,
         private IncidentDashboardService $dashboard,
-        private IncidentCategoryRepository $categories,
+        private TaxonomyKindRepository $kinds,
         private IncidentListService $list,
         private bool $recordScreens = false,
         private ?TokenStorageInterface $tokenStorage = null,
@@ -82,7 +82,7 @@ final readonly class IncidentListController
     ): Response {
         $now = new \DateTimeImmutable();
         $viewer = $this->viewer();
-        $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...IncidentController::windowFor($request, $now));
+        $filter = IncidentFilter::fromRequest($request, $area, $this->kinds->forArea($area), ...IncidentController::windowFor($request, $now));
 
         $dashboard = $this->dashboard->build($filter, $now, $viewer);
 

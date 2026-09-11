@@ -30,13 +30,13 @@ use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Contracts\Entity\UserInterface;
-use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
 use Uhifadhi\Incident\Model\IncidentPrefill;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
-use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
-use Uhifadhi\Incident\Repository\IncidentSubcategoryRepository;
+use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
+use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Storage\Model\FileEntry;
 use Uhifadhi\Storage\Registry\FileRegistry;
@@ -60,7 +60,7 @@ use Uhifadhi\Storage\Registry\FileRegistry;
  * record-borne filing is retired. There is one container and one POST, refused
  * for the same three reasons.
  *
- * STEP 2 IS THE CATEGORY'S OWN. The fields are the sub-category's field set, and
+ * STEP 2 IS THE SUB-CATEGORY'S OWN. The fields are its field set, and
  * the money row EXISTS ONLY where the sub-category carries money — choose a
  * natural mortality and the row is not rendered at all. Not disabled. Absent.
  *
@@ -104,8 +104,8 @@ final class IncidentReportController
         private readonly Environment $twig,
         private readonly UrlGeneratorInterface $router,
         private readonly IncidentReportService $reports,
-        private readonly IncidentCategoryRepository $categories,
-        private readonly IncidentSubcategoryRepository $subcategories,
+        private readonly TaxonomyKindRepository $kinds,
+        private readonly TaxonomySubcategoryRepository $subcategories,
         private readonly AuthorizationCheckerInterface $authorization,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly TokenStorageInterface $tokenStorage,
@@ -137,7 +137,7 @@ final class IncidentReportController
         return new Response($this->render(
             $area,
             $prefill,
-            null === $prefill->subcategorySlug ? null : $this->subcategories->findOneBySlug($prefill->subcategorySlug),
+            null === $prefill->subcategorySlug ? null : $this->subcategories->findOneByAreaAndCode($area, $prefill->subcategorySlug),
             [],
         ));
     }
@@ -162,7 +162,9 @@ final class IncidentReportController
         $this->denyUnlessCsrfValid($request);
 
         $prefill = IncidentPrefill::fromRequest($request);
-        $subcategory = $this->subcategories->findOneBySlug($request->request->getString('subcategory'));
+        // THIS AREA'S WORD, never another area's with the same code: the form
+        // posts a wire-code and the area in the path is what gives it meaning.
+        $subcategory = $this->subcategories->findOneByAreaAndCode($area, $request->request->getString('subcategory'));
         $position = self::positionFrom($request) ?? $prefill->position();
         // CLAMPED, NEVER REFUSED. The line arrives prefilled from the source
         // record's note, which is written to be read rather than to fit a column,
@@ -226,7 +228,7 @@ final class IncidentReportController
      *
      * @param array<string, string> $errors
      */
-    private function render(AreaOfInterest $area, IncidentPrefill $prefill, ?IncidentSubcategory $chosen, array $errors): string
+    private function render(AreaOfInterest $area, IncidentPrefill $prefill, ?TaxonomySubcategory $chosen, array $errors): string
     {
         $fromARecord = $prefill->hasProvenance();
         $query = $prefill->toQuery();
@@ -234,7 +236,7 @@ final class IncidentReportController
         return $this->twig->render('@UhifadhiIncident/report/show.html.twig', [
             'area' => $area,
             'now' => new \DateTimeImmutable(),
-            'categories' => $this->categories->allInOrder(),
+            'kinds' => $this->kinds->forArea($area),
             'prefill' => $prefill,
             'chosen' => $chosen,
             'csrfToken' => $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue(),

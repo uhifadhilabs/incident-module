@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Model;
 
 use Uhifadhi\Incident\Entity\Incident;
-use Uhifadhi\Incident\Entity\IncidentCategory;
-use Uhifadhi\Incident\Entity\IncidentSubcategory;
+use Uhifadhi\Incident\Entity\TaxonomyKind;
+use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 
@@ -45,17 +45,17 @@ use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 final readonly class IncidentOverview
 {
     /**
-     * @param list<IncidentCategory>   $categories    the taxonomy, in its own order
+     * @param list<TaxonomyKind>       $kinds         this area's kinds, in its own order
      * @param array<string, int>       $statusTally   status value => count, every place present
-     * @param list<Incident>           $pastTerm      open work past its OWN category's term, worst first
+     * @param list<Incident>           $pastTerm      open work past its OWN sub-category's term, worst first
      * @param list<Incident>           $today         filed today, oldest first
      * @param list<Incident>           $lastWeek      filed the same weekday a week ago
      * @param list<Incident>           $latest        the newest handful, newest first
      * @param list<Incident>           $unpaid        money neither settled nor waived, oldest first
      * @param array<string, int>       $outstanding   money direction value => what is still owed
      * @param array<string, int>       $assessedMonth money direction value => what was signed off this month
-     * @param IncidentSubcategory|null $shortestTerm  the tightest promise this area is held to
-     * @param IncidentSubcategory|null $longestTerm   the loosest one
+     * @param TaxonomySubcategory|null $shortestTerm  the tightest promise this area is held to
+     * @param TaxonomySubcategory|null $longestTerm   the loosest one
      * @param array<string, string>    $statusUrls    status value => the module list filtered to it
      */
     public function __construct(
@@ -65,12 +65,12 @@ final readonly class IncidentOverview
         public string $currency,
         public string $dashboardUrl,
         public int $total,
-        public array $categories,
+        public array $kinds,
         public array $statusTally,
         public array $pastTerm,
         public ?float $medianHoursToVerify,
-        public ?IncidentSubcategory $shortestTerm,
-        public ?IncidentSubcategory $longestTerm,
+        public ?TaxonomySubcategory $shortestTerm,
+        public ?TaxonomySubcategory $longestTerm,
         public array $today,
         public array $lastWeek,
         public int $closedOutToday,
@@ -143,11 +143,11 @@ final readonly class IncidentOverview
      *
      * @return list<Incident>
      */
-    public function todayFor(IncidentCategory $category): array
+    public function todayFor(TaxonomyKind $kind): array
     {
         return array_values(array_filter(
             $this->today,
-            static fn (Incident $incident) => $incident->getCategory()->getSlug() === $category->getSlug(),
+            static fn (Incident $incident) => $incident->getKind()->getCode() === $kind->getCode(),
         ));
     }
 

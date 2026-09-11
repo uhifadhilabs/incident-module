@@ -75,7 +75,7 @@ final class ReportEntryWidgetTest extends FunctionalTestCase
     /** OFF BY DEFAULT: the header already carries a Report control. */
     public function testTheShippedCompositionDoesNotCarryIt(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->dashboardUrl($this->uuidOf($area)));
@@ -87,7 +87,7 @@ final class ReportEntryWidgetTest extends FunctionalTestCase
     /** Switched on, it is on the dashboard, at the width the composition names. */
     public function testItRendersOnTheDashboardOnceSomebodyAddsIt(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
         $this->compose($this->uuidOf($area), ['report' => 6, 'register' => 12]);
 
@@ -104,7 +104,7 @@ final class ReportEntryWidgetTest extends FunctionalTestCase
      */
     public function testItDrawsWhatItsStaticTwinDraws(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
         $this->compose($this->uuidOf($area), ['report' => 6]);
 
@@ -132,7 +132,7 @@ final class ReportEntryWidgetTest extends FunctionalTestCase
      */
     public function testItNamesTheLastFilingAndOpensIt(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
         $incident = $this->anIncident($area);
         $this->compose($this->uuidOf($area), ['report' => 6]);
@@ -151,7 +151,7 @@ final class ReportEntryWidgetTest extends FunctionalTestCase
     /** Nothing filed is a fact about the window, not an empty line naming nothing. */
     public function testWithNothingFiledItSaysSoRatherThanNamingNothing(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
         $this->compose($this->uuidOf($area), ['report' => 6]);
 
@@ -168,7 +168,7 @@ final class ReportEntryWidgetTest extends FunctionalTestCase
      */
     public function testItsButtonOpensTheFullPageAndNeverTheDrawer(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
         $this->anIncident($area);
         $this->compose($this->uuidOf($area), ['report' => 6]);

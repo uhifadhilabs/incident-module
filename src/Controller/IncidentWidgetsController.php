@@ -31,7 +31,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
-use Uhifadhi\Incident\Repository\IncidentCategoryRepository;
+use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentTransitionToken;
 use Uhifadhi\Incident\Service\IncidentWidgetUrls;
@@ -81,7 +81,7 @@ final class IncidentWidgetsController
         private readonly Environment $twig,
         private readonly UrlGeneratorInterface $router,
         private readonly IncidentDashboardService $dashboard,
-        private readonly IncidentCategoryRepository $categories,
+        private readonly TaxonomyKindRepository $kinds,
         private readonly WidgetService $widgets,
         private readonly IncidentWidgetUrls $widgetUrls,
         private readonly IncidentTransitionToken $transitionToken,
@@ -105,7 +105,7 @@ final class IncidentWidgetsController
         $viewer = $this->endpoint->user();
         $areaUuid = $area->getUuid();
         $now = new \DateTimeImmutable();
-        $filter = IncidentFilter::fromRequest($request, $area, $this->categories->allInOrder(), ...IncidentController::monthRange($now));
+        $filter = IncidentFilter::fromRequest($request, $area, $this->kinds->forArea($area), ...IncidentController::monthRange($now));
 
         return new Response($this->twig->render('@UhifadhiIncident/dashboard/widgets.html.twig', [
             'area' => $area,

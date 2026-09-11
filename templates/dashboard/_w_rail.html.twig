@@ -16,7 +16,7 @@
         <div class="i-railhd">
             <a class="i-railid" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">{{ incident.reference }}</a>
             <span class="i-railttl">{{ incident.headline }}</span>
-            {{ ui.cat(incident.category, incident.subcategory.label) }}
+            {{ ui.cat(incident.kind, incident.subcategory.label) }}
             {{ ui.status(incident.status) }}
             <span class="i-spacer"></span>
             <a class="open-btn" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">Open the case →</a>

@@ -38,14 +38,13 @@ final class IncidentRegisterBehindTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->installTaxonomy();
     }
 
     /** Newest first, capped, and this area's only. */
     public function testTheRowsBehindAreThisAreasNewestFirst(): void
     {
-        $area = $this->anArea();
-        $elsewhere = $this->anArea('Another Area');
+        $area = $this->anAreaWithKinds();
+        $elsewhere = $this->anAreaWithKinds('Another Area');
 
         $this->anIncident($area, title: 'Oldest', at: new \DateTimeImmutable('2026-08-01 06:00:00'));
         $this->anIncident($area, title: 'Newest', at: new \DateTimeImmutable('2026-08-20 06:00:00'));
@@ -63,7 +62,7 @@ final class IncidentRegisterBehindTest extends IntegrationTestCase
     /** A backdrop is context, not a listing: it takes as many rows as it is given room for. */
     public function testTheRowsBehindAreCapped(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         foreach (range(1, 6) as $n) {
             $this->anIncident($area, title: 'Filing '.$n, at: new \DateTimeImmutable(\sprintf('2026-08-%02d 06:00:00', $n)));
         }
@@ -74,6 +73,6 @@ final class IncidentRegisterBehindTest extends IntegrationTestCase
     /** A first filing has nothing behind it, and that is a fact, not a failure. */
     public function testAnAreaWithNothingFiledHasNothingBehind(): void
     {
-        self::assertSame([], $this->incidents()->recentForArea($this->anArea(), 5));
+        self::assertSame([], $this->incidents()->recentForArea($this->anAreaWithKinds(), 5));
     }
 }

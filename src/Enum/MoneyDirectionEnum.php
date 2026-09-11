@@ -20,7 +20,7 @@ namespace Uhifadhi\Incident\Enum;
  * column would lose the argument an incident is usually about.
  *
  * Which direction an incident carries — if any — is the SUB-CATEGORY's business
- * ({@see \Uhifadhi\Incident\Entity\IncidentSubcategory::getMoneyDirection()}),
+ * ({@see \Uhifadhi\Incident\Entity\TaxonomySubcategory::getMoneyDirection()}),
  * which is how roadkill can carry a fine while natural mortality carries nothing.
  */
 enum MoneyDirectionEnum: string

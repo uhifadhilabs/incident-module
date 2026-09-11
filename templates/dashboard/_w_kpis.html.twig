@@ -10,7 +10,7 @@
     <div class="c kpi hot">
         <span class="tab">Filed<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F')|lower : 'all time' }}</span></span>
         <b class="disp">{{ dashboard.filedCount }}</b>
-        <span class="sub">{% for category in dashboard.categories %}{{ dashboard.categoryCount(category) }} {{ category.label|lower|split(' ')|first }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
+        <span class="sub">{% for kind in dashboard.kinds %}{{ dashboard.kindCount(kind) }} {{ kind.label|lower|split(' ')|first }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
     </div>
     <div class="c kpi">
         <span class="tab">Money outstanding</span>

@@ -24,7 +24,7 @@ final class DashboardPageTest extends FunctionalTestCase
 {
     public function testTheShippedCompositionRenders(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->aZone($area, 'North Gate');
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
@@ -64,7 +64,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testEveryWidgetInTheCatalogueRenders(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->aZone($area, 'North Gate');
         $reporter = $this->aReporter();
         $this->anIncident($area, reportedBy: $reporter);
@@ -96,7 +96,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testThePortedWidgetMarkupMatchesTheDesign(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->aZone($area, 'North Gate');
         $reporter = $this->aReporter();
         $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', $reporter);
@@ -139,7 +139,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testOverviewListWidgetsDoNotGrowWithTheData(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $reporter = $this->aReporter();
         // Sixteen reported-by-me incidents: past every cap (feed 14, queue 8,
         // board column 6) and all in the one "reported" column.
@@ -178,7 +178,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheMapIsThePlatesAndItsLegendSwitchesItsLayers(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->aZone($area, 'North Gate');
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
@@ -212,7 +212,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testEveryMarkCarriesItsHoverLineAndItsCaseFileUrl(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $incident = $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -271,7 +271,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheMapFirstChartsDrawFromData(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $reporter = $this->aReporter();
         $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', $reporter);
         $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside', $reporter);
@@ -302,7 +302,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheRegisterChipShowsTheCriticalLevel(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $reporter = $this->aReporter();
         $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', $reporter, IncidentSeverityEnum::Critical);
         $this->client->loginUser($reporter);
@@ -317,7 +317,7 @@ final class DashboardPageTest extends FunctionalTestCase
     /** An area with nothing filed still gets a whole dashboard, not an error. */
     public function testAnEmptyAreaRendersAWholeDashboard(): void
     {
-        $area = $this->anArea('Quiet Area');
+        $area = $this->anAreaWithKinds('Quiet Area');
         $this->client->loginUser($this->aReporter());
 
         $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
@@ -332,7 +332,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testACategoryChipNarrowsTheWholePage(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $reporter = $this->aReporter();
         $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside', $reporter);
         $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', $reporter);
@@ -355,7 +355,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheSearchBoxNarrowsTheWholePage(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $reporter = $this->aReporter();
         $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside', $reporter);
         $this->anIncident($area, 'snaring', 'Snare line lifted at the Acacia Wood forest edge', $reporter);
@@ -380,7 +380,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheFilterBarIsFiveDropdowns(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -413,7 +413,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheDropdownsFilterForReal(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $reporter = $this->aReporter();
         $this->anIncident($area, 'livestock-depredation', 'Lion killed four goats at Riverside', $reporter);
         $this->client->loginUser($reporter);
@@ -446,7 +446,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheLensChipAlwaysOffersTheWholeList(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -477,7 +477,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheReportControlIsOfferedOnlyToSomebodyWhoMayFile(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
 
         // Staff, signed in, holding neither permission — the shape of the very
@@ -501,7 +501,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheReportCardsControlAsksTheSameQuestion(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aUser('bystander@example.test', 'Neema', 'Kimaro'));
 
         $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
@@ -518,7 +518,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheHeaderDrawsTheExportAndTheFilingAndNoConfigurationButton(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $this->client->loginUser($this->aManager());
 
@@ -548,7 +548,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheDashboardShowsTheKindsThisAreaFiles(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 
@@ -571,7 +571,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheKindsScreenIsOfferedOnlyToSomebodyWhoMayManage(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $kinds = \sprintf('/areas/%s/modules/incidents/kinds', $this->uuidOf($area));
 
@@ -591,7 +591,7 @@ final class DashboardPageTest extends FunctionalTestCase
      */
     public function testTheExportLinkCarriesTheCurrentFilter(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area);
         $this->client->loginUser($this->aReporter());
 

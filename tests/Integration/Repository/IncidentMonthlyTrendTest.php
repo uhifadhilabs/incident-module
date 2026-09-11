@@ -42,13 +42,12 @@ final class IncidentMonthlyTrendTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->installTaxonomy();
     }
 
     /** Six months, oldest first, every one present — the quiet months at zero. */
     public function testItReturnsSixMonthsOldestFirstEveryMonthPresent(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         $this->anIncident($area, at: new \DateTimeImmutable('2026-03-10 08:00:00'));
         $this->anIncident($area, at: new \DateTimeImmutable('2026-07-20 08:00:00'));
         $this->anIncident($area, at: new \DateTimeImmutable('2026-08-05 08:00:00'));
@@ -72,7 +71,7 @@ final class IncidentMonthlyTrendTest extends IntegrationTestCase
     /** A filing older than the six-month window is not on the line. */
     public function testFilingsBeforeTheWindowAreExcluded(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         // February is one month before March, the first month in the window.
         $this->anIncident($area, at: new \DateTimeImmutable('2026-02-15 08:00:00'));
         $this->anIncident($area, at: new \DateTimeImmutable('2026-08-05 08:00:00'));
@@ -89,13 +88,13 @@ final class IncidentMonthlyTrendTest extends IntegrationTestCase
     /** The category filter narrows the trend the way it narrows everything else. */
     public function testTheCategoryFilterNarrowsTheTrend(): void
     {
-        $area = $this->anArea();
+        $area = $this->anAreaWithKinds();
         // 'snaring' is poaching; 'livestock-depredation' is human–wildlife conflict.
         $this->anIncident($area, 'snaring', 'Snare line', at: new \DateTimeImmutable('2026-08-05 08:00:00'));
         $this->anIncident($area, 'livestock-depredation', 'Lion took goats', at: new \DateTimeImmutable('2026-08-06 08:00:00'));
 
         $counts = $this->incidents()->monthlyFiledCounts(
-            new IncidentFilter(area: $area, categorySlugs: ['poaching']),
+            new IncidentFilter(area: $area, kindCodes: ['poaching']),
             new \DateTimeImmutable(self::ANCHOR),
         );
 
@@ -106,7 +105,7 @@ final class IncidentMonthlyTrendTest extends IntegrationTestCase
     /** An area with nothing filed still gets six zeroed months, never an empty map. */
     public function testAQuietAreaStillGetsSixZeroedMonths(): void
     {
-        $area = $this->anArea('Quiet Area');
+        $area = $this->anAreaWithKinds('Quiet Area');
 
         $counts = $this->incidents()->monthlyFiledCounts(
             new IncidentFilter(area: $area),

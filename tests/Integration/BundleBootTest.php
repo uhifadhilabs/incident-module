@@ -74,8 +74,10 @@ final class BundleBootTest extends KernelTestCase
         self::assertArrayHasKey('Uhifadhi\Incident\Entity', $driver->getDrivers());
 
         // The tables the module owns, mapped without a line of host config —
-        // the incident record and its taxonomy, plus the area-scoped taxonomy
-        // admin's own two tables.
+        // the incident record, what hangs off it, and the area's own two-level
+        // taxonomy. The installation-wide `incident_category` /
+        // `incident_subcategory` pair is deliberately absent: the classes are
+        // retired and the tables are dropped by a later, @destructive version.
         $mapped = [];
         foreach ($em->getMetadataFactory()->getAllMetadata() as $metadata) {
             if (str_starts_with($metadata->getName(), 'Uhifadhi\\Incident\\Entity\\')) {
@@ -86,14 +88,12 @@ final class BundleBootTest extends KernelTestCase
 
         self::assertSame([
             'incident',
-            'incident_category',
             'incident_event',
             'incident_evidence',
             'incident_link',
             'incident_money',
             'incident_party',
             'incident_settings',
-            'incident_subcategory',
             'incident_taxonomy_kind',
             'incident_taxonomy_subcategory',
         ], $mapped);
