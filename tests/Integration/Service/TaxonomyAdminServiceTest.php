@@ -195,6 +195,66 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
         self::assertNull($sub->getMoneyDirection());
     }
 
+    // ── what a word promises, and what it asks ───────────────────────────────────
+
+    /**
+     * THE TERM IS THIS WORD'S OWN. A human injury is 72 hours and a construction
+     * notice is 14 days; one term for the whole area would be a lie about both,
+     * which is why the ageing widget reads it off the row.
+     */
+    public function testTheTermIsThisWordsOwnAndCannotBeLessThanAnHour(): void
+    {
+        $area = $this->anArea();
+        $kind = $this->admin()->createKind($area, 'Compliance', 'comp');
+        $notice = $this->admin()->createSubcategory($kind, 'Unauthorized construction');
+        $injury = $this->admin()->createSubcategory($kind, 'Human injury');
+
+        $this->admin()->setTermHours($notice, 336);
+        $this->admin()->setTermHours($injury, 72);
+
+        self::assertSame('14 d', $notice->termLabel());
+        self::assertSame('72 h', $injury->termLabel());
+
+        // Zero is not a promise, so it is clamped rather than stored.
+        $this->admin()->setTermHours($injury, 0);
+        self::assertSame(1, $injury->getTermHours());
+    }
+
+    /**
+     * THE KEY IS THE LABEL, SLUGGED, so renaming a field IS renaming the question
+     * and answers under the old wording stop being asked for. Order is the order
+     * typed, blanks are dropped, and a repeated label is one question.
+     */
+    public function testTheFieldsAreStoredInTheOrderTypedWithKeysDerivedFromTheLabels(): void
+    {
+        $area = $this->anArea();
+        $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
+        $sub = $this->admin()->createSubcategory($kind, 'Crop raiding');
+
+        $this->admin()->setFieldSet($sub, ['Species', 'Area affected', '', 'Species', 'Household']);
+
+        self::assertSame([
+            ['key' => 'species', 'label' => 'Species'],
+            ['key' => 'area_affected', 'label' => 'Area affected'],
+            ['key' => 'household', 'label' => 'Household'],
+        ], $sub->getFieldSet());
+    }
+
+    /**
+     * THE LENS IS ORDERING, NOT ACCESS — and it is the AREA's, so two areas can
+     * put the same kind in front of different departments.
+     */
+    public function testTheDepartmentsAKindLeadsWithAreTheAreasOwn(): void
+    {
+        $area = $this->anArea();
+        $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
+
+        $this->admin()->setKindLeads($kind, ['Protection Service', '  ', 'Ecology & Wildlife Mgmt', 'Protection Service']);
+
+        self::assertSame(['Protection Service', 'Ecology & Wildlife Mgmt'], $kind->getLeads());
+        self::assertSame('Protection Service · Ecology & Wildlife Mgmt', $kind->leadsLine());
+    }
+
     // ── deactivate hides but keeps ───────────────────────────────────────────────
 
     public function testDeactivatingAKindDimsItButKeepsItAndItsSubs(): void

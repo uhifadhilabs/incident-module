@@ -81,11 +81,13 @@
               {% else %}
                 <span class="tx-blk none">no blocks yet</span>
               {% endfor %}
+              <span class="tx-blk">term {{ sub.termLabel }}</span>
+              <span class="tx-blk">{{ sub.fieldSet|length }} {{ sub.fieldSet|length == 1 ? 'field' : 'fields' }}</span>
             </div>
           </div>
           <div class="acts">
             {# → the block editor opens on the same route, ?blocks={uuid} #}
-            <a class="tx-act" href="{{ path('incident_kinds', {uuid: area.uuid, kind: selected.uuid, blocks: sub.uuid}) }}#blocks-{{ sub.uuid }}">{{ ux_icon('incident:pen-line', {width: 12, height: 12}) }} Edit blocks</a>
+            <a class="tx-act" href="{{ path('incident_kinds', {uuid: area.uuid, kind: selected.uuid, blocks: sub.uuid}) }}#blocks-{{ sub.uuid }}">{{ ux_icon('incident:pen-line', {width: 12, height: 12}) }} Edit behaviour</a>
             {% if sub.active %}
               <form class="tx-actform" method="post" action="{{ path('incident_kinds_sub_deactivate', {uuid: area.uuid, sub: sub.uuid}) }}">
                 <input type="hidden" name="_token" value="{{ csrfToken }}">
@@ -101,10 +103,12 @@
         </div>
 
         {# THE COMPOSABLE BEHAVIOUR-BLOCK TOGGLES, opened for this sub. Each block
-           is independent — tick what it records. → PUT …/subcategories/{uuid}/blocks #}
+           is independent — tick what it records. The term and the fields save with
+           them, because they are one decision about one word.
+           → POST …/subcategories/{uuid}/behaviour #}
         {% if editingBlocks is same as(sub) %}
           <div class="tx-blockedit" id="blocks-{{ sub.uuid }}">
-            <form method="post" action="{{ path('incident_kinds_sub_blocks', {uuid: area.uuid, sub: sub.uuid}) }}">
+            <form method="post" action="{{ path('incident_kinds_sub_behaviour', {uuid: area.uuid, sub: sub.uuid}) }}">
               <input type="hidden" name="_token" value="{{ csrfToken }}">
               <div class="tx-picker">
                 <div class="hd"><b>{{ sub.label }} &mdash; this sub-category also records</b><em>each block is independent &mdash; tick what it asks for</em></div>
@@ -118,13 +122,29 @@
                   {% endfor %}
                 </div>
               </div>
+              {# THE TERM AND THE QUESTIONS — SET·11. The term is what the ageing
+                 widget and the case file hold this word to; the fields are what
+                 the filing form asks under it, in the order typed. #}
+              <div class="tx-picker" style="margin-top:9px">
+                <div class="hd"><b>{{ sub.label }} &mdash; what it promises, and what it asks</b><em>the term is this word&rsquo;s own &mdash; one term for the whole area would be a lie about most of them</em></div>
+                <div class="tx-toggles" style="grid-template-columns:1fr">
+                  <label class="tx-tog" style="align-items:center">
+                    <span class="bd"><b>Term, in hours</b><em>reads as &ldquo;{{ sub.termLabel }}&rdquo; on a chip</em></span>
+                    <input class="tx-input" type="number" name="term_hours" min="1" value="{{ sub.termHours }}" aria-label="Term in hours for {{ sub.label }}" style="width:96px">
+                  </label>
+                  <label class="tx-tog" style="align-items:center">
+                    <span class="bd"><b>Fields this word asks for</b><em>comma-separated, in the order the form draws them</em></span>
+                    <input class="tx-input" type="text" name="fields" value="{{ sub.fieldSet|map(f => f.label)|join(', ') }}" placeholder="Species, Livestock lost, Household" aria-label="Fields {{ sub.label }} asks for" style="flex:1">
+                  </label>
+                </div>
+              </div>
               <div class="tx-savebar">
                 <label class="tx-meta" for="money-dir-{{ sub.uuid }}">Money runs as</label>
                 <select class="tx-input" id="money-dir-{{ sub.uuid }}" name="money_direction">
                   <option value="">— not decided —</option>
                   {% for dir in moneyDirections %}<option value="{{ dir.value }}"{{ sub.moneyDirection is same as(dir) ? ' selected' }}>{{ dir.value }}</option>{% endfor %}
                 </select>
-                <button class="tx-cta" type="submit">{{ ux_icon('shell:check', {width: 13, height: 13}) }} Save blocks</button>
+                <button class="tx-cta" type="submit">{{ ux_icon('shell:check', {width: 13, height: 13}) }} Save</button>
                 <a class="tx-act" href="{{ path('incident_kinds', {uuid: area.uuid, kind: selected.uuid}) }}">Cancel</a>
               </div>
             </form>

@@ -247,8 +247,14 @@ final class IncidentTaxonomyController
         return $this->backToManager($area, $entity->getKind());
     }
 
-    #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/blocks', name: 'incident_kinds_sub_blocks', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
-    public function setBlocks(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
+    /**
+     * WHAT THIS WORD DOES, in one save: the behaviour blocks, which way money
+     * runs when the money block is on, what the word promises, and what its form
+     * asks for. One panel and one POST, because they are one decision — a term
+     * chosen without seeing the fields beside it is a term chosen in the dark.
+     */
+    #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/behaviour', name: 'incident_kinds_sub_behaviour', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
+    public function setBehaviour(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
     {
         $this->guardWrite($request);
         $entity = $this->subcategory($area, $sub);
@@ -269,6 +275,8 @@ final class IncidentTaxonomyController
             $blocks,
             MoneyDirectionEnum::tryFrom($request->request->getString('money_direction')),
         );
+        $this->admin->setTermHours($entity, $request->request->getInt('term_hours', TaxonomySubcategory::DEFAULT_TERM_HOURS));
+        $this->admin->setFieldSet($entity, self::fieldLabels($request->request->getString('fields')));
 
         return $this->backToManager($area, $entity->getKind());
     }
@@ -380,6 +388,26 @@ final class IncidentTaxonomyController
         }
 
         return $this->backToManager($area, $selected);
+    }
+
+    /**
+     * The fields as the administrator types them: one line, comma-separated, in
+     * the order the form will draw them. Blank entries are dropped rather than
+     * stored as a question with no words in it.
+     *
+     * @return list<string>
+     */
+    private static function fieldLabels(string $raw): array
+    {
+        $labels = [];
+        foreach (explode(',', $raw) as $label) {
+            $label = trim($label);
+            if ('' !== $label) {
+                $labels[] = $label;
+            }
+        }
+
+        return $labels;
     }
 
     private function guardWrite(Request $request): void

@@ -135,7 +135,13 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         self::assertCount(2, $editor->filter('.tx-toggles input[checked]'));
     }
 
-    public function testComposingBlocksThroughTheEditorPersists(): void
+    /**
+     * ONE PANEL, ONE SAVE. The blocks, the direction money runs, the term the
+     * word promises and the questions its form asks are one decision about one
+     * word, so the editor writes all four in a single POST — SET·11 draws them
+     * together for the same reason.
+     */
+    public function testComposingAWordsBehaviourThroughTheEditorPersists(): void
     {
         $area = $this->anArea();
         $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
@@ -143,10 +149,12 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $this->client->loginUser($this->aManager());
 
         $html = $this->client->request('GET', $this->kindsUrl($area).'?kind='.$kind->getUuid()->toRfc4122().'&blocks='.$sub->getUuid()->toRfc4122())->html();
-        $this->client->request('POST', $this->kindsUrl($area).'/subcategories/'.$sub->getUuid()->toRfc4122().'/blocks', [
+        $this->client->request('POST', $this->kindsUrl($area).'/subcategories/'.$sub->getUuid()->toRfc4122().'/behaviour', [
             '_token' => $this->tokenFrom($html),
             'blocks' => ['species', 'money'],
             'money_direction' => 'compensation',
+            'term_hours' => '720',
+            'fields' => 'Species, Livestock lost , ,Household',
         ]);
 
         self::assertResponseRedirects();
@@ -156,6 +164,35 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         self::assertTrue($stored->hasBlock(BehaviorBlockEnum::Species));
         self::assertTrue($stored->carriesMoney());
         self::assertSame('compensation', $stored->getMoneyDirection()?->value);
+
+        // The term is this word's own, and reads as the design writes it.
+        self::assertSame(720, $stored->getTermHours());
+        self::assertSame('30 d', $stored->termLabel());
+
+        // The questions, in the order typed, with the blank entry dropped and the
+        // key derived from the label — renaming a field IS renaming the question.
+        self::assertSame(
+            [
+                ['key' => 'species', 'label' => 'Species'],
+                ['key' => 'livestock_lost', 'label' => 'Livestock lost'],
+                ['key' => 'household', 'label' => 'Household'],
+            ],
+            $stored->getFieldSet(),
+        );
+    }
+
+    /** The two controls are actually on the panel, not merely accepted by the POST. */
+    public function testTheBehaviourPanelDrawsTheTermAndTheFields(): void
+    {
+        $area = $this->anArea();
+        $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
+        $sub = $this->admin()->createSubcategory($kind, 'Livestock depredation');
+        $this->client->loginUser($this->aManager());
+
+        $editor = $this->client->request('GET', $this->kindsUrl($area).'?kind='.$kind->getUuid()->toRfc4122().'&blocks='.$sub->getUuid()->toRfc4122());
+
+        self::assertCount(1, $editor->filter('.tx-blockedit input[name="term_hours"]'));
+        self::assertCount(1, $editor->filter('.tx-blockedit input[name="fields"]'));
     }
 
     // ── deactivate never deletes ─────────────────────────────────────────────
