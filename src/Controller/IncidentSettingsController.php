@@ -88,6 +88,7 @@ final readonly class IncidentSettingsController
         return new RedirectResponse($this->router->generate(ConfigureController::MODULE_ROUTE, [
             'uuid' => $area->getUuidString(),
             'slug' => IncidentModuleProvider::SLUG,
+            'section' => 'settings',
         ]));
     }
 }

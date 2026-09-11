@@ -40,12 +40,12 @@ final class ConfigurePageTest extends FunctionalTestCase
     }
 
     /** The bare address is the surface's settings, by the platform's ruled order. */
-    public function testTheConfigurePageOpensOnSettingsAndNamesThisModule(): void
+    public function testTheSettingsSectionNamesThisModule(): void
     {
         $area = $this->anArea();
         $this->client->loginUser($this->aManager());
 
-        $crawler = $this->client->request('GET', $this->configureUrl($area));
+        $crawler = $this->client->request('GET', $this->configureUrl($area, 'settings'));
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Sample Area — Incidents · configure', $crawler->filter('h1.pg')->text());
@@ -62,7 +62,7 @@ final class ConfigurePageTest extends FunctionalTestCase
         $area = $this->anArea();
         $this->client->loginUser($this->aManager());
 
-        $crawler = $this->client->request('GET', $this->configureUrl($area));
+        $crawler = $this->client->request('GET', $this->configureUrl($area, 'settings'));
 
         self::assertSame(
             ['Currency', 'Kinds'],
@@ -79,7 +79,7 @@ final class ConfigurePageTest extends FunctionalTestCase
         $area = $this->anArea();
         $this->client->loginUser($this->aManager());
 
-        $crawler = $this->client->request('GET', $this->configureUrl($area));
+        $crawler = $this->client->request('GET', $this->configureUrl($area, 'settings'));
 
         self::assertStringContainsString('the installation', self::card($crawler, 'Currency')->text());
     }
@@ -90,7 +90,7 @@ final class ConfigurePageTest extends FunctionalTestCase
         $area = $this->anArea();
         $this->client->loginUser($this->aManager());
 
-        $crawler = $this->client->request('GET', $this->configureUrl($area));
+        $crawler = $this->client->request('GET', $this->configureUrl($area, 'settings'));
         $token = (string) $crawler->filter('input[name="_token"]')->attr('value');
 
         $this->client->request('POST', $this->configureUrl($area, 'settings'), [
@@ -98,9 +98,9 @@ final class ConfigurePageTest extends FunctionalTestCase
             'currency' => 'KES',
         ]);
 
-        self::assertResponseRedirects($this->configureUrl($area));
+        self::assertResponseRedirects($this->configureUrl($area, 'settings'));
 
-        $crawler = $this->client->request('GET', $this->configureUrl($area));
+        $crawler = $this->client->request('GET', $this->configureUrl($area, 'settings'));
         self::assertSame('KES', $crawler->filter('select[name="currency"] option[selected]')->attr('value'));
         self::assertStringContainsString('this area’s own', self::card($crawler, 'Currency')->text());
     }
@@ -111,7 +111,7 @@ final class ConfigurePageTest extends FunctionalTestCase
         $area = $this->anArea();
         $this->client->loginUser($this->aManager());
 
-        $crawler = $this->client->request('GET', $this->configureUrl($area));
+        $crawler = $this->client->request('GET', $this->configureUrl($area, 'settings'));
         $token = (string) $crawler->filter('input[name="_token"]')->attr('value');
 
         $this->client->request('POST', $this->configureUrl($area, 'settings'), [
@@ -119,7 +119,7 @@ final class ConfigurePageTest extends FunctionalTestCase
             'currency' => 'XXX',
         ]);
 
-        $crawler = $this->client->request('GET', $this->configureUrl($area));
+        $crawler = $this->client->request('GET', $this->configureUrl($area, 'settings'));
         self::assertNotSame('XXX', $crawler->filter('select[name="currency"] option[selected]')->attr('value'));
     }
 
@@ -155,7 +155,7 @@ final class ConfigurePageTest extends FunctionalTestCase
         $area = $this->anArea();
         $this->client->loginUser($this->aManager());
 
-        $this->client->request('GET', $this->configureUrl($area));
+        $this->client->request('GET', $this->configureUrl($area, 'settings'));
 
         self::assertStringNotContainsStringIgnoringCase(
             'register',
