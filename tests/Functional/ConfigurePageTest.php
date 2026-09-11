@@ -73,6 +73,24 @@ final class ConfigurePageTest extends FunctionalTestCase
         self::assertGreaterThan(0, $crawler->filter('select[name="currency"] option')->count());
     }
 
+    /**
+     * The Kinds card no longer says a sub-category's term and fields are editable
+     * nowhere — they are, in the Incident kinds section — so the note that said so
+     * is gone, and what replaced it points at that section.
+     */
+    public function testTheKindsCardSendsTermAndFieldsToTheKindsSection(): void
+    {
+        $area = $this->anArea();
+        $this->client->loginUser($this->aManager());
+
+        $crawler = $this->client->request('GET', $this->configureUrl($area, 'settings'));
+        $kinds = self::card($crawler, 'Kinds')->text();
+
+        self::assertStringNotContainsString('not editable here yet', $kinds);
+        self::assertStringContainsString('the term it promises', $kinds);
+        self::assertStringContainsString('Incident kinds', $kinds);
+    }
+
     /** Until an area saves, it counts money in the installation's currency. */
     public function testAnAreaThatHasNeverSavedShowsTheInstallationsCurrency(): void
     {
