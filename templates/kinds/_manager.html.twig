@@ -120,7 +120,7 @@
                 <div class="hd"><b>{{ sub.label }} &mdash; this sub-category also records</b><em>each block is independent &mdash; tick what it asks for</em></div>
                 <div class="tx-toggles">
                   {% for block in blockCatalogue %}
-                    <label class="tx-tog{{ sub.hasBlock(block) ? ' on' }}">
+                    <label class="tx-tog">
                       <input type="checkbox" name="blocks[]" value="{{ block.value }}"{{ sub.hasBlock(block) ? ' checked' }}>
                       <span class="box">{{ ux_icon('shell:check', {width: 10, height: 10}) }}</span>
                       <span class="bd"><b>{{ block.label }}</b><em>{{ block.description }}</em></span>

@@ -188,6 +188,34 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     }
 
     /**
+     * AND THE CHECKBOX IS THE ONLY THING THAT SAYS SO. A switched-on block is
+     * rendered checked and nothing else: the sheet lights the toggle from
+     * `:has(input:checked)`, so unticking one goes dark where a person clicked.
+     * A second, server-written `on` class would hold the toggle lit until the
+     * next page load and read as a block that refuses to be switched off.
+     */
+    public function testASwitchedOnBlockIsSaidByItsCheckboxAlone(): void
+    {
+        $area = $this->anArea();
+        $kind = $this->admin()->createKind($area, 'Poaching', 'poach');
+        $sub = $this->admin()->createSubcategory($kind, 'Snaring');
+        $this->admin()->setBlocks($sub, [BehaviorBlockEnum::Species, BehaviorBlockEnum::Counts]);
+        $this->client->loginUser($this->aManager());
+
+        $editor = $this->client->request(
+            'GET',
+            $this->kindsUrl($area).'?kind='.$kind->getUuid()->toRfc4122().'&blocks='.$sub->getUuid()->toRfc4122(),
+        );
+
+        self::assertCount(2, $editor->filter('.tx-toggles input[checked]'));
+        self::assertCount(
+            0,
+            $editor->filter('.tx-toggles .tx-tog.on'),
+            'The server writes no lit class on a block toggle: the checkbox carries the state.',
+        );
+    }
+
+    /**
      * ONE PANEL, ONE SAVE. The blocks, the direction money runs and the term the
      * word promises are one decision about one word, so the editor writes all
      * three in a single POST. WHAT THE FORM ASKS IS NOT ON THE PANEL AT ALL: the
