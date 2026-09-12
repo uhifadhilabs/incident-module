@@ -855,17 +855,18 @@ html.light{
 .rr-q.done>i{border-color:var(--ok);color:var(--ok)}
 .rr-q.need>i{border-color:var(--warn);color:var(--warn)}
 .rr-q>div{min-width:0;flex:1}
-.rr-q b{display:block;font-size:12px;font-weight:600;color:var(--tx)}
+/* The block's name is the row's own child and is the only <b> that takes a line
+   of its own. The question under it emphasises the answer it cannot do without
+   with a <b> of its own, INSIDE the <em>, and that one stays in the sentence —
+   so the block rule names the direct child rather than every <b> in the row. */
+.rr-q>div>b{display:block;font-size:12px;font-weight:600;color:var(--tx)}
 .rr-q em{display:block;font-style:normal;font-size:11px;line-height:1.5;color:var(--fog);margin-top:2px}
-/* display:inline is explicit: the row's own `b` is a block — the block's NAME on
-   its own line — and the emphasis inside the question is a clause of a sentence.
-   Without this the defining answer and the full stop after it each take a line.
-   (The design workspace's sheet omits it; the rendering there is wrong for the
-   same reason and the design agent has been told.) */
-.rr-q em b{display:inline;color:var(--tx);font-weight:600}
+.rr-q em b{display:inline;font-size:inherit;color:var(--tx);font-weight:600}
 .rr-q .n{font:600 8.5px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.12em;
   text-transform:uppercase;color:var(--dim);margin-top:4px;display:block}
-.rr-q.done b{color:var(--fog)}
+/* A done row quietens the block's NAME and not the answer inside its question:
+   the same direct child the block rule names, so the emphasis keeps --tx. */
+.rr-q.done>div>b{color:var(--fog)}
 
 /* The scope the list was built with, stated — a list of questions with no word
    behind it is a list nobody can argue with. */
