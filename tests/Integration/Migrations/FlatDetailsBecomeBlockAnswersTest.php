@@ -40,7 +40,7 @@ final class FlatDetailsBecomeBlockAnswersTest extends MigrationsTestCase
     /** The version the flat shape is written at — the last one before the move. */
     private const string BEFORE_THE_BLOCKS = 'Uhifadhi\Incident\Migrations\Version20260911140000';
 
-    /** The answers one incident carried under the retired per-question names. */
+    /** The answers one incident carries under a flat name per question. */
     private const array FLAT_DETAILS = [
         'species' => 'Lion',
         'sex' => 'female',
@@ -224,8 +224,8 @@ final class FlatDetailsBecomeBlockAnswersTest extends MigrationsTestCase
     }
 
     /**
-     * One area, one word, one incident — and the answers the retired field list
-     * produced, written straight into the column the old form wrote them to.
+     * One area, one word, one incident — and a flat answer per question name,
+     * written straight into the column that holds them.
      *
      * @param array<string, string>|null $details null for the whole flat set
      */

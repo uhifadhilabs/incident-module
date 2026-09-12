@@ -222,9 +222,9 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
 
     /**
      * NOTHING IN THE ADMIN WRITES A LIST OF QUESTIONS. A word's questions are the
-     * questions of the blocks it switches on, so the service that used to take a
-     * typed field list no longer offers one — there is no form builder, and a
-     * screen that could invent a field is a screen that could ask anything.
+     * questions of the blocks it switches on, so the admin offers no way to name
+     * one: there is no form builder, and a screen that could invent a field is a
+     * screen that could ask anything.
      */
     public function testTheAdminOffersNoWayToInventAQuestion(): void
     {
@@ -234,7 +234,7 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
                 static fn (\ReflectionMethod $method): string => $method->getName(),
                 new \ReflectionClass(TaxonomyAdminService::class)->getMethods(\ReflectionMethod::IS_PUBLIC),
             ),
-            'The retired field list has no door back in.',
+            'A typed field list has no door into the admin.',
         );
     }
 

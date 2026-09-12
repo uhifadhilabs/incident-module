@@ -228,7 +228,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         self::assertSame([], $stored->getFieldSet());
     }
 
-    /** The term is on the panel — and the retired field list is nowhere on it. */
+    /** The term is on the panel, and nothing on the panel asks for a field name. */
     public function testTheBehaviourPanelDrawsTheTermAndAsksForNoFields(): void
     {
         $area = $this->anArea();
