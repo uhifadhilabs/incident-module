@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Functional;
 
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
@@ -438,6 +439,67 @@ final class ReportFlowTest extends FunctionalTestCase
         // and never a category's.
         $roadkill = $crawler->filter('[data-uhifadhi--incident-module--incident-report-target="fieldset"][data-subcategory="roadkill"]')->html();
         self::assertStringContainsString('Fine assessed', $roadkill);
+    }
+
+    /**
+     * STEP 2 IS A RUN OF FOLDS, ONE PER BLOCK THE WORD SWITCHED ON — the first
+     * open and the rest shut, in the kinds editor's order, each summary line
+     * naming the block, saying what it is for, printing its question count and
+     * carrying its mark.
+     */
+    public function testStepTwoDrawsOneFoldPerBlockTheFirstOpenAndTheRestShut(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+        $folds = $crawler->filter('[data-subcategory="livestock-depredation"] .i-blocks > .fold');
+
+        self::assertCount(4, $folds);
+        self::assertSame(
+            ['Species', 'Counts', 'Parties', 'Money · compensation'],
+            $folds->each(static fn (Crawler $fold): string => $fold->filter('.sum > b')->text()),
+        );
+        self::assertSame(
+            ['3 questions', '2 questions', '5 questions', '1 question'],
+            $folds->each(static fn (Crawler $fold): string => $fold->filter('.sum > .n')->text()),
+        );
+        // The first is open; every other one is shut, which is the ruled
+        // arrangement and the reason a summary line has to carry the mark.
+        self::assertSame(
+            [false, true, true, true],
+            $folds->each(static fn (Crawler $fold): bool => str_contains((string) $fold->attr('class'), 'shut')),
+        );
+        self::assertCount(4, $folds->filter('.sum > .fwhen.req'));
+        // The money fold wears the money token, and it is the only one that does.
+        self::assertSame(
+            [false, false, false, true],
+            $folds->each(static fn (Crawler $fold): bool => str_contains((string) $fold->attr('class'), 'money')),
+        );
+    }
+
+    /**
+     * A REPEATING BLOCK SHIPS ONE ROW, THE CONTROL TO GROW IT AND THE MARK THAT
+     * SAYS A ROW IS WANTED — and the row's cells post as a row, so two of them
+     * are two answers rather than one overwritten.
+     */
+    public function testARepeatingBlockShipsOneRowAndTheControlToGrowIt(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+        $counts = $crawler->filter('[data-subcategory="livestock-depredation"] .i-blocks > .fold')->eq(1);
+
+        self::assertCount(1, $counts->filter('.reps > .rep'));
+        self::assertSame('+ Add a quantity', $counts->filter('.repfoot .repadd')->text());
+        self::assertSame('one row needed to file', $counts->filter('.repfoot .fwhen.req')->text());
+        self::assertSame(
+            ['blocks[counts][rows][0][quantity]', 'blocks[counts][rows][0][how_many]'],
+            $counts->filter('.rep [name]')->each(static fn (Crawler $cell): string => (string) $cell->attr('name')),
+        );
+        // Both cells of a count row are what the row cannot be without.
+        self::assertCount(2, $counts->filter('.rep [data-need-row]'));
     }
 
     /**
