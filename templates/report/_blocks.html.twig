@@ -1,0 +1,83 @@
+{# ============================================================================
+   THE BLOCKS THIS SUB-CATEGORY SWITCHED ON — one fold each, in the order the
+   kinds editor holds them, the FIRST OPEN and the rest shut (the ruled
+   arrangement C).
+
+   A BLOCK THAT IS OFF IS ABSENT, not disabled: a sub-category carrying only the
+   money block renders one fold with one question, and that is the smallest step 2
+   there is.
+
+   THE SUMMARY LINE KEEPS A SHUT FOLD HONEST. It names the block, says in one line
+   what it is for, prints how many questions are inside and carries the
+   `needed to file` mark — so a fold nobody opened can never hide a held-up
+   filing, and the footer names what is missing whether or not it is open.
+
+   NOTHING HERE TYPES A QUESTION. Every label, control, option list, placeholder
+   and mark comes from the catalogue, which is why unticking a block in the editor
+   is the whole of removing its questions from this page.
+
+   Parameters: controller, sets, subcategory, areaLists, disabled
+   ========================================================================== #}
+<div class="i-blocks">
+    {% for set in sets %}
+        {% set open = loop.first %}
+        <div class="fold{{ open ? '' : ' shut' }}{{ set.block.isMoney ? ' money' }}"
+             {%- if set.gates %} data-need="{{ set.missingLabel }}"{% endif %}>
+            <button type="button" class="sum" {{ stimulus_action(controller, 'fold', 'click') }}>
+                <span class="cv"></span>
+                <b>{{ set.title }}</b>
+                <em>{{ set.caption }}</em>
+                {% if set.gates %}<span class="fwhen req">needed to file</span>{% endif %}
+                <span class="n">{{ set.questionCountLabel }}</span>
+            </button>
+            <div class="bd">
+                {% if set.repeats %}
+                    {# THE ROW THAT REPEATS. One row is drawn, and the add control
+                       grows the list — the questions inside a row carry no labels
+                       because a list of five labelled rows is a form nobody can
+                       read; the placeholder is the label. #}
+                    <div class="reps" {{ stimulus_target(controller, 'rows') }}>
+                        <div class="rep">
+                            <span class="ix">1</span>
+                            {% for question in set.rowQuestions %}
+                                {{ include('@UhifadhiIncident/report/_control.html.twig', {
+                                    controller: controller,
+                                    question: question,
+                                    name: 'blocks[' ~ set.block.value ~ '][rows][0][' ~ question.key ~ ']',
+                                    areaLists: areaLists,
+                                    need: question.gates ? 'row' : null,
+                                    disabled: disabled,
+                                }, with_context: false) }}
+                            {% endfor %}
+                            <button type="button" class="x" {{ stimulus_action(controller, 'removeRow', 'click') }}
+                                    aria-label="Remove this row">&times;</button>
+                        </div>
+                    </div>
+                    <div class="repfoot">
+                        <button type="button" class="repadd" {{ stimulus_action(controller, 'addRow', 'click') }}>{{ set.addLabel }}</button>
+                        <span class="fwhen req">{{ set.rowMark }}</span>
+                    </div>
+                {% endif %}
+
+                {% for question in set.questions %}
+                    {% set id = 'b-' ~ subcategory.code ~ '-' ~ set.block.value ~ '-' ~ question.key %}
+                    <div class="i-fld">
+                        <label for="{{ id }}">{{ question.label }}</label>
+                        <span>{{ include('@UhifadhiIncident/report/_control.html.twig', {
+                                controller: controller,
+                                question: question,
+                                name: 'blocks[' ~ set.block.value ~ '][' ~ question.key ~ ']',
+                                areaLists: areaLists,
+                                need: question.gates ? 'answer' : null,
+                                disabled: disabled,
+                                id: id,
+                            }, with_context: false) }}
+                            <span class="fwhen{{ question.gates ? ' req' }}">{{ question.whenLabel }}</span>
+                            {%- if question.note %} <span class="i-kpi-note">{{ question.note }}</span>{% endif -%}
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>

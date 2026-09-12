@@ -393,6 +393,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('twig'),
                     service('router'),
                     service('incident.report'),
+                    service('incident.block_answers'),
                     service(TaxonomyKindRepository::class),
                     service(TaxonomySubcategoryRepository::class),
                     service('security.authorization_checker'),

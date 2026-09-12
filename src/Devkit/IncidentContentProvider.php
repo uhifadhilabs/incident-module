@@ -229,7 +229,7 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
                 occurredAt: $reportedAt->modify('-2 hours'),
                 narrative: $row['narrative'],
                 reportedBy: $recorder,
-                details: DemoMonth::detailsFor($subcategory, $index),
+                blockAnswers: DemoMonth::blockAnswersFor($subcategory, $index),
             );
 
             $this->addParties($incident, $row['parties'], $reportedAt, $recorder);
@@ -271,19 +271,38 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
             foreach ($definition['subcategories'] as $subCode => $sub) {
                 $subcategory = $this->taxonomy->createSubcategory($kind, $sub['label'], $subCode);
 
-                // The money block, and only where the design says money runs.
-                // A word with no direction gets no block, which is what makes the
-                // money row ABSENT from its form rather than empty on it.
+                // THE BLOCKS THIS WORD SWITCHES ON — which is the whole of what
+                // its form asks. The money block only where the design says money
+                // runs, and a word with no direction gets none, which is what
+                // makes the money question ABSENT from its form rather than empty
+                // on it.
                 $direction = null === $sub['money'] ? null : MoneyDirectionEnum::from($sub['money']);
-                $this->taxonomy->setBlocks(
-                    $subcategory,
-                    null === $direction ? [] : [BehaviorBlockEnum::Money],
-                    $direction,
-                );
+                $this->taxonomy->setBlocks($subcategory, self::blocksOf($sub['blocks']), $direction);
                 $this->taxonomy->setTermHours($subcategory, $sub['term_hours']);
-                $this->taxonomy->setFieldSet($subcategory, $sub['fields']);
             }
         }
+    }
+
+    /**
+     * The blocks the table names, as the enum — a value the enum does not know is
+     * dropped rather than seeded, because a demo may not teach a block that does
+     * not exist.
+     *
+     * @param list<string> $blocks
+     *
+     * @return list<BehaviorBlockEnum>
+     */
+    private static function blocksOf(array $blocks): array
+    {
+        $cases = [];
+        foreach ($blocks as $value) {
+            $block = BehaviorBlockEnum::tryFrom($value);
+            if (null !== $block) {
+                $cases[] = $block;
+            }
+        }
+
+        return $cases;
     }
 
     /**

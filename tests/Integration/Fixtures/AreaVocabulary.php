@@ -55,9 +55,16 @@ final readonly class AreaVocabulary
             foreach ($definition['subcategories'] as $subCode => $sub) {
                 $subcategory = $this->admin->createSubcategory($kind, $sub['label'], $subCode);
                 $direction = null === $sub['money'] ? null : MoneyDirectionEnum::from($sub['money']);
+                $blocks = [];
+                foreach ($sub['blocks'] as $value) {
+                    $block = BehaviorBlockEnum::tryFrom($value);
+                    if (null !== $block) {
+                        $blocks[] = $block;
+                    }
+                }
                 $this->admin->setBlocks(
                     $subcategory,
-                    null === $direction ? [] : [BehaviorBlockEnum::Money],
+                    $blocks,
                     $direction,
                 );
                 $this->admin->setTermHours($subcategory, $sub['term_hours']);

@@ -81,6 +81,25 @@ final class ReportFlowTest extends FunctionalTestCase
         );
     }
 
+    /**
+     * THE ANSWERS `livestock depredation` CANNOT BE FILED WITHOUT — the species,
+     * one count row, a party with a role and a name, and the figure. The four
+     * blocks it switched on, each asked its own first question.
+     *
+     * @return array<string, mixed>
+     */
+    private static function theBlocksDepredationAsks(): array
+    {
+        return [
+            'blocks' => [
+                'species' => ['species' => 'Lion', 'sex' => 'unknown'],
+                'counts' => ['rows' => [['quantity' => 'head of stock', 'how_many' => '4']]],
+                'parties' => ['rows' => [['role' => 'claimant', 'name' => 'A stock owner']]],
+                'money' => ['claimed' => '900000'],
+            ],
+        ];
+    }
+
     // ── THE FULL PAGE — standalone filing ────────────────────────────────────
 
     /**
@@ -209,7 +228,7 @@ final class ReportFlowTest extends FunctionalTestCase
      * place all came with the record, so nothing is missing, the gate says
      * nothing, and the control is alive before a single keystroke.
      */
-    public function testAFilingThatArrivedCompleteShipsWithTheControlAlive(): void
+    public function testAFilingThatArrivedCompleteStillWaitsOnTheBlocksItSwitchedOn(): void
     {
         $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
@@ -217,9 +236,15 @@ final class ReportFlowTest extends FunctionalTestCase
         $url = $this->fromARecordUrl($this->uuidOf($area)).'&category=livestock-depredation';
         $crawler = $this->client->request('GET', $url);
 
-        self::assertNull($crawler->filter('button.ro-file')->attr('disabled'));
-        self::assertNotNull($crawler->filter('.ro-gate')->attr('hidden'));
-        self::assertNull($crawler->filter('.ro-filebar .hint')->attr('hidden'));
+        // The three shared answers arrived with the record, so none of them is in
+        // the line — and every block the word switched on is, because a block that
+        // records nothing is worse than an absent one.
+        self::assertNotNull($crawler->filter('button.ro-file')->attr('disabled'));
+        self::assertSame(
+            'the species · one count row · a party with a role and a name · the loss claimed',
+            $crawler->filter('.ro-gate')->text(),
+        );
+        self::assertNotNull($crawler->filter('.ro-filebar .hint')->attr('hidden'));
     }
 
     /**
@@ -239,7 +264,7 @@ final class ReportFlowTest extends FunctionalTestCase
             'title' => str_repeat('a', 260),
             'lat' => '-3.21',
             'lng' => '-29.75',
-        ]);
+        ] + self::theBlocksDepredationAsks());
 
         self::assertResponseRedirects();
         $incident = $this->em->getRepository(Incident::class)->findOneBy([]);
@@ -379,7 +404,7 @@ final class ReportFlowTest extends FunctionalTestCase
             $promise = $crawler->filter('.ro-promise');
             self::assertCount(1, $promise);
             self::assertStringContainsString(
-                'Only the kind, what happened and where are needed now. Severity, people, evidence and money are added on the record afterwards.',
+                'Only the kind, what happened, where, and each block\'s own first answer are needed now. The paperwork — contacts, ID numbers, custody references, dates and facilities — is added on the record afterwards.',
                 $promise->text(),
             );
 
@@ -406,13 +431,13 @@ final class ReportFlowTest extends FunctionalTestCase
 
         $natural = $crawler->filter('[data-uhifadhi--incident-module--incident-report-target="fieldset"][data-subcategory="natural-mortality"]')->html();
         self::assertStringNotContainsString('Loss claimed', $natural);
-        self::assertStringNotContainsString('Fine to assess', $natural);
+        self::assertStringNotContainsString('Fine assessed', $natural);
 
         // Roadkill sits beside natural mortality under the same kind and DOES
         // carry money — which is why the money row is a sub-category's business
         // and never a category's.
         $roadkill = $crawler->filter('[data-uhifadhi--incident-module--incident-report-target="fieldset"][data-subcategory="roadkill"]')->html();
-        self::assertStringContainsString('Fine to assess', $roadkill);
+        self::assertStringContainsString('Fine assessed', $roadkill);
     }
 
     /**
@@ -453,8 +478,7 @@ final class ReportFlowTest extends FunctionalTestCase
             'lng' => '-29.75',
             'severity' => 'high',
             'narrative' => 'They came in the night.',
-            'details_species' => 'Lion',
-        ]);
+        ] + self::theBlocksDepredationAsks());
 
         self::assertResponseRedirects();
         $this->client->followRedirect();
@@ -465,7 +489,16 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertSame(IncidentStatusEnum::Reported, $incident->getStatus());
         self::assertSame('high', $incident->getSeverity()->value);
         self::assertSame('They came in the night.', $incident->getNarrative());
-        self::assertSame(['species' => 'Lion'], $incident->getDetails());
+        // THE ANSWERS ARE KEPT PER BLOCK, and the repeating ones as rows.
+        self::assertSame([
+            'species' => ['species' => 'Lion', 'sex' => 'unknown'],
+            'counts' => ['rows' => [['quantity' => 'head of stock', 'how_many' => '4']]],
+            'parties' => ['rows' => [['role' => 'claimant', 'name' => 'A stock owner']]],
+        ], $incident->getBlockAnswers());
+        // THE FIGURE IS THE CLAIMED ONE AND NOT A MONEY RECORD: nobody has judged
+        // anything at filing, and the money flow opens the record where it says.
+        self::assertSame(900_000, $incident->getClaimedAtFiling());
+        self::assertNull($incident->getMoney());
         // The point was resolved to a zone in PostGIS, once, at filing.
         self::assertSame('North Gate', $incident->zoneLabel());
         self::assertSame($reporter->getId(), $incident->getReportedBy()?->getId());
@@ -721,7 +754,7 @@ final class ReportFlowTest extends FunctionalTestCase
             'title' => 'Fresh lion tracks 400 m from North Gate bomas',
             'lat' => '-3.2014',
             'lng' => '-29.5378',
-        ]);
+        ] + self::theBlocksDepredationAsks());
 
         self::assertResponseRedirects();
         $incident = $this->em->getRepository(Incident::class)->findOneBy(['title' => 'Fresh lion tracks 400 m from North Gate bomas']);

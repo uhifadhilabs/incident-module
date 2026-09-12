@@ -1,0 +1,57 @@
+{# ONE BLOCK QUESTION'S CONTROL — the house form vocabulary, chosen by what the
+   question is rather than by which block asked it.
+
+   Six controls and no seventh, because the catalogue names six: a styled select,
+   a number with its unit, a yes/no pair, a date, a text field, and the select
+   that reads ONE AREA'S OWN list. Every one of them is a rule the shell's design
+   system owns — nothing here knows what an incident is.
+
+   THE EMPTY AREA LIST IS NOT A BUG AND IS NOT PAPERED OVER. No screen edits an
+   area's species, methods, land uses or named places yet, so those selects offer
+   the area's list — which arrives empty — and the typed `other` beside it. A
+   hardcoded animal would be one area's vocabulary written into every area on
+   earth, so the list stays empty until an editor fills it.
+
+   WHAT GATES SAYS SO TWICE: the accent mark a person reads, and the attribute the
+   gate reads — `data-need-answer` on a question asked once, `data-need-row` on a
+   cell a started row cannot be without.
+
+   Parameters: controller, question, name, areaLists, need ('answer' | 'row' | null),
+               disabled, id (optional — a labelled row passes one)
+   ========================================================================== #}
+{%- set gate = 'answer' == need ? ' data-need-answer' : ('row' == need ? ' data-need-row' : '') -%}
+{%- set off = disabled ? ' disabled' : '' -%}
+{%- set idAttr = id is defined and id ? ' id="' ~ id ~ '"' : '' -%}
+{%- if 'select-fixed' == question.control.value -%}
+    <span class="fsel {{ question.wide ? 'w' : 'n' }}"><select class="fld" name="{{ name }}"{{ idAttr|raw }}{{ gate|raw }}{{ off|raw }}>
+        {%- if question.placeholder %}<option value="" selected>{{ question.placeholder }}</option>{% endif -%}
+        {%- for option in question.options -%}
+            <option{{ question.placeholder ? '' : (loop.first ? ' selected' : '') }}>{{ option }}</option>
+        {%- endfor -%}
+    </select></span>
+{%- elseif 'select-area-list' == question.control.value -%}
+    <span class="fsel w"><select class="fld" name="{{ name }}"{{ idAttr|raw }}{{ gate|raw }}{{ off|raw }}>
+        <option value="" selected>{{ question.areaList.placeholder }}</option>
+        {%- for option in areaLists[question.areaList.value]|default([]) -%}
+            <option>{{ option }}</option>
+        {%- endfor -%}
+        <option>other — not on the list</option>
+    </select></span>
+{%- elseif 'number' == question.control.value -%}
+    <span class="fnum"><input class="fld" type="text" inputmode="numeric" placeholder="0"
+                              name="{{ name }}"{{ idAttr|raw }}{{ gate|raw }}{{ off|raw }}>
+        <span class="u">{{ question.unit }}</span></span>
+{%- elseif 'yes-no' == question.control.value -%}
+    {# The pair a person presses, and the one value that is posted: a button posts
+       nothing, so the answer lives in the field behind them. #}
+    <span class="fyn">
+        <button type="button" data-answer="yes" {{ stimulus_action(controller, 'pick', 'click') }}{{ off|raw }}>yes</button>
+        <button type="button" data-answer="no" {{ stimulus_action(controller, 'pick', 'click') }}{{ off|raw }}>no</button>
+        <input type="hidden" name="{{ name }}"{{ gate|raw }}{{ off|raw }}>
+    </span>
+{%- elseif 'date' == question.control.value -%}
+    <input class="fld fdate" type="text" name="{{ name }}"{{ idAttr|raw }} placeholder="dd mmm yyyy"{{ gate|raw }}{{ off|raw }}>
+{%- else -%}
+    <input class="fld ftxt" type="text" name="{{ name }}"{{ idAttr|raw }}
+           placeholder="{{ question.placeholder ?? question.label|lower }}"{{ gate|raw }}{{ off|raw }}>
+{%- endif -%}

@@ -33,10 +33,14 @@ use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
+use Uhifadhi\Incident\Model\BlockAnswers;
+use Uhifadhi\Incident\Model\BlockQuestionCatalogue;
+use Uhifadhi\Incident\Model\BlockQuestionSet;
 use Uhifadhi\Incident\Model\IncidentPrefill;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
+use Uhifadhi\Incident\Service\IncidentBlockAnswerService;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Storage\Model\FileEntry;
 use Uhifadhi\Storage\Registry\FileRegistry;
@@ -60,9 +64,20 @@ use Uhifadhi\Storage\Registry\FileRegistry;
  * record-borne filing is retired. There is one container and one POST, refused
  * for the same three reasons.
  *
- * STEP 2 IS THE SUB-CATEGORY'S OWN. The fields are its field set, and
- * the money row EXISTS ONLY where the sub-category carries money — choose a
- * natural mortality and the row is not rendered at all. Not disabled. Absent.
+ * STEP 2 IS THE SUB-CATEGORY'S OWN, AND ITS QUESTIONS COME FROM ITS BLOCKS. One
+ * fold per behaviour block the sub-category switched on, in the order the kinds
+ * editor holds them, each asking exactly what {@see BlockQuestionCatalogue} says
+ * it asks. A block that is off is ABSENT — choose a natural mortality and there
+ * is no money fold in the document at all. Not disabled. Absent.
+ *
+ * AND EVERY SWITCHED-ON BLOCK'S DEFINING ANSWER GATES THE FILING: the species,
+ * one count row, the method, a party with a role and a name, a seizure item and
+ * count, the figure, the condition, a sample type and reference, an injury row, a
+ * measure row, the kind of place and which one, the permit and licence status. A
+ * block that records nothing is worse than a block that is absent. The paperwork
+ * — contacts, ID numbers, custody references, dates, facilities — never gates,
+ * and the browser says all of this sooner than the endpoint without being the
+ * authority for any of it ({@see IncidentBlockAnswerService}).
  *
  * ARRIVING FROM AN OBSERVATION: {@see IncidentPrefill} reads the hand-off's query
  * string. Everything it carries is a guess the filer may overrule, except the
@@ -104,6 +119,7 @@ final class IncidentReportController
         private readonly Environment $twig,
         private readonly UrlGeneratorInterface $router,
         private readonly IncidentReportService $reports,
+        private readonly IncidentBlockAnswerService $blockAnswers,
         private readonly TaxonomyKindRepository $kinds,
         private readonly TaxonomySubcategoryRepository $subcategories,
         private readonly AuthorizationCheckerInterface $authorization,
@@ -173,6 +189,14 @@ final class IncidentReportController
         // provenance link keeps the original reachable forever.
         $title = mb_substr(trim($request->request->getString('title')), 0, self::TITLE_LIMIT);
 
+        // THE BLOCKS' ANSWERS, READ AGAINST WHAT THE CHOSEN SUB-CATEGORY ASKS.
+        // Nothing is read for a sub-category that was not chosen, so a form that
+        // carried every sub-category's questions files only the one it picked.
+        $answers = null === $subcategory
+            ? new BlockAnswers()
+            : $this->blockAnswers->read($subcategory, $request->request->all('blocks'));
+        $missing = null === $subcategory ? [] : $this->blockAnswers->missing($subcategory, $answers);
+
         $errors = [];
         if (null === $subcategory) {
             $errors['subcategory'] = 'Choose what kind of incident this was.';
@@ -183,8 +207,14 @@ final class IncidentReportController
         if ('' === $title) {
             $errors['title'] = 'One line saying what happened.';
         }
+        if ([] !== $missing) {
+            // A BLOCK THAT RECORDS NOTHING IS WORSE THAN AN ABSENT ONE, so the
+            // refusal names every defining answer that is still unanswered — the
+            // same line the footer was already showing.
+            $errors['blocks'] = 'Every block that is on needs its own first answer: '.implode(' · ', $missing).'.';
+        }
 
-        if (null === $subcategory || null === $position || '' === $title) {
+        if (null === $subcategory || null === $position || '' === $title || [] !== $missing) {
             // 422 and the form back: the request was understood and simply cannot
             // be stored, which is how every recording screen in this deployment
             // answers a rejected form. It comes back on the same page it was made
@@ -211,7 +241,7 @@ final class IncidentReportController
             narrative: self::narrativeFrom($request) ?? $prefill->note,
             reportedBy: $this->filer(),
             prefill: $prefill,
-            details: self::detailsFrom($request, $subcategory->getFieldSet()),
+            blockAnswers: $answers,
         );
 
         $this->flash($request, \sprintf('%s filed. It starts at reported and cannot skip verification.', $incident->getReference()));
@@ -232,15 +262,27 @@ final class IncidentReportController
     {
         $fromARecord = $prefill->hasProvenance();
         $query = $prefill->toQuery();
+        $kinds = $this->kinds->forArea($area);
 
         return $this->twig->render('@UhifadhiIncident/report/show.html.twig', [
             'area' => $area,
             'now' => new \DateTimeImmutable(),
-            'kinds' => $this->kinds->forArea($area),
+            'kinds' => $kinds,
             'prefill' => $prefill,
             'chosen' => $chosen,
             'csrfToken' => $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue(),
             'errors' => $errors,
+            // WHAT EACH SUB-CATEGORY'S BLOCKS ASK, keyed by wire-code: the form
+            // renders one fold per block, so the page never types a question of
+            // its own and a block that is off has no markup at all.
+            'blockSets' => self::blockSetsFor($kinds),
+            // THE PER-AREA LISTS the catalogue's four list questions read from —
+            // which animal, by what method, what the ground is used for, which
+            // named place. NO SCREEN EDITS THEM YET, so every list arrives empty
+            // and the form offers the typed `other` beside it rather than
+            // inventing a choice. When an editor ships, it fills this map and
+            // nothing else on the form changes.
+            'areaLists' => [],
             // THE FORM POSTS BACK TO ITS OWN ENTRY POINT. Without the hand-off on the
             // action, pressing File would drop the provenance, the source card and
             // the container all at once.
@@ -322,25 +364,31 @@ final class IncidentReportController
     }
 
     /**
-     * The answers to THIS sub-category's own questions, and only those: a field
-     * the sub-category does not ask for is not stored, so re-categorising an
-     * incident never carries a stale answer into its new form.
+     * WHAT EVERY SUB-CATEGORY IN THIS AREA ASKS, keyed by its wire-code.
      *
-     * @param list<array{key: string, label: string}> $fieldSet
+     * The form renders one fold per block a sub-category switched on, so the page
+     * needs the questions of all of them: it draws every sub-category's step 2 and
+     * hides all but the chosen one, which is what lets choosing a word swap the
+     * questions without a round trip. The money direction comes from the row,
+     * because it is what names the one question the money block asks.
      *
-     * @return array<string, string>
+     * @param list<\Uhifadhi\Incident\Entity\TaxonomyKind> $kinds
+     *
+     * @return array<string, list<BlockQuestionSet>>
      */
-    private static function detailsFrom(Request $request, array $fieldSet): array
+    private static function blockSetsFor(array $kinds): array
     {
-        $details = [];
-        foreach ($fieldSet as $field) {
-            $value = trim($request->request->getString('details_'.$field['key']));
-            if ('' !== $value) {
-                $details[$field['key']] = $value;
+        $sets = [];
+        foreach ($kinds as $kind) {
+            foreach ($kind->getSubcategories() as $subcategory) {
+                $sets[$subcategory->getCode()] = BlockQuestionCatalogue::forBlocks(
+                    $subcategory->getBlocks(),
+                    $subcategory->getMoneyDirection(),
+                );
             }
         }
 
-        return $details;
+        return $sets;
     }
 
     private function denyUnlessGranted(): void

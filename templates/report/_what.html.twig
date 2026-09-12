@@ -26,17 +26,19 @@
    verbatim note belong to every kind of incident, so they are asked once, above
    the swapped field sets — never sixteen times with fifteen of them disabled.
 
-   STEP 2 IS THEN THE SUB-CATEGORY'S OWN. Every sub-category's field set is
-   rendered and all but the chosen one are hidden AND disabled, so the posted form
-   carries only the fields the chosen kind of incident actually asks for. The
-   MONEY row exists only inside the field sets of sub-categories that carry money
-   — choose a natural mortality and there is no money row in the document at all.
-   Not disabled. Absent.
+   STEP 2 IS THEN THE SUB-CATEGORY'S OWN, AND ITS QUESTIONS COME FROM ITS BLOCKS.
+   One fold per behaviour block the word switched on, in the kinds editor's order,
+   drawn by @UhifadhiIncident/report/_blocks.html.twig from the catalogue — nothing
+   on this page types a question. Every sub-category's step 2 is rendered and all
+   but the chosen one are hidden AND disabled, so the posted form carries only what
+   the chosen word actually asks. The MONEY fold exists only where the
+   sub-category carries money — choose a natural mortality and there is no money
+   question in the document at all. Not disabled. Absent.
 
    The page writes the one line on a labelled row, in the same field set as where,
    when and how bad — one column with room for a caption under each answer.
 
-   Parameters: controller, kinds, chosen, prefill
+   Parameters: controller, kinds, chosen, prefill, blockSets, areaLists
    ========================================================================== #}
 <div class="i-fieldset">
     <div class="i-fld"><label for="report-title">What happened</label>
@@ -84,13 +86,14 @@
 {% for kind in kinds %}
     {% for subcategory in kind.subcategories %}
         {% set isChosen = chosen and chosen.code == subcategory.code %}
-        <div class="i-fieldset" {{ stimulus_target(controller, 'fieldset') }}
+        <div {{ stimulus_target(controller, 'fieldset') }}
              data-subcategory="{{ subcategory.code }}"{{ isChosen ? '' : ' hidden' }}>
-            <div class="hd">the fields {{ subcategory.label }} asks for</div>
+        <div class="i-fieldset">
+            <div class="hd">the questions {{ subcategory.label }} asks</div>
 
-            {# The siblings under this kind. Choosing one swaps the whole field
-               set, because the sub-category is what decides the questions — and
-               whether there is a money row at all. #}
+            {# The siblings under this kind. Choosing one swaps every question
+               below, because the sub-category is what decides which blocks are on
+               — and whether there is a money question at all. #}
             <div class="i-fld"><label>Sub-category</label>
                 <span><span class="i-taxsub">
                     {%- for sibling in kind.subcategories -%}
@@ -101,18 +104,17 @@
                     {%- endfor -%}
                 </span></span></div>
 
-            {% for field in subcategory.fieldSet %}
-                <div class="i-fld"><label for="d-{{ subcategory.code }}-{{ field.key }}">{{ field.label }}</label>
-                    <span><input type="text" id="d-{{ subcategory.code }}-{{ field.key }}"
-                                 name="details_{{ field.key }}"{{ isChosen ? '' : ' disabled' }}></span></div>
-            {% endfor %}
+        </div>
 
-            {# ONLY where this kind of incident carries money. #}
-            {% if subcategory.carriesMoney %}
-                <div class="i-fld only"><label>{{ subcategory.moneyDirection.value == 'fine' ? 'Fine to assess' : 'Loss claimed' }}</label>
-                    <span class="i-kpi-note">Recorded on the case file once somebody has assessed it — filing is cheap,
-                        and a figure guessed at the roadside is worse than none.</span></div>
-            {% endif %}
+        {# THE BLOCKS THIS WORD SWITCHED ON. A fold each, and the money fold only
+           where the sub-category carries money — absent, never greyed. #}
+        {{ include('@UhifadhiIncident/report/_blocks.html.twig', {
+            controller: controller,
+            sets: blockSets[subcategory.code]|default([]),
+            subcategory: subcategory,
+            areaLists: areaLists,
+            disabled: not isChosen,
+        }, with_context: false) }}
         </div>
     {% endfor %}
 {% endfor %}

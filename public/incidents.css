@@ -1007,3 +1007,113 @@ html.light .kheat{background:color-mix(in srgb,var(--heat,var(--acc)) calc(var(-
    the one link to the screen that does. */
 .kp-foot{display:flex;align-items:center;gap:10px;border-top:1px solid var(--ln);padding-top:14px;margin-top:18px}
 .kp-foot .use{margin:0;flex:1}
+
+/* ── THE HOUSE FORM VOCABULARY THE BLOCK QUESTIONS ARE DRAWN IN ─────────────
+   Ported byte-faithful from the design's uhifadhi.css, where these rules
+   graduated to (`.fsel .fnum .fyn .fdate .ftxt .reps .rep .repadd .repfoot
+   .fwhen .fold`) — the shell's own sheet does not carry them yet, so a report
+   form that named them and nothing else would draw twelve blocks of questions as
+   bare text. The same self-sufficiency rule as .mchip, .chip and .factband
+   above: an incidents page styles everything it renders.
+
+   None of it knows what an incident is, and all of it belongs upstream the day
+   the shell ships it — at which point these rules are deleted here, not kept in
+   two places. `.fld`, which every one of them decorates, IS the shell's already.
+
+   ONE SUBSTITUTION, and it changes no colour: the design writes a fold's ground
+   as `--card`, which its own sheet defines as `--raised`; the shell ships
+   `--raised` and no `--card`, so the fold names the token that exists.
+
+   ONE HEIGHT, 34px, ACROSS THE WHOLE FAMILY: a select, a number and a yes/no
+   standing in the same row sit on one baseline, and a control a few pixels short
+   of its neighbour is the difference between a form and a tidy form.           */
+/* No raw dropdown ships anywhere: the house field with a chevron drawn on it. */
+.fsel{position:relative;display:inline-block;max-width:100%}
+.fsel>select.fld{appearance:none;-webkit-appearance:none;padding-right:30px;
+   font-size:12.5px;padding-top:7px;padding-bottom:8px;cursor:pointer}
+.fsel>select.fld:focus{outline:none;border-color:var(--acc)}
+.fsel::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;
+   margin-top:-5px;border-right:1.6px solid var(--fog);border-bottom:1.6px solid var(--fog);
+   transform:rotate(45deg);pointer-events:none}
+/* The wide select still leaves its row: the mark that says when the answer is
+   wanted sits beside it, not under it. */
+.fsel.w{width:100%;max-width:300px}
+.fsel.n>select.fld{width:158px}
+
+/* A number, and the unit it is counted in. */
+.fnum{display:inline-flex;align-items:center;gap:7px}
+.fnum>input.fld{width:104px;font-size:12.5px;padding-top:7px;padding-bottom:8px;
+   font-variant-numeric:tabular-nums}
+.fnum>.u{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;
+   letter-spacing:.06em;color:var(--dim)}
+.ftxt{width:100%;max-width:300px;font-size:12.5px;padding-top:7px;padding-bottom:8px}
+.fdate{width:158px;font-size:12.5px;padding-top:7px;padding-bottom:8px;
+   font-family:"JetBrains Mono",ui-monospace,monospace}
+
+/* Yes / no: two halves of one control, at the family's height. */
+.fyn{display:inline-flex;border:1px solid var(--ln2);border-radius:9px;overflow:hidden}
+.fyn>button{background:none;border:0;color:var(--fog);cursor:pointer;line-height:1;
+   font:600 10px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.1em;
+   text-transform:uppercase;padding:10px 14px 12px}
+.fyn>button+button{border-left:1px solid var(--ln2)}
+.fyn>button.on{background:var(--acc);color:var(--accT)}
+
+/* WHEN AN ANSWER IS WANTED. The quiet mark beside a control: `can wait` by
+   default, and the accent `needed to file` on the ones the submit control is
+   dead without. It is a statement of the rule, never a validation state, so it
+   does not use the fail colour and does not change when a field is empty. */
+.fwhen{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;font-weight:600;
+   letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-left:7px;
+   white-space:nowrap}
+.fwhen.req{color:var(--acc);font-weight:700}
+
+/* THE REPEATABLE ROW. Some questions are lists, not fields, and a list that
+   cannot grow is a different question. One row keeps one height whether or not
+   it carries a remove control. */
+.reps{display:flex;flex-direction:column;gap:8px;margin-top:2px}
+.rep{display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+   border:1px solid var(--ln);border-radius:10px;padding:9px 11px;background:var(--raised)}
+.rep>.ix{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;
+   color:var(--dim);flex:none;width:14px;font-variant-numeric:tabular-nums}
+.rep>.x{margin-left:auto;flex:none;background:none;border:1px solid var(--ln2);
+   color:var(--dim);border-radius:7px;width:24px;height:24px;cursor:pointer;
+   font-size:13px;line-height:1;padding:0}
+.rep>.x:hover{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 50%,transparent)}
+/* A row's text fields share the slack instead of each claiming 300px. */
+.rep .ftxt{flex:1 1 170px;width:auto;min-width:0}
+.repadd{border:1px dashed var(--acc);background:none;color:var(--acc);border-radius:9px;
+   padding:7px 13px 8px;font:600 9.5px "JetBrains Mono",ui-monospace,monospace;
+   letter-spacing:.1em;text-transform:uppercase;cursor:pointer;line-height:1;
+   align-self:flex-start;margin-top:2px}
+.repadd:hover{background:color-mix(in srgb,var(--acc) 8%,transparent)}
+/* The add control and the mark that says a row is wanted sit on one line. */
+.repfoot{display:flex;align-items:center;gap:2px;flex-wrap:wrap;margin-top:2px}
+
+/* A NAMED GROUP THAT SHUTS. The summary line carries the group's name, the one
+   line it is for and how many questions are inside it, so a shut group still
+   says how much is in it — a fold whose contents cannot be guessed is a trap.
+   Shut is a class on the group, and the caret turns with it. */
+.fold{border:1px solid var(--ln);border-radius:11px;background:var(--raised);overflow:hidden}
+.fold+.fold{margin-top:9px}
+.fold>.sum{display:flex;align-items:center;gap:10px;width:100%;background:none;
+   border:0;cursor:pointer;padding:11px 13px;text-align:left;color:var(--tx)}
+.fold>.sum>b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;
+   font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
+.fold>.sum>em{font-style:normal;font-size:11.5px;color:var(--fog);flex:1;min-width:0}
+.fold>.sum>.n{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;
+   letter-spacing:.08em;text-transform:uppercase;color:var(--dim);flex:none}
+.fold>.sum>.cv{flex:none;width:9px;height:9px;border-right:1.6px solid var(--fog);
+   border-bottom:1.6px solid var(--fog);transform:rotate(45deg);margin:-4px 2px 0 0}
+.fold>.bd{padding:2px 13px 12px;border-top:1px solid var(--ln)}
+.fold.shut>.bd{display:none}
+.fold.shut>.sum>.cv{transform:rotate(-45deg);margin:2px 2px 0 0}
+/* The mark on a summary line keeps its own margin off the count beside it. */
+.fold>.sum>.fwhen{margin-left:0}
+
+/* ── STEP 2'S RUN OF BLOCK FOLDS ────────────────────────────────────────────
+   The only thing this module adds to the fold above: the run it sits in, and the
+   money token. A money fold reads as the money card does, because it is the same
+   fact on a different surface.                                                 */
+.i-blocks{margin-top:12px}
+.i-blocks .fold.money{border-color:color-mix(in srgb,var(--i-money) 30%,transparent)}
+.i-blocks .fold.money>.sum>b{color:var(--i-money)}

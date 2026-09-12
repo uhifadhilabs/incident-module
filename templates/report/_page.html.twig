@@ -12,7 +12,7 @@
    standalone filing has none. Same page either way.
 
    Parameters: controller, area, kinds, prefill, chosen, csrfToken, errors,
-               createUrl, cancelUrl, sourceFiles
+               createUrl, cancelUrl, sourceFiles, blockSets, areaLists
    ========================================================================== #}
 {# NO CRUMB HERE. The trail is the shell frame's socket and the page fills it
    once (see @UhifadhiIncident/base.html.twig); a container typing its own would
@@ -47,17 +47,18 @@
 
         <div class="ro-sect">
             {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 2, heading: 'What happened', mark: null, markLabel: null}, with_context: false) }}
-            {{ include('@UhifadhiIncident/report/_what.html.twig', {controller: controller, kinds: kinds, chosen: chosen, prefill: prefill}, with_context: false) }}
+            {{ include('@UhifadhiIncident/report/_what.html.twig', {controller: controller, kinds: kinds, chosen: chosen, prefill: prefill, blockSets: blockSets, areaLists: areaLists}, with_context: false) }}
         </div>
 
-        {{ include('@UhifadhiIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl}, with_context: false) }}
+        {{ include('@UhifadhiIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl, blockSets: blockSets}, with_context: false) }}
     </form>
 </div>
 
 <div class="c i-rules">
     <span class="tab">The rules the form enforces<span class="src">· the container may change; these do not</span></span>
-    <div class="rln"><span>Required to file</span><span class="mono acc">a category · one line saying what happened · a place</span></div>
-    <div class="rln"><span>Never required</span><span class="mono">how bad, people, evidence, money — they follow on the record</span></div>
+    <div class="rln"><span>Required to file</span><span class="mono acc">a category · one line saying what happened · a place · every block's own first answer</span></div>
+    <div class="rln"><span>The questions</span><span class="mono">the blocks the sub-category switched on · nothing else</span></div>
+    <div class="rln"><span>Never required</span><span class="mono">how bad, contacts, ID numbers, custody references, dates, facilities</span></div>
     <div class="rln"><span>The File control</span><span class="mono">dead until the required answers exist · the server refuses the same filing</span></div>
     <div class="rln"><span>Starting state</span><span class="mono">reported — never verified</span></div>
     <div class="rln"><span>Provenance</span><span class="mono">written once, never editable</span></div>

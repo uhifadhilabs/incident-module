@@ -32,6 +32,7 @@ use Uhifadhi\Incident\Repository\IncidentSettingsRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
+use Uhifadhi\Incident\Service\IncidentBlockAnswerService;
 use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentEvidenceService;
@@ -135,6 +136,14 @@ return static function (ContainerConfigurator $container): void {
             service('incident.transitions'),
             service(IncidentLinkRepository::class),
         ]);
+
+    /*
+     * WHAT STEP 2'S BLOCKS ASKED, READ AND GATED. Pure logic with nothing behind
+     * it — no database, no request — so the form, the endpoint and a test all ask
+     * the same object the same question and cannot disagree about what holds up a
+     * filing.
+     */
+    $services->set('incident.block_answers', IncidentBlockAnswerService::class);
 
     $services->set('incident.report', IncidentReportService::class)
         ->args([

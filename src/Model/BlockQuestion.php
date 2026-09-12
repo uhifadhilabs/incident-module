@@ -39,6 +39,7 @@ final readonly class BlockQuestion
      * @param bool         $gates       whether the File control is dead until this is answered
      * @param string|null  $placeholder the line an empty control shows, in the design's words
      * @param string|null  $note        the quiet caption under the control, where the design draws one
+     * @param bool         $wide        whether the select needs the room its options ask for
      */
     public function __construct(
         public string $key,
@@ -50,6 +51,7 @@ final readonly class BlockQuestion
         public ?string $unit = null,
         public ?string $placeholder = null,
         public ?string $note = null,
+        public bool $wide = false,
     ) {
     }
 

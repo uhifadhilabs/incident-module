@@ -24,6 +24,7 @@ use Uhifadhi\Incident\Enum\IncidentEventKindEnum;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
 use Uhifadhi\Incident\Enum\PartyRoleEnum;
+use Uhifadhi\Incident\Model\BlockAnswers;
 use Uhifadhi\Incident\Model\IncidentPrefill;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
@@ -60,9 +61,6 @@ final readonly class IncidentReportService
     ) {
     }
 
-    /**
-     * @param array<string, string> $details the answers to the sub-category's own field set
-     */
     public function file(
         AreaOfInterest $area,
         TaxonomySubcategory $subcategory,
@@ -75,7 +73,7 @@ final readonly class IncidentReportService
         ?string $narrative = null,
         ?UserInterface $reportedBy = null,
         ?IncidentPrefill $prefill = null,
-        array $details = [],
+        ?BlockAnswers $blockAnswers = null,
     ): Incident {
         $incident = new Incident(
             $area,
@@ -96,7 +94,11 @@ final readonly class IncidentReportService
             // at filing rather than on every read: an incident does not move, and
             // recomputing it per render would be a spatial join on every widget.
             ->setZone($this->zones->locate($area, $position))
-            ->setDetails($details);
+            // THE ANSWERS TO THE BLOCKS THE SUB-CATEGORY SWITCHED ON, and the
+            // figure the money block asked, which is the CLAIMED FIGURE and not a
+            // money record — see below.
+            ->setBlockAnswers(null === $blockAnswers ? [] : $blockAnswers->values)
+            ->setClaimedAtFiling($blockAnswers?->claimed);
 
         // PROVENANCE, WRITTEN ONCE. Whatever the filer changed on the way through
         // the form, the record it came from is the record it came from.
@@ -104,8 +106,12 @@ final readonly class IncidentReportService
             $incident->recordProvenance($prefill->record, $prefill->label, $prefill->backUrl);
         }
 
-        // NO MONEY RECORD IS OPENED HERE, deliberately. A sub-category that
-        // CARRIES money is one whose form offers the fields; it is not a promise
+        // NO MONEY RECORD IS OPENED HERE, deliberately — not even where the money
+        // block asked a figure at filing. That figure is the CLAIMANT'S OWN, or
+        // the officer's at the roadside, and it is kept as the claimed figure on
+        // the incident; the money record is opened by whoever assesses or
+        // approves, in the state the money flow names. A sub-category that
+        // CARRIES money is one whose form asks the question; it is not a promise
         // that this particular incident involves any. A roadkill where no driver
         // was ever identified owes nothing, and an empty money row would make it
         // unresolvable — the resolve guard would sit waiting for an assessment

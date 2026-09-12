@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Devkit;
 
 use Uhifadhi\Incident\Entity\TaxonomySubcategory;
+use Uhifadhi\Incident\Enum\BehaviorBlockEnum;
+use Uhifadhi\Incident\Model\BlockAnswers;
 
 /**
  * THE DESIGN'S SAMPLE MONTH, as data — the forty-seven incidents every widget in
@@ -55,7 +57,17 @@ final class DemoMonth
      * THE VOCABULARY THE SAMPLE MONTH IS FILED AGAINST — the design's reference
      * card (IN·09), as data: four kinds and the sixteen sub-categories under
      * them, with the colour each wears, the departments its lens leads with, which
-     * way money runs on it, what it promises and what it asks for.
+     * way money runs on it, what it promises and which BEHAVIOUR BLOCKS it
+     * switches on — which is the whole of what its form asks.
+     *
+     * THE BLOCKS THE DESIGN NAMES ARE THE DESIGN'S: snaring carries Species,
+     * Counts, Method & means, Seizures and Money · fine, which is the sixteen
+     * questions the report page counts; livestock depredation carries Species,
+     * Counts, Parties and Money · compensation; crop raiding carries the money
+     * block alone, which is the smallest step 2 a word can produce. The other
+     * thirteen are configured the way this demo's words were already being asked
+     * about, so every one of the twelve blocks appears somewhere a developer can
+     * see it.
      *
      * IT IS DEMO CONTENT, NOT A DEFAULT. The module ships no taxonomy and seeds
      * none: a new area starts empty and writes its own words in the kinds editor.
@@ -87,7 +99,7 @@ final class DemoMonth
      *     label: string,
      *     colour: string,
      *     leads: list<string>,
-     *     subcategories: array<string, array{label: string, money: string|null, term_hours: int, fields: list<string>}>
+     *     subcategories: array<string, array{label: string, money: string|null, term_hours: int, blocks: list<string>, fields: list<string>}>
      * }>
      */
     public static function kinds(): array
@@ -102,24 +114,28 @@ final class DemoMonth
                         'label' => 'snaring',
                         'money' => 'fine',
                         'term_hours' => 72,
+                        'blocks' => ['species', 'counts', 'method', 'seizures', 'money'],
                         'fields' => ['Species', 'Snares lifted', 'Method', 'Suspects', 'Seizures'],
                     ],
                     'bushmeat' => [
                         'label' => 'bushmeat',
                         'money' => 'fine',
                         'term_hours' => 72,
+                        'blocks' => ['species', 'counts', 'method', 'parties', 'seizures', 'money'],
                         'fields' => ['Species', 'Quantity', 'Method', 'Suspects', 'Seizures'],
                     ],
                     'ivory-trophy' => [
                         'label' => 'ivory & trophy',
                         'money' => 'fine',
                         'term_hours' => 72,
+                        'blocks' => ['species', 'method', 'parties', 'seizures', 'money'],
                         'fields' => ['Species', 'Trophy', 'Method', 'Suspects', 'Seizures'],
                     ],
                     'illegal-fishing' => [
                         'label' => 'illegal fishing',
                         'money' => 'fine',
                         'term_hours' => 168,
+                        'blocks' => ['counts', 'method', 'parties', 'seizures', 'named-place', 'money'],
                         'fields' => ['Water body', 'Gear', 'Catch', 'Suspects', 'Seizures'],
                     ],
                 ],
@@ -135,24 +151,28 @@ final class DemoMonth
                         'label' => 'livestock depredation',
                         'money' => 'compensation',
                         'term_hours' => 720,
+                        'blocks' => ['species', 'counts', 'parties', 'money'],
                         'fields' => ['Species', 'Livestock lost', 'Enclosure', 'Household', 'Retaliation risk'],
                     ],
                     'crop-raiding' => [
                         'label' => 'crop raiding',
                         'money' => 'compensation',
                         'term_hours' => 72,
+                        'blocks' => ['money'],
                         'fields' => ['Species', 'Crop', 'Area affected', 'Household', 'Deterrents in place'],
                     ],
                     'human-injury' => [
                         'label' => 'human injury',
                         'money' => 'compensation',
                         'term_hours' => 72,
+                        'blocks' => ['species', 'casualty', 'named-place', 'money'],
                         'fields' => ['Species', 'Injuries', 'Treatment', 'Household', 'Circumstances'],
                     ],
                     'property-damage' => [
                         'label' => 'property damage',
                         'money' => 'compensation',
                         'term_hours' => 336,
+                        'blocks' => ['species', 'extent', 'named-place', 'money'],
                         'fields' => ['Species', 'Property', 'Extent', 'Household', 'Circumstances'],
                     ],
                 ],
@@ -166,24 +186,28 @@ final class DemoMonth
                         'label' => 'unauthorized construction',
                         'money' => 'fine',
                         'term_hours' => 336,
+                        'blocks' => ['counts', 'extent', 'parties', 'notice', 'money'],
                         'fields' => ['Structures', 'Footprint', 'Permit status', 'Occupier', 'Notice served'],
                     ],
                     'illegal-grazing' => [
                         'label' => 'illegal grazing',
                         'money' => 'fine',
                         'term_hours' => 336,
+                        'blocks' => ['counts', 'extent', 'parties', 'notice', 'money'],
                         'fields' => ['Herd size', 'Livestock type', 'Owner', 'Duration', 'Notice served'],
                     ],
                     'boundary-encroachment' => [
                         'label' => 'boundary encroachment',
                         'money' => 'fine',
                         'term_hours' => 336,
+                        'blocks' => ['extent', 'named-place', 'parties', 'notice', 'money'],
                         'fields' => ['Extent', 'Land use', 'Occupier', 'Boundary marker', 'Notice served'],
                     ],
                     'unlicensed-operation' => [
                         'label' => 'unlicensed operation',
                         'money' => 'fine',
                         'term_hours' => 336,
+                        'blocks' => ['counts', 'method', 'parties', 'notice', 'money'],
                         'fields' => ['Activity', 'Operator', 'Licence status', 'Vehicles', 'Notice served'],
                     ],
                 ],
@@ -199,24 +223,28 @@ final class DemoMonth
                         'label' => 'roadkill',
                         'money' => 'fine',
                         'term_hours' => 168,
+                        'blocks' => ['species', 'condition', 'named-place', 'money'],
                         'fields' => ['Species', 'Sex', 'Age class', 'Road segment', 'Carcass disposition', 'Vehicle'],
                     ],
                     'natural-mortality' => [
                         'label' => 'natural mortality',
                         'money' => null,
                         'term_hours' => 168,
+                        'blocks' => ['species', 'condition'],
                         'fields' => ['Species', 'Sex', 'Age class', 'Condition', 'Carcass disposition'],
                     ],
                     'disease-die-off' => [
                         'label' => 'disease die-off',
                         'money' => null,
                         'term_hours' => 72,
+                        'blocks' => ['species', 'counts', 'samples', 'condition'],
                         'fields' => ['Species', 'Individuals affected', 'Signs', 'Samples taken', 'Carcass disposition'],
                     ],
                     'poisoning' => [
                         'label' => 'poisoning',
                         'money' => null,
                         'term_hours' => 168,
+                        'blocks' => ['species', 'counts', 'method', 'samples', 'condition'],
                         'fields' => ['Species', 'Individuals affected', 'Suspected agent', 'Samples taken', 'Carcass disposition'],
                     ],
                 ],
@@ -1333,54 +1361,185 @@ final class DemoMonth
     }
 
     /**
-     * The answers to THIS sub-category's own questions — the design's "what this
-     * category asks for" section, filled in.
+     * THE ANSWERS TO THE QUESTIONS THIS WORD'S BLOCKS ASK, in the shape the blocks
+     * keep them — the case file's "what this word asked" section, filled in.
      *
-     * Only the fields the sub-category actually asks for are answered; a
-     * deployment that edited its field set gets answers for whatever it kept and
-     * blanks for what it added, which is the honest result of seeding against a
-     * configurable taxonomy.
-     *
-     * @return array<string, string>
+     * Only the blocks the sub-category actually switched on are answered, and every
+     * DEFINING answer is given: a seeded record that the report form would have
+     * refused is a demo that teaches the wrong rule. A "%d" is replaced by a small
+     * number that varies per row, so forty-seven records do not read as one record
+     * copied forty-seven times.
      */
-    public static function detailsFor(TaxonomySubcategory $subcategory, int $index): array
+    public static function blockAnswersFor(TaxonomySubcategory $subcategory, int $index): BlockAnswers
     {
         $answers = self::ANSWERS[$subcategory->getCode()] ?? [];
-        $details = [];
-        foreach ($subcategory->getFieldSet() as $field) {
-            $value = $answers[$field['key']] ?? null;
-            if (null !== $value) {
-                $details[$field['key']] = str_replace('%d', (string) (1 + $index % 5), $value);
+        $values = [];
+        $claimed = null;
+
+        foreach ($subcategory->getBlocks() as $block) {
+            $given = $answers[$block->value] ?? null;
+            if (!\is_array($given)) {
+                continue;
             }
+
+            if (BehaviorBlockEnum::Money === $block) {
+                $figure = $given['claimed'] ?? null;
+                $claimed = \is_int($figure) ? $figure : null;
+
+                continue;
+            }
+
+            $values[$block->value] = self::varied($given, $index);
         }
 
-        return $details;
+        return new BlockAnswers($values, $claimed);
     }
 
     /**
-     * Sample answers per sub-category, keyed by the field key the taxonomy
-     * installer derives from the field's label. A "%d" is replaced by a small
-     * number that varies per row, so forty-seven records do not read as one
-     * record copied forty-seven times.
+     * The same answers with the row number worked in, wherever a "%d" says to.
      *
-     * @var array<string, array<string, string>>
+     * @param array<string, mixed> $given
+     *
+     * @return array<string, mixed>
+     */
+    private static function varied(array $given, int $index): array
+    {
+        $n = (string) (1 + $index % 5);
+        $out = [];
+        foreach ($given as $key => $value) {
+            if (\is_string($value)) {
+                $out[$key] = str_replace('%d', $n, $value);
+
+                continue;
+            }
+
+            if ('rows' === $key && \is_array($value)) {
+                $rows = [];
+                foreach ($value as $row) {
+                    $cells = [];
+                    foreach ((array) $row as $cell => $answer) {
+                        $cells[$cell] = \is_string($answer) ? str_replace('%d', $n, $answer) : $answer;
+                    }
+                    $rows[] = $cells;
+                }
+                $out['rows'] = $rows;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Sample answers per sub-category, keyed by the block that asks them and then
+     * by the question's own key. The money block's entry is the figure asked at
+     * FILING — the claimant's own, or the officer's at the roadside — and not the
+     * money record, which the walk through the workflow records where the money
+     * flow allows it.
+     *
+     * @var array<string, array<string, array<string, mixed>>>
      */
     private const array ANSWERS = [
-        'snaring' => ['species' => 'Impala, dik-dik', 'snares_lifted' => '%d wire snares', 'method' => 'Wire cable, anchored', 'suspects' => 'None traced', 'seizures' => 'Snares, one bicycle'],
-        'bushmeat' => ['species' => 'Wildebeest, zebra', 'quantity' => '%d sacks, dried', 'method' => 'Carried on foot', 'suspects' => 'Two men, detained', 'seizures' => 'Meat, two knives'],
-        'ivory-trophy' => ['species' => 'Elephant', 'trophy' => '%d worked pieces', 'method' => 'Concealed in a vehicle', 'suspects' => 'One man, detained', 'seizures' => 'Pieces, one vehicle'],
-        'illegal-fishing' => ['water_body' => 'Seasonal pool', 'gear' => '%d gill nets', 'catch' => 'Tilapia, undersized', 'suspects' => 'None traced', 'seizures' => 'Nets, one canoe'],
-        'livestock-depredation' => ['species' => 'Lion', 'livestock_lost' => '%d head', 'enclosure' => 'Thorn boma, breached', 'household' => 'Named on the claim', 'retaliation_risk' => 'Assessed — none observed'],
-        'crop-raiding' => ['species' => 'Elephant', 'crop' => 'Maize', 'area_affected' => '%d ha', 'household' => 'Named on the claim', 'deterrents_in_place' => 'Chilli fence, partial'],
-        'human-injury' => ['species' => 'Hyena', 'injuries' => 'Leg and hand', 'treatment' => 'North Gate health centre', 'household' => 'Named on the claim', 'circumstances' => 'At night, herding'],
-        'property-damage' => ['species' => 'Elephant', 'property' => 'Water tank, fencing', 'extent' => '%d structures', 'household' => 'Named on the claim', 'circumstances' => 'Overnight'],
-        'unauthorized-construction' => ['structures' => '%d structures', 'footprint' => 'Outside the agreed line', 'permit_status' => 'None held', 'occupier' => 'Named on the notice', 'notice_served' => 'Served on site'],
-        'illegal-grazing' => ['herd_size' => '%d0 head', 'livestock_type' => 'Cattle', 'owner' => 'Named on the notice', 'duration' => 'Two nights', 'notice_served' => 'Served on site'],
-        'boundary-encroachment' => ['extent' => '%d acres', 'land_use' => 'Cultivation', 'occupier' => 'Named on the notice', 'boundary_marker' => 'Beacon intact', 'notice_served' => 'Served on site'],
-        'unlicensed-operation' => ['activity' => 'Guided game drives', 'operator' => 'Named on the notice', 'licence_status' => 'None held', 'vehicles' => '%d vehicles', 'notice_served' => 'Served on site'],
-        'roadkill' => ['species' => 'Zebra', 'sex' => 'Female', 'age_class' => 'Adult', 'road_segment' => 'C-road, km 12', 'carcass_disposition' => 'Removed and buried', 'vehicle' => 'Not identified'],
-        'natural-mortality' => ['species' => 'Wildebeest', 'sex' => 'Male', 'age_class' => 'Adult', 'condition' => 'No injury pattern', 'carcass_disposition' => 'Left in situ'],
-        'disease-die-off' => ['species' => 'Wildebeest', 'individuals_affected' => '%d', 'signs' => 'Nasal discharge, lethargy', 'samples_taken' => 'Two swabs', 'carcass_disposition' => 'Burned'],
-        'poisoning' => ['species' => 'White-backed vulture', 'individuals_affected' => '%d', 'suspected_agent' => 'Carbamate on a carcass', 'samples_taken' => 'Tissue and bait', 'carcass_disposition' => 'Removed and burned'],
+        'snaring' => [
+            'species' => ['species' => 'Impala', 'sex' => 'unknown', 'age_class' => 'adult'],
+            'counts' => ['rows' => [['quantity' => 'snares lifted', 'how_many' => '1%d']]],
+            'method' => ['method' => 'wire snare', 'gear' => 'Cable, anchored to a stump'],
+            'seizures' => ['rows' => [['item' => 'Wire snares', 'how_many' => '1%d', 'description' => 'Hand-made, cable']]],
+            'money' => ['claimed' => 250_000],
+        ],
+        'bushmeat' => [
+            'species' => ['species' => 'Blue wildebeest', 'sex' => 'unknown', 'age_class' => 'adult'],
+            'counts' => ['rows' => [['quantity' => 'animals', 'how_many' => '%d']]],
+            'method' => ['method' => 'wire snare', 'gear' => 'Carried on foot'],
+            'parties' => ['rows' => [['role' => 'suspect', 'name' => 'Two men, detained']]],
+            'seizures' => ['rows' => [['item' => 'Dried meat', 'how_many' => '%d', 'description' => 'In sacks']]],
+            'money' => ['claimed' => 400_000],
+        ],
+        'ivory-trophy' => [
+            'species' => ['species' => 'Elephant', 'sex' => 'male', 'age_class' => 'adult'],
+            'method' => ['method' => 'firearm', 'vehicle' => 'A pick-up, not traced'],
+            'parties' => ['rows' => [['role' => 'suspect', 'name' => 'One man, detained']]],
+            'seizures' => ['rows' => [['item' => 'Worked pieces', 'how_many' => '%d']]],
+            'money' => ['claimed' => 1_500_000],
+        ],
+        'illegal-fishing' => [
+            'counts' => ['rows' => [['quantity' => 'animals', 'how_many' => '%d0']]],
+            'method' => ['method' => 'net', 'gear' => 'Gill nets, undersized mesh'],
+            'parties' => ['rows' => [['role' => 'suspect', 'name' => 'Not identified']]],
+            'seizures' => ['rows' => [['item' => 'Gill nets', 'how_many' => '%d']]],
+            'named-place' => ['place_kind' => 'water body', 'place_name' => 'A seasonal pool'],
+            'money' => ['claimed' => 180_000],
+        ],
+        'livestock-depredation' => [
+            'species' => ['species' => 'Lion', 'sex' => 'unknown', 'age_class' => 'adult'],
+            'counts' => ['rows' => [['quantity' => 'head of stock', 'how_many' => '%d']]],
+            'parties' => ['rows' => [['role' => 'claimant', 'name' => 'A stock owner', 'household' => 'A boma on the eastern line']]],
+            'money' => ['claimed' => 900_000],
+        ],
+        'crop-raiding' => [
+            'money' => ['claimed' => 300_000],
+        ],
+        'human-injury' => [
+            'species' => ['species' => 'Spotted hyena'],
+            'casualty' => ['rows' => [['injuries' => 'serious', 'people' => '%d', 'treatment' => 'dispensary', 'facility' => 'A rural dispensary']]],
+            'named-place' => ['place_kind' => 'household or boma', 'place_name' => 'A boma on the eastern line'],
+            'money' => ['claimed' => 600_000],
+        ],
+        'property-damage' => [
+            'species' => ['species' => 'Elephant'],
+            'extent' => ['land_use' => 'cultivation', 'rows' => [['measure' => 'footprint · m²', 'value' => '%d0']]],
+            'named-place' => ['place_kind' => 'household or boma', 'place_name' => 'A boma on the eastern line'],
+            'money' => ['claimed' => 450_000],
+        ],
+        'unauthorized-construction' => [
+            'counts' => ['rows' => [['quantity' => 'structures', 'how_many' => '%d']]],
+            'extent' => ['land_use' => 'settlement', 'rows' => [['measure' => 'footprint · m²', 'value' => '%d00']]],
+            'parties' => ['rows' => [['role' => 'suspect', 'name' => 'Named on the notice']]],
+            'notice' => ['permit_status' => 'none', 'licence_status' => 'not applicable', 'notice_served' => 'yes'],
+            'money' => ['claimed' => 800_000],
+        ],
+        'illegal-grazing' => [
+            'counts' => ['rows' => [['quantity' => 'head of stock', 'how_many' => '%d0']]],
+            'extent' => ['land_use' => 'grazing', 'rows' => [['measure' => 'how long it went on · days', 'value' => '2']]],
+            'parties' => ['rows' => [['role' => 'suspect', 'name' => 'Named on the notice']]],
+            'notice' => ['permit_status' => 'none', 'licence_status' => 'not applicable', 'notice_served' => 'yes'],
+            'money' => ['claimed' => 350_000],
+        ],
+        'boundary-encroachment' => [
+            'extent' => ['land_use' => 'cultivation', 'rows' => [['measure' => 'area affected · ha', 'value' => '%d']]],
+            'named-place' => ['place_kind' => 'boundary marker', 'place_name' => 'A beacon, intact'],
+            'parties' => ['rows' => [['role' => 'suspect', 'name' => 'Named on the notice']]],
+            'notice' => ['permit_status' => 'none', 'licence_status' => 'not applicable', 'notice_served' => 'yes'],
+            'money' => ['claimed' => 700_000],
+        ],
+        'unlicensed-operation' => [
+            'counts' => ['rows' => [['quantity' => 'vehicles', 'how_many' => '%d']]],
+            'method' => ['method' => 'other — not on the list', 'activity' => 'transport', 'operator' => 'Named on the notice'],
+            'parties' => ['rows' => [['role' => 'suspect', 'name' => 'Named on the notice']]],
+            'notice' => ['permit_status' => 'not applicable', 'licence_status' => 'none', 'notice_served' => 'yes'],
+            'money' => ['claimed' => 500_000],
+        ],
+        'roadkill' => [
+            'species' => ['species' => 'Plains zebra', 'sex' => 'female', 'age_class' => 'adult'],
+            'condition' => ['condition' => 'dead, fresh', 'carcass_disposition' => 'buried'],
+            'named-place' => ['place_kind' => 'road segment', 'place_name' => 'A district road, km 1%d'],
+            'money' => ['claimed' => 200_000],
+        ],
+        'natural-mortality' => [
+            'species' => ['species' => 'Blue wildebeest', 'sex' => 'male', 'age_class' => 'adult'],
+            'condition' => ['condition' => 'dead, decomposed', 'carcass_disposition' => 'left in situ'],
+        ],
+        'disease-die-off' => [
+            'species' => ['species' => 'Blue wildebeest'],
+            'counts' => ['rows' => [['quantity' => 'individuals affected', 'how_many' => '%d']]],
+            'samples' => ['rows' => [['samples_taken' => 'blood', 'reference' => 'S-%d', 'sent_to' => 'A veterinary laboratory']]],
+            'condition' => ['condition' => 'dead, fresh', 'carcass_disposition' => 'burned'],
+        ],
+        'poisoning' => [
+            'species' => ['species' => 'White-backed vulture'],
+            'counts' => ['rows' => [['quantity' => 'individuals affected', 'how_many' => '%d']]],
+            'method' => ['method' => 'poison', 'gear' => 'A treated carcass', 'suspected_agent' => 'person'],
+            'samples' => ['rows' => [['samples_taken' => 'tissue', 'reference' => 'S-%d', 'sent_to' => 'A veterinary laboratory']]],
+            'condition' => ['condition' => 'dead, fresh', 'carcass_disposition' => 'removed to store'],
+        ],
     ];
 }

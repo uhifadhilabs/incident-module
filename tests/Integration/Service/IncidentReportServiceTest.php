@@ -17,6 +17,7 @@ use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Incident\Enum\IncidentSourceEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Incident\Model\BlockAnswers;
 use Uhifadhi\Incident\Model\IncidentPrefill;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
@@ -180,22 +181,40 @@ final class IncidentReportServiceTest extends IntegrationTestCase
     }
 
     /**
-     * Only the fields THIS sub-category asks for are stored, so re-categorising
-     * never carries a stale answer into a new form.
+     * THE ANSWERS ARE KEPT IN THE SHAPE THE BLOCKS ASK IN, and the figure asked at
+     * filing is kept apart from the money record — which is not opened here at
+     * all, whatever was claimed.
      */
-    public function testOnlyTheFieldsTheCategoryAsksForAreStored(): void
+    public function testTheBlockAnswersAndTheClaimedFigureAreStoredAsFiled(): void
     {
         $area = $this->anAreaWithKinds();
         $incident = $this->reports()->file(
             area: $area,
             subcategory: $this->subcategory($area, 'roadkill'),
-            title: 'Zebra roadkill on the C-road',
+            title: 'Zebra roadkill on a district road',
             position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable('2026-08-21 16:20:00'),
-            details: ['species' => 'Zebra', 'enclosure' => 'thorn boma', 'road_segment' => 'C-road, km 12'],
+            blockAnswers: new BlockAnswers([
+                'species' => ['species' => 'Plains zebra', 'sex' => 'female'],
+                'named-place' => ['place_kind' => 'road segment', 'place_name' => 'A district road, km 12'],
+            ], 200_000),
         );
 
-        self::assertSame(['species' => 'Zebra', 'road_segment' => 'C-road, km 12'], $incident->getDetails());
+        self::assertSame([
+            'species' => ['species' => 'Plains zebra', 'sex' => 'female'],
+            'named-place' => ['place_kind' => 'road segment', 'place_name' => 'A district road, km 12'],
+        ], $incident->getBlockAnswers());
+        self::assertSame(200_000, $incident->getClaimedAtFiling());
+        self::assertNull($incident->getMoney());
+    }
+
+    /** A filing that answered no block at all carries an empty shape, never a null. */
+    public function testAFilingWithNoBlockAnswersCarriesAnEmptyShape(): void
+    {
+        $incident = $this->anIncident($this->anAreaWithKinds());
+
+        self::assertSame([], $incident->getBlockAnswers());
+        self::assertNull($incident->getClaimedAtFiling());
     }
 
     /** The person who filed it is a party to it, in the reporter's role. */

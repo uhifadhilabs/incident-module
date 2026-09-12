@@ -352,6 +352,9 @@ final class BlockQuestionCatalogue
                     gates: true,
                     options: ['area affected · ha', 'footprint · m²', 'length of boundary · m', 'how long it went on · hours', 'how long it went on · days'],
                     placeholder: '— the measure, with its unit —',
+                    // The measure carries its unit in the option, so the option is
+                    // long and the control takes the room it needs.
+                    wide: true,
                 ),
                 new BlockQuestion('value', 'Value', QuestionControlEnum::Number, gates: true, unit: 'value'),
             ],

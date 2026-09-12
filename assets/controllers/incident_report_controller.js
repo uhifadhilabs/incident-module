@@ -9,17 +9,23 @@ import { Controller } from '@hotwired/stimulus';
  * animates anything. What it adds is only what the server cannot do without a
  * round trip: swapping the sub-category's own field set, and the gate.
  *
- * STEP 2 IS THE CATEGORY'S OWN. Choosing a kind of incident swaps in that kind's
- * field set, and the money row is ABSENT — not disabled — for a sub-category that
- * carries no money. That is the design's contract and it is enforced by the
- * template, which renders no money row there at all.
+ * STEP 2 IS THE CATEGORY'S OWN, AND ITS QUESTIONS COME FROM ITS BLOCKS. Choosing a
+ * kind of incident swaps in that word's own folds — one per behaviour block it
+ * switched on — and the money fold is ABSENT, not disabled, for a sub-category
+ * that carries no money. That is the design's contract and the template enforces
+ * it by rendering no money fold there at all.
+ *
+ * WHAT ELSE IT DOES IS WHAT A LIST NEEDS: a fold opens and shuts, and a repeating
+ * block grows and loses rows. Neither reaches the server — a fold remembers a
+ * person's reading habit, not a fact about the incident.
  *
  * THE WHOLE FLOW WORKS WITHOUT THIS CONTROLLER: the category is a radio in the
- * noscript block, the File control ships disabled and the form posts normally to
- * the same endpoint, which refuses the same three omissions.
+ * noscript block, one row of every repeating block is in the markup, the File
+ * control ships disabled and the form posts normally to the same endpoint, which
+ * refuses the same omissions.
  */
 export default class extends Controller {
-    static targets = ['category', 'fieldset', 'gate', 'hint', 'file', 'headline'];
+    static targets = ['category', 'fieldset', 'gate', 'hint', 'file', 'headline', 'rows'];
 
     connect() {
         this.gate();
@@ -106,6 +112,7 @@ export default class extends Controller {
         if (!this.hasPosition()) {
             missing.push('mark where it happened');
         }
+        missing.push(...this.blocksMissing());
 
         if (this.hasFileTarget) {
             this.fileTarget.disabled = 0 !== missing.length;
@@ -120,6 +127,172 @@ export default class extends Controller {
         if (this.hasHintTarget) {
             this.hintTarget.hidden = 0 !== missing.length;
         }
+    }
+
+    /**
+     * EVERY SWITCHED-ON BLOCK'S OWN FIRST ANSWER, named the way it is missed —
+     * and named whether or not the fold holding it is open, because a fold is an
+     * invitation to skip and a hidden question may not hide a held-up filing.
+     *
+     * A fold says how it is missed on `data-need`. Inside it, a question asked
+     * once carries `data-need-answer`; a block that is a row the filer adds to
+     * carries `data-need-row` on the cells a row cannot be without, and ONE WHOLE
+     * row satisfies it — half a row is no row. The sub-categories that were not
+     * chosen are disabled, so their folds are not asked.
+     */
+    blocksMissing() {
+        const missing = [];
+
+        for (const fold of this.element.querySelectorAll('.fold[data-need]')) {
+            // A sub-category that was not chosen is hidden, and its questions are
+            // not asked — the same rule the posted form obeys.
+            if (fold.closest('[hidden]')) {
+                continue;
+            }
+
+            const answers = [...fold.querySelectorAll('[data-need-answer]')];
+            if (answers.some((field) => '' === field.value.trim())) {
+                missing.push(fold.dataset.need);
+                continue;
+            }
+
+            const rows = [...fold.querySelectorAll('.rep')];
+            if (0 === rows.length) {
+                continue;
+            }
+            const whole = rows.some((row) => {
+                const cells = [...row.querySelectorAll('[data-need-row]')];
+                return 0 !== cells.length && !cells.some((cell) => '' === cell.value.trim());
+            });
+            if (!whole) {
+                missing.push(fold.dataset.need);
+            }
+        }
+
+        return missing;
+    }
+
+    /**
+     * A BLOCK FOLDS. Nothing here reaches the server and no fold state is ever
+     * filed: what a fold remembers is how somebody reads, not what happened.
+     */
+    fold(event) {
+        event.currentTarget.parentNode.classList.toggle('shut');
+    }
+
+    /**
+     * A ROW THAT REPEATS GROWS. The new row is the last one, emptied — so it
+     * carries whatever the markup said a row is, and this controller never has an
+     * opinion about which questions a block asks.
+     */
+    addRow(event) {
+        event.preventDefault();
+        const rows = this.rowsFor(event.currentTarget);
+        const last = rows?.querySelector('.rep:last-of-type');
+        if (!last) {
+            return;
+        }
+
+        const row = last.cloneNode(true);
+        const index = rows.querySelectorAll('.rep').length;
+
+        for (const field of row.querySelectorAll('input, select')) {
+            // The name says which row it is, and the new one is its own row or
+            // the two would post as one.
+            field.name = field.name.replace(/\[rows]\[\d+]/, `[rows][${index}]`);
+            field.removeAttribute('id');
+            if ('SELECT' === field.tagName) {
+                field.selectedIndex = 0;
+            } else {
+                field.value = '';
+            }
+        }
+        for (const pressed of row.querySelectorAll('.fyn > button.on')) {
+            pressed.classList.remove('on');
+        }
+
+        const counter = row.querySelector('.ix');
+        if (counter) {
+            counter.textContent = `${index + 1}`;
+        }
+
+        rows.append(row);
+        this.gate();
+    }
+
+    /**
+     * AND LOSES ONE — except the last, because a block that repeats still asks its
+     * questions. Emptying the last row is how somebody says they have nothing to
+     * put in it.
+     */
+    removeRow(event) {
+        event.preventDefault();
+        const row = event.currentTarget.closest('.rep');
+        const rows = row?.parentElement;
+        if (!row || !rows) {
+            return;
+        }
+
+        if (1 === rows.querySelectorAll('.rep').length) {
+            for (const field of row.querySelectorAll('input, select')) {
+                if ('SELECT' === field.tagName) {
+                    field.selectedIndex = 0;
+                } else {
+                    field.value = '';
+                }
+            }
+        } else {
+            row.remove();
+            this.renumber(rows);
+        }
+
+        this.gate();
+    }
+
+    /** The row set a control inside a block belongs to. */
+    rowsFor(control) {
+        const fold = control.closest('.fold');
+
+        return fold ? fold.querySelector('.reps') : null;
+    }
+
+    /** One, two, three — and the names follow the numbers. */
+    renumber(rows) {
+        let index = 0;
+        for (const row of rows.querySelectorAll('.rep')) {
+            for (const field of row.querySelectorAll('input, select')) {
+                field.name = field.name.replace(/\[rows]\[\d+]/, `[rows][${index}]`);
+            }
+            const counter = row.querySelector('.ix');
+            if (counter) {
+                counter.textContent = `${index + 1}`;
+            }
+            ++index;
+        }
+    }
+
+    /**
+     * YES OR NO, as a pair of halves and one posted value. A button posts nothing,
+     * so the answer lives in the field behind them and pressing a half is what
+     * writes it.
+     */
+    pick(event) {
+        event.preventDefault();
+        const pressed = event.currentTarget;
+        const pair = pressed.parentElement;
+        if (!pair) {
+            return;
+        }
+
+        for (const half of pair.querySelectorAll('button')) {
+            half.classList.toggle('on', half === pressed);
+        }
+        const field = pair.querySelector('input[type="hidden"]');
+        if (field) {
+            field.value = pressed.dataset.answer ?? '';
+        }
+
+        this.gate();
     }
 
     /**

@@ -1,11 +1,16 @@
-{# THE GATE — the same three answers, in both containers.
+{# THE GATE — the three answers every incident owes, and every switched-on
+   block's own first one.
 
    The File control is DEAD, visually and functionally, until a kind is chosen,
-   one line says what happened and the place is marked. A quiet line names
-   whatever is still missing rather than making anybody press a disabled button to
-   find out.
+   one line says what happened, the place is marked, and each block that is on has
+   answered the question it records nothing without — the species, one count row,
+   the method, a party with a role and a name, a seizure item and count, the
+   figure, the condition, a sample type and reference, an injury row, a measure
+   row, the kind of place and which one, the permit and licence status. Paperwork
+   never gates. A quiet line names whatever is still missing rather than making
+   anybody press a disabled button to find out.
 
-   THE SERVER REFUSES THE SAME FILING for the same three reasons
+   THE SERVER REFUSES THE SAME FILING for the same reasons
    ({@see IncidentReportController::create}); this only says so sooner. The button
    ships disabled so a filer without JavaScript is never shown a control that
    would be refused, and the noscript block hands it back because without the
@@ -19,7 +24,7 @@
    the explicit close on the drawer. Nothing here can be dismissed by clicking
    beside it.
 
-   Parameters: controller, chosen, prefill, cancelUrl
+   Parameters: controller, chosen, prefill, cancelUrl, blockSets
    ========================================================================== #}
 {% set missing = [] %}
 {% if not chosen %}{% set missing = missing|merge(['choose a category']) %}{% endif %}
@@ -28,6 +33,15 @@
 {% if not prefill.note %}{% set missing = missing|merge(['describe what happened']) %}{% endif %}
 {% if prefill.latitude is null or prefill.longitude is null %}
     {% set missing = missing|merge(['mark where it happened']) %}
+{% endif %}
+{# AND EVERY BLOCK THE CHOSEN WORD SWITCHED ON, named the way it is missed. A
+   filing arrives with none of them answered, so on first paint the line carries
+   the lot — and it carries them whether or not the fold holding them is open,
+   which is what stops a shut fold hiding a held-up filing. #}
+{% if chosen %}
+    {% for set in blockSets[chosen.code]|default([])|filter(set => set.gates) %}
+        {% set missing = missing|merge([set.missingLabel]) %}
+    {% endfor %}
 {% endif %}
 
 {# THE QUICK-FILE PROMISE, IN ONE LINE, BESIDE THE CONTROL THAT ACTS ON IT.
@@ -42,8 +56,8 @@
    so it never competes with the gate's own list of what is still missing.
 
    One line, one wording, stated once beside the control it acts on. #}
-<p class="ro-promise">Only the kind, what happened and where are needed now. Severity, people, evidence and money are
-    added on the record afterwards.</p>
+<p class="ro-promise">Only the kind, what happened, where, and each block's own first answer are needed now. The
+    paperwork — contacts, ID numbers, custody references, dates and facilities — is added on the record afterwards.</p>
 
 <div class="ro-filebar">
     {# The gate REPLACES the reassuring line rather than crowding in beside it:
@@ -61,8 +75,8 @@
 </div>
 <noscript>
     <div class="ro-filebar">
-        <span class="hint">Choose a kind above, say what happened and give the place — the report is refused without
-            all three.</span>
+        <span class="hint">Choose a kind above, say what happened, give the place, and answer the first question of
+            each block that is on — the report is refused without them.</span>
         <span class="sp"></span>
         <button class="cta" type="submit">File incident →</button>
     </div>
