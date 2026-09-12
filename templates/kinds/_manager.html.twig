@@ -75,13 +75,19 @@
           <span class="grip">{{ ux_icon('shell:grip-vertical', {width: 11, height: 11}) }}</span>
           <div class="bd">
             <div class="nm"><b>{{ sub.label }}</b><span class="tx-code locked">{{ sub.code }}</span>{% if not sub.active %} <span class="tx-retired">retired</span>{% endif %}</div>
+            {# ONE CHIP PER BLOCK SWITCHED ON, the money one carrying its direction,
+               and the term this word promises. A word with no money block SAYS SO:
+               an absence a reader has to notice is an absence a reader misses. #}
             <div class="blocks">
               {% for block in sub.blocks %}
                 <span class="tx-blk {{ block.isMoney ? 'money' : 'on' }}">{{ block.label }}{% if block.isMoney and sub.moneyDirection %} &middot; {{ sub.moneyDirection.value }}{% endif %}</span>
               {% else %}
                 <span class="tx-blk none">no blocks yet</span>
               {% endfor %}
-              <span class="tx-blk">term {{ sub.termLabel }}</span>
+              {% if sub.blocks is not empty and not sub.carriesMoney %}
+                <span class="tx-blk none">no money block</span>
+              {% endif %}
+              <span class="tx-blk term">term {{ sub.termLabel }}</span>
             </div>
           </div>
           <div class="acts">

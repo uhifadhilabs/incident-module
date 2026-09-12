@@ -256,11 +256,25 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $this->admin()->setBlocks($sub, [BehaviorBlockEnum::Species, BehaviorBlockEnum::Money], MoneyDirectionEnum::Compensation);
         $this->client->loginUser($this->aManager());
 
-        $page = $this->client->request('GET', $this->kindsUrl($area).'?kind='.$kind->getUuid()->toRfc4122());
-        $chips = $page->filter('.tx-sub .blocks .tx-blk')->each(static fn ($node): string => $node->text());
+        // A second word, carrying no money block at all — the row says so rather
+        // than leaving a reader to notice an absence.
+        $this->admin()->setBlocks(
+            $this->admin()->createSubcategory($kind, 'Crop raiding'),
+            [BehaviorBlockEnum::Counts],
+        );
 
-        self::assertSame(['Species', 'Money · compensation', 'term 72 h'], $chips);
+        $page = $this->client->request('GET', $this->kindsUrl($area).'?kind='.$kind->getUuid()->toRfc4122());
+        $rows = $page->filter('.tx-sub')->each(
+            static fn ($row): array => $row->filter('.blocks .tx-blk')->each(static fn ($chip): string => $chip->text()),
+        );
+
+        self::assertSame([
+            ['Species', 'Money · compensation', 'term 72 h'],
+            ['Counts', 'no money block', 'term 72 h'],
+        ], $rows);
         self::assertStringNotContainsString('fields', $page->filter('.tx-sub')->text());
+        // The term chip wears the design's own class, not the plain chip's.
+        self::assertCount(2, $page->filter('.tx-sub .blocks .tx-blk.term'));
     }
 
     // ── deactivate never deletes ─────────────────────────────────────────────

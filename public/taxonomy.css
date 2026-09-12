@@ -139,6 +139,11 @@
   border-color:color-mix(in srgb,var(--i-money,var(--warn)) 42%,transparent);
   background:color-mix(in srgb,var(--i-money,var(--warn)) 9%,transparent)}
 .tx-blk.none{color:var(--dim);border-style:dashed;background:none;font-weight:600}
+/* The term is not a block: it is the clock the case is answered against, and it
+   sits in the same row because that is where everything else about the word is
+   set. Quiet, and separated from the blocks by its own left rule. */
+.tx-blk.term{color:var(--dim);background:none;border-color:var(--ln);
+  box-shadow:inset 2px 0 0 var(--ln2);padding-left:10px}
 
 /* ── the block PICKER, presentation 2: composable toggles ───────────────── */
 .tx-picker{border:1px solid var(--ln2);border-radius:12px;padding:14px 16px 12px;
