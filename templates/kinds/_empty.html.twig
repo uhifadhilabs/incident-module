@@ -18,7 +18,7 @@
     <form class="tx-form" method="post" action="{{ path('incident_kinds_kind_create', {uuid: area.uuid}) }}" style="justify-content:center">
       <input type="hidden" name="_token" value="{{ csrfToken }}">
       <input class="tx-input" type="text" name="label" placeholder="e.g. Poaching &amp; wildlife crime" required style="min-width:280px">
-      <select class="tx-input" name="colour" aria-label="Colour">
+      <select class="fld" name="colour" aria-label="Colour">
         {% for key in colourKeys %}<option value="{{ key }}">{{ key }}</option>{% endfor %}
       </select>
       <button class="tx-cta" type="submit">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Write the first kind of incident</button>

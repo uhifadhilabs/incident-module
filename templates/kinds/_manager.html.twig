@@ -27,7 +27,7 @@
     <form class="tx-form" method="post" action="{{ path('incident_kinds_kind_create', {uuid: area.uuid}) }}" style="padding:11px 13px;gap:7px;border-top:1px dashed color-mix(in srgb,var(--fog) 28%,transparent)">
       <input type="hidden" name="_token" value="{{ csrfToken }}">
       <input class="tx-input" type="text" name="label" placeholder="New kind of incident" required style="flex:1">
-      <select class="tx-input" name="colour" aria-label="Colour">
+      <select class="fld" name="colour" aria-label="Colour">
         {% for key in colourKeys %}<option value="{{ key }}">{{ key }}</option>{% endfor %}
       </select>
       <button class="tx-cta" type="submit">{{ ux_icon('shell:plus', {width: 13, height: 13}) }} Add</button>
@@ -141,12 +141,19 @@
                   </label>
                 </div>
               </div>
-              <div class="tx-savebar">
-                <label class="tx-meta" for="money-dir-{{ sub.uuid }}">Money runs as</label>
-                <select class="tx-input" id="money-dir-{{ sub.uuid }}" name="money_direction">
+              {# WHICH WAY THE MONEY RUNS, on its own row — the direction belongs to
+                 the SUB-CATEGORY and not to the person filing, so it is set here,
+                 beside the blocks, and never on a report. A field, not a bar
+                 control: it is an answer about this word, and the bar below holds
+                 the two things that act on the form. #}
+              <div class="dirrow">
+                <label for="money-dir-{{ sub.uuid }}">Money runs as</label>
+                <select class="fld" id="money-dir-{{ sub.uuid }}" name="money_direction">
                   <option value="">— not decided —</option>
                   {% for dir in moneyDirections %}<option value="{{ dir.value }}"{{ sub.moneyDirection is same as(dir) ? ' selected' }}>{{ dir.value }}</option>{% endfor %}
                 </select>
+              </div>
+              <div class="tx-savebar">
                 <button class="tx-cta" type="submit">{{ ux_icon('shell:check', {width: 13, height: 13}) }} Save</button>
                 <a class="tx-act" href="{{ path('incident_kinds', {uuid: area.uuid, kind: selected.uuid}) }}">Cancel</a>
               </div>

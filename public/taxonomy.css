@@ -96,12 +96,6 @@
 .tx-code::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--dim);flex:none}
 .tx-code.locked::before{background:var(--acc)}
 
-/* A neutral meta line — same size and weight as .i-sub, but module-independent
-   (it does not depend on incidents.css being loaded). Ported from the design's
-   taxonomy.css; used by the block-editor's "Money runs as" savebar label. */
-.tx-meta{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:var(--fog);
-  letter-spacing:.03em}
-
 /* ── a sub-category row ─────────────────────────────────────────────────── */
 .tx-subs{padding:6px 0 0}
 .tx-sub{display:flex;align-items:flex-start;gap:11px;padding:12px 18px;
@@ -320,12 +314,16 @@
    Small, server-rendered forms that carry out the ruled actions without
    JavaScript. They reuse the tokens above and add nothing to the palette. */
 .tx-form{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.tx-form .tx-input{border:1px solid var(--ln2);border-radius:8px;padding:7px 11px;
+/* A select is the shell's `.fld` wherever the product draws one, and this row
+   sizes it to the height its text fields keep — decoration over the shell's box,
+   never a second box. `width:auto` is the load-bearing half: `.fld` is full-width
+   by default, which in a flex row is the whole row. */
+.tx-form .tx-input,.tx-form .fld{border:1px solid var(--ln2);border-radius:8px;padding:7px 11px;
   background:color-mix(in srgb,var(--fog) 6%,transparent);color:var(--tx);
-  font:inherit;font-size:13px;min-width:0}
-.tx-form .tx-input:focus{border-color:var(--acc);outline:none;
+  font:inherit;font-size:13px;min-width:0;width:auto}
+.tx-form .tx-input:focus,.tx-form .fld:focus{border-color:var(--acc);outline:none;
   box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
-.tx-form select.tx-input{cursor:pointer}
+.tx-form select.fld{cursor:pointer}
 .tx-cta{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--acc);
   background:var(--acc);color:var(--accT,#fff);border-radius:8px;padding:7px 13px;cursor:pointer;
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:700;
@@ -335,6 +333,14 @@
 .tx-blockedit{padding:2px 18px 16px}
 .tx-blockedit .tx-picker{margin-top:4px}
 .tx-blockedit .tx-savebar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+/* WHICH WAY THE MONEY RUNS, as the block editor's own row: a tracked mono label
+   and the field, at the width the designs give this one select. It is a field and
+   not a bar control — the direction is an answer about the word, and the bar under
+   it holds only what acts on the form. */
+.tx-blockedit .dirrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.tx-blockedit .dirrow label{font:600 9.5px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--fog)}
+.tx-blockedit .dirrow .fld{width:334px}
 .tx-actform{display:inline}
 
 /* ── THE LISTS SECTION ────────────────────────────────────────────────────────

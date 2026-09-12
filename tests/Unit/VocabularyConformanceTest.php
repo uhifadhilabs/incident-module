@@ -116,6 +116,36 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
     }
 
     /**
+     * EVERY SELECT IS A `.fld` — the shell's field, the class the designs put on
+     * all 194 of the selects they draw.
+     *
+     * A select with no house class on it, or with one styled only somewhere else
+     * on the page, renders as the browser's own control: a white box with a
+     * #767676 hairline in Arial, two thirds the height of the fields beside it,
+     * ignoring the theme entirely. Nothing about that is visible in a template and
+     * nothing about it fails a functional test, so it is asserted here instead.
+     *
+     * A row may still SIZE a field to its own rhythm — `.tx-form .fld` and
+     * `.fsel>select.fld` do — because that is decoration over the shell's box and
+     * not a second box.
+     */
+    public function testEverySelectTheTemplatesWriteWearsTheShellsFieldClass(): void
+    {
+        $offenders = [];
+        foreach (self::templateFiles() as $file) {
+            preg_match_all('/<select\b[^>]*>/', (string) file_get_contents($file), $matches);
+            foreach ($matches[0] as $tag) {
+                preg_match('/\bclass="([^"]*)"/', $tag, $class);
+                if (!\in_array('fld', preg_split('/\s+/', trim($class[1] ?? '')) ?: [], true)) {
+                    $offenders[] = basename($file).': '.$tag;
+                }
+            }
+        }
+
+        self::assertSame([], $offenders, 'These selects render as raw browser controls: a select is a .fld.');
+    }
+
+    /**
      * @return list<string>
      */
     private static function templateFiles(): array
