@@ -27,9 +27,12 @@ the **Incident kinds** editor each area writes its own classification in.
 
 **An area starts empty.** The module ships no kinds of incident, seeds none and
 suggests none: a kind, its colour, the departments a lens puts it in front of,
-and under it the sub-categories — their behaviour blocks, which way money runs,
-the term each promises and the fields its form asks for — are all the area's own,
-written in the kinds editor before the first incident is filed there. Sample
+and under it the sub-categories — their behaviour blocks, which way money runs
+and the term each promises — are all the area's own, written in the kinds editor
+before the first incident is filed there. **What a sub-category's form asks is
+not among them:** the questions come from the behaviour blocks it switches on and
+from nowhere else, so nothing in the product invents a field and there is no form
+builder (see `docs/the-model.md`). Sample
 kinds exist only in the devkit demo content, which writes them into an area
 through that same editor's service.
 
@@ -200,6 +203,40 @@ it does, because it moves data rather than only schema:
 - **Until that release, `doctrine:migrations:diff` proposes dropping those
   three things**, because the mapping no longer knows them. That proposal is the
   deferral working, not drift — do not apply it.
+
+### Upgrading to 0.3: a word's questions come from its blocks
+
+`Uhifadhi\Incident\Migrations\Version20260912103000` moves every answer a
+record carries into the shape the behaviour blocks ask in
+(`incident.block_answers`) and adds `incident.claimed_at_filing` for the figure
+the money block asks at filing. It runs with `migrate` and needs nothing from
+you; like the version above it moves data, so it is worth knowing what it does:
+
+- Every answer whose key **name** says what it answered arrives in the block that
+  asks it: `snares_lifted` becomes a count row, `road_segment` becomes the kind
+  and the name of a place, `suspects` becomes a party row in the suspect's role.
+  The repeating blocks — counts, parties, seizures, samples, casualties, measures
+  — arrive as rows, in the order the migration's own table names them, so two
+  installations upgrade identically.
+- **Two kinds of key are deliberately left where they are.** A key that does not
+  say what it counted (`quantity` answered "3 sacks, dried" under one word and
+  "2 animals" under another) and a key no block asks for at all (`enclosure`,
+  `crop`, `circumstances`, `signs` — they came from the retired free-text field
+  list). Choosing a block answer for either would be writing the record.
+- **Nothing is dropped.** `incident.details` and
+  `incident_taxonomy_subcategory.field_set` are kept, still populated, for one
+  release — which is where those left-behind keys can still be read — and
+  `doctrine:migrations:diff` proposes dropping them both until the release that
+  does, in a version marked `@destructive`. That proposal is the deferral
+  working, not drift: do not apply it.
+- The figure is **not** backfilled from a money record. What a money record holds
+  was written by whoever assessed or approved it, in a state past filing; dating
+  somebody else's figure to a moment nobody recorded it at would be a lie about a
+  number.
+- After the update the **kinds editor no longer asks for a list of field names**,
+  and the report form asks exactly what each sub-category's blocks ask. An area
+  whose words were switching on no blocks will see a short step 2 until somebody
+  ticks them: the blocks were always the model, and they are now the whole of it.
 
 If your `config/packages/incident.yaml` carries an `incident.taxonomy` tree, the
 container refuses to build until you remove the key, and says so in those words.

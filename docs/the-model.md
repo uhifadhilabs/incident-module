@@ -6,6 +6,7 @@
 - [Money runs in two directions](#money-runs-in-two-directions)
 - [No money record is opened at filing](#no-money-record-is-opened-at-filing)
 - [Each direction is recorded from its own place](#each-direction-is-recorded-from-its-own-place)
+- [A sub-category's questions come from its blocks](#a-sub-categorys-questions-come-from-its-blocks)
 - [One taxonomy, and it is the area’s](#one-taxonomy-and-it-is-the-areas)
 - [How this module references areas](#how-this-module-references-areas)
 - [Provenance is written once](#provenance-is-written-once)
@@ -18,7 +19,7 @@ that area's own sub-categories, at one point in a five-state workflow.
 | Thing | Table | Why it exists |
 |---|---|---|
 | `Incident` | `incident` | The event. One area, one PostGIS point, one sub-category, one place in the workflow. |
-| `TaxonomyKind` / `TaxonomySubcategory` | `incident_taxonomy_kind`, `incident_taxonomy_subcategory` | The taxonomy, and it is **each area's own**. An area starts **empty** — nothing is shipped or seeded — and writes its kinds in the Incident kinds editor. A kind carries its colour and the departments a lens leads with; a sub-category composes **behaviour blocks**, says which way money runs, what term it promises and what fields its form asks for. Wire-codes are unique per area and never change; retirement **deactivates, never deletes**. |
+| `TaxonomyKind` / `TaxonomySubcategory` | `incident_taxonomy_kind`, `incident_taxonomy_subcategory` | The taxonomy, and it is **each area's own**. An area starts **empty** — nothing is shipped or seeded — and writes its kinds in the Incident kinds editor. A kind carries its colour and the departments a lens leads with; a sub-category composes **behaviour blocks** — which are the whole of what its form asks — says which way money runs and what term it promises. An incident's answers to those blocks live in `incident.block_answers`, and the figure the money block asks at filing in `incident.claimed_at_filing`. Wire-codes are unique per area and never change; retirement **deactivates, never deletes**. |
 | `IncidentEvent` | `incident_event` | The **append-only** timeline. Nothing on it is ever edited or removed; a correction is a new event saying what was corrected. |
 | `IncidentEvidence` | `incident_evidence` | Photographs and documents, each keeping **its own** capture time and position — never the upload's. |
 | `IncidentParty` | `incident_party` | A suspect, a claimant, a witness, the ranger who filed it — and the **animal**. One shape, different roles; the design refuses to build four tables. |
@@ -37,9 +38,13 @@ carries a fine while natural mortality beside it carries nothing.
 
 ## No money record is opened at filing
 
-**No money record is opened at filing.** A sub-category that *carries* money is
-one whose form offers the fields; that is not a claim that this incident involves
-any. The row appears when somebody records an amount — which is also when the
+**No money record is opened at filing** — not even where the money block asked a
+figure there. A sub-category that *carries* money is one whose form asks the
+question; that is not a claim that this incident involves any. The figure a filer
+gives is the claimant's own, or the officer's at the roadside, and it is kept as
+`incident.claimed_at_filing`: the case file shows it as **claimed at filing** and
+says out loud that nothing has been judged. The money row appears when somebody
+records an amount — which is also when the
 case file's money card appears, and why a roadkill where no driver was ever
 identified can still be resolved rather than waiting forever for a payment nobody
 is making.
@@ -61,6 +66,56 @@ source the case file's money panel is gated on and the money service refuses on 
 so the panel is never drawn where a POST would be refused. Each direction also
 refuses in its own words (`refusedTooEarly()`): a claimant told "response has not
 started" would be told the wrong rule.
+
+## A sub-category's questions come from its blocks
+
+**A sub-category's questions are the questions of the behaviour blocks it
+switches on, and of nowhere else.** Tick a block in the kinds editor and its
+questions join step 2 of the report form; untick it and they are gone. Nothing in
+the product invents a field, no screen types a question, and there is no form
+builder.
+
+`src/Model/BlockQuestionCatalogue.php` is the whole vocabulary: per block, each
+question's label as the filer reads it, the control it is drawn in
+(`QuestionControlEnum` — a styled select, a number with its unit, a yes/no pair, a
+date, a text field, or the select that reads one area's own list), the key the
+answer is kept under, and whether it **holds up a filing**. It is code rather than
+data for three reasons: a question is behaviour the form has to know how to draw,
+an answer has to be worth counting across areas, and a block's defining question
+has to be the same one everywhere or "needed to file" means nothing.
+
+| Block | Asks | Gates a filing |
+|---|---|---|
+| Species | species, sex, age class | the species |
+| Counts | what was counted, how many — **a row that repeats** | one whole row |
+| Method & means | method, gear, vehicle, suspected agent, activity, operator | the method |
+| Parties | role, name, contact, household, ID number — **rows** | a row with a role and a name |
+| Seizures | item, how many, description, custody reference — **rows** | a row with an item and a count |
+| Money | one figure, named by the direction | the figure |
+| Condition & disposition | condition, disposition | the condition |
+| Samples | type, reference, sent to, date sent — **rows** | a row with a type and a reference |
+| Casualty & treatment | injury, how many people, treatment, facility, date — **rows** | a row with an injury |
+| Extent | the measure with its unit and its value — **rows** — plus land use | a row with a measure and a value |
+| Named place | kind of place, which one, or a typed name | the kind and the name |
+| Notice & licence | permit status, licence status, notice served, reference, date | both statuses |
+
+Everything not in the last column is **paperwork and can wait**: contacts, ID
+numbers, custody references, dates sent, facilities. A block that is on and
+records nothing is worse than a block that is absent, which is why the defining
+answers gate — and the paperwork never does, because a half-remembered report that
+exists beats a perfect one that was never filed.
+
+**Where the answers live.** `incident.block_answers` keys them by block: a block
+whose questions are asked once keeps `{key: answer}`, a block that repeats keeps
+`{rows: [{key: answer}, …]}`. `IncidentBlockAnswerService` reads a posted form
+against the catalogue and decides what is still missing — the browser says the
+same thing sooner and is not the authority.
+
+**Four questions read a per-area list** (`AreaListEnum`): which animal, by what
+method, what the ground is used for, which named place. **No screen edits those
+lists yet**, so the form draws the area's list — empty — beside a typed `other`; a
+hardcoded animal would be one area's vocabulary written into every area on earth.
+The editors are the next thing this module owes the form.
 
 ## One taxonomy, and it is the area’s
 

@@ -52,9 +52,9 @@ the three ways back.
 The `Settings` section reads and writes one row per area (`incident_settings`).
 An area that has never saved counts money in the installation's own `incident:`
 currency, so an untouched default and a chosen one stay distinguishable. The
-per-kind colour, the "shown first to" departments, and a sub-category's term and
-form fields are **not editable there yet** — the section says so, and the kinds
-section is where a colour and a money direction are edited today.
+per-kind colour, the "shown first to" departments and a sub-category's term are
+**not editable there yet** — the section says so, and the kinds section is where a
+colour, a money direction, the behaviour blocks and the term are edited today.
 
 ## Parking closes every one of them
 
