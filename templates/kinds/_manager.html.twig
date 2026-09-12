@@ -82,7 +82,6 @@
                 <span class="tx-blk none">no blocks yet</span>
               {% endfor %}
               <span class="tx-blk">term {{ sub.termLabel }}</span>
-              <span class="tx-blk">{{ sub.fieldSet|length }} {{ sub.fieldSet|length == 1 ? 'field' : 'fields' }}</span>
             </div>
           </div>
           <div class="acts">
@@ -103,8 +102,9 @@
         </div>
 
         {# THE COMPOSABLE BEHAVIOUR-BLOCK TOGGLES, opened for this sub. Each block
-           is independent — tick what it records. The term and the fields save with
-           them, because they are one decision about one word.
+           is independent — tick what it records, and what it records is what the
+           report form asks. The term saves with them, because they are one
+           decision about one word.
            → POST …/subcategories/{uuid}/behaviour #}
         {% if editingBlocks is same as(sub) %}
           <div class="tx-blockedit" id="blocks-{{ sub.uuid }}">
@@ -122,19 +122,16 @@
                   {% endfor %}
                 </div>
               </div>
-              {# THE TERM AND THE QUESTIONS — SET·11. The term is what the ageing
-                 widget and the case file hold this word to; the fields are what
-                 the filing form asks under it, in the order typed. #}
+              {# THE TERM. What the ageing widget and the case file hold this word
+                 to — and the only thing on this panel that is not a block, because
+                 WHAT THE FORM ASKS IS THE BLOCKS ABOVE and a word may not invent a
+                 question of its own. #}
               <div class="tx-picker" style="margin-top:9px">
-                <div class="hd"><b>{{ sub.label }} &mdash; what it promises, and what it asks</b><em>the term is this word&rsquo;s own &mdash; one term for the whole area would be a lie about most of them</em></div>
+                <div class="hd"><b>{{ sub.label }} &mdash; what it promises</b><em>the term is this word&rsquo;s own &mdash; one term for the whole area would be a lie about most of them</em></div>
                 <div class="tx-toggles" style="grid-template-columns:1fr">
                   <label class="tx-tog" style="align-items:center">
                     <span class="bd"><b>Term, in hours</b><em>reads as &ldquo;{{ sub.termLabel }}&rdquo; on a chip</em></span>
                     <input class="tx-input" type="number" name="term_hours" min="1" value="{{ sub.termHours }}" aria-label="Term in hours for {{ sub.label }}" style="width:96px">
-                  </label>
-                  <label class="tx-tog" style="align-items:center">
-                    <span class="bd"><b>Fields this word asks for</b><em>comma-separated, in the order the form draws them</em></span>
-                    <input class="tx-input" type="text" name="fields" value="{{ sub.fieldSet|map(f => f.label)|join(', ') }}" placeholder="Species, Livestock lost, Household" aria-label="Fields {{ sub.label }} asks for" style="flex:1">
                   </label>
                 </div>
               </div>

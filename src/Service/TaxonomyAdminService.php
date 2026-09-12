@@ -226,40 +226,6 @@ final class TaxonomyAdminService
         return $subcategory;
     }
 
-    /**
-     * The questions this word asks, in the order the form draws them. Given as
-     * LABELS, because a label is what an administrator types and reads back; the
-     * key an answer is stored under is derived from it here.
-     *
-     * THE KEY IS THE LABEL, SLUGGED — so renaming a field IS renaming the field,
-     * and answers recorded under the old wording stop being asked for. That is the
-     * honest behaviour: "Livestock lost" becoming "Animals lost" is a change of
-     * question, and silently carrying the old answers under the new one would put
-     * words in a witness's mouth.
-     *
-     * @param list<string> $labels
-     */
-    public function setFieldSet(TaxonomySubcategory $subcategory, array $labels): TaxonomySubcategory
-    {
-        $fields = [];
-        foreach ($labels as $label) {
-            $label = $this->cleanLabel($label);
-            if ('' === $label) {
-                continue;
-            }
-
-            $key = trim(strtolower((string) preg_replace('/[^a-z0-9]+/i', '_', $label)), '_');
-            if ('' !== $key && !isset($fields[$key])) {
-                $fields[$key] = ['key' => $key, 'label' => $label];
-            }
-        }
-
-        $subcategory->setFieldSet(array_values($fields));
-        $this->em->flush();
-
-        return $subcategory;
-    }
-
     public function deactivateSubcategory(TaxonomySubcategory $subcategory): TaxonomySubcategory
     {
         $subcategory->deactivate();

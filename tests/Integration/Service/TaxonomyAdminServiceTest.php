@@ -221,23 +221,21 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     }
 
     /**
-     * THE KEY IS THE LABEL, SLUGGED, so renaming a field IS renaming the question
-     * and answers under the old wording stop being asked for. Order is the order
-     * typed, blanks are dropped, and a repeated label is one question.
+     * NOTHING IN THE ADMIN WRITES A LIST OF QUESTIONS. A word's questions are the
+     * questions of the blocks it switches on, so the service that used to take a
+     * typed field list no longer offers one — there is no form builder, and a
+     * screen that could invent a field is a screen that could ask anything.
      */
-    public function testTheFieldsAreStoredInTheOrderTypedWithKeysDerivedFromTheLabels(): void
+    public function testTheAdminOffersNoWayToInventAQuestion(): void
     {
-        $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
-        $sub = $this->admin()->createSubcategory($kind, 'Crop raiding');
-
-        $this->admin()->setFieldSet($sub, ['Species', 'Area affected', '', 'Species', 'Household']);
-
-        self::assertSame([
-            ['key' => 'species', 'label' => 'Species'],
-            ['key' => 'area_affected', 'label' => 'Area affected'],
-            ['key' => 'household', 'label' => 'Household'],
-        ], $sub->getFieldSet());
+        self::assertNotContains(
+            'setFieldSet',
+            array_map(
+                static fn (\ReflectionMethod $method): string => $method->getName(),
+                new \ReflectionClass(TaxonomyAdminService::class)->getMethods(\ReflectionMethod::IS_PUBLIC),
+            ),
+            'The retired field list has no door back in.',
+        );
     }
 
     /**

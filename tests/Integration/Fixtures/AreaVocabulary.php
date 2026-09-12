@@ -68,7 +68,6 @@ final readonly class AreaVocabulary
                     $direction,
                 );
                 $this->admin->setTermHours($subcategory, $sub['term_hours']);
-                $this->admin->setFieldSet($subcategory, $sub['fields']);
             }
         }
     }

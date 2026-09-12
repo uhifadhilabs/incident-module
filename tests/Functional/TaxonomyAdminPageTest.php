@@ -19,6 +19,7 @@ use Uhifadhi\Incident\Devkit\DemoMonth;
 use Uhifadhi\Incident\Entity\TaxonomyKind;
 use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\BehaviorBlockEnum;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Service\TaxonomyAdminService;
 
 /**
@@ -187,10 +188,10 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     }
 
     /**
-     * ONE PANEL, ONE SAVE. The blocks, the direction money runs, the term the
-     * word promises and the questions its form asks are one decision about one
-     * word, so the editor writes all four in a single POST — SET·11 draws them
-     * together for the same reason.
+     * ONE PANEL, ONE SAVE. The blocks, the direction money runs and the term the
+     * word promises are one decision about one word, so the editor writes all
+     * three in a single POST. WHAT THE FORM ASKS IS NOT ON THE PANEL AT ALL: the
+     * questions come from the blocks, and a word cannot invent one.
      */
     public function testComposingAWordsBehaviourThroughTheEditorPersists(): void
     {
@@ -205,7 +206,9 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
             'blocks' => ['species', 'money'],
             'money_direction' => 'compensation',
             'term_hours' => '720',
-            'fields' => 'Species, Livestock lost , ,Household',
+            // Whatever a hand-made request carries under this name, the editor no
+            // longer has a field list to write it to.
+            'fields' => 'Species, Livestock lost',
         ]);
 
         self::assertResponseRedirects();
@@ -220,20 +223,13 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         self::assertSame(720, $stored->getTermHours());
         self::assertSame('30 d', $stored->termLabel());
 
-        // The questions, in the order typed, with the blank entry dropped and the
-        // key derived from the label — renaming a field IS renaming the question.
-        self::assertSame(
-            [
-                ['key' => 'species', 'label' => 'Species'],
-                ['key' => 'livestock_lost', 'label' => 'Livestock lost'],
-                ['key' => 'household', 'label' => 'Household'],
-            ],
-            $stored->getFieldSet(),
-        );
+        // NOTHING WRITES A FIELD LIST ANY MORE. The column is still on the table
+        // for one release, holding whatever it held; the editor cannot add to it.
+        self::assertSame([], $stored->getFieldSet());
     }
 
-    /** The two controls are actually on the panel, not merely accepted by the POST. */
-    public function testTheBehaviourPanelDrawsTheTermAndTheFields(): void
+    /** The term is on the panel — and the retired field list is nowhere on it. */
+    public function testTheBehaviourPanelDrawsTheTermAndAsksForNoFields(): void
     {
         $area = $this->anArea();
         $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
@@ -243,7 +239,28 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
         $editor = $this->client->request('GET', $this->kindsUrl($area).'?kind='.$kind->getUuid()->toRfc4122().'&blocks='.$sub->getUuid()->toRfc4122());
 
         self::assertCount(1, $editor->filter('.tx-blockedit input[name="term_hours"]'));
-        self::assertCount(1, $editor->filter('.tx-blockedit input[name="fields"]'));
+        self::assertCount(0, $editor->filter('.tx-blockedit input[name="fields"]'));
+        self::assertStringNotContainsString('Fields this word asks for', $editor->html());
+    }
+
+    /**
+     * THE SUB-CATEGORY ROW CARRIES ITS BLOCKS AND ITS TERM, AND NO COUNT OF
+     * FIELDS. A count of fields would be a count of something the product does not
+     * have: a word's questions are its blocks' questions.
+     */
+    public function testTheSubcategoryRowCarriesBlockChipsAndNoFieldCount(): void
+    {
+        $area = $this->anArea();
+        $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
+        $sub = $this->admin()->createSubcategory($kind, 'Livestock depredation');
+        $this->admin()->setBlocks($sub, [BehaviorBlockEnum::Species, BehaviorBlockEnum::Money], MoneyDirectionEnum::Compensation);
+        $this->client->loginUser($this->aManager());
+
+        $page = $this->client->request('GET', $this->kindsUrl($area).'?kind='.$kind->getUuid()->toRfc4122());
+        $chips = $page->filter('.tx-sub .blocks .tx-blk')->each(static fn ($node): string => $node->text());
+
+        self::assertSame(['Species', 'Money · compensation', 'term 72 h'], $chips);
+        self::assertStringNotContainsString('fields', $page->filter('.tx-sub')->text());
     }
 
     // ── deactivate never deletes ─────────────────────────────────────────────

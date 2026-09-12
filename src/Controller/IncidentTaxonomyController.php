@@ -248,10 +248,13 @@ final class IncidentTaxonomyController
     }
 
     /**
-     * WHAT THIS WORD DOES, in one save: the behaviour blocks, which way money
-     * runs when the money block is on, what the word promises, and what its form
-     * asks for. One panel and one POST, because they are one decision — a term
-     * chosen without seeing the fields beside it is a term chosen in the dark.
+     * WHAT THIS WORD DOES, in one save: the behaviour blocks, which way money runs
+     * when the money block is on, and what the word promises. One panel and one
+     * POST, because they are one decision — a term chosen without seeing the blocks
+     * beside it is a term chosen in the dark.
+     *
+     * WHAT IT DOES NOT SAVE IS A LIST OF QUESTIONS. A word's questions are the
+     * questions of the blocks ticked here, and nothing on this page can add one.
      */
     #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/behaviour', name: 'incident_kinds_sub_behaviour', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
     public function setBehaviour(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
@@ -276,7 +279,6 @@ final class IncidentTaxonomyController
             MoneyDirectionEnum::tryFrom($request->request->getString('money_direction')),
         );
         $this->admin->setTermHours($entity, $request->request->getInt('term_hours', TaxonomySubcategory::DEFAULT_TERM_HOURS));
-        $this->admin->setFieldSet($entity, self::fieldLabels($request->request->getString('fields')));
 
         return $this->backToManager($area, $entity->getKind());
     }
@@ -388,26 +390,6 @@ final class IncidentTaxonomyController
         }
 
         return $this->backToManager($area, $selected);
-    }
-
-    /**
-     * The fields as the administrator types them: one line, comma-separated, in
-     * the order the form will draw them. Blank entries are dropped rather than
-     * stored as a question with no words in it.
-     *
-     * @return list<string>
-     */
-    private static function fieldLabels(string $raw): array
-    {
-        $labels = [];
-        foreach (explode(',', $raw) as $label) {
-            $label = trim($label);
-            if ('' !== $label) {
-                $labels[] = $label;
-            }
-        }
-
-        return $labels;
     }
 
     private function guardWrite(Request $request): void
