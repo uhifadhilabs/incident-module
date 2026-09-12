@@ -1,8 +1,9 @@
 {# IN·16 — the way IN to the report flow, on the dashboard.
 
    THE ENTRY CARD, NOT THE FORM. What it surfaces is the ruled quick-file
-   discipline — a kind, one line saying what happened, a place, and nothing else
-   required — so a person reads the price of filing before they start. The form
+   discipline — a kind, one line saying what happened, a place, and the defining
+   question of every block the category switches on, and no paperwork — so a
+   person reads the price of filing before they start. The form
    itself lives on one route, in one set of step partials, and is not duplicated
    here: a second, shorter form would be a second product.
 
@@ -24,8 +25,8 @@
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
 {% set last = dashboard.recent is empty ? null : dashboard.recent|first %}
 <div class="c" data-w="report">
-    <span class="tab">File an incident<span class="src">· three answers · the rest follows on the record</span></span>
-    <div class="use" style="margin:0 2px 12px">A report is cheap and a verification is expensive. Three answers and the record exists — how bad it was, who was involved, the photographs and any money are offered afterwards on the case file, where the timeline keeps who added what and when.</div>
+    <span class="tab">File an incident<span class="src">· what makes the record · the paperwork follows on it</span></span>
+    <div class="use" style="margin:0 2px 12px">A report is cheap and a verification is expensive. What makes the record what it is files it — the kind, the line, the place, and the defining question of every block the category switched on; how bad it was, who was involved, the photographs and any money are offered afterwards on the case file, where the timeline keeps who added what and when.</div>
     <div class="rln"><span><b>1</b> What kind</span><span class="mono" style="font-size:11px">{{ dashboard.kinds|length }} kinds, then the sub-category</span></div>
     <div class="rln"><span><b>2</b> What happened</span><span class="mono" style="font-size:11px">one line — the list prints it</span></div>
     <div class="rln"><span><b>3</b> Where</span><span class="mono" style="font-size:11px">the place, on the map</span></div>

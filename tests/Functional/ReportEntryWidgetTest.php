@@ -99,8 +99,8 @@ final class ReportEntryWidgetTest extends FunctionalTestCase
     }
 
     /**
-     * THE STATIC TWIN, ELEMENT BY ELEMENT: the index, the heading, the three
-     * answers a report cannot be without, and the button's own words.
+     * THE STATIC TWIN, ELEMENT BY ELEMENT: the index, the heading, what a report
+     * cannot be without, and the button's own words.
      */
     public function testItDrawsWhatItsStaticTwinDraws(): void
     {

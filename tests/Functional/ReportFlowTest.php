@@ -24,8 +24,9 @@ use Uhifadhi\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
  * FILING AN INCIDENT, over HTTP.
  *
  * The design's own economics are the thing under test: a report is CHEAP and a
- * verification is EXPENSIVE. Three answers file an incident — a kind, one line
- * saying what happened, and a place — and everything else is offered on the
+ * verification is EXPENSIVE. What makes the record what it is files an incident —
+ * a kind, one line saying what happened, a place, and the defining question of
+ * every block the category switches on — and the paperwork is offered on the
  * record afterwards.
  *
  * ONE CONTAINER, WHATEVER THE ENTRY POINT — the ruled direction (A, the full
@@ -35,7 +36,7 @@ use Uhifadhi\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
  * slide-over drawer the module used to open when a filing arrived from a record
  * is retired; a filing FROM a record renders the same full page, with the source
  * card riding at its head. Both entry points render the same step partials, gate
- * the same three answers, and post to the same endpoint.
+ * the same answers, and post to the same endpoint.
  */
 final class ReportFlowTest extends FunctionalTestCase
 {
@@ -311,7 +312,7 @@ final class ReportFlowTest extends FunctionalTestCase
         $this->client->loginUser($this->aReporter());
 
         // A record that carried nothing but its identity, so it is asked for
-        // exactly the same three answers a standalone filing is.
+        // exactly the same answers a standalone filing is.
         $bare = $this->reportUrl($this->uuidOf($area)).'?'.http_build_query([
             'source' => 'patrol_observation',
             'record' => Uuid::v7()->toRfc4122(),
@@ -413,6 +414,31 @@ final class ReportFlowTest extends FunctionalTestCase
             // kind, the line, and the place.
             self::assertCount(3, $crawler->filter('.ro-req'));
         }
+    }
+
+    /**
+     * THE RULES CARD STATES THE GATE THE FORM ACTUALLY ENFORCES.
+     *
+     * What a filing owes is a category, one line saying what happened, a place
+     * AND the defining question of every block the sub-category switched on
+     * ({@see IncidentBlockAnswerService::missing()}). A closing line that priced
+     * filing at three answers would promise a gate nothing enforces, so the card
+     * may not carry that number anywhere.
+     */
+    public function testTheRulesCardPricesFilingAtTheWholeGate(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->client->loginUser($this->aReporter());
+
+        $card = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)))->filter('.i-rules');
+
+        self::assertCount(1, $card);
+        self::assertStringContainsString('a category · one line saying what happened · a place · every block\'s own first answer', $card->filter('.rln')->eq(0)->text());
+        self::assertStringContainsString(
+            'Filing may never cost more than what makes the record what it is — the category, the line, the place, and the defining question of every block the category switched on — and the paperwork follows on the record.',
+            $card->filter('.use')->text(),
+        );
+        self::assertStringNotContainsString('three answers', $card->text());
     }
 
     /**

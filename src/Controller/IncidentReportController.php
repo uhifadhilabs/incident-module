@@ -46,7 +46,8 @@ use Uhifadhi\Storage\Model\FileEntry;
 use Uhifadhi\Storage\Registry\FileRegistry;
 
 /**
- * REPORTING AN INCIDENT — three answers: what kind, what happened, and where.
+ * REPORTING AN INCIDENT — what kind, what happened, where, and the defining
+ * question of every block the category switched on.
  *
  * ONE CONTAINER, THE FULL PAGE (the ruled direction A, with D's quick-file
  * discipline inside it). Filing gets an ADDRESS of its own, whatever the entry

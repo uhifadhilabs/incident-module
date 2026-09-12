@@ -136,7 +136,7 @@ final class IncidentWidgets implements WidgetSurfaceInterface
             // It opens the FULL PAGE rather than the drawer: a dashboard is
             // standalone context. See the partial for why that follows from the
             // container ruling rather than from a preference.
-            new Widget('report', 'File an incident', 'a', 6, [12, 9, 6], on: false, note: 'The three answers a report cannot be without, and the button that opens the filing page.'),
+            new Widget('report', 'File an incident', 'a', 6, [12, 9, 6], on: false, note: 'What a report cannot be without, and the button that opens the filing page.'),
             new Widget('maplist', 'Map + results', 'b', 12, [12, 9], on: false, note: 'The map at full height with the matching incidents docked beside it.'),
             new Widget('zones', 'By zone', 'b', 6, [12, 9, 6, 3], on: false, note: 'Incidents by the zone they fall in, this month.'),
             // THE TWO-BY-TWO RAIL OF GRAPHS the design added under the map: when
