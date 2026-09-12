@@ -403,8 +403,6 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('security.authorization_checker'),
                     service('security.csrf.token_manager'),
                     service('security.token_storage'),
-                    service('storage.file_registry'),
-                    service('incident.map'),
                 ])
                 ->public();
             $services->alias(IncidentReportController::class, 'incident.controller.report')->public();

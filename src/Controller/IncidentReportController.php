@@ -43,10 +43,7 @@ use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\AreaListService;
 use Uhifadhi\Incident\Service\IncidentBlockAnswerService;
-use Uhifadhi\Incident\Service\IncidentMapService;
 use Uhifadhi\Incident\Service\IncidentReportService;
-use Uhifadhi\Storage\Model\FileEntry;
-use Uhifadhi\Storage\Registry\FileRegistry;
 
 /**
  * REPORTING AN INCIDENT — what kind, what happened, where, and the defining
@@ -135,21 +132,6 @@ final class IncidentReportController
         private readonly AuthorizationCheckerInterface $authorization,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly TokenStorageInterface $tokenStorage,
-        /**
-         * THE PLATFORM'S FILE REGISTRY. It is how the source card shows the
-         * observation's photographs without this bundle knowing anything about
-         * observations: it hands the registry the source token and the record
-         * uuid the hand-off arrived with, and the module that OWNS that record
-         * answers.
-         */
-        private readonly FileRegistry $fileRegistry,
-        /**
-         * THE ONE INCIDENTS MAP BUILDER. The rail's plate — where the observation
-         * this filing came from was recorded — is drawn by the same service that
-         * draws the dashboard's plate and the case file's, so "where" reads
-         * identically wherever the module states it.
-         */
-        private readonly IncidentMapService $maps,
     ) {
     }
 
@@ -313,48 +295,11 @@ final class IncidentReportController
             'cancelUrl' => $fromARecord && null !== $prefill->backUrl
                 ? $prefill->backUrl
                 : $this->router->generate('incident_dashboard', ['uuid' => $area->getUuidString()]),
-            // THE SOURCE RECORD'S PHOTOGRAPHS, asked of the module that owns them.
-            'sourceFiles' => $this->filesOf($prefill),
-            // WHERE THE SOURCE RECORD WAS RECORDED, as the atlas's plate — null
-            // where the hand-off carried no usable coordinates, and the rail then
-            // draws no plate rather than an empty one.
-            'sourceMap' => $fromARecord && null !== $prefill->latitude && null !== $prefill->longitude
-                ? $this->maps->forObservation($area, $prefill->latitude, $prefill->longitude)
-                : null,
             // WHAT EACH SUB-CATEGORY ASKS, as the rail states it — built from the
             // same sets the form renders step 2 from, so the rail cannot describe a
             // form this page did not draw.
             'checklists' => self::checklistsFor($kinds, $blockSets),
         ]);
-    }
-
-    /**
-     * THE PHOTOGRAPHS OF THE RECORD THIS FILING CAME FROM.
-     *
-     * Asked of the platform's registry, which asks the module that owns the
-     * record — this bundle never names the patrols module, its routes or its key
-     * prefix, because a host may install either without the other. All it has is
-     * the token and the uuid the hand-off's query string carried, and that is exactly
-     * what {@see FileRegistry::forRecord()} takes.
-     *
-     * EVERY WAY OF HAVING NONE ANSWERS THE SAME. No photographs, a token naming
-     * a module this deployment does not have, a registry having a bad day — all
-     * of them are an empty list and a card with no strip. None of them is an
-     * error, and none of them may cost anybody a report.
-     *
-     * @return list<FileEntry>
-     */
-    private function filesOf(IncidentPrefill $prefill): array
-    {
-        if (null === $prefill->source || null === $prefill->record) {
-            return [];
-        }
-
-        try {
-            return $this->fileRegistry->forRecord($prefill->source, $prefill->record->toRfc4122());
-        } catch (\Throwable) {
-            return [];
-        }
     }
 
     /** The point the form carries, as GeoJSON text, or null where it carried none. */

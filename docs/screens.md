@@ -119,25 +119,29 @@ and the rail draws no row for what it was not told.
 **A richer record-summary contract is the obvious next step, and is not this
 module's to invent.** Today the rail knows a record through three separate
 channels: a query string (the label, the words, the position, the patrol, the
-observer), the platform's file registry (the photographs), and nothing at all (the
-record's amendment history, which the design's card shows and this one cannot).
-A contract that let an asking module say *"describe record X"* and get back a
-titled list of facts would replace the first and the third at once. It belongs
-beside `FileSourceInterface`, in the package that owns cross-module record access —
-not here.
+observer) and nothing at all (the record's amendment history, which the design's
+card shows and this one cannot). A contract that let an asking module say
+*"describe record X"* and get back a titled list of facts would replace both at
+once. It belongs beside `FileSourceInterface`, in the package that owns
+cross-module record access — not here.
 
 ## The rail beside the report form
 
 The report page is two columns inside one `.i-rwrap`: the form at 860px, and a
-340px rail 18px to its right. **One page scroller** — neither column is a scroll
-region of its own, so there is one scrollbar to find and nothing in the rail can be
-stranded beside a form that has grown long. Below 1160px the two columns cannot
-both stand, the rail stacks under the form, and the form keeps its width: the rail
-is extra help, never a reason for the form to get narrower.
+340px rail 18px to its right. **The rail stands still and the form scrolls past
+it** — what is in the rail is read against the questions, and a reader who has to
+scroll away from a question to see what it asks for has lost the thing the rail is
+for. So it is `position:sticky` under the shell's 56px top bar, `max-height:calc(100vh
+- 56px - 26px)` (the shell's own page bottom gutter), `overflow-y:auto`, and
+`align-self:flex-start` so a flex item that would otherwise stretch to the row has
+something to stick within. The scrollbar is the shell's one thin bar, stated once in
+`shell.css`. Below 1160px the two columns cannot both stand, the rail stacks under the
+form and is a plain block again, and the form keeps its width: the rail is extra help,
+never a reason for the form to get narrower.
 
 | Card | When | What is on it |
 |---|---|---|
-| **The observation** | only where the filing carries a source record | its own words, quoted; an atlas plate of where it was recorded; its photographs at the rail's width; then the record itself — patrol, observer, time, place, source |
+| **The observation** | only where the filing carries a source record | its own words, quoted, then the record itself — patrol, observer, time, place, source |
 | **What `<word>` asks** | always | one row per answer the filing owes, a progress line, and the blocks the word left off named as absent |
 
 **The rail informs; it never gates.** The marks on the checklist are **the gate's**:
@@ -162,29 +166,22 @@ three: a progress line that left one out would disagree with the footer by one.
 (The design workspace's mock shows two, because its gate has no place requirement;
 this page's does, and the rail follows the page.)
 
-**Where the observation was recorded is the atlas's plate**, built by
-`IncidentMapService::forObservation()` — the same service that builds the
-dashboard's and the case file's, so "where" reads identically on the observation's
-own page, in this rail, and on the case file the filing becomes. One mark under its
-own legend heading and never a category's: nothing has been filed yet, and drawing
-it in a category's hue would claim a classification the filer has not made.
+**Words and facts, and nothing else.** The filer is describing something they may
+not have seen, and what helps them is the sentence the observer wrote and the five
+facts that place it. A map of the pin answers "where" with a picture that has to be
+interpreted, when the **Where** row answers it in the notation the observation's own
+page uses. The photographs belong to the record that holds them; a strip of them
+beside a form is a second gallery to keep in step, and the case file the filing
+becomes is where an incident's own evidence lives.
 
-**Two things the rail does not draw, and why.** The design's card shows a
-`filename · time · offset` caption under each photograph and an amendment-history
-row; the hand-off carries neither an offset from the pin nor a history, so the
-caption is `filename · time` and there is no history row. Both are waiting on the
-record-summary contract above.
+**The Source row is the way back to everything the card leaves out** — the record's
+position on a map, its photographs, its amendment history — on the page that owns
+them, where they are current. It links to the `back` url the hand-off carried, and a
+hand-off without one leaves the words.
 
-**A short plate should put its legend below the imagery, and the atlas does not yet
-do it.** The house map contract puts a legend below the plate; the atlas floats it
-over the bottom-right corner, which is right on a plate that is the page's subject
-and wrong on a 176px one, where it covers the ground it is describing. **This is
-not an incidents defect and must not be fixed with an incidents rule** — every
-module's thumbnail plate has it, and a module that restyled the plate's internals
-would be a module whose map read differently from every other one
-(`tests/Unit/Template/CaseFilePlateSizingTest` fails the build for exactly that).
-The fix is one rule in the atlas's own sheet, keyed off the plate's height or off a
-`legend: below` option on `render_map()`. **Open, and needs the core's ruling.**
+**The design's card also carries a History row**, and the hand-off carries no
+history, so the app draws none: another thing waiting on the record-summary contract
+above.
 
 ## The maps
 

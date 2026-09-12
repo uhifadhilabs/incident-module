@@ -21,16 +21,6 @@
    page — place — brand, so naming the area here would print it twice. #}
 {% block title %}Report an incident{% endblock %}
 
-{# THE FILE PREVIEW's vocabulary, and ONLY where the card actually has
-   photographs to open in it. A sheet linked on a page with nothing to open is a
-   request every reader pays for and nobody uses. #}
-{% block stylesheets %}
-    {{ parent() }}
-    {% if sourceFiles is not empty %}
-        <link rel="stylesheet" href="{{ asset('bundles/uhifadhistorage/preview.css') }}">
-    {% endif %}
-{% endblock %}
-
 {% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / report{% endblock %}
 
 {# THE FLOW BRINGS ITS OWN HEADING — the page's plate carries its own title, so
@@ -46,8 +36,6 @@
         errors: errors,
         createUrl: createUrl,
         cancelUrl: cancelUrl,
-        sourceFiles: sourceFiles,
-        sourceMap: sourceMap,
         blockSets: blockSets,
         checklists: checklists,
         areaLists: areaLists,

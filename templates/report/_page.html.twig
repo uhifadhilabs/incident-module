@@ -13,13 +13,17 @@
 
    A RAIL BESIDE THE FORM. The form is 860px and the screen is not, so the column
    beside it carries the two things the form cannot say for itself: the source
-   observation in full, where there is one, and what the chosen kind asks. One page
-   scroller, and below 1160px the rail stacks under the form
+   observation, where there is one, and what the chosen kind asks. The rail stands
+   still while the form scrolls past it, and below 1160px it stacks under the form
    (@UhifadhiIncident/report/_rail.html.twig).
 
+   ONE WAY OUT, AND IT IS IN THE FILE BAR. The head carries no way back: a filer
+   reads it before they have written anything, and an exit offered there is offered
+   where the decision is not being made. Cancel sits beside File, where somebody
+   decides whether to go through with the filing, and it says where it goes.
+
    Parameters: controller, area, kinds, prefill, chosen, csrfToken, errors,
-               createUrl, cancelUrl, sourceFiles, sourceMap, blockSets, areaLists,
-               checklists
+               createUrl, cancelUrl, blockSets, areaLists, checklists
    ========================================================================== #}
 {# NO CRUMB HERE. The trail is the shell frame's socket and the page fills it
    once (see @UhifadhiIncident/base.html.twig); a container typing its own would
@@ -32,18 +36,15 @@
             was, who was involved, what it cost and anything that shows it can be added here or on the record
             afterwards, where the timeline keeps who added what and when.</p>
     </div>
-    <div class="pgact">
-        <a class="tgl w-act" href="{{ cancelUrl }}">{{ ux_icon('shell:chevron-left') }} Back to incidents</a>
-    </div>
 </div>
 
-{# TWO COLUMNS, ONE CONTROLLER, ONE SCROLLER. The rail's checklist carries the
-   gate's own marks, so the gate has to be able to reach it: the controller wraps
-   the form AND the rail, and neither column is a scroll region of its own. #}
+{# TWO COLUMNS, ONE CONTROLLER. The rail's checklist carries the gate's own marks,
+   so the gate has to be able to reach it: the controller wraps the form AND the
+   rail. #}
 <div class="i-rwrap" {{ stimulus_controller(controller) }}>
     <div class="ro-col">
         {% if prefill.hasProvenance %}
-            {{ include('@UhifadhiIncident/report/_source.html.twig', {prefill: prefill, files: sourceFiles}, with_context: false) }}
+            {{ include('@UhifadhiIncident/report/_source.html.twig', {prefill: prefill}, with_context: false) }}
         {% endif %}
 
         {# input and change both bubble, so ONE action on the form re-reads the gate
@@ -79,7 +80,5 @@
         chosen: chosen,
         prefill: prefill,
         checklists: checklists,
-        sourceFiles: sourceFiles,
-        sourceMap: sourceMap,
     }, with_context: false) }}
 </div>

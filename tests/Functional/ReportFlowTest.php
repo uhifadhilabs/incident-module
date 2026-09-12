@@ -134,22 +134,52 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertCount(16, $crawler->filter('[data-uhifadhi--incident-module--incident-report-target="fieldset"]'));
     }
 
-    /** An honest back link, not a dismissal: it says where it goes. */
-    public function testTheFullPageOffersAWayBackToTheRegister(): void
+    /**
+     * ONE WAY OUT, AND IT IS BESIDE THE CONTROL IT UNDOES.
+     *
+     * The page head carries no way back. A filer reads the head before they have
+     * written anything and the footer after, and a leave-this-page link at the top
+     * of a form somebody is filling in is an exit offered where the decision is not
+     * being made. Cancel sits in the file bar, beside File, and says where it goes.
+     *
+     * THE MODULE'S ONE `Configure` ACTION STAYS, because it is the shell's action
+     * row and it is on every page of the module.
+     */
+    public function testThePageHeadCarriesNoBackLinkAndCancelIsTheOneWayOut(): void
     {
         $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
 
-        // Not `first()`: the SHELL draws the module's one `Configure` action at
-        // the head of every page in the module, so the flow's own way back is
-        // found by where it goes rather than by where it sits.
-        self::assertCount(1, $crawler->filter('.pghead .pgact a')->reduce(
-            fn ($node): bool => $this->createUrl($this->uuidOf($area)) === $node->attr('href'),
+        self::assertSame(
+            ['Configure'],
+            $crawler->filter('.pghead .pgact a')->each(static fn (Crawler $a): string => trim($a->text())),
+        );
+        self::assertCount(0, $crawler->filter('.pghead')->reduce(
+            fn (Crawler $head): bool => 0 < $head->filter(\sprintf('a[href="%s"]', $this->createUrl($this->uuidOf($area))))->count(),
         ));
+        // A walk-in filing came from the register, so Cancel goes back to it.
         self::assertSame(
             $this->createUrl($this->uuidOf($area)),
+            $crawler->filter('.ro-filebar a.tgl')->attr('href'),
+        );
+    }
+
+    /** And a filing that came from a record goes back to the record. */
+    public function testCancelReturnsToTheSourceRecordWhenTheFilingCameFromOne(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
+
+        self::assertSame(
+            ['Configure'],
+            $crawler->filter('.pghead .pgact a')->each(static fn (Crawler $a): string => trim($a->text())),
+        );
+        self::assertSame(
+            '/areas/x/modules/patrols/observation/2',
             $crawler->filter('.ro-filebar a.tgl')->attr('href'),
         );
     }
@@ -671,14 +701,12 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * THE SOURCE RECORD, IN THE RAIL, AT A SIZE THAT CAN BE READ.
+     * THE SOURCE RECORD, IN THE RAIL, IN THE WORDS AND FACTS OF THE RECORD.
      *
      * "How is the filing user going to remember the context of what happened?" By
-     * looking at it — and a 76px thumbnail strip and a one-line position under a
-     * heading are not looking at it. The rail beside the form carries the
-     * observation's own words, a plate of where it was recorded, its photographs
-     * at the rail's width, and the record itself: which patrol, whose eyes, when,
-     * where. Nothing on it is editable: provenance is written once, at filing.
+     * reading it — the observation's own sentence, quoted, and the record itself:
+     * which patrol, whose eyes, when, where, and what kind of record it was.
+     * Nothing on it is editable: provenance is written once, at filing.
      */
     public function testTheRailShowsTheSourceObservationInFull(): void
     {
@@ -704,15 +732,23 @@ final class ReportFlowTest extends FunctionalTestCase
             ->filter('.i-rail [data-incident-observation]');
 
         self::assertCount(1, $card);
-        self::assertStringContainsString('OBS-02 · lion tracks', $card->filter('.tab')->text());
+        // THE TAB NAMES THE RECORD AND NOTHING ELSE: a 340px rail clips a longer
+        // one, and "not editable" is about the rows, so it rides on their label.
+        self::assertSame('The observation· OBS-02 · lion tracks', trim($card->filter('.tab')->text()));
+        self::assertSame('· OBS-02 · lion tracks', trim($card->filter('.tab .src')->text()));
+        self::assertSame(
+            'The record itself · not editable',
+            trim($card->filter('.rr-sub')->first()->text()),
+        );
         // The observation's own words, quoted and not editable.
         self::assertStringContainsString('Fresh lion tracks 400 m from the bomas.', $card->filter('.rr-quote')->text());
         self::assertCount(0, $card->filter('textarea, input, select'));
-        // WHERE IT WAS RECORDED, as an atlas plate — zoom chrome and all — with
-        // its legend, and sized for a rail rather than for a page.
-        self::assertCount(1, $card->filter('.map-plate'));
-        self::assertStringContainsString('--map-plate-height', (string) $card->filter('.map-plate')->attr('style'));
-        self::assertCount(1, $card->filter('.map-plate .map-legend'));
+        // NO PLATE. A 176px map beside a form answers "where" with a picture a
+        // reader has to interpret, while the Where row below answers it in the
+        // notation the observation page itself uses — and the plate cost the page
+        // the atlas's whole map machinery to say the same thing less exactly.
+        self::assertCount(0, $card->filter('.map-plate'));
+        self::assertStringNotContainsString('--map-plate-height', $card->html());
         // The record itself: patrol, ranger, when, where.
         $rows = $card->filter('.rln')->each(static fn (Crawler $row): string => $row->text());
         self::assertStringContainsString('P-0142 · foot patrol', implode(' | ', $rows));
@@ -723,6 +759,13 @@ final class ReportFlowTest extends FunctionalTestCase
         self::assertStringContainsString('08:15', implode(' | ', $rows));
         // The position, in the observation page's own notation.
         self::assertStringContainsString('3°12\'05"S 29°32\'16"W', implode(' | ', $rows));
+        // AND THE SOURCE ROW IS THE WAY BACK TO WHAT THE CARD LEAVES OUT: the
+        // record's own map, its photographs, its history, all current on the page
+        // that owns them.
+        $source = $card->filter('.rln')->last();
+        self::assertStringContainsString('Source', $source->text());
+        self::assertSame('/areas/x/modules/patrols/observation/2', $source->filter('a')->attr('href'));
+        self::assertStringContainsString('its position and its photographs are on it', $source->text());
     }
 
     /**
@@ -798,12 +841,14 @@ final class ReportFlowTest extends FunctionalTestCase
 
         self::assertCount(1, $asks);
         self::assertNull($asks->attr('hidden'));
-        // The card names the word it is about, and prices it.
-        self::assertStringContainsString('What livestock depredation asks', $asks->filter('.tab')->text());
-        self::assertStringContainsString('· 4 blocks · 11 questions', $asks->filter('.tab .src')->text());
-        self::assertStringContainsString(
-            'the sub-category switches these on — change it and this list changes with it',
-            $asks->filter('.rr-scope')->text(),
+        // THE TAB CARRIES THE TITLE ALONE. A 340px rail clips a tab that also
+        // prices the word, so the price moves to the scope line under the progress
+        // bar, where it is read with the list it describes.
+        self::assertSame('What livestock depredation asks', trim($asks->filter('.tab')->text()));
+        self::assertCount(0, $asks->filter('.tab .src'));
+        self::assertSame(
+            '4 blocks · 11 questions — the sub-category switches these on, and this list changes with it',
+            trim($asks->filter('.rr-scope')->text()),
         );
 
         // SEVEN ROWS: the three answers every incident owes, then the four blocks
@@ -913,86 +958,30 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * THE SOURCE CARD SHOWS THE RECORD'S PHOTOGRAPHS — through the cross-module
-     * hand-off, and without this bundle knowing what an observation is.
+     * THE RAIL DRAWS NO PHOTOGRAPHS, EVEN WHERE THE RECORD HAS THEM.
      *
-     * It has a record uuid and a source token from a query string, and it hands
-     * both straight to the platform's file registry, which asks the module that
-     * OWNS the record. Here that module is a fixture, which is the point: nothing
-     * in the report flow names it.
+     * The filer is writing a report, not reviewing a gallery, and the pictures
+     * belong to the record that holds them and to the case file this filing
+     * becomes. So the rail asks the platform's file registry nothing, opens no
+     * preview overlay, and does not pay for the overlay's stylesheet on a page
+     * with nothing to open in it.
      */
-    public function testTheSourceCardShowsTheRecordsPhotographs(): void
+    public function testTheRailDrawsNoPhotographsOfTheSourceRecord(): void
     {
         $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
+        // The record the fixture module really does hold photographs for.
         $crawler = $this->client->request('GET', $this->fromAStubbedRecordUrl($this->uuidOf($area)));
 
         self::assertResponseIsSuccessful();
-        // A BUTTON, not a link: the shared preview reads a click inside an <a>
-        // as navigation and stands aside, so a thumbnail wrapped in one would
-        // leave the flow for a raw image file.
-        $shots = $crawler->filter('[data-incident-observation] .rr-shots button[type="button"]');
-        self::assertCount(2, $shots);
-        self::assertCount(0, $crawler->filter('[data-incident-observation] .rr-shots a'));
-
-        // Each one is drawn from the storage route by its THUMBNAIL key — the
-        // small picture, never the original, on a card.
-        self::assertStringContainsString(
-            'fieldwork/rec-1/first.jpg.thumb.jpg',
-            (string) $crawler->filter('[data-incident-observation] .rr-shots img')->first()->attr('src'),
-        );
-        self::assertCount(2, $crawler->filter('[data-incident-observation] .rr-shots img'));
-        // …and the strip says so in the card's own words.
-        self::assertStringContainsString('2 photographs', $crawler->filter('.i-src .i-srcnote')->text());
-    }
-
-    /**
-     * THEY OPEN IN THE SHARED PREVIEW — the one component every surface opens a
-     * file in, so a photograph looks the same and says the same things whether it
-     * is opened from the Files hub, from its own record, or from here. This module
-     * draws none of that overlay: it includes the component and puts the
-     * component's own data contract on each thumbnail.
-     */
-    public function testThePhotographsOpenInTheSharedPreviewComponent(): void
-    {
-        $area = $this->anAreaWithKinds();
-        $this->client->loginUser($this->aReporter());
-
-        $crawler = $this->client->request('GET', $this->fromAStubbedRecordUrl($this->uuidOf($area)));
-
-        $first = $crawler->filter('[data-incident-observation] .rr-shots button')->first();
-        // The trigger contract, filled from the FileEntry the owning module gave.
-        self::assertNotNull($first->attr('data-f-preview'));
-        self::assertSame('first.jpg', $first->attr('data-f-name'));
-        self::assertSame('REC-0001', $first->attr('data-f-rec'));
-        self::assertSame('Fieldwork', $first->attr('data-f-modlabel'));
-        self::assertStringContainsString('fieldwork/rec-1/first.jpg', (string) $first->attr('data-f-original'));
-
-        // The overlay itself, included once — this module ships no copy of it.
-        self::assertGreaterThan(0, $crawler->filter('[data-controller*="preview"]')->count());
-        // …and its stylesheet, loaded only where there is something to open.
-        self::assertStringContainsString('uhifadhistorage/preview', $crawler->html());
-    }
-
-    /**
-     * NO PHOTOGRAPHS IS A FACT, NOT A FAILURE. A record nobody photographed, a
-     * token naming a module this deployment does not have — both draw a source
-     * card with no strip, and neither costs anybody a report.
-     */
-    public function testACardWithNoPhotographsSimplyHasNoStrip(): void
-    {
-        $area = $this->anAreaWithKinds();
-        $this->client->loginUser($this->aReporter());
-
-        // Same shape, a record the owning module has never heard of.
-        $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
-
-        self::assertResponseIsSuccessful();
-        self::assertCount(1, $crawler->filter('.i-src'));
-        self::assertCount(0, $crawler->filter('[data-incident-observation] .rr-shots'));
-        self::assertStringNotContainsString('photograph', $crawler->filter('.i-src .i-srcnote')->text());
-        // Nothing to open, so the overlay's stylesheet is not asked for either.
+        $card = $crawler->filter('[data-incident-observation]');
+        self::assertCount(1, $card);
+        self::assertCount(0, $card->filter('.rr-shots'));
+        self::assertCount(0, $card->filter('img'));
+        self::assertCount(0, $card->filter('button'));
+        // Nothing to open, so neither the shared overlay nor its sheet is asked for.
+        self::assertCount(0, $crawler->filter('[data-controller*="preview"]'));
         self::assertStringNotContainsString('uhifadhistorage/preview', $crawler->html());
     }
 

@@ -1,30 +1,19 @@
 {# THE PROVENANCE STRIP — one line, at the head of the page.
 
-   It was the whole source card once: the record's own words, its position in the
-   observation page's notation, its time and a strip of 76px thumbnails. Its job
-   was never to be READ — 76px is enough to prove a photograph exists and not
-   enough to see what is in one — and now that the RAIL carries the same record
-   legibly ({@see @UhifadhiIncident/report/_observation.html.twig}), a second copy
-   of the words, the position and the thumbnails above the form is duplication on
-   the one page a filer is trying to get through.
+   A STRIP IS FOR TWO THINGS: it says which record this filing came from, and it
+   links back to it. The record's own words, its position and its time are READ in
+   the rail ({@see @UhifadhiIncident/report/_observation.html.twig}), and a second
+   copy of them above the form would be duplication on the one page a filer is
+   trying to get through. Nothing on it is editable — provenance is written once,
+   at filing, and never again.
 
-   So what is left is the two things a strip is for: it says which record this
-   filing came from, and it links back to it. Nothing on it is editable —
-   provenance is written once, at filing, and never again.
-
-   Parameters: prefill, files
+   Parameters: prefill
    ========================================================================== #}
 <section class="i-src" data-incident-source-card>
     <div class="hd">{{ ux_icon('incident:git-branch') }}<b>Filed from {{ prefill.label }}</b>
         {% if prefill.backUrl %}<a class="go" href="{{ prefill.backUrl }}">Open the source →</a>{% endif %}</div>
 
-    <p class="i-srcnote">
-        {%- if files is not empty -%}
-            its words, its position, its time and its {{ files|length }} photograph{{ 1 == files|length ? '' : 's' }}
-            are in the rail, at a size that can be read
-        {%- else -%}
-            its words, its position and its time are in the rail, at a size that can be read
-        {%- endif -%}
-        · its category guess, coordinates, time and note are already in the form below · the link is kept forever
-    </p>
+    <p class="i-srcnote">its words, its position and its time are in the rail, at a size that can be
+        read · its category guess, coordinates, time and note are already in the form below · the link is kept
+        forever</p>
 </section>

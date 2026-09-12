@@ -2,12 +2,20 @@
    THE SOURCE RECORD, BESIDE THE FORM — the rail's first card.
 
    The thin strip at the top of the page proves the observation exists; it cannot
-   be READ. Here the same record is legible: its own words, where it was recorded,
-   its photographs at a size that shows what is in them, and the record itself —
+   be READ. Here the same record is legible: its own words, and the record itself —
    which patrol, whose eyes, when, where.
+
+   WORDS AND FACTS, AND NOTHING ELSE. The filer is describing something they may
+   not have seen, and what helps them is the sentence the observer wrote and the
+   four facts that place it. A map of the pin answers "where" with a picture that
+   has to be interpreted, when the Where row answers it in the notation the
+   observation's own page uses; the photographs belong to the record that holds
+   them and to the case file this filing becomes.
 
    NOTHING ON IT IS EDITABLE. Provenance is written once, at filing, and never
    again; there is not a control on this card and the seam test holds it to that.
+   The tab names the record and stops — at 340px a longer one is clipped — and
+   "not editable" rides on the label of the rows it is about.
 
    IT RENDERS ONLY WHERE THE FILING CAME FROM A RECORD. A walk-in filing has
    nothing to show, and the rail is the checklist alone.
@@ -16,70 +24,17 @@
    composes: a module with no patrol, no named observer or no coordinates sends
    what it has, and a row nobody was told about is absent rather than empty.
 
-   Parameters: prefill, files, map
+   Parameters: prefill
    ========================================================================== #}
 <div class="c" data-incident-observation>
-    <span class="tab">The observation<span class="src">· {{ prefill.label }} · not editable</span></span>
+    <span class="tab">The observation<span class="src">· {{ prefill.label }}</span></span>
 
     {# THE OBSERVATION'S OWN WORDS, quoted — so it reads as somebody else's
        sentence rather than as this form's prefilled answer, which is the field
        below it and is editable. #}
     {% if prefill.note %}<p class="rr-quote">“{{ prefill.note }}”</p>{% endif %}
 
-    {# WHERE IT WAS RECORDED. The atlas's plate — the deployment's imagery, the
-       one boundary treatment, the control stack top-right and fullscreen — told
-       its height and nothing else, because here it answers one question rather
-       than being the page's subject.
-
-       The height is a custom property on the PLATE, which is what the atlas
-       documents: handed to render_map() it sizes the plate, and set on the canvas
-       inside it would size nothing. It is the ONE thing a module may say about a
-       plate — the imagery, the control stack, the frame, fullscreen and where the
-       legend goes are the atlas's, so that a map reads the same on every screen in
-       the product.
-
-       THE LEGEND IS THE ONE UNFINISHED PIECE, and it is not this module's to fix:
-       the atlas floats it over the imagery, which is right on a plate that is the
-       page's subject and wrong on a 176px one. See docs/design-decisions.md. #}
-    {% if map %}
-        <span class="rr-sub">Where it was recorded</span>
-        {{ render_map(map, {
-            '--map-plate-height': '176px',
-            'role': 'img',
-            'aria-label': 'Where ' ~ prefill.label ~ ' was recorded',
-        }) }}
-    {% endif %}
-
-    {# THE PHOTOGRAPHS, AT THE RAIL'S WIDTH. The strip above the form draws them
-       76px wide, which is enough to prove a photograph exists and not enough to
-       read one. They arrive through the platform's file registry, which asks the
-       module that OWNS the record — this bundle knows a token and a uuid and
-       nothing else — and they open in the shared preview, the one component every
-       surface opens a file in.
-
-       A BUTTON, NOT A LINK: the preview component reads a click inside an <a> as
-       navigation and stands aside, so a thumbnail wrapped in one would leave the
-       flow for a raw image file. `type=button` is stated even though the rail sits
-       outside the form: a button's default is submit, and a control that would
-       submit something is not a control anybody should have to reason about. #}
-    {% if files is not empty %}
-        {% import '@UhifadhiStorage/overlay/_preview.html.twig' as preview %}
-        <span class="rr-sub">Its {{ files|length }} photograph{{ 1 == files|length ? '' : 's' }}</span>
-        <div class="rr-shots">
-            {% for file in files %}
-                <button type="button" class="rr-shot"
-                        title="{{ file.name }}{% if file.takenAt %} · {{ file.takenAt|date('H:i') }}{% endif %}"
-                        {{ preview.entry(file, '') }}>
-                    <img src="{{ path('storage_evidence_show', {key: file.thumbKey ?? file.key}) }}"
-                         alt="{{ file.name }}, from {{ prefill.label }}" loading="lazy">
-                    <i>{{ file.name }}{% if file.takenAt %} · {{ file.takenAt|date('H:i', false) }}{% endif %}</i>
-                </button>
-            {% endfor %}
-        </div>
-        {{ include('@UhifadhiStorage/overlay/_preview.html.twig') }}
-    {% endif %}
-
-    <span class="rr-sub">The record itself</span>
+    <span class="rr-sub">The record itself · not editable</span>
     {% if prefill.patrol %}<div class="rln"><span>Patrol</span><span class="mono">{{ prefill.patrol }}</span></div>{% endif %}
     {% if prefill.ranger %}<div class="rln"><span>Recorded by</span><span class="mono">{{ prefill.ranger }}</span></div>{% endif %}
     {# `false` KEEPS THE MOMENT'S OWN ZONE. The observation was made at 08:15 where
@@ -91,8 +46,16 @@
     {% if prefill.positionLabel %}
         <div class="rln"><span>Where</span><span class="mono">{{ prefill.positionLabel }}</span></div>
     {% endif %}
-    <div class="rln"><span>Source</span><span class="mono">{{ prefill.sourceLabel }}</span></div>
+    {# THE SOURCE ROW IS THE WAY BACK TO EVERYTHING THIS CARD LEAVES OUT — the
+       record's own position on a map, its photographs, its history. They are one
+       click away on the page that owns them, which is where they are current;
+       copied here they would be a second gallery to keep in step. The link is the
+       one the hand-off carried, and a hand-off without one leaves the words. #}
+    <div class="rln"><span>Source</span><span class="mono">
+        {%- if prefill.backUrl %}<a href="{{ prefill.backUrl }}">{{ prefill.sourceLabel }}</a>{% else %}{{ prefill.sourceLabel }}{% endif %}
+        · its position and its photographs are on it</span></div>
 
     <div class="use">The filer is describing something they may not have seen. Everything the person who did see it
-        wrote down is one glance to the right, at a size that can be read, for as long as the form is open.</div>
+        wrote down is one glance to the right, for as long as the form is open, and the observation itself is one
+        click further.</div>
 </div>

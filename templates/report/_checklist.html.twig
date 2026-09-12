@@ -9,6 +9,10 @@
    not greyed" is a promise about a form and a reader cannot check a promise about
    things they cannot see.
 
+   THE TAB CARRIES THE TITLE ALONE. A 340px rail clips a tab that also prices the
+   word, so what the word costs — how many blocks, how many questions — is read on
+   the scope line under the progress bar, beside the list it is describing.
+
    IT INFORMS, IT NEVER GATES. The marks are THE GATE'S: every row names the
    missing answer the gate names, on one attribute, and the controller marks the
    rows from the list it just handed the footer. A second reading of the form here
@@ -60,7 +64,7 @@
 
             <div class="c" data-incident-asks="{{ subcategory.code }}"
                  {{ stimulus_target(controller, 'asks') }}{{ isChosen ? '' : ' hidden' }}>
-                <span class="tab">What {{ subcategory.label }} asks<span class="src">· {{ checklist.blocksAndQuestions }}</span></span>
+                <span class="tab">What {{ subcategory.label }} asks</span>
 
                 {# THE GATE, MIRRORED. The footer already names what is missing; here
                    the same count is a progress line, because a rail is read before a
@@ -69,7 +73,8 @@
                     <span class="bar{{ 0 == stillNeeded ? ' ok' : '' }}"><i style="width:{{ 0 == total ? 0 : ((total - stillNeeded) / total * 100)|round }}%"></i></span>
                     <b>{{ stillNeeded }} of {{ total }} still needed</b>
                 </div>
-                <p class="rr-scope">the sub-category switches these on — change it and this list changes with it</p>
+                <p class="rr-scope">{{ checklist.blocksAndQuestions }} — the sub-category switches these on, and this list
+                   changes with it</p>
 
                 {{ _self.row(
                     'choose a category', isChosen, ordinals, 'Category', 'step 1', null,
@@ -110,7 +115,7 @@
 {# NOTHING CHOSEN YET, and the rail says so rather than standing empty. Hidden the
    moment a word is picked, because the card that names the word takes over. #}
 <div class="c" data-incident-asks-empty-card {{ stimulus_target(controller, 'asksEmpty') }}{{ chosen ? ' hidden' : '' }}>
-    <span class="tab">What this kind asks<span class="src">· pick a kind above</span></span>
+    <span class="tab">What this kind asks</span>
     <p class="rr-none" data-incident-asks-empty>Choose a kind of incident above and this card lists what it asks: the
         blocks that word switches on, each one's <b>defining question</b>, and how many answers are still needed to
         file. The blocks it does not switch on are absent from the form, never greyed out inside it.</p>

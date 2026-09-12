@@ -5,8 +5,8 @@
    column of nothing beside a form somebody was filling in. What belongs there is
    the two things the form cannot say for itself:
 
-     THE OBSERVATION, IN FULL — only where the filing came from a record. The strip
-     at the top of the page proves it exists; this makes it legible.
+     THE OBSERVATION — only where the filing came from a record. The strip at the
+     top of the page proves it exists; this says what it said and who recorded it.
 
      WHAT THIS KIND ASKS — always. Every block the chosen sub-category switched on,
      with the gate's own marks against them.
@@ -15,21 +15,19 @@
    there is: somebody walked into an office, there is no record behind it, and the
    rail is still the place that says what is left to answer.
 
-   ONE SCROLLER. The rail is not a scroll region of its own — the page is the
-   scroller, so there is one scrollbar to find and nothing in the rail can be
-   stranded beside a form that has grown long. Below 1160px the two columns cannot
-   both stand and the rail stacks under the form, which keeps its width: the rail is
-   extra help, never a reason for the form to get narrower (see incidents.css).
+   THE RAIL STANDS STILL AND THE FORM SCROLLS PAST IT. What is in the rail is read
+   AGAINST the questions, and a reader who has to scroll away from a question to
+   see what it asks for has lost the thing the rail is for. So the rail is fixed
+   under the shell's top bar and scrolls inside itself. Below 1160px the two
+   columns cannot both stand: the rail stacks under the form and is a plain block
+   again, and the form keeps its width — the rail is extra help, never a reason for
+   the form to get narrower (see incidents.css).
 
-   Parameters: controller, kinds, chosen, prefill, checklists, sourceFiles, sourceMap
+   Parameters: controller, kinds, chosen, prefill, checklists
    ========================================================================== #}
 <aside class="i-rail">
     {% if prefill.hasProvenance %}
-        {{ include('@UhifadhiIncident/report/_observation.html.twig', {
-            prefill: prefill,
-            files: sourceFiles,
-            map: sourceMap,
-        }, with_context: false) }}
+        {{ include('@UhifadhiIncident/report/_observation.html.twig', {prefill: prefill}, with_context: false) }}
     {% endif %}
 
     {{ include('@UhifadhiIncident/report/_checklist.html.twig', {
