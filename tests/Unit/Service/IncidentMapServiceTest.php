@@ -310,6 +310,78 @@ final class IncidentMapServiceTest extends TestCase
     }
 
     /**
+     * WHERE THE OBSERVATION BEING FILED ABOUT WAS RECORDED — one point, on the
+     * same ground every other incidents plate is drawn on.
+     *
+     * It is one mark and it means one thing, so it is its own layer under its own
+     * legend heading rather than borrowed from a category: nothing has been filed
+     * yet, and drawing the observation in a category's hue would claim a
+     * classification the filer has not made.
+     */
+    public function testTheObservationPlateDrawsOneMarkForWhereItWasRecorded(): void
+    {
+        $map = IncidentMapService::composeObservation(
+            new MapBuilder(),
+            self::BOUNDARY,
+            -3.2014,
+            -29.5378,
+            [['name' => 'The northern block', 'geom' => self::ZONE]],
+        )->toArray();
+
+        self::assertSame(['geojson' => json_decode(self::BOUNDARY, true), 'scrim' => true], $map['boundary']);
+
+        $layers = $map['layers'];
+        self::assertSame(
+            [IncidentMapService::ZONES_LAYER, IncidentMapService::OBSERVATION_LAYER],
+            array_column($layers, 'id'),
+        );
+
+        $mark = $layers[1];
+        self::assertSame(IncidentMapService::OBSERVATION_SWATCH, $mark['swatch']);
+        self::assertSame('point', $mark['shape']);
+        self::assertSame(
+            [['type' => 'Feature', 'properties' => [], 'geometry' => ['type' => 'Point', 'coordinates' => [-29.5378, -3.2014]]]],
+            self::featuresOf($mark),
+        );
+    }
+
+    /**
+     * AND IT SHIPS ITS LEGEND — under its own heading, because the mark is the
+     * observation and not a category.
+     */
+    public function testTheObservationMarkShipsItsOwnLegendRowUnderItsOwnHeading(): void
+    {
+        $legend = IncidentMapService::composeObservation(
+            new MapBuilder(),
+            self::BOUNDARY,
+            -3.2014,
+            -29.5378,
+            [['name' => 'The northern block', 'geom' => self::ZONE]],
+        )->legend();
+
+        self::assertSame(['Zones', IncidentMapService::OBSERVATION_LABEL], array_map(static fn (LegendItem $i) => $i->label, $legend));
+        self::assertSame([1, 1], array_map(static fn (LegendItem $i) => $i->count, $legend));
+        self::assertSame(IncidentMapService::OBSERVATION_GROUP, $legend[1]->group);
+        self::assertSame(IncidentMapService::OBSERVATION_SWATCH, $legend[1]->swatch);
+    }
+
+    /** And the zones are still the context they are on every other plate. */
+    public function testTheObservationPlateKeepsTheAreasZonesAsContext(): void
+    {
+        $layers = IncidentMapService::composeObservation(
+            new MapBuilder(),
+            self::BOUNDARY,
+            -3.2014,
+            -29.5378,
+            [['name' => 'The northern block', 'geom' => self::ZONE]],
+        )->toArray()['layers'];
+
+        self::assertSame(IncidentMapService::ZONE_SWATCH, $layers[0]['swatch']);
+        self::assertSame('line', $layers[0]['shape']);
+        self::assertCount(1, self::featuresOf($layers[0]));
+    }
+
+    /**
      * @param list<array{slug: string, label: string, colourKey: string}>|null $categories
      * @param list<array{name: string, geom: string|null}>|null                $zones
      */

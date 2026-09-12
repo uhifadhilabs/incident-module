@@ -94,6 +94,25 @@ final readonly class IncidentMapService
     public const float SERIOUS_WEIGHT = 2.4;
     public const string SERIOUS_DASH = '3 3';
 
+    /**
+     * WHERE THE OBSERVATION A FILING CAME FROM WAS RECORDED — the rail's plate.
+     *
+     * Its own layer under its own heading, never a category's: nothing has been
+     * filed yet, and drawing the mark in a category's hue would claim a
+     * classification the filer has not made. The heading is what the legend group
+     * prints.
+     */
+    public const string OBSERVATION_LAYER = 'incident.observation';
+    public const string OBSERVATION_GROUP = 'This observation';
+    public const string OBSERVATION_LABEL = 'Where it was recorded';
+
+    /**
+     * The mark's colour. A number and not `var(--warn)` for the reason
+     * {@see ZONE_SWATCH} is one: a layer's colour is DATA the atlas is handed, and
+     * it is drawn over imagery that is dark in both themes.
+     */
+    public const string OBSERVATION_SWATCH = '#DBA33F';
+
     /** The property a hover reads: which case, what kind, where it stands. */
     public const string HOVER_PROPERTY = 'summary';
 
@@ -233,6 +252,99 @@ final readonly class IncidentMapService
                 featureId: 'reference',
             ));
         }
+
+        return $map;
+    }
+
+    /**
+     * WHERE THE OBSERVATION A FILING CAME FROM WAS RECORDED — the plate in the
+     * report form's rail.
+     *
+     * One mark, on the same ground and in the same chrome every other incidents
+     * plate is drawn on, so "where" reads identically on the observation's own
+     * page, in this rail, and on the case file the filing becomes. The area's
+     * zones are underneath as context, exactly as they are everywhere else.
+     *
+     * The mark is its own layer under its own legend heading and never a
+     * category's: nothing has been filed yet, and drawing it in a category's hue
+     * would claim a classification the filer has not made.
+     */
+    public function forObservation(AreaOfInterest $area, float $latitude, float $longitude): AtlasMap
+    {
+        return self::composeObservation(
+            $this->maps,
+            $area->hasBoundary() ? $area->getGeom() : null,
+            $latitude,
+            $longitude,
+            array_map(static fn (Zone $zone): array => [
+                'name' => $zone->getName() ?? '',
+                'geom' => $zone->getGeom(),
+            ], $this->zones->zonesFor($area)),
+        );
+    }
+
+    /**
+     * The rail's plate, from plain data — static and entity-free for the same
+     * reason {@see compose()} is: the shape of a plate is pinned without a
+     * database behind it.
+     *
+     * @param string|null                                  $boundary the area's geom as GeoJSON text
+     * @param list<array{name: string, geom: string|null}> $zones
+     */
+    public static function composeObservation(
+        MapBuilderInterface $maps,
+        ?string $boundary,
+        float $latitude,
+        float $longitude,
+        array $zones,
+    ): AtlasMap {
+        $map = $maps->createMap();
+
+        $geometry = self::decode($boundary);
+        if (null !== $geometry) {
+            $map->boundary(new Boundary($geometry));
+        }
+
+        $drawnZones = [];
+        foreach ($zones as $zone) {
+            $shape = self::decode($zone['geom']);
+            if (null !== $shape) {
+                $drawnZones[] = self::feature($shape, ['label' => $zone['name']]);
+            }
+        }
+
+        // UNDER THE MARK, so it is added first: the plate draws layers in the
+        // order they are stated.
+        $map->addLayer(new GeoJsonLayer(
+            id: self::ZONES_LAYER,
+            label: 'Zones',
+            features: self::collection($drawnZones),
+            swatch: self::ZONE_SWATCH,
+            shape: LayerShape::Line,
+            visible: [] !== $drawnZones,
+            count: \count($drawnZones),
+            group: self::GROUP,
+        ));
+
+        $map->addLayer(new GeoJsonLayer(
+            id: self::OBSERVATION_LAYER,
+            label: self::OBSERVATION_LABEL,
+            features: self::collection([
+                self::feature(['type' => 'Point', 'coordinates' => [$longitude, $latitude]], []),
+            ]),
+            swatch: self::OBSERVATION_SWATCH,
+            shape: LayerShape::Point,
+            count: 1,
+            group: self::OBSERVATION_GROUP,
+            // A DASHED RING AROUND A SMALL CENTRE, which is how the design draws a
+            // place somebody recorded rather than a case somebody filed.
+            style: new LayerStyle(
+                weight: self::SERIOUS_WEIGHT,
+                fillOpacity: self::OPEN_FILL,
+                radius: self::MARK_RADIUS,
+                dashArray: self::SERIOUS_DASH,
+            ),
+        ));
 
         return $map;
     }

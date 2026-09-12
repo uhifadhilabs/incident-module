@@ -7,6 +7,7 @@
 - [Parking closes every one of them](#parking-closes-every-one-of-them)
 - [The five directions are presets, not pages](#the-five-directions-are-presets-not-pages)
 - [Filing from another module](#filing-from-another-module)
+- [The rail beside the report form](#the-rail-beside-the-report-form)
 - [The maps](#the-maps)
 
 ## The routes
@@ -103,10 +104,87 @@ knows, without either bundle naming the other's classes or routes:
     &back=<url of that observation's page>
     &at=2026-08-22T08:15:00+03:00&lat=-3.2014&lng=-29.5378
     &category=<sub-category slug it guesses>&note=<the field note, verbatim>
+    &patrol=P-0142 · foot patrol · North Block&ranger=<who recorded it>
 ```
 
 Everything there is a guess the filer may overrule — except `record` and `label`,
 which become the incident's provenance and are never editable again.
+
+`patrol` and `ranger` are **prose the sending module composes**, not identifiers to
+resolve, and they exist for the rail: the record's own card states which patrol and
+whose eyes, and neither bundle may name the other's classes to find that out. A
+module that has neither — or one that predates the two parameters — sends neither,
+and the rail draws no row for what it was not told.
+
+**A richer record-summary contract is the obvious next step, and is not this
+module's to invent.** Today the rail knows a record through three separate
+channels: a query string (the label, the words, the position, the patrol, the
+observer), the platform's file registry (the photographs), and nothing at all (the
+record's amendment history, which the design's card shows and this one cannot).
+A contract that let an asking module say *"describe record X"* and get back a
+titled list of facts would replace the first and the third at once. It belongs
+beside `FileSourceInterface`, in the package that owns cross-module record access —
+not here.
+
+## The rail beside the report form
+
+The report page is two columns inside one `.i-rwrap`: the form at 860px, and a
+340px rail 18px to its right. **One page scroller** — neither column is a scroll
+region of its own, so there is one scrollbar to find and nothing in the rail can be
+stranded beside a form that has grown long. Below 1160px the two columns cannot
+both stand, the rail stacks under the form, and the form keeps its width: the rail
+is extra help, never a reason for the form to get narrower.
+
+| Card | When | What is on it |
+|---|---|---|
+| **The observation** | only where the filing carries a source record | its own words, quoted; an atlas plate of where it was recorded; its photographs at the rail's width; then the record itself — patrol, observer, time, place, source |
+| **What `<word>` asks** | always | one row per answer the filing owes, a progress line, and the blocks the word left off named as absent |
+
+**The rail informs; it never gates.** The marks on the checklist are **the gate's**:
+every row carries the missing-answer label the gate uses on
+`data-incident-report-need`, and the Stimulus controller marks the rows from the
+very list it has just written into the footer. There is no second computation of
+"is this answered" anywhere, because the day two of them disagreed the rail would
+be telling somebody they may file while the File control refused to.
+`tests/Unit/Template/ReportRailSeamTest` holds both sides of that seam to the same
+strings.
+
+**One card per sub-category, all but the chosen one hidden** — the arrangement
+step 2 already uses for its field sets, and for the same reason: choosing a word
+swaps the questions without a round trip, and the card that names the word has to
+swap with them. `Model/ReportChecklist` builds each card from the very
+`BlockQuestionSet` list the form renders step 2 from, so the rail cannot describe a
+form this page did not draw.
+
+**The three shared answers are rows too.** The gate holds a filing on the category,
+the line and the place exactly as it holds it on a block, so the rail counts all
+three: a progress line that left one out would disagree with the footer by one.
+(The design workspace's mock shows two, because its gate has no place requirement;
+this page's does, and the rail follows the page.)
+
+**Where the observation was recorded is the atlas's plate**, built by
+`IncidentMapService::forObservation()` — the same service that builds the
+dashboard's and the case file's, so "where" reads identically on the observation's
+own page, in this rail, and on the case file the filing becomes. One mark under its
+own legend heading and never a category's: nothing has been filed yet, and drawing
+it in a category's hue would claim a classification the filer has not made.
+
+**Two things the rail does not draw, and why.** The design's card shows a
+`filename · time · offset` caption under each photograph and an amendment-history
+row; the hand-off carries neither an offset from the pin nor a history, so the
+caption is `filename · time` and there is no history row. Both are waiting on the
+record-summary contract above.
+
+**A short plate should put its legend below the imagery, and the atlas does not yet
+do it.** The house map contract puts a legend below the plate; the atlas floats it
+over the bottom-right corner, which is right on a plate that is the page's subject
+and wrong on a 176px one, where it covers the ground it is describing. **This is
+not an incidents defect and must not be fixed with an incidents rule** — every
+module's thumbnail plate has it, and a module that restyled the plate's internals
+would be a module whose map read differently from every other one
+(`tests/Unit/Template/CaseFilePlateSizingTest` fails the build for exactly that).
+The fix is one rule in the atlas's own sheet, keyed off the plate's height or off a
+`legend: below` option on `render_map()`. **Open, and needs the core's ruling.**
 
 ## The maps
 

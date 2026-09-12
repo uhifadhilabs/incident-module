@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Unit\Model;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Incident\Model\IncidentPrefill;
 
@@ -133,5 +134,41 @@ final class IncidentPrefillTest extends TestCase
     public function testAPrefillThatUnderstoodNothingEchoesNothing(): void
     {
         self::assertSame([], new IncidentPrefill()->toQuery());
+    }
+
+    /**
+     * WHOSE RECORD IT WAS AND WHOSE EYES SAW IT, read the same way the label is:
+     * off the hand-off's query string. The rail beside the report form states the
+     * record it is filing about — which patrol, which observer, when — and neither
+     * bundle may name the other's classes to find that out, so the sending module
+     * puts it on the wire beside the label it already sends.
+     */
+    public function testTheHandOffCarriesThePatrolAndTheObserverBesideTheLabel(): void
+    {
+        $prefill = IncidentPrefill::fromRequest(Request::create('/', 'GET', [
+            'patrol' => 'P-0142 · foot patrol · Endulen',
+            'ranger' => 'S. Laizer · ranger',
+        ]));
+
+        self::assertSame('P-0142 · foot patrol · Endulen', $prefill->patrol);
+        self::assertSame('S. Laizer · ranger', $prefill->ranger);
+        self::assertSame(
+            ['patrol' => 'P-0142 · foot patrol · Endulen', 'ranger' => 'S. Laizer · ranger'],
+            $prefill->toQuery(),
+        );
+    }
+
+    /**
+     * AND A HAND-OFF THAT SENT NEITHER IS COMPLETE. A module with no patrol and no
+     * named observer — or one that predates the two parameters — hands over what it
+     * has, and the rail simply draws no row for what it was not told.
+     */
+    public function testAHandOffWithNoPatrolOrObserverSimplyHasNone(): void
+    {
+        $prefill = IncidentPrefill::fromRequest(Request::create('/', 'GET', ['patrol' => '  ', 'ranger' => '']));
+
+        self::assertNull($prefill->patrol);
+        self::assertNull($prefill->ranger);
+        self::assertSame([], $prefill->toQuery());
     }
 }

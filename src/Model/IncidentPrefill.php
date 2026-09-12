@@ -35,6 +35,8 @@ use Uhifadhi\Incident\Enum\IncidentSourceEnum;
  *       &lat=-3.2014&lng=-29.5378
  *       &category=<sub-category slug it guesses>
  *       &note=<the field note, verbatim>
+ *       &patrol=P-0142 · foot patrol · North Block
+ *       &ranger=<who recorded it>
  *
  * Everything is a GUESS except the provenance. The category is a suggestion the
  * filer can overrule; the note is copied in and stays editable until the incident
@@ -53,6 +55,17 @@ use Uhifadhi\Incident\Enum\IncidentSourceEnum;
  * is how the source card shows them without this bundle knowing what an
  * observation is.
  *
+ * WHOSE RECORD IT WAS COMES THE SAME WAY THE LABEL DOES. The rail beside the form
+ * states the record being filed about — its words, where it was recorded, its
+ * photographs, and then the record itself: which patrol, whose eyes, when, where.
+ * The photographs are asked of the platform's file registry, which is a contract;
+ * the position and the time are on the wire already; so {@see patrol} and
+ * {@see ranger} are on the wire too, beside the label they belong with. They are
+ * PROSE the sending module composes, not identifiers to resolve — a module with no
+ * patrol, or one that predates them, simply sends neither and the rail draws no
+ * row. A richer record-summary contract is the obvious next step and is not one
+ * this module may invent alone; see docs/design-decisions.md.
+ *
  * Every field is untrusted, so an unreadable one is simply absent and the form
  * opens empty in that place — a bad link must produce a blank form, never an
  * error page between a ranger and filing a report.
@@ -69,6 +82,8 @@ final readonly class IncidentPrefill
         public ?float $longitude = null,
         public ?string $subcategorySlug = null,
         public ?string $note = null,
+        public ?string $patrol = null,
+        public ?string $ranger = null,
     ) {
     }
 
@@ -164,6 +179,8 @@ final readonly class IncidentPrefill
             'lng' => null === $this->longitude ? null : (string) $this->longitude,
             'category' => $this->subcategorySlug,
             'note' => $this->note,
+            'patrol' => $this->patrol,
+            'ranger' => $this->ranger,
         ] as $key => $value) {
             if (null !== $value) {
                 $query[$key] = $value;
@@ -187,6 +204,8 @@ final readonly class IncidentPrefill
             self::coordinate($request->query->getString('lng'), 180.0),
             self::text($request->query->getString('category'), 60),
             self::text($request->query->getString('note'), 2000),
+            self::text($request->query->getString('patrol'), 120),
+            self::text($request->query->getString('ranger'), 120),
         );
     }
 

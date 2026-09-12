@@ -11,8 +11,15 @@
    THE SOURCE CARD RIDES AT THE HEAD when the filing came from a record; a
    standalone filing has none. Same page either way.
 
+   A RAIL BESIDE THE FORM. The form is 860px and the screen is not, so the column
+   beside it carries the two things the form cannot say for itself: the source
+   observation in full, where there is one, and what the chosen kind asks. One page
+   scroller, and below 1160px the rail stacks under the form
+   (@UhifadhiIncident/report/_rail.html.twig).
+
    Parameters: controller, area, kinds, prefill, chosen, csrfToken, errors,
-               createUrl, cancelUrl, sourceFiles, blockSets, areaLists
+               createUrl, cancelUrl, sourceFiles, sourceMap, blockSets, areaLists,
+               checklists
    ========================================================================== #}
 {# NO CRUMB HERE. The trail is the shell frame's socket and the page fills it
    once (see @UhifadhiIncident/base.html.twig); a container typing its own would
@@ -30,40 +37,49 @@
     </div>
 </div>
 
-<div {{ stimulus_controller(controller) }}>
-    {% if prefill.hasProvenance %}
-        {{ include('@UhifadhiIncident/report/_source.html.twig', {prefill: prefill, files: sourceFiles}, with_context: false) }}
-    {% endif %}
+{# TWO COLUMNS, ONE CONTROLLER, ONE SCROLLER. The rail's checklist carries the
+   gate's own marks, so the gate has to be able to reach it: the controller wraps
+   the form AND the rail, and neither column is a scroll region of its own. #}
+<div class="i-rwrap" {{ stimulus_controller(controller) }}>
+    <div class="ro-col">
+        {% if prefill.hasProvenance %}
+            {{ include('@UhifadhiIncident/report/_source.html.twig', {prefill: prefill, files: sourceFiles}, with_context: false) }}
+        {% endif %}
 
-    {# input and change both bubble, so ONE action on the form re-reads the gate
-       whatever the filer typed into. #}
-    <form class="ro-form" method="post" action="{{ createUrl }}"
-          {{ stimulus_action(controller, 'gate', 'input')|stimulus_action(controller, 'gate', 'change') }}>
-        {{ include('@UhifadhiIncident/report/_carry.html.twig', {csrfToken: csrfToken, prefill: prefill, errors: errors}, with_context: false) }}
+        {# input and change both bubble, so ONE action on the form re-reads the gate
+           whatever the filer typed into. #}
+        <form class="ro-form" method="post" action="{{ createUrl }}"
+              {{ stimulus_action(controller, 'gate', 'input')|stimulus_action(controller, 'gate', 'change') }}>
+            {{ include('@UhifadhiIncident/report/_carry.html.twig', {csrfToken: csrfToken, prefill: prefill, errors: errors}, with_context: false) }}
 
-        <div class="ro-sect">
-            {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 1, heading: 'What kind of incident', mark: 'req', markLabel: 'needed to file'}, with_context: false) }}
-            {{ include('@UhifadhiIncident/report/_kind.html.twig', {controller: controller, kinds: kinds, chosen: chosen}, with_context: false) }}
-        </div>
+            <div class="ro-sect">
+                {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 1, heading: 'What kind of incident', mark: 'req', markLabel: 'needed to file'}, with_context: false) }}
+                {{ include('@UhifadhiIncident/report/_kind.html.twig', {controller: controller, kinds: kinds, chosen: chosen}, with_context: false) }}
+            </div>
 
-        <div class="ro-sect">
-            {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 2, heading: 'What happened', mark: null, markLabel: null}, with_context: false) }}
-            {{ include('@UhifadhiIncident/report/_what.html.twig', {controller: controller, kinds: kinds, chosen: chosen, prefill: prefill, blockSets: blockSets, areaLists: areaLists}, with_context: false) }}
-        </div>
+            <div class="ro-sect">
+                {{ include('@UhifadhiIncident/report/_secthd.html.twig', {n: 2, heading: 'What happened', mark: null, markLabel: null}, with_context: false) }}
+                {{ include('@UhifadhiIncident/report/_what.html.twig', {controller: controller, kinds: kinds, chosen: chosen, prefill: prefill, blockSets: blockSets, areaLists: areaLists}, with_context: false) }}
+            </div>
 
-        {{ include('@UhifadhiIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl, blockSets: blockSets}, with_context: false) }}
-    </form>
-</div>
+            {{ include('@UhifadhiIncident/report/_gate.html.twig', {controller: controller, chosen: chosen, prefill: prefill, cancelUrl: cancelUrl, blockSets: blockSets}, with_context: false) }}
+        </form>
+    </div>
 
-<div class="c i-rules">
-    <span class="tab">The rules the form enforces<span class="src">· the container may change; these do not</span></span>
-    <div class="rln"><span>Required to file</span><span class="mono acc">a category · one line saying what happened · a place · every block's own first answer</span></div>
-    <div class="rln"><span>The questions</span><span class="mono">the blocks the sub-category switched on · nothing else</span></div>
-    <div class="rln"><span>Never required</span><span class="mono">how bad, contacts, ID numbers, custody references, dates, facilities</span></div>
-    <div class="rln"><span>The File control</span><span class="mono">dead until the required answers exist · the server refuses the same filing</span></div>
-    <div class="rln"><span>Starting state</span><span class="mono">reported — never verified</span></div>
-    <div class="rln"><span>Provenance</span><span class="mono">written once, never editable</span></div>
-    <div class="use">A report is cheap and a verification is expensive. Filing may never cost more than what makes the
-        record what it is — the category, the line, the place, and the defining question of every block the category
-        switched on — and the paperwork follows on the record.</div>
+    {# THE RULES CARD IS NOT HERE, AND IS NOT ANYWHERE. It restated, as nine mono
+       rows at the foot of the page, rules the form was already enforcing in front
+       of the reader — which answers are marked, which blocks are drawn, that the
+       File control is dead until the gate is answered. A card that repeats the page
+       it sits under is a second place for the same truth to be written, and the two
+       drift. What filing COSTS is not a restatement, and that line stays where
+       somebody reads it before they start: the dashboard's entry card. #}
+    {{ include('@UhifadhiIncident/report/_rail.html.twig', {
+        controller: controller,
+        kinds: kinds,
+        chosen: chosen,
+        prefill: prefill,
+        checklists: checklists,
+        sourceFiles: sourceFiles,
+        sourceMap: sourceMap,
+    }, with_context: false) }}
 </div>

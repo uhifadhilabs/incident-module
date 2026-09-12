@@ -1,0 +1,139 @@
+{# ============================================================================
+   WHAT THIS KIND ASKS — the rail's second card.
+
+   The form folds every block but the first, which is the right answer to length
+   and the wrong answer to surprise: a filer cannot see what is coming. So the
+   rail states the same run flat — every block the chosen sub-category switched on,
+   each one's defining question, how much is behind it, and whether the form has it
+   open — and then names the blocks the word did NOT switch on, because "absent,
+   not greyed" is a promise about a form and a reader cannot check a promise about
+   things they cannot see.
+
+   IT INFORMS, IT NEVER GATES. The marks are THE GATE'S: every row names the
+   missing answer the gate names, on one attribute, and the controller marks the
+   rows from the list it just handed the footer. A second reading of the form here
+   would be a second opinion, and the day the two disagreed the rail would be
+   telling somebody they may file while the File control refused to.
+
+   ONE CARD PER SUB-CATEGORY, all but the chosen one hidden — the same arrangement
+   the form uses for its field sets, and for the same reason: choosing a word swaps
+   the questions without a round trip, and the card that names the word has to swap
+   with them. Nothing is chosen yet on a fresh page, so a card of its own says what
+   choosing will do rather than leaving the rail looking broken.
+
+   THE THREE SHARED ANSWERS ARE ROWS TOO. The gate holds a filing on the category,
+   the line and the place exactly as it holds it on a block, so the rail counts
+   them: a progress line that left one out would disagree with the footer by one.
+
+   Parameters: controller, kinds, chosen, prefill, checklists
+   ========================================================================== #}
+{# WHAT THE GATE IS MISSING ON FIRST PAINT, computed exactly as
+   @UhifadhiIncident/report/_gate.html.twig computes it — a line the source record
+   already wrote counts as filled, and so does a place that came with it. #}
+{% set lineDone = prefill.note is not empty %}
+{% set placeDone = prefill.latitude is not null and prefill.longitude is not null %}
+
+{% for kind in kinds %}
+    {% for subcategory in kind.subcategories %}
+        {% set checklist = checklists[subcategory.code]|default(null) %}
+        {% if checklist %}
+            {% set isChosen = chosen and chosen.code == subcategory.code %}
+            {# Every gating row, in the gate's own order, as {need, done} — so the
+               ordinal on a needed row and the count in the progress line are read
+               off one list rather than counted twice. #}
+            {% set gating = [
+                {'need': 'choose a category', 'done': isChosen},
+                {'need': 'describe what happened', 'done': lineDone},
+                {'need': 'mark where it happened', 'done': placeDone},
+            ] %}
+            {% for row in checklist.rows|filter(row => row.gates) %}
+                {% set gating = gating|merge([{'need': row.definingAnswer, 'done': false}]) %}
+            {% endfor %}
+            {% set total = gating|length %}
+            {% set stillNeeded = gating|filter(g => not g.done)|length %}
+            {% set ordinals = {} %}
+            {% set at = 0 %}
+            {% for g in gating|filter(g => not g.done) %}
+                {% set at = at + 1 %}
+                {% set ordinals = ordinals|merge({(g.need): at}) %}
+            {% endfor %}
+
+            <div class="c" data-incident-asks="{{ subcategory.code }}"
+                 {{ stimulus_target(controller, 'asks') }}{{ isChosen ? '' : ' hidden' }}>
+                <span class="tab">What {{ subcategory.label }} asks<span class="src">· {{ checklist.blocksAndQuestions }}</span></span>
+
+                {# THE GATE, MIRRORED. The footer already names what is missing; here
+                   the same count is a progress line, because a rail is read before a
+                   footer is. The bar shows the share that is DONE. #}
+                <div class="rr-prog{{ 0 == stillNeeded ? ' ok' : '' }}" {{ stimulus_target(controller, 'progress') }}>
+                    <span class="bar{{ 0 == stillNeeded ? ' ok' : '' }}"><i style="width:{{ 0 == total ? 0 : ((total - stillNeeded) / total * 100)|round }}%"></i></span>
+                    <b>{{ stillNeeded }} of {{ total }} still needed</b>
+                </div>
+                <p class="rr-scope">the sub-category switches these on — change it and this list changes with it</p>
+
+                {{ _self.row(
+                    'choose a category', isChosen, ordinals, 'Category', 'step 1', null,
+                    subcategory.path
+                ) }}
+                {{ _self.row(
+                    'describe what happened', lineDone, ordinals, 'What happened', 'step 2', null,
+                    lineDone
+                        ? 'one line the register shows — <b>came with the ' ~ prefill.sourceLabel|e ~ '</b>'
+                        : 'one line the register shows. Nothing wrote it for you — this report is the first record of it.'
+                ) }}
+                {{ _self.row(
+                    'mark where it happened', placeDone, ordinals, 'Where it happened', 'step 2', null,
+                    placeDone
+                        ? 'the place, on the map — <b>came with the ' ~ prefill.sourceLabel|e ~ '</b>'
+                        : 'the place, on the map. An incident happened somewhere, and nobody can add that reliably tomorrow.'
+                ) }}
+
+                {% for row in checklist.rows %}
+                    {{ _self.row(
+                        row.definingAnswer, false, ordinals, row.title, row.questionCountLabel, row.foldLabel,
+                        row.gates
+                            ? row.caption|e ~ '. It cannot do without <b>' ~ row.definingAnswer|e ~ '</b>.'
+                            : row.caption|e ~ '. Nothing in it holds up a filing.'
+                    ) }}
+                {% endfor %}
+
+                {% if checklist.absentCountWord %}
+                    <p class="rr-none">The other {{ checklist.absentCountWord }}
+                        block{{ 1 == checklist.absentBlocks|length ? '' : 's' }} — {{ checklist.absentBlocks|join(', ') }} —
+                        are <b>absent</b> from this form, not greyed out. This sub-category never switched them on.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+{# NOTHING CHOSEN YET, and the rail says so rather than standing empty. Hidden the
+   moment a word is picked, because the card that names the word takes over. #}
+<div class="c" data-incident-asks-empty-card {{ stimulus_target(controller, 'asksEmpty') }}{{ chosen ? ' hidden' : '' }}>
+    <span class="tab">What this kind asks<span class="src">· pick a kind above</span></span>
+    <p class="rr-none" data-incident-asks-empty>Choose a kind of incident above and this card lists what it asks: the
+        blocks that word switches on, each one's <b>defining question</b>, and how many answers are still needed to
+        file. The blocks it does not switch on are absent from the form, never greyed out inside it.</p>
+</div>
+
+{# ── ONE ROW ──────────────────────────────────────────────────────────────
+   The mark is the state rail's mark at a smaller size — a tick where the answer
+   has arrived, the ordinal of what is still owed where it has not — so "answered"
+   reads identically wherever this module draws it.
+
+   `question` is markup: one clause of it is emphasised (the defining answer, or
+   the fact that something else already wrote the line), and the callers escape
+   every value they interpolate into it.
+
+   `fold` is null on the three shared answers, which are never behind a fold.  #}
+{% macro row(need, done, ordinals, title, countLabel, fold, question) %}
+    <div class="rr-q {{ done ? 'done' : 'need' }}" data-incident-report-need="{{ need }}"
+         data-incident-report-fold="{{ fold ?? 'open' }}">
+        <i>{{ done ? '✓' : ordinals[need]|default('') }}</i>
+        <div>
+            <b>{{ title }}</b>
+            <em>{{ question|raw }}</em>
+            <span class="n" data-incident-report-n="{{ countLabel }}">{{ countLabel }} · {{ done ? 'answered' : (fold ?? 'open') }}</span>
+        </div>
+    </div>
+{% endmacro %}

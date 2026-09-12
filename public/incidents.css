@@ -755,13 +755,13 @@ html.light{
    between it and its mark. */
 .ro-form .i-fld>span>.i-kpi-note{flex-basis:100%}
 
-/* ── THE SOURCE CARD ──────────────────────────────────────────────────────
-   How is the filing user going to remember the context of what happened? By
-   looking at it. When the flow opens from an observation, that observation is
-   pinned above the steps: its label (linking back), its own words verbatim, the
-   position and the time, and its photographs — the same facts the observation
-   page shows, in the same notation, so the two records read as one thing.
-   Provenance is written once; nothing on this card is editable.              */
+/* ── THE PROVENANCE STRIP ─────────────────────────────────────────────────
+   One line at the head of the page: which record this filing came from, and the
+   way back to it. It was the whole source card once — the words, the position,
+   the time and a strip of 76px thumbnails — and 76px was never enough to read a
+   photograph. The RAIL carries that record legibly now, so what is left here is
+   the two things a strip is for. Provenance is written once; nothing on it is
+   editable.                                                                   */
 .i-src{border:1px solid var(--ln2);border-radius:12px;padding:13px 14px 12px;margin-bottom:16px;
   background:color-mix(in srgb,var(--acc) 5%,transparent)}
 .i-src .hd{display:flex;align-items:center;gap:9px;margin-bottom:9px}
@@ -771,20 +771,7 @@ html.light{
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;letter-spacing:.08em;
   text-transform:uppercase}
 .i-src .hd .go:hover{text-decoration:underline}
-.i-src .note{margin:0 0 11px;font-size:12.5px;line-height:1.6;color:var(--tx);padding-left:10px;
-  border-left:2px solid color-mix(in srgb,var(--acc) 45%,transparent)}
-.i-src .facts{display:flex;flex-wrap:wrap;gap:7px 20px}
-.i-src .facts span{display:flex;flex-direction:column;gap:2px}
-.i-src .facts em{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;font-style:normal;
-  letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
-.i-src .facts b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:600;
-  color:var(--tx)}
-.i-src .shots{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
-.i-src .shots a,.i-src .shots button{display:block;width:76px;height:57px;padding:0;cursor:pointer;border-radius:8px;overflow:hidden;
-  border:1px solid var(--ln2);background:color-mix(in srgb,var(--fog) 12%,transparent)}
-.i-src .shots a:hover,.i-src .shots button:hover{border-color:var(--acc)}
-.i-src .shots img{width:100%;height:100%;object-fit:cover;display:block}
-.i-src .i-srcnote{margin:11px 0 0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;
+.i-src .i-srcnote{margin:9px 0 0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;
   letter-spacing:.06em;color:var(--dim)}
 
 
@@ -797,6 +784,127 @@ html.light{
   color:var(--acc);text-decoration:none}
 .i-railid:hover{text-decoration:underline;text-underline-offset:2px}
 .i-railttl{font-size:13px;font-weight:600;color:var(--tx)}
+
+/* ── THE RAIL BESIDE THE REPORT FORM ──────────────────────────────────────
+   The form is 860px wide and the screen is not, so the column beside it carries
+   the two things the form cannot say for itself: the source observation in full,
+   where there is one, and what the chosen kind asks.
+
+   ONE SCROLLER, and it is the PAGE. The design workspace draws this pair inside a
+   sheet, so there the wrapper is the scroll region; here the flow is a route and
+   the document already scrolls. A second scroll region beside a form is a second
+   place to lose your position in, and a rail that scrolled on its own could be
+   stranded beside a form that had grown long.
+
+   Below 1160px the two columns cannot both stand, so the rail STACKS UNDER the
+   form and the form keeps its width — the rail is extra help, never a reason for
+   the form to get narrower. 1218px is 860 + 18 + 340: the pair, and no more.   */
+.i-rwrap{display:flex;align-items:flex-start;gap:18px;width:100%;max-width:1218px}
+.i-rwrap>.ro-col{flex:1 1 auto;min-width:0}
+.i-rail{flex:0 0 340px;max-width:340px;display:flex;flex-direction:column;gap:20px;padding:9px 2px 2px 0}
+
+@media (max-width:1159px){
+  .i-rwrap{flex-direction:column;align-items:stretch;gap:26px}
+  .i-rail{flex:none;width:100%;max-width:860px;padding:0 0 2px}
+}
+
+/* A rail card is the same card, told it has 340px and not 860. The .rln row stops
+   being label-left/value-right — at this width that squeezes the value into three
+   words a line — and becomes label over value. */
+.i-rail>.c{padding:22px 15px 13px;box-shadow:none;margin:0}
+.i-rail .rln{flex-direction:column;align-items:flex-start;gap:3px;padding:8px 1px;font-size:11.5px}
+.i-rail .rln>span:first-child{color:var(--fog)}
+.i-rail .rln .mono{font-size:10.5px;line-height:1.55}
+.i-rail .use{font-size:11.5px;margin:10px 1px 2px}
+.i-rail .c>.tab{max-width:calc(100% - 20px)}
+
+/* THE MAP PLATE IN A RAIL states ONE thing and states it on the plate's own
+   property: how tall it is here. Everything else about a map — the imagery, the
+   control stack top-right, the frame, fullscreen and where the legend sits — is
+   the atlas's, and a module that dressed any of it would be a module whose map
+   read differently from every other one in the product (see
+   tests/Unit/Template/CaseFilePlateSizingTest).
+
+   THE LEGEND IS THE ONE UNFINISHED PIECE. The house contract puts a legend BELOW
+   the imagery; the atlas floats it over the bottom-right corner, which is right on
+   a plate that is the page's subject and wrong on a 176px one, where it covers the
+   ground it is describing. That is not an incidents problem and must not be fixed
+   with an incidents rule: every module's thumbnail plate has it. The fix belongs in
+   the atlas's own sheet — see docs/design-decisions.md, "a short plate puts its
+   legend below the imagery". The height below is handed over by the template as
+   `--map-plate-height`, which is the only thing a module may say about a plate. */
+
+/* ── THE RAIL'S OWN SMALL PIECES ──────────────────────────────────────────
+   Row shapes the rail needs and the chain does not have: a question with a mark
+   against it, a photograph at a size worth looking at, quoted words that are not
+   editable.                                                                   */
+
+/* WHAT THIS KIND ASKS — one row per answer the filing owes: what it is, the
+   question it stands for, and whether that question has an answer yet. The mark is
+   THE GATE'S mark, written by the same controller that writes the footer's line,
+   so the rail and the File control can never disagree. */
+.rr-q{display:flex;gap:9px;align-items:flex-start;padding:9px 1px;
+  border-bottom:1px dashed color-mix(in srgb,var(--fog) 18%,transparent)}
+.rr-q:last-child{border-bottom:0}
+/* The mark is the state rail's mark at a smaller size — same circle, same 1.5px
+   ring, same mono glyph — so "answered" reads identically wherever the module
+   draws it. */
+.rr-q>i{flex:none;width:16px;height:16px;border-radius:50%;margin-top:1px;font-style:normal;
+  display:grid;place-items:center;font:700 8.5px "JetBrains Mono",ui-monospace,monospace;
+  border:1.5px solid var(--ln2);color:var(--dim)}
+.rr-q.done>i{border-color:var(--ok);color:var(--ok)}
+.rr-q.need>i{border-color:var(--warn);color:var(--warn)}
+.rr-q>div{min-width:0;flex:1}
+.rr-q b{display:block;font-size:12px;font-weight:600;color:var(--tx)}
+.rr-q em{display:block;font-style:normal;font-size:11px;line-height:1.5;color:var(--fog);margin-top:2px}
+/* display:inline is explicit: the row's own `b` is a block — the block's NAME on
+   its own line — and the emphasis inside the question is a clause of a sentence.
+   Without this the defining answer and the full stop after it each take a line.
+   (The design workspace's sheet omits it; the rendering there is wrong for the
+   same reason and the design agent has been told.) */
+.rr-q em b{display:inline;color:var(--tx);font-weight:600}
+.rr-q .n{font:600 8.5px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim);margin-top:4px;display:block}
+.rr-q.done b{color:var(--fog)}
+
+/* The scope the list was built with, stated — a list of questions with no word
+   behind it is a list nobody can argue with. */
+.rr-scope{font:600 9px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.08em;
+  color:var(--dim);line-height:1.6;margin:0 0 10px}
+/* AND THE BLOCKS THIS WORD LEFT OFF, said in words: absent from the form, never
+   greyed out inside it. */
+.rr-none{font-size:11.5px;color:var(--fog);line-height:1.55;margin:11px 1px 2px}
+.rr-none b{color:var(--tx)}
+
+/* THE GATE, MIRRORED. The footer already names what is missing; here the same
+   count is a progress line, because a rail is read before a footer is. The bar
+   shows the share that is DONE. */
+.rr-prog{display:flex;align-items:center;gap:9px;margin:2px 1px 10px}
+.rr-prog .bar{flex:1;height:5px;border-radius:99px;overflow:hidden;
+  background:color-mix(in srgb,var(--fog) 20%,transparent)}
+.rr-prog .bar i{display:block;height:100%;background:var(--warn);border-radius:99px}
+.rr-prog .bar.ok i{background:var(--ok)}
+.rr-prog b{font:700 9.5px "JetBrains Mono",ui-monospace,monospace;color:var(--warn);white-space:nowrap}
+.rr-prog.ok b{color:var(--ok)}
+
+/* THE EVIDENCE, AT A SIZE WORTH LOOKING AT. The strip at the head of the page
+   draws a photograph 76px wide, which is enough to prove one exists and not enough
+   to read one. In the rail a photograph is the rail's width. */
+.rr-shots{display:flex;flex-direction:column;gap:9px}
+.rr-shot{display:block;width:100%;padding:0;text-align:left;cursor:pointer;
+  border:1px solid var(--ln2);border-radius:10px;overflow:hidden;
+  background:color-mix(in srgb,var(--fog) 12%,transparent);text-decoration:none}
+.rr-shot:hover{border-color:var(--acc);text-decoration:none}
+.rr-shot img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.rr-shot i{display:block;font-style:normal;font:600 9px "JetBrains Mono",ui-monospace,monospace;
+  color:var(--fog);padding:6px 9px 7px;letter-spacing:.04em}
+/* The observation's own words, marked as quoted and not editable. */
+.rr-quote{margin:0;font-size:12px;line-height:1.6;color:var(--tx);padding-left:10px;
+  border-left:2px solid color-mix(in srgb,var(--acc) 45%,transparent)}
+/* A one-line section inside a rail card, where a card carries two kinds of thing
+   and a second tab would be a second card. */
+.rr-sub{font:700 8.5px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);margin:14px 1px 8px;display:block}
 
 
 /* ── PORT ADDITIONS ───────────────────────────────────────────────────────
@@ -846,7 +954,6 @@ html.light{
 .i-moneywhy{font-size:11.5px;margin-bottom:0}
 .i-partynote{font-size:11.5px}
 .i-assessment{font-size:12.5px;color:var(--tx);margin-top:10px;line-height:1.6}
-.i-rules{margin-top:22px}
 .i-provlead{margin-bottom:16px}
 
 /* The report sheet's own form controls. The design drew the fields as static

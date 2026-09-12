@@ -83,6 +83,22 @@ enum MoneyDirectionEnum: string
         };
     }
 
+    /**
+     * WHO PAYS WHOM — the money block's summary line, in the design's own words.
+     *
+     * It is the caption rather than the heading because it is what a filer needs
+     * while deciding whether the block is theirs to answer: "a fine to assess, or
+     * a claim to settle" states both possibilities at a filer who is only ever
+     * looking at one of them.
+     */
+    public function whoPaysWhom(): string
+    {
+        return match ($this) {
+            self::Fine => 'the offender pays the authority',
+            self::Compensation => 'the authority pays the claimant',
+        };
+    }
+
     /** What the largest figure is called before anything moves. */
     public function assessedWord(): string
     {

@@ -1,69 +1,30 @@
-{# THE SOURCE CARD. "How is the filing user going to remember the context of what
-   happened?" By looking at it: the record this filing came from is pinned above
-   the questions with its own words, its position in the same notation the source
-   page prints, its time and its photographs. Nothing on it is editable —
-   provenance is written once, at filing.
+{# THE PROVENANCE STRIP — one line, at the head of the page.
 
-   Shared verbatim by both containers: it rides inside the drawer when the filing
-   came from a record, and would ride at the head of the full page if one ever
-   arrived there.
+   It was the whole source card once: the record's own words, its position in the
+   observation page's notation, its time and a strip of 76px thumbnails. Its job
+   was never to be READ — 76px is enough to prove a photograph exists and not
+   enough to see what is in one — and now that the RAIL carries the same record
+   legibly ({@see @UhifadhiIncident/report/_observation.html.twig}), a second copy
+   of the words, the position and the thumbnails above the form is duplication on
+   the one page a filer is trying to get through.
+
+   So what is left is the two things a strip is for: it says which record this
+   filing came from, and it links back to it. Nothing on it is editable —
+   provenance is written once, at filing, and never again.
 
    Parameters: prefill, files
    ========================================================================== #}
 <section class="i-src" data-incident-source-card>
     <div class="hd">{{ ux_icon('incident:git-branch') }}<b>Filed from {{ prefill.label }}</b>
         {% if prefill.backUrl %}<a class="go" href="{{ prefill.backUrl }}">Open the source →</a>{% endif %}</div>
-    {% if prefill.note %}<p class="note">“{{ prefill.note }}”</p>{% endif %}
-    <div class="facts">
-        {# `false` KEEPS THE MOMENT'S OWN ZONE. The observation was made at 08:15
-           where the observer was standing, and a card meant to be recognised must
-           not restate it in UTC. #}
-        {% if prefill.occurredAt %}<span><em>when</em><b>{{ prefill.occurredAt|date('D j M Y · H:i', false)|lower }}</b></span>{% endif %}
-        {% if prefill.positionLabel %}<span><em>where</em><b>{{ prefill.positionLabel }}</b></span>{% endif %}
-        <span><em>source</em><b>{{ prefill.sourceLabel }}</b></span>
-    </div>
-    {# THE SOURCE RECORD'S PHOTOGRAPHS, through the cross-module file contract.
-
-       This bundle knows a record UUID and a source token and nothing else — it
-       may not name the patrols module's classes, its routes or its key prefix,
-       because a host may install either module without the other. So it asks the
-       hub's registry, which asks the module that OWNS the record
-       ({@see \Uhifadhi\Storage\Registry\FileRegistry::forRecord()}), and gets
-       back the same FileEntry the Files hub gets.
-
-       GRACEFUL WHEN THERE IS NOTHING. The observation photographed by nobody, a
-       token naming a module this deployment does not have — both arrive here as
-       an empty list, and the card simply has no strip. Neither is an error and
-       neither may cost anybody a report.
-
-       THEY OPEN IN THE SHARED PREVIEW, the one component every surface opens a
-       file in, so a photograph looks the same and says the same things whether it
-       is opened from the Files hub, from its observation, or from here. #}
-    {% if files is not empty %}
-        {% import '@UhifadhiStorage/overlay/_preview.html.twig' as preview %}
-        {# A BUTTON, NOT A LINK, and the preview component is why: it reads a
-           click inside an <a> as navigation and stands aside, so a thumbnail
-           wrapped in one would leave the flow for a raw image file. `type=button`
-           because this sits inside the report form and must never submit it. #}
-        <div class="shots">
-            {% for file in files %}
-                <button type="button"
-                        title="{{ file.name }}{% if file.takenAt %} · {{ file.takenAt|date('H:i') }}{% endif %}"
-                        {{ preview.entry(file, '') }}>
-                    <img src="{{ path('storage_evidence_show', {key: file.thumbKey ?? file.key}) }}"
-                         alt="{{ file.name }}, from {{ prefill.label }}" loading="lazy">
-                </button>
-            {% endfor %}
-        </div>
-        {{ include('@UhifadhiStorage/overlay/_preview.html.twig') }}
-    {% endif %}
 
     <p class="i-srcnote">
         {%- if files is not empty -%}
-            its {{ files|length }} photograph{{ 1 == files|length ? '' : 's' }}, category guess, coordinates, time and
-            note are already in the form below · the link is kept forever
+            its words, its position, its time and its {{ files|length }} photograph{{ 1 == files|length ? '' : 's' }}
+            are in the rail, at a size that can be read
         {%- else -%}
-            its category guess, coordinates, time and note are already in the form below · the link is kept forever
+            its words, its position and its time are in the rail, at a size that can be read
         {%- endif -%}
+        · its category guess, coordinates, time and note are already in the form below · the link is kept forever
     </p>
 </section>

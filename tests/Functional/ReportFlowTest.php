@@ -213,10 +213,11 @@ final class ReportFlowTest extends FunctionalTestCase
         $line = $crawler->filter('form textarea[name="title"]');
         self::assertCount(1, $line);
         self::assertSame('Fresh lion tracks 400 m from the bomas.', $line->text());
-        // Verbatim, above the questions, untouched by anything done to the line.
+        // Verbatim, in the rail beside the questions, untouched by anything done
+        // to the line.
         self::assertStringContainsString(
             'Fresh lion tracks 400 m from the bomas.',
-            $crawler->filter('.i-src .note')->text(),
+            $crawler->filter('.i-rail [data-incident-observation] .rr-quote')->text(),
         );
         // …and a prefilled line COUNTS AS FILLED: the gate does not ask for it
         // again, and with the category still to choose the File control is still
@@ -417,28 +418,28 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * THE RULES CARD STATES THE GATE THE FORM ACTUALLY ENFORCES.
+     * THE RULES CARD IS GONE — removed, not moved to the rail.
      *
-     * What a filing owes is a category, one line saying what happened, a place
-     * AND the defining question of every block the sub-category switched on
-     * ({@see IncidentBlockAnswerService::missing()}). A closing line that priced
-     * filing at three answers would promise a gate nothing enforces, so the card
-     * may not carry that number anywhere.
+     * It restated, as nine mono rows at the foot of the page, rules the form was
+     * already enforcing in front of the reader: which answers are marked, which
+     * blocks are drawn, that the File control is dead until the gate is answered.
+     * A card that repeats the page it sits under is a second place for the same
+     * truth to be written, and the two drift. The one thing on it that was NOT a
+     * restatement — what filing costs — is the entry card's own line, and that
+     * stays.
      */
-    public function testTheRulesCardPricesFilingAtTheWholeGate(): void
+    public function testTheRulesCardIsGoneFromTheReportPage(): void
     {
         $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
 
-        $card = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)))->filter('.i-rules');
+        $page = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
 
-        self::assertCount(1, $card);
-        self::assertStringContainsString('a category · one line saying what happened · a place · every block\'s own first answer', $card->filter('.rln')->eq(0)->text());
-        self::assertStringContainsString(
-            'Filing may never cost more than what makes the record what it is — the category, the line, the place, and the defining question of every block the category switched on — and the paperwork follows on the record.',
-            $card->filter('.use')->text(),
-        );
-        self::assertStringNotContainsString('three answers', $card->text());
+        self::assertCount(0, $page->filter('.i-rules'));
+        self::assertStringNotContainsString('The rules the form enforces', $page->text());
+        self::assertStringNotContainsString('the container may change; these do not', $page->html());
+        // …and nothing of it reappeared in the rail.
+        self::assertStringNotContainsString('reported — never verified', $page->filter('.i-rail')->text());
     }
 
     /**
@@ -670,12 +671,16 @@ final class ReportFlowTest extends FunctionalTestCase
     }
 
     /**
-     * THE SOURCE CARD. "How is the filing user going to remember the context of
-     * what happened?" By looking at it: the observation is pinned above the steps
-     * with its own words, its position in the same degrees-minutes-seconds the
-     * observation page prints, its time, and a way back to it.
+     * THE SOURCE RECORD, IN THE RAIL, AT A SIZE THAT CAN BE READ.
+     *
+     * "How is the filing user going to remember the context of what happened?" By
+     * looking at it — and a 76px thumbnail strip and a one-line position under a
+     * heading are not looking at it. The rail beside the form carries the
+     * observation's own words, a plate of where it was recorded, its photographs
+     * at the rail's width, and the record itself: which patrol, whose eyes, when,
+     * where. Nothing on it is editable: provenance is written once, at filing.
      */
-    public function testTheSourceCardShowsTheObservationThisFilingCameFrom(): void
+    public function testTheRailShowsTheSourceObservationInFull(): void
     {
         $area = $this->anAreaWithKinds();
         $this->client->loginUser($this->aReporter());
@@ -691,23 +696,220 @@ final class ReportFlowTest extends FunctionalTestCase
             'lat' => '-3.2014',
             'lng' => '-29.5378',
             'note' => 'Fresh lion tracks 400 m from the bomas.',
+            'patrol' => 'P-0142 · foot patrol',
+            'ranger' => 'S. Laizer · ranger',
         ]);
 
-        $card = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)).'?'.$query)->filter('.i-src');
+        $card = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)).'?'.$query)
+            ->filter('.i-rail [data-incident-observation]');
 
         self::assertCount(1, $card);
-        self::assertStringContainsString('OBS-02 · lion tracks', $card->text());
-        // The note, verbatim.
-        self::assertStringContainsString('Fresh lion tracks 400 m from the bomas.', $card->filter('.note')->text());
-        // The position, in the observation page's own notation.
-        self::assertStringContainsString('3°12\'05"S 29°32\'16"W', $card->filter('.facts')->text());
-        self::assertStringContainsString('patrol observation', $card->filter('.facts')->text());
+        self::assertStringContainsString('OBS-02 · lion tracks', $card->filter('.tab')->text());
+        // The observation's own words, quoted and not editable.
+        self::assertStringContainsString('Fresh lion tracks 400 m from the bomas.', $card->filter('.rr-quote')->text());
+        self::assertCount(0, $card->filter('textarea, input, select'));
+        // WHERE IT WAS RECORDED, as an atlas plate — zoom chrome and all — with
+        // its legend, and sized for a rail rather than for a page.
+        self::assertCount(1, $card->filter('.map-plate'));
+        self::assertStringContainsString('--map-plate-height', (string) $card->filter('.map-plate')->attr('style'));
+        self::assertCount(1, $card->filter('.map-plate .map-legend'));
+        // The record itself: patrol, ranger, when, where.
+        $rows = $card->filter('.rln')->each(static fn (Crawler $row): string => $row->text());
+        self::assertStringContainsString('P-0142 · foot patrol', implode(' | ', $rows));
+        self::assertStringContainsString('S. Laizer · ranger', implode(' | ', $rows));
         // THE TIME AS THE OBSERVER WROTE IT — 08:15 in the field, not 05:15 in
-        // UTC. A card meant to be recognised must not restate the moment in a
+        // UTC. A record meant to be recognised must not restate the moment in a
         // zone nobody there was standing in.
-        self::assertStringContainsString('08:15', $card->filter('.facts')->text());
-        // …and the way back to the record it came from.
-        self::assertSame('/areas/x/modules/patrols/observation/2', $card->filter('.hd a.go')->attr('href'));
+        self::assertStringContainsString('08:15', implode(' | ', $rows));
+        // The position, in the observation page's own notation.
+        self::assertStringContainsString('3°12\'05"S 29°32\'16"W', implode(' | ', $rows));
+    }
+
+    /**
+     * AND THE STRIP AT THE TOP SHRINKS TO ITS ONE PROVENANCE LINE. Its job was
+     * never to be read — it was to prove the observation exists and link back to
+     * it. Once the rail carries the record legibly, a second copy of the words,
+     * the position and the thumbnails above the form is duplication on the one
+     * page a filer is trying to get through.
+     */
+    public function testTheProvenanceStripShrinksToOneLineWhenTheRailCarriesTheRecord(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->client->loginUser($this->aReporter());
+
+        $strip = $this->client->request('GET', $this->fromAStubbedRecordUrl($this->uuidOf($area)))->filter('.i-src');
+
+        self::assertCount(1, $strip);
+        // The provenance line, and a way back to the record.
+        self::assertStringContainsString('Filed from observation 2 of patrol P-0142', $strip->filter('.hd b')->text());
+        self::assertSame('/areas/x/modules/patrols/observation/2', $strip->filter('.hd a.go')->attr('href'));
+        self::assertStringContainsString('are in the rail', $strip->filter('.i-srcnote')->text());
+        // …and nothing the rail now carries.
+        self::assertCount(0, $strip->filter('.note'));
+        self::assertCount(0, $strip->filter('.facts'));
+        self::assertCount(0, $strip->filter('.shots'));
+    }
+
+    // ── THE RAIL — WHAT THIS KIND ASKS ───────────────────────────────────────
+
+    /**
+     * A WALK-IN FILING HAS NO OBSERVATION, AND THE RAIL IS STILL WORTH HAVING.
+     *
+     * Somebody who walked into an office is the commonest filing there is, and
+     * there is no record behind it to show. The rail then carries the checklist
+     * alone — and it has to look like the whole of what the rail is for, not like
+     * a card with a hole above it.
+     */
+    public function testAWalkInFilingShowsTheChecklistAloneAndNoObservationCard(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->client->loginUser($this->aReporter());
+
+        $rail = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)))->filter('.i-rail');
+
+        self::assertCount(1, $rail);
+        self::assertCount(0, $rail->filter('[data-incident-observation]'));
+        // One card per sub-category, the way the form carries one field set per
+        // sub-category — and none of them showing, because nothing is chosen.
+        self::assertCount(16, $rail->filter('[data-incident-asks]'));
+        self::assertCount(0, $rail->filter('[data-incident-asks]:not([hidden])'));
+        // …so the rail says what choosing will do rather than standing empty.
+        self::assertCount(1, $rail->filter('.rr-none[data-incident-asks-empty]'));
+    }
+
+    /**
+     * WHAT THIS KIND ASKS. The form folds every block but the first, which is the
+     * right answer to length and the wrong answer to surprise — a filer cannot see
+     * what is coming. So the rail names every block the chosen sub-category
+     * switched on, each one's defining question, and how much is inside it.
+     *
+     * It INFORMS AND NEVER GATES: the marks are the gate's own, read from the
+     * gate's state in the browser, which is why there is exactly one of them on
+     * the page and the rail can never disagree with the File control.
+     */
+    public function testTheChecklistNamesTheBlocksThePreselectedSubCategorySwitchedOn(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->client->loginUser($this->aReporter());
+
+        $url = $this->fromARecordUrl($this->uuidOf($area)).'&category=livestock-depredation';
+        $asks = $this->client->request('GET', $url)
+            ->filter('.i-rail [data-incident-asks="livestock-depredation"]');
+
+        self::assertCount(1, $asks);
+        self::assertNull($asks->attr('hidden'));
+        // The card names the word it is about, and prices it.
+        self::assertStringContainsString('What livestock depredation asks', $asks->filter('.tab')->text());
+        self::assertStringContainsString('· 4 blocks · 11 questions', $asks->filter('.tab .src')->text());
+        self::assertStringContainsString(
+            'the sub-category switches these on — change it and this list changes with it',
+            $asks->filter('.rr-scope')->text(),
+        );
+
+        // SEVEN ROWS: the three answers every incident owes, then the four blocks
+        // this word switched on.
+        $rows = $asks->filter('.rr-q');
+        self::assertCount(7, $rows);
+        self::assertSame(
+            ['Category', 'What happened', 'Where it happened', 'Species', 'Counts', 'Parties', 'Money · compensation'],
+            $rows->each(static fn (Crawler $row): string => $row->children('div')->children('b')->text()),
+        );
+        // Each block row carries the block's own caption AND the DEFINING answer,
+        // named the way the gate misses it — the same string, so a reworded gate
+        // cannot leave the rail describing a different form.
+        self::assertSame(
+            [
+                'which animal, and what is known about it. It cannot do without the species.',
+                'how many of what. It cannot do without one count row.',
+                'the people on the record, each in a role. It cannot do without a party with a role and a name.',
+                'the authority pays the claimant. It cannot do without the loss claimed.',
+            ],
+            $rows->slice(3)->each(static fn (Crawler $row): string => $row->filter('em')->text()),
+        );
+        // …and how much is behind it, and whether the form has it open.
+        self::assertSame(
+            ['step 1', 'step 2', 'step 2', '3 questions', '2 questions', '5 questions', '1 question'],
+            $rows->each(static fn (Crawler $row): string => explode(' · ', $row->filter('.n')->text())[0]),
+        );
+        self::assertSame(
+            ['open', 'folded', 'folded', 'folded'],
+            $rows->slice(3)->each(static fn (Crawler $row): string => explode(' · ', $row->filter('.n')->text())[1]),
+        );
+        // THE MARK IS THE GATE'S. Every row names the missing answer the gate
+        // names, so the browser can mark it from one source of truth.
+        self::assertSame(
+            [
+                'choose a category',
+                'describe what happened',
+                'mark where it happened',
+                'the species',
+                'one count row',
+                'a party with a role and a name',
+                'the loss claimed',
+            ],
+            $rows->each(static fn (Crawler $row): ?string => $row->attr('data-incident-report-need')),
+        );
+
+        // THE OTHER BLOCKS ARE ABSENT, NOT GREYED, and the rail says so in words.
+        $absent = $asks->filter('.rr-none')->text();
+        self::assertStringContainsString('The other eight blocks', $absent);
+        self::assertStringContainsString('method & means', $absent);
+        self::assertStringContainsString('absent from this form, not greyed out', $absent);
+    }
+
+    /**
+     * AND THE PROGRESS LINE MIRRORS THE GATE'S COUNT, not a count of its own. The
+     * three answers every incident owes are rows too, because the gate holds the
+     * filing on them exactly as it holds it on a block.
+     */
+    public function testTheChecklistProgressLineCountsWhatTheGateIsStillMissing(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->client->loginUser($this->aReporter());
+
+        $url = $this->fromARecordUrl($this->uuidOf($area)).'&category=livestock-depredation';
+        $crawler = $this->client->request('GET', $url);
+
+        // The category, the line and the place all came with the record, so four
+        // of the seven rows are still needed — and those four are exactly the four
+        // the footer's gate line names.
+        $shown = $crawler->filter('[data-incident-asks="livestock-depredation"]');
+        self::assertSame('4 of 7 still needed', $shown->filter('.rr-prog b')->text());
+        self::assertSame(
+            'the species · one count row · a party with a role and a name · the loss claimed',
+            $crawler->filter('.ro-gate')->text(),
+        );
+        // Three answered, four needed — marked the way the state rail marks a step
+        // it has passed, and NUMBERED in the order they are still owed.
+        self::assertCount(3, $shown->filter('.rr-q.done'));
+        self::assertSame(
+            ['1', '2', '3', '4'],
+            $shown->filter('.rr-q.need')->each(static fn (Crawler $row): string => $row->children('i')->text()),
+        );
+        // The bar shows the share that is done, never a count of its own.
+        self::assertStringContainsString('width:43%', (string) $shown->filter('.rr-prog .bar i')->attr('style'));
+    }
+
+    /**
+     * THE RAIL IS BESIDE THE FORM, IN ONE SCROLLER. A second scroll region beside
+     * a form is a second place to lose your position in; the two columns are one
+     * page, and below 1160px the rail stacks under the form rather than squeezing
+     * it.
+     */
+    public function testTheRailSitsBesideTheFormInsideTheOneStimulusController(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
+
+        // One wrapper, carrying the form column and the rail as its two children.
+        $wrap = $crawler->filter('.i-rwrap');
+        self::assertCount(1, $wrap);
+        self::assertCount(1, $wrap->children('.ro-col')->children('form.ro-form'));
+        self::assertCount(1, $wrap->children('.i-rail'));
+        // The gate drives both, so both are inside the one controller.
+        self::assertCount(1, $crawler->filter('[data-controller*="incident-report"] .i-rail'));
     }
 
     /**
@@ -730,17 +932,17 @@ final class ReportFlowTest extends FunctionalTestCase
         // A BUTTON, not a link: the shared preview reads a click inside an <a>
         // as navigation and stands aside, so a thumbnail wrapped in one would
         // leave the flow for a raw image file.
-        $shots = $crawler->filter('.i-src .shots button[type="button"]');
+        $shots = $crawler->filter('[data-incident-observation] .rr-shots button[type="button"]');
         self::assertCount(2, $shots);
-        self::assertCount(0, $crawler->filter('.i-src .shots a'));
+        self::assertCount(0, $crawler->filter('[data-incident-observation] .rr-shots a'));
 
         // Each one is drawn from the storage route by its THUMBNAIL key — the
         // small picture, never the original, on a card.
         self::assertStringContainsString(
             'fieldwork/rec-1/first.jpg.thumb.jpg',
-            (string) $crawler->filter('.i-src .shots img')->first()->attr('src'),
+            (string) $crawler->filter('[data-incident-observation] .rr-shots img')->first()->attr('src'),
         );
-        self::assertCount(2, $crawler->filter('.i-src .shots img'));
+        self::assertCount(2, $crawler->filter('[data-incident-observation] .rr-shots img'));
         // …and the strip says so in the card's own words.
         self::assertStringContainsString('2 photographs', $crawler->filter('.i-src .i-srcnote')->text());
     }
@@ -759,7 +961,7 @@ final class ReportFlowTest extends FunctionalTestCase
 
         $crawler = $this->client->request('GET', $this->fromAStubbedRecordUrl($this->uuidOf($area)));
 
-        $first = $crawler->filter('.i-src .shots button')->first();
+        $first = $crawler->filter('[data-incident-observation] .rr-shots button')->first();
         // The trigger contract, filled from the FileEntry the owning module gave.
         self::assertNotNull($first->attr('data-f-preview'));
         self::assertSame('first.jpg', $first->attr('data-f-name'));
@@ -788,7 +990,7 @@ final class ReportFlowTest extends FunctionalTestCase
 
         self::assertResponseIsSuccessful();
         self::assertCount(1, $crawler->filter('.i-src'));
-        self::assertCount(0, $crawler->filter('.i-src .shots'));
+        self::assertCount(0, $crawler->filter('[data-incident-observation] .rr-shots'));
         self::assertStringNotContainsString('photograph', $crawler->filter('.i-src .i-srcnote')->text());
         // Nothing to open, so the overlay's stylesheet is not asked for either.
         self::assertStringNotContainsString('uhifadhistorage/preview', $crawler->html());

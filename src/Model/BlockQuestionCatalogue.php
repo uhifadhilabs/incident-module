@@ -227,7 +227,12 @@ final class BlockQuestionCatalogue
             title: null === $direction
                 ? BehaviorBlockEnum::Money->label()
                 : BehaviorBlockEnum::Money->label().' · '.$direction->value,
-            caption: BehaviorBlockEnum::Money->caption(),
+            // THE ONE CAPTION THAT KNOWS ITS DIRECTION. "A fine to assess, or a
+            // claim to settle" states both possibilities at a filer who is only
+            // ever looking at one of them; the sub-category has already decided
+            // which, so the summary line says who pays whom. The block's generic
+            // name stands only where no direction is set.
+            caption: $direction?->whoPaysWhom() ?? BehaviorBlockEnum::Money->caption(),
             questions: [
                 new BlockQuestion(
                     key: 'claimed',

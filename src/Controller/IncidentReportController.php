@@ -37,11 +37,13 @@ use Uhifadhi\Incident\Model\BlockAnswers;
 use Uhifadhi\Incident\Model\BlockQuestionCatalogue;
 use Uhifadhi\Incident\Model\BlockQuestionSet;
 use Uhifadhi\Incident\Model\IncidentPrefill;
+use Uhifadhi\Incident\Model\ReportChecklist;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Service\AreaListService;
 use Uhifadhi\Incident\Service\IncidentBlockAnswerService;
+use Uhifadhi\Incident\Service\IncidentMapService;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Storage\Model\FileEntry;
 use Uhifadhi\Storage\Registry\FileRegistry;
@@ -141,6 +143,13 @@ final class IncidentReportController
          * answers.
          */
         private readonly FileRegistry $fileRegistry,
+        /**
+         * THE ONE INCIDENTS MAP BUILDER. The rail's plate — where the observation
+         * this filing came from was recorded — is drawn by the same service that
+         * draws the dashboard's plate and the case file's, so "where" reads
+         * identically wherever the module states it.
+         */
+        private readonly IncidentMapService $maps,
     ) {
     }
 
@@ -271,6 +280,7 @@ final class IncidentReportController
         $fromARecord = $prefill->hasProvenance();
         $query = $prefill->toQuery();
         $kinds = $this->kinds->forArea($area);
+        $blockSets = self::blockSetsFor($kinds);
 
         return $this->twig->render('@UhifadhiIncident/report/show.html.twig', [
             'area' => $area,
@@ -283,7 +293,7 @@ final class IncidentReportController
             // WHAT EACH SUB-CATEGORY'S BLOCKS ASK, keyed by wire-code: the form
             // renders one fold per block, so the page never types a question of
             // its own and a block that is off has no markup at all.
-            'blockSets' => self::blockSetsFor($kinds),
+            'blockSets' => $blockSets,
             // THE PER-AREA LISTS the catalogue's four list questions read from —
             // which animal, by what method, what the ground is used for, which
             // named place. THIS AREA'S OWN WORDS, written in the Lists section of
@@ -305,6 +315,16 @@ final class IncidentReportController
                 : $this->router->generate('incident_dashboard', ['uuid' => $area->getUuidString()]),
             // THE SOURCE RECORD'S PHOTOGRAPHS, asked of the module that owns them.
             'sourceFiles' => $this->filesOf($prefill),
+            // WHERE THE SOURCE RECORD WAS RECORDED, as the atlas's plate — null
+            // where the hand-off carried no usable coordinates, and the rail then
+            // draws no plate rather than an empty one.
+            'sourceMap' => $fromARecord && null !== $prefill->latitude && null !== $prefill->longitude
+                ? $this->maps->forObservation($area, $prefill->latitude, $prefill->longitude)
+                : null,
+            // WHAT EACH SUB-CATEGORY ASKS, as the rail states it — built from the
+            // same sets the form renders step 2 from, so the rail cannot describe a
+            // form this page did not draw.
+            'checklists' => self::checklistsFor($kinds, $blockSets),
         ]);
     }
 
@@ -398,6 +418,34 @@ final class IncidentReportController
         }
 
         return $sets;
+    }
+
+    /**
+     * WHAT EACH SUB-CATEGORY ASKS, AS THE RAIL STATES IT, keyed by wire-code.
+     *
+     * Built from the block sets the form is already rendering step 2 from — the
+     * rail describes the form this page drew, never a second reading of the
+     * taxonomy. Keyed the same way, so the controller that swaps a field set swaps
+     * the card that names it.
+     *
+     * @param list<\Uhifadhi\Incident\Entity\TaxonomyKind> $kinds
+     * @param array<string, list<BlockQuestionSet>>        $blockSets
+     *
+     * @return array<string, ReportChecklist>
+     */
+    private static function checklistsFor(array $kinds, array $blockSets): array
+    {
+        $checklists = [];
+        foreach ($kinds as $kind) {
+            foreach ($kind->getSubcategories() as $subcategory) {
+                $checklists[$subcategory->getCode()] = ReportChecklist::for(
+                    $subcategory->getLabel(),
+                    $blockSets[$subcategory->getCode()] ?? [],
+                );
+            }
+        }
+
+        return $checklists;
     }
 
     private function denyUnlessGranted(): void

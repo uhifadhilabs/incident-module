@@ -1,0 +1,42 @@
+{# ============================================================================
+   THE RAIL BESIDE THE REPORT FORM.
+
+   The form is 860px wide and the screen is not, so on a wide viewport there was a
+   column of nothing beside a form somebody was filling in. What belongs there is
+   the two things the form cannot say for itself:
+
+     THE OBSERVATION, IN FULL — only where the filing came from a record. The strip
+     at the top of the page proves it exists; this makes it legible.
+
+     WHAT THIS KIND ASKS — always. Every block the chosen sub-category switched on,
+     with the gate's own marks against them.
+
+   A WALK-IN FILING IS THE SECOND CARD ALONE, and that is the commonest filing
+   there is: somebody walked into an office, there is no record behind it, and the
+   rail is still the place that says what is left to answer.
+
+   ONE SCROLLER. The rail is not a scroll region of its own — the page is the
+   scroller, so there is one scrollbar to find and nothing in the rail can be
+   stranded beside a form that has grown long. Below 1160px the two columns cannot
+   both stand and the rail stacks under the form, which keeps its width: the rail is
+   extra help, never a reason for the form to get narrower (see incidents.css).
+
+   Parameters: controller, kinds, chosen, prefill, checklists, sourceFiles, sourceMap
+   ========================================================================== #}
+<aside class="i-rail">
+    {% if prefill.hasProvenance %}
+        {{ include('@UhifadhiIncident/report/_observation.html.twig', {
+            prefill: prefill,
+            files: sourceFiles,
+            map: sourceMap,
+        }, with_context: false) }}
+    {% endif %}
+
+    {{ include('@UhifadhiIncident/report/_checklist.html.twig', {
+        controller: controller,
+        kinds: kinds,
+        chosen: chosen,
+        prefill: prefill,
+        checklists: checklists,
+    }, with_context: false) }}
+</aside>

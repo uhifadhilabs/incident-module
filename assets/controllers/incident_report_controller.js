@@ -15,6 +15,13 @@ import { Controller } from '@hotwired/stimulus';
  * that carries no money. That is the design's contract and the template enforces
  * it by rendering no money fold there at all.
  *
+ * AND THE RAIL BESIDE THE FORM IS MARKED FROM THE GATE'S OWN LIST. The checklist
+ * names every answer the filing still owes; it is handed the very list the footer
+ * was just given, so the rail and the File control can never disagree about the
+ * same form. Choosing a word swaps the rail's card with step 2's field set, for the
+ * same reason both exist: a form showing one sub-category's questions beside a card
+ * describing another's would be two answers to one question.
+ *
  * WHAT ELSE IT DOES IS WHAT A LIST NEEDS: a fold opens and shuts, and a repeating
  * block grows and loses rows. Neither reaches the server — a fold remembers a
  * person's reading habit, not a fact about the incident.
@@ -25,7 +32,15 @@ import { Controller } from '@hotwired/stimulus';
  * refuses the same omissions.
  */
 export default class extends Controller {
-    static targets = ['category', 'fieldset', 'gate', 'hint', 'file', 'headline', 'rows'];
+    static targets = [
+        'category', 'fieldset', 'gate', 'hint', 'file', 'headline', 'rows',
+        // The rail beside the form: one card per sub-category, plus the card that
+        // stands in while nothing is chosen.
+        'asks', 'asksEmpty', 'progress',
+    ];
+
+    /** The attribute a rail row carries the gate's own missing-answer label on. */
+    static NEED = 'data-incident-report-need';
 
     connect() {
         this.gate();
@@ -81,6 +96,16 @@ export default class extends Controller {
             }
         }
 
+        // THE RAIL'S CARD SWAPS WITH THE FIELD SET. The card names the word and
+        // prices it, so a form showing one sub-category's questions beside a card
+        // describing another's would be two answers to one question.
+        for (const asks of this.asksTargets) {
+            asks.hidden = asks.dataset.incidentAsks !== slug;
+        }
+        if (this.hasAsksEmptyTarget) {
+            this.asksEmptyTarget.hidden = true;
+        }
+
         const chosen = this.element.querySelector('[data-incident-report-subcategory]');
         if (chosen) {
             chosen.value = slug;
@@ -126,6 +151,76 @@ export default class extends Controller {
         }
         if (this.hasHintTarget) {
             this.hintTarget.hidden = 0 !== missing.length;
+        }
+
+        this.markTheRail(missing);
+    }
+
+    /**
+     * THE RAIL, MARKED FROM THE GATE'S OWN LIST.
+     *
+     * The checklist beside the form says whether each answer the filing owes has
+     * arrived. It must never work that out for itself: a second reading of the same
+     * form is a second opinion, and the day the two disagree the rail is telling
+     * somebody they may file while the File control refuses to. So this is handed
+     * the very list that was just written into the footer, and every row is marked
+     * by matching its own `data-incident-report-need` against it.
+     *
+     * A row that is still owed is NUMBERED in the order it is owed, and one that has
+     * arrived wears a tick — the same marks the state rail uses, so "answered" reads
+     * identically wherever this module draws it.
+     *
+     * The rail informs and never gates: nothing here touches the File control.
+     */
+    markTheRail(missing) {
+        const shown = this.asksTargets.find((asks) => !asks.hidden);
+        if (!shown) {
+            return;
+        }
+
+        const rows = [...shown.querySelectorAll('.rr-q')];
+        let owed = 0;
+        for (const row of rows) {
+            const need = row.getAttribute(this.constructor.NEED);
+            const done = !missing.includes(need);
+            row.classList.toggle('done', done);
+            row.classList.toggle('need', !done);
+
+            const mark = row.querySelector(':scope > i');
+            if (mark) {
+                mark.textContent = done ? '✓' : `${++owed}`;
+            }
+
+            // "3 questions · folded" while it waits, "3 questions · answered" once
+            // the answer is in — the count is the markup's, the second word is this.
+            const note = row.querySelector('.n');
+            if (note) {
+                const base = note.dataset.incidentReportN ?? '';
+                const fold = row.dataset.incidentReportFold ?? 'open';
+                note.textContent = `${base} · ${done ? 'answered' : fold}`;
+            }
+        }
+
+        const total = rows.filter((row) => row.hasAttribute(this.constructor.NEED)).length;
+        const still = rows.filter((row) => missing.includes(row.getAttribute(this.constructor.NEED))).length;
+        const progress = shown.querySelector('.rr-prog');
+        if (!progress || 0 === total) {
+            return;
+        }
+
+        const done = 0 === still;
+        progress.classList.toggle('ok', done);
+        const bar = progress.querySelector('.bar');
+        if (bar) {
+            bar.classList.toggle('ok', done);
+            const fill = bar.querySelector('i');
+            if (fill) {
+                fill.style.width = `${Math.round(((total - still) / total) * 100)}%`;
+            }
+        }
+        const count = progress.querySelector('b');
+        if (count) {
+            count.textContent = `${still} of ${total} still needed`;
         }
     }
 
