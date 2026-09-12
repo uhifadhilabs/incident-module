@@ -85,6 +85,32 @@ enum BehaviorBlockEnum: string
         };
     }
 
+    /**
+     * The ONE LINE a fold's summary carries beside the block's name — what the
+     * block is for, said short enough to sit on a row that is shut.
+     *
+     * Not {@see description()}, which is the picker's paragraph: a manager
+     * choosing blocks is reading about a decision, and a filer reading a fold is
+     * deciding whether the questions inside it are theirs to answer.
+     */
+    public function caption(): string
+    {
+        return match ($this) {
+            self::Species => 'which animal, and what is known about it',
+            self::Counts => 'how many of what',
+            self::Method => 'how it was done, and with what',
+            self::Parties => 'the people on the record, each in a role',
+            self::Seizures => 'what was taken into custody',
+            self::Money => 'a fine to assess, or a claim to settle',
+            self::Condition => 'the state it was in, and what became of it',
+            self::Samples => 'what was taken, and where it went',
+            self::Casualty => 'who was hurt, and what was done for them',
+            self::Extent => 'the measured size of the thing',
+            self::NamedPlace => 'the place beyond the pin, when the pin is not the answer',
+            self::Notice => 'permit or licence status, and whether a notice was served',
+        };
+    }
+
     /** Whether this block is the money block — the one that also carries a direction. */
     public function isMoney(): bool
     {
