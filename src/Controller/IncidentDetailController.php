@@ -37,6 +37,7 @@ use Uhifadhi\Incident\Exception\IncidentTransitionException;
 use Uhifadhi\Incident\Model\BlockQuestionCatalogue;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\IncidentRepository;
+use Uhifadhi\Incident\Service\AreaListService;
 use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentMapService;
@@ -91,6 +92,12 @@ final class IncidentDetailController
         private readonly IncidentDashboardService $dashboard,
         private readonly IncidentMapService $map,
         private readonly IncidentCaseService $cases,
+        /**
+         * THE WORDS THIS AREA'S LISTS HOLD, so a printed answer is the word a
+         * warden reads rather than the key a record keeps — and so a RETIRED word
+         * still resolves, which is the whole promise retiring makes.
+         */
+        private readonly AreaListService $areaLists,
         private readonly ?AuthorizationCheckerInterface $authorization = null,
         private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
         private readonly ?TokenStorageInterface $tokenStorage = null,
@@ -128,6 +135,10 @@ final class IncidentDetailController
                 $incident->getSubcategory()->getBlocks(),
                 $incident->getSubcategory()->getMoneyDirection(),
             ),
+            // WHAT A STORED ANSWER IS CALLED. Every word this area ever had,
+            // retired ones included: a case file must never lose the word that
+            // describes it because somebody took that word off the form.
+            'areaWords' => $this->areaLists->wordsFor($area),
             'csrfToken' => $this->csrfTokenManager?->getToken(self::csrfTokenId($area))->getValue(),
         ]));
     }

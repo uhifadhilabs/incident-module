@@ -22,6 +22,7 @@ use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 use Uhifadhi\Incident\Controller\IncidentController;
 use Uhifadhi\Incident\Controller\IncidentKindsOverviewController;
 use Uhifadhi\Incident\Controller\IncidentListController;
+use Uhifadhi\Incident\Repository\AreaListEntryRepository;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 use Uhifadhi\Incident\Repository\IncidentLinkRepository;
@@ -32,6 +33,8 @@ use Uhifadhi\Incident\Repository\IncidentSettingsRepository;
 use Uhifadhi\Incident\Repository\IncidentZoneLocator;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
+use Uhifadhi\Incident\Service\AreaListBoardService;
+use Uhifadhi\Incident\Service\AreaListService;
 use Uhifadhi\Incident\Service\IncidentBlockAnswerService;
 use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
@@ -195,6 +198,32 @@ return static function (ContainerConfigurator $container): void {
         ]);
 
     /*
+     * THE FOUR PER-AREA LISTS. Two services, because they answer two different
+     * questions and only one of them writes: AreaListService is every write that
+     * reaches a word plus the words the report form and the case file read, and
+     * AreaListBoardService assembles the editor's four folds — its rows, its
+     * counts and the "used by" line derived from the block catalogue.
+     *
+     * Both unconditional. They are pure domain logic with no security of their
+     * own; the CONTROLLER that fronts them is registered only under the security
+     * guard (see UhifadhiIncidentBundle), because every write rides on
+     * "incidents.manage" and there is nobody to grant it without a firewall —
+     * and the READ is needed on the report form, which the guard also covers, and
+     * on the case file, which everybody can open.
+     */
+    $services->set('incident.area_lists', AreaListService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(AreaListEntryRepository::class),
+        ]);
+
+    $services->set('incident.area_list_board', AreaListBoardService::class)
+        ->args([
+            service(AreaListEntryRepository::class),
+            service(TaxonomyKindRepository::class),
+        ]);
+
+    /*
      * Repositories keep FQCN ids — the one place the bundle-alias prefix cannot
      * be used: ServiceRepositoryCompilerPass keys its locator by SERVICE ID over
      * findTaggedServiceIds(), while ContainerRepositoryFactory looks a repository
@@ -211,6 +240,7 @@ return static function (ContainerConfigurator $container): void {
         IncidentLinkRepository::class,
         TaxonomyKindRepository::class,
         TaxonomySubcategoryRepository::class,
+        AreaListEntryRepository::class,
     ] as $repository) {
         $services->set($repository)
             ->args([service('doctrine')])

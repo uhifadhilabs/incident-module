@@ -29,6 +29,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Incident\Command\CloseDueCommand;
+use Uhifadhi\Incident\Controller\IncidentAreaListController;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
 use Uhifadhi\Incident\Controller\IncidentMoneyController;
 use Uhifadhi\Incident\Controller\IncidentReportController;
@@ -45,6 +46,7 @@ use Uhifadhi\Incident\Overview\IncidentNowTiles;
 use Uhifadhi\Incident\Overview\IncidentOverviewContributor;
 use Uhifadhi\Incident\Overview\IncidentOverviewCopy;
 use Uhifadhi\Incident\Overview\IncidentPulse;
+use Uhifadhi\Incident\Repository\AreaListEntryRepository;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
@@ -363,6 +365,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('incident.dashboard'),
                     service('incident.map'),
                     service('incident.case'),
+                    service('incident.area_lists'),
                     service('security.authorization_checker'),
                     // FrameworkBundle defines this id whenever symfony/security-csrf
                     // is installed, which a host running SecurityBundle already has.
@@ -394,6 +397,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('router'),
                     service('incident.report'),
                     service('incident.block_answers'),
+                    service('incident.area_lists'),
                     service(TaxonomyKindRepository::class),
                     service(TaxonomySubcategoryRepository::class),
                     service('security.authorization_checker'),
@@ -422,6 +426,27 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 ])
                 ->public();
             $services->alias(IncidentTaxonomyController::class, 'incident.controller.taxonomy')->public();
+
+            /*
+             * THE LISTS EDITOR — the words this area's four gating questions
+             * offer. The sibling of the kinds editor next door and guarded the
+             * same way, for the same reason: every route on it rides on
+             * "incidents.manage", and naming the words everybody else must pick
+             * from is not something filing an incident earns. Its two services
+             * are unconditional; only this door is guarded.
+             */
+            $services->set('incident.controller.area_lists', IncidentAreaListController::class)
+                ->args([
+                    service('twig'),
+                    service('router'),
+                    service('incident.area_lists'),
+                    service('incident.area_list_board'),
+                    service(AreaListEntryRepository::class),
+                    service('security.authorization_checker'),
+                    service('security.csrf.token_manager'),
+                ])
+                ->public();
+            $services->alias(IncidentAreaListController::class, 'incident.controller.area_lists')->public();
 
             /*
              * THE SETTINGS SECTION'S ONE POST. It changes what the area runs

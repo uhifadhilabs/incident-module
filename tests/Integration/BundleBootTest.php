@@ -88,6 +88,7 @@ final class BundleBootTest extends KernelTestCase
 
         self::assertSame([
             'incident',
+            'incident_area_list_entry',
             'incident_event',
             'incident_evidence',
             'incident_link',

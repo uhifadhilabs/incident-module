@@ -40,6 +40,7 @@ use Uhifadhi\Incident\Model\IncidentPrefill;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
+use Uhifadhi\Incident\Service\AreaListService;
 use Uhifadhi\Incident\Service\IncidentBlockAnswerService;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Storage\Model\FileEntry;
@@ -121,6 +122,12 @@ final class IncidentReportController
         private readonly UrlGeneratorInterface $router,
         private readonly IncidentReportService $reports,
         private readonly IncidentBlockAnswerService $blockAnswers,
+        /**
+         * THE WORDS THIS AREA'S FOUR LIST QUESTIONS OFFER — asked of the same
+         * service the Lists editor writes through, so the form can never offer a
+         * word the editor could not have produced.
+         */
+        private readonly AreaListService $areaLists,
         private readonly TaxonomyKindRepository $kinds,
         private readonly TaxonomySubcategoryRepository $subcategories,
         private readonly AuthorizationCheckerInterface $authorization,
@@ -279,11 +286,12 @@ final class IncidentReportController
             'blockSets' => self::blockSetsFor($kinds),
             // THE PER-AREA LISTS the catalogue's four list questions read from —
             // which animal, by what method, what the ground is used for, which
-            // named place. NO SCREEN EDITS THEM YET, so every list arrives empty
-            // and the form offers the typed `other` beside it rather than
-            // inventing a choice. When an editor ships, it fills this map and
-            // nothing else on the form changes.
-            'areaLists' => [],
+            // named place. THIS AREA'S OWN WORDS, written in the Lists section of
+            // the configure page, and only the ones still offered: retiring a word
+            // takes it off this form and leaves it on every record already filed
+            // under it. A list with nothing in it draws an empty select beside the
+            // typed `other`, which is a legitimate state and not a bug.
+            'areaLists' => $this->areaLists->wordsFor($area),
             // THE FORM POSTS BACK TO ITS OWN ENTRY POINT. Without the hand-off on the
             // action, pressing File would drop the provenance, the source card and
             // the container all at once.

@@ -336,3 +336,69 @@
 .tx-blockedit .tx-picker{margin-top:4px}
 .tx-blockedit .tx-savebar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
 .tx-actform{display:inline}
+
+/* ── THE LISTS SECTION ────────────────────────────────────────────────────────
+   The four lists a gating question reads, as four folds. The fold itself is
+   incidents.css's (it is the same component the report form uses), and what is
+   added here is the registry ROW families the house sheets do not carry yet plus
+   this page's own rhythm.
+
+   THE ROW FAMILIES ARE A HOIST, AND THE HOIST IS DEBT. `.srow>.note`, `.sren`
+   and the `.saddrow`/`.saddcard` pair are copied verbatim from the design
+   workspace's own sheet (DesignsProjects/uhifadhi-web/uhifadhi.css), because the
+   shell does not ship them yet. They are GENERAL — a registry member's short
+   note, a member mid-rename, the row that creates one — so they belong in
+   shell.css beside `.srow` and `.sact`; the day they are there this block comes
+   out rather than being restyled.
+
+   ONE RULE THE SHELL STILL CONTRADICTS: `.srow.gone>.nm` is struck through in
+   shell.css and dimmed only in the design sheet, which is the ruled treatment —
+   a strike says the word was a mistake and is gone, and retired means the
+   opposite. It is the shell's rule to change; restating it here would be two
+   definitions of one component, so this sheet leaves it alone.            */
+
+/* A row's SHORT NOTE — what the entry also is, in words rather than a code: a
+   species' scientific name, where a place is, what a terse word means. */
+.srow>.note{min-width:0;font-size:11.5px;font-style:italic;color:var(--fog);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow.gone>.note{color:var(--dim)}
+
+/* A ROW MID-RENAME. The label becomes a field where the label was, at the row's
+   own 21px control height — what a .sact and a .chip compute to — so a row being
+   renamed is exactly as tall as its siblings and the list does not step. */
+.sren{flex:none;width:196px;height:21px;padding:0 8px;border-radius:6px;
+  background:var(--raised);border:1px solid color-mix(in srgb,var(--acc) 55%,transparent);
+  color:var(--tx);font-family:inherit;font-size:12.5px;font-weight:600}
+.sren:focus{outline:0;box-shadow:0 0 0 3px var(--accGlow)}
+
+/* The row that creates an entry, and the panel that holds it. `.sadd` alone is
+   the button; `.saddrow` is the row it stands in once creating takes a word and a
+   note; `.saddcard` gives that row a panel and a heading of its own, because
+   creating is a small form and a form inside a list is not a list row. */
+.saddrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.saddrow>.fld{flex:1;width:auto;min-width:168px;height:34px;padding:0 13px;font-size:12.5px}
+.saddrow>.sadd{margin-top:0;height:34px;display:inline-flex;align-items:center;white-space:nowrap}
+.saddcard{margin-top:18px;border:1px solid var(--ln2);border-radius:11px;
+  padding:12px 14px 13px;background:var(--raised)}
+.saddcard>.hd{display:block;margin-bottom:10px;color:var(--dim);
+  font:600 9px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase}
+/* The list's last entry keeps no rule of its own: the panel below it is the
+   separation, and a dashed line immediately above the panel is a second one. */
+.srow:has(+ .saddcard){border-bottom:0}
+
+/* ── this page's own ──────────────────────────────────────────────────────────
+   Every control here is a link or a one-button form, because the open fold is in
+   the URL and the whole screen works without JavaScript. So a link has to stand
+   where the design drew a button, at the same height and without an underline,
+   and a form standing in a row of actions must not become a block. */
+.tx-lists .fold>a.sum{text-decoration:none}
+.tx-lists a.sact{display:inline-flex;align-items:center;text-decoration:none}
+.tx-lists .srow>.acts form{display:inline-flex}
+
+/* The rhythm the design states as inline styles on the elements themselves; a
+   template that renders from data states it once, here. */
+.tx-lists>.use{margin:14px 2px 18px}
+.tx-lists .fold>.bd>.use{margin:10px 0 12px}
+.tx-lists .c{margin-top:22px}
+.tx-lists .c>.use{margin:2px 2px 0}
+.tx-lists>.use.whose{margin:18px 2px 4px}

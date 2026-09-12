@@ -27,11 +27,14 @@ use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
 use Uhifadhi\Incident\Service\IncidentSettingsService;
 
 /**
- * WHAT IS ON THE INCIDENTS CONFIGURE PAGE — three sections, in the order the
+ * WHAT IS ON THE INCIDENTS CONFIGURE PAGE — four sections, in the order the
  * platform rules and not the order written here: the library, the kinds, the
- * numbers.
+ * words, the numbers.
  *
- * TWO OF THEM KEEP AN ADDRESS OF THEIR OWN, and the design is why. The widget
+ * THE WORDS COME AFTER THE KINDS, because a list is the words a kind's blocks ask
+ * for, and before Settings, which is numbers.
+ *
+ * THREE OF THEM KEEP AN ADDRESS OF THEIR OWN, and the design is why. The widget
  * library and the incident kinds are each a full screen in the settled design —
  * `widgets.html` and `kinds.html`, each with its own URL, wearing the configure
  * page's heading and the configure page's strip — so they are declared as
@@ -90,7 +93,8 @@ final readonly class IncidentConfigurationSections implements ConfigurationSecti
     public function summary(): string
     {
         return 'Everything this module is set up with in this area, in one place: how its dashboard is composed, '
-            .'the kinds a case is filed under, and what this area counts money in.';
+            .'the kinds of incident this area files, the words its questions offer, and how money and terms behave '
+            .'under them.';
     }
 
     public function sections(): array
@@ -107,6 +111,15 @@ final readonly class IncidentConfigurationSections implements ConfigurationSecti
                 'kinds',
                 'Incident kinds',
                 'incident_kinds',
+            ),
+            // THE WORDS ONE QUESTION OFFERS, per area. A full screen in the
+            // settled design — four folds, their rows and their add panels —
+            // and a body the shell could not be handed cheaply: it is assembled
+            // from this area's taxonomy and from the register's own counts.
+            ConfigurationSection::screen(
+                'lists',
+                'Lists',
+                'incident_lists',
             ),
             ConfigurationSection::page(
                 ConfigurationSection::SETTINGS,

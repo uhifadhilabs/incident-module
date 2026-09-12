@@ -50,7 +50,7 @@ final class ConfigurePageTest extends FunctionalTestCase
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Sample Area — Incidents · configure', $crawler->filter('h1.pg')->text());
         self::assertSame(
-            ['Widget library', 'Incident kinds', 'Settings'],
+            ['Widget library', 'Incident kinds', 'Lists', 'Settings'],
             $crawler->filter('.atabs a')->each(static fn (Crawler $a): string => trim($a->text())),
         );
         self::assertSame('Settings', trim($crawler->filter('.atabs a.on')->text()));

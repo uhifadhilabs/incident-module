@@ -322,7 +322,10 @@
             {% endif %}
             {% for question in set.questions %}
                 <div class="i-fld"><label>{{ question.label }}</label>
-                    <span>{% if set.block.isMoney %}{{ incident.claimedAtFiling is null ? '—' : ui.amount(money ? money.currency : 'TZS', incident.claimedAtFiling, 'claimed at filing') }}{% else %}{{ answers[question.key]|default('—') }}{% endif %}</span></div>
+                    {# AN ANSWER FROM ONE OF THE AREA'S LISTS IS PRINTED AS THE WORD,
+                       not as the stable key the record keeps — and a retired word still
+                       resolves, because that is what retiring promises. #}
+                    <span>{% if set.block.isMoney %}{{ incident.claimedAtFiling is null ? '—' : ui.amount(money ? money.currency : 'TZS', incident.claimedAtFiling, 'claimed at filing') }}{% elseif question.areaList and answers[question.key] is defined %}{{ areaWords.label(question.areaList, answers[question.key]) }}{% else %}{{ answers[question.key]|default('—') }}{% endif %}</span></div>
             {% endfor %}
         </div>
     {% else %}

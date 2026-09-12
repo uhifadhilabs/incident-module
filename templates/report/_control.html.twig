@@ -6,11 +6,15 @@
    that reads ONE AREA'S OWN list. Every one of them is a rule the shell's design
    system owns — nothing here knows what an incident is.
 
-   THE EMPTY AREA LIST IS NOT A BUG AND IS NOT PAPERED OVER. No screen edits an
-   area's species, methods, land uses or named places yet, so those selects offer
-   the area's list — which arrives empty — and the typed `other` beside it. A
+   AN AREA LIST OFFERS KEYS AND SHOWS WORDS. The option's value is the entry's
+   stable key and its text is the word, because that key is what the record keeps:
+   a word corrected later still resolves on every case file filed under it. A
    hardcoded animal would be one area's vocabulary written into every area on
-   earth, so the list stays empty until an editor fills it.
+   earth, so the words come from the area's own list and nowhere else.
+
+   AN EMPTY AREA LIST IS NOT A BUG AND IS NOT PAPERED OVER. A list nobody has
+   written words into yet draws its select empty, with the typed `other` beside
+   it, which is exactly what the Lists editor's own empty state promises.
 
    WHAT GATES SAYS SO TWICE: the accent mark a person reads, and the attribute the
    gate reads — `data-need-answer` on a question asked once, `data-need-row` on a
@@ -32,10 +36,10 @@
 {%- elseif 'select-area-list' == question.control.value -%}
     <span class="fsel w"><select class="fld" name="{{ name }}"{{ idAttr|raw }}{{ gate|raw }}{{ off|raw }}>
         <option value="" selected>{{ question.areaList.placeholder }}</option>
-        {%- for option in areaLists[question.areaList.value]|default([]) -%}
-            <option>{{ option }}</option>
+        {%- for key, word in areaLists.options(question.areaList) -%}
+            <option value="{{ key }}">{{ word }}</option>
         {%- endfor -%}
-        <option>other — not on the list</option>
+        <option value="other">other — not on the list</option>
     </select></span>
 {%- elseif 'number' == question.control.value -%}
     <span class="fnum"><input class="fld" type="text" inputmode="numeric" placeholder="0"

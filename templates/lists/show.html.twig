@@ -1,0 +1,92 @@
+{# ============================================================================
+   THE WORDS THIS AREA'S GATING QUESTIONS OFFER — the design's lists.html, ported.
+
+   IT IS A SECTION OF THE CONFIGURE PAGE that kept an address of its own, beside
+   Incident kinds, so it wears the configure page's heading and the configure
+   page's strip and the Configure action stays lit on it. The shell draws all
+   three; nothing here draws navigation, and there is no way back other than the
+   strip, the lit Configure and the crumb.
+
+   FOUR FOLDS, ONE OPEN, AND THE FOLD IS A SPACE SAVER. Four full lists on one
+   page would not fit, so three are shut — and a shut fold here never means "you
+   may leave this alone", which is why its summary counts the sub-categories that
+   READ the list and carries OPEN / CLOSED in a word beside the caret. That is
+   deliberately not the report form's fold wording, where a shut block genuinely
+   may be optional.
+
+   THE OPEN ONE IS WHICHEVER LIST THE ROUTE RESOLVES, so every control on the page
+   is a link or a small server-rendered form carrying the CSRF token and the whole
+   screen works with no JavaScript — including the row being renamed, which
+   survives the round trip because the fold it is in is in the URL.
+
+   `panels`, `editing`, `recordScreens`, `csrfToken`, `area` come from
+   IncidentAreaListController.
+   ========================================================================== #}
+{% extends '@UhifadhiIncident/base.html.twig' %}
+
+{% block title %}Incidents · lists{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# The configure sections' own `tx-` vocabulary and this screen's registry
+       rows, by the bundle's own constant so the path is never typed twice. #}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Incident\\UhifadhiIncidentBundle::TAXONOMY_STYLESHEET')) }}">
+{% endblock %}
+
+{% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / lists{% endblock %}
+
+{% block shell_page_title %}{{ area.name }} &mdash; Incidents &middot; configure{% endblock %}
+
+{% block shell_page_subtitle %}Everything this module is set up with in <b>this area</b>, in one place: how its dashboard is composed, the kinds of incident this area files, the words its questions offer, and how money and terms behave under them.{% endblock %}
+
+{% block shell_page_actions %}
+    {% if recordScreens %}
+        <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('incident:pencil') }} Report incident</a>
+    {% endif %}
+{% endblock %}
+
+{% block incident_page %}
+<div class="tx-lists">
+    {# Scope and authority, said once and plainly — the two facts that change how
+       the whole page is read: the words are this area's, and naming them is not
+       something filing an incident earns. #}
+    <div class="tx-say">{{ ux_icon('incident:shield', {width: 17, height: 17}) }}<div><b>These lists are {{ area.name }}&rsquo;s own.</b>
+        A list is not a kind of incident &mdash; it is the <b>words one question offers</b>, and they are this area&rsquo;s words.
+        Two records about the same water body are countable as one place, and two about the same animal as one species, which a
+        typed name can never promise. Editing rides on <span class="mono">incidents.manage</span> &mdash; the same authority that
+        names the kinds. Filing an incident is not enough to name the words everybody else must pick from.</div></div>
+
+    <div class="use"><b>There are exactly four lists, and an area cannot add a fifth.</b> Each one belongs to a question a
+        behaviour block already asks &mdash; the species, the method, the land use and the named place &mdash; so a new list
+        arrives only with a new block, in code. What is this area&rsquo;s is <b>the words in them</b>, and every other question on
+        the report form either carries its own fixed choices or is typed. <b>The four folds below are a space saver and nothing
+        more:</b> every one of these lists is in use, and a shut fold says only that four full lists on one page would not fit.</div>
+
+    {% for panel in panels %}
+        {{ include('@UhifadhiIncident/lists/_fold.html.twig', {
+            area: area,
+            panel: panel,
+            editing: editing,
+            csrfToken: csrfToken,
+        }, with_context: false) }}
+    {% endfor %}
+
+    {# WHAT RETIRING DOES, said where somebody is about to press Retire. The
+       design prints a workshop index in this card's tab; that is the design
+       workspace's referencing system and it does not ship. #}
+    <div class="c">
+        <span class="tab">What retiring an entry does<span class="src">&middot; never delete</span></span>
+        <div class="use"><b>Retired leaves the picker and stays on the record.</b> Exactly as an observation kind or a
+            sub-category does: every incident already filed under the word keeps it, it stays in the register filter, in every
+            export and on every case file, and it is off the report form and off the handsets at their next sync. Bring it back
+            in one click and it returns as it was. <b>There is no delete control on this page</b>, so nothing here can orphan a
+            case file. A rename is safe for the same reason the kinds are: the entry keeps the identity the filed records point
+            at, and only its words change.</div>
+    </div>
+
+    <div class="use whose"><b>Whose lists these are.</b> They are held per area and edited here, in the incidents module,
+        because every one of them is read by a question the module asks. The model is written so the same words could later be
+        lifted to the area&rsquo;s own shared vocabulary &mdash; a species list a second module could read &mdash; without moving
+        them again; until a second module needs them, the screen stays the module&rsquo;s.</div>
+</div>
+{% endblock %}

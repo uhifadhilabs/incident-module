@@ -38,6 +38,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
+use Uhifadhi\Incident\Repository\AreaListEntryRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\AreaVocabulary;
@@ -313,6 +314,9 @@ final class TestKernel extends Kernel
             // reached directly and asked to do the one thing it does.
             'incident.devkit.content',
             'incident.zone_locator',
+            // The four per-area lists: the writes, and the editor's four folds.
+            'incident.area_lists',
+            'incident.area_list_board',
             // The registry's own two: the reconciliation that puts this module
             // in the catalogue, and the service an admin's Customize page calls
             // to switch it on for one area. A suite that renders a module page
@@ -335,6 +339,7 @@ final class TestKernel extends Kernel
         // findable in.
         foreach ([
             'incident.repository' => IncidentRepository::class,
+            'incident.area_list_entries' => AreaListEntryRepository::class,
             'shell.widget.service' => WidgetService::class,
             'shell.widget.endpoint' => WidgetEndpoint::class,
             'shell.widget.surfaces' => WidgetSurfaceRegistry::class,

@@ -62,24 +62,28 @@ final class IncidentConfigurationSectionsTest extends TestCase
     }
 
     /**
-     * THE THREE SECTIONS, in the words this module chose — and two of them keep
+     * THE FOUR SECTIONS, in the words this module chose — and three of them keep
      * an address of their own, exactly as the settled design draws them.
+     *
+     * THE WORDS COME AFTER THE KINDS, because a list is the words a kind's blocks
+     * ask for, and before Settings, which is numbers.
      */
-    public function testItDeclaresTheLibraryTheKindsAndTheSettings(): void
+    public function testItDeclaresTheLibraryTheKindsTheListsAndTheSettings(): void
     {
         $sections = $this->declaration()->sections();
 
         self::assertSame(
-            [ConfigurationSection::WIDGETS, 'kinds', ConfigurationSection::SETTINGS],
+            [ConfigurationSection::WIDGETS, 'kinds', 'lists', ConfigurationSection::SETTINGS],
             array_map(static fn (ConfigurationSection $s): string => $s->id, $sections),
         );
         self::assertSame(
-            ['Widget library', 'Incident kinds', 'Settings'],
+            ['Widget library', 'Incident kinds', 'Lists', 'Settings'],
             array_map(static fn (ConfigurationSection $s): string => $s->label, $sections),
         );
         self::assertFalse($sections[0]->isRendered());
         self::assertFalse($sections[1]->isRendered());
-        self::assertTrue($sections[2]->isRendered());
+        self::assertFalse($sections[2]->isRendered());
+        self::assertTrue($sections[3]->isRendered());
     }
 
     /**
@@ -91,7 +95,7 @@ final class IncidentConfigurationSectionsTest extends TestCase
         $request = new Request();
         $request->attributes->set('_route', 'incident_dashboard');
 
-        self::assertSame([], $this->declaration($request)->sections()[2]->variables);
+        self::assertSame([], $this->declaration($request)->sections()[3]->variables);
     }
 
     /** A request that names no area gets an empty heading rather than a throw. */

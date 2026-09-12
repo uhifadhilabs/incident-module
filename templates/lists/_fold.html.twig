@@ -1,0 +1,81 @@
+{# ── ONE LIST, AS ONE FOLD ────────────────────────────────────────────────────
+   The summary line is written for THIS job and not the report form's: that one
+   folds a block of questions a filer may not have to answer, so its summaries
+   count questions and stay quiet about use. This one counts the sub-categories
+   that READ the list and says OPEN / CLOSED in a word beside the caret, because
+   the fold here saves vertical space and never means "you may leave this alone".
+
+   THE SUMMARY IS A LINK, not a script: which fold is open is in the URL, which is
+   what lets a write — and a row mid-rename — come back to the list it happened in.
+
+   A LIST WITH NO WORDS YET is a data condition of this same fold, not a second
+   screen: it holds the line instead of rows, and the line says what the form will
+   do about it.
+
+   Parameters: area, panel, editing (an entry uuid or null), csrfToken
+   ========================================================================== #}
+{%- set list = panel.list -%}
+<div class="fold{{ panel.open ? '' : ' shut' }}">
+    <a class="sum" href="{{ path('incident_lists', {uuid: area.uuid, list: list.value}) }}">
+        <b>{{ list.label }}</b>
+        <em>{{ panel.summaryLine }}</em>
+        <span class="n">{{ panel.sizeLabel }}</span>
+        <span class="fstate">{{ panel.stateLabel }}</span>
+        <span class="cv"></span>
+    </a>
+    <div class="bd">
+        {# WHO READS THIS LIST — derived from the block catalogue and from this
+           area's own kinds, never written down: see AreaListUse. #}
+        <p class="use"><b>used by</b> <span class="tx-blk on">{{ panel.use.blockLabel }}</span> &rarr;
+            <b>{{ panel.use.questionLabel }}</b> &mdash;
+            {%- if panel.use.kinds is empty %}
+                no sub-category in this area switches that block on yet, so nothing asks for one of these words today.
+            {%- else %}
+                in
+                {%- for kindLabel, subcategories in panel.use.kinds -%}
+                    {{ loop.first ? '' : (loop.last ? ' and' : ',') }}
+                    <b>{{ kindLabel }}</b> ({{ panel.use.parenthetical(kindLabel) }})
+                {%- endfor -%}
+                : <b>{{ panel.use.subcategoryCount }}
+                {{- panel.use.subcategoryCount == 1 ? ' sub-category' : ' sub-categories' }}</b>.
+            {%- endif %}
+            {% if panel.use.gates %}
+                The answer <b>gates filing</b>{{ list.gateNote ? ' — ' ~ list.gateNote : '' }}.
+            {% else %}
+                This one <b>does not gate filing</b>{{ list.gateNote ? ': ' ~ list.gateNote : '' }}.
+            {% endif %}
+            On the form the empty line reads <span class="mono">{{ list.placeholder }}</span>.
+            {# The sentences true of this list and of no other. Their source is a
+               constant of this module (AreaListEnum::notes) and never input. #}
+            {% for note in list.notes %} {{ note|raw }}{% endfor %}</p>
+
+        {% for row in panel.rows %}
+            {{ include('@UhifadhiIncident/lists/_row.html.twig', {
+                area: area,
+                list: list,
+                row: row,
+                renaming: editing == row.uuid,
+                csrfToken: csrfToken,
+            }, with_context: false) }}
+        {% else %}
+            <div class="sout"><div class="bd">No entries yet &mdash; the form offers only &ldquo;other&rdquo; until this
+                    list has words.</div></div>
+        {% endfor %}
+
+        {# THE ADD PANEL IS THE SEPARATION. Adding is a small form — a word and an
+           optional note — and a form inside a list is not a list row, so it gets
+           a panel and a heading of its own and the list's last row drops its own
+           dashed rule rather than drawing a second mark. #}
+        <form class="saddcard" method="post" action="{{ path('incident_lists_add', {uuid: area.uuid, list: list.value}) }}">
+            <input type="hidden" name="_token" value="{{ csrfToken }}">
+            <span class="hd">{{ list.addHeading }}</span>
+            <div class="saddrow">
+                <input class="fld" type="text" name="label" placeholder="{{ list.wordPlaceholder }}"
+                       aria-label="{{ list.wordPlaceholder }}" maxlength="120" required>
+                <input class="fld" type="text" name="note" placeholder="{{ list.notePlaceholder }}"
+                       aria-label="{{ list.notePlaceholder }}" maxlength="160">
+                <button class="sadd" type="submit">{{ list.addAction }}</button>
+            </div>
+        </form>
+    </div>
+</div>

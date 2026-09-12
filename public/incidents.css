@@ -1117,3 +1117,12 @@ html.light .kheat{background:color-mix(in srgb,var(--heat,var(--acc)) calc(var(-
 .i-blocks{margin-top:12px}
 .i-blocks .fold.money{border-color:color-mix(in srgb,var(--i-money) 30%,transparent)}
 .i-blocks .fold.money>.sum>b{color:var(--i-money)}
+
+/* A FOLD THAT IS ONLY A SPACE SAVER SAYS SO IN A WORD. Where the group is
+   optional — step 2's behaviour blocks — the caret is the whole story. Where it
+   is not, and the fold exists because the page would otherwise be four times as
+   long, the summary carries OPEN / CLOSED beside the caret so the device is never
+   read as "you may not have to answer this". Text only, at the count's size and
+   weight, so a summary line is exactly as tall open as shut. */
+.fold>.sum>.fstate{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;
+   letter-spacing:.08em;text-transform:uppercase;color:var(--fog);flex:none}
