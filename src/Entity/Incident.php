@@ -214,6 +214,34 @@ class Incident
     #[ORM\Column(type: 'json')]
     private array $details = [];
 
+    /**
+     * THE ANSWERS TO THE QUESTIONS THE SUB-CATEGORY'S BEHAVIOUR BLOCKS ASK, kept
+     * per block, in the shape the block asks in: a block whose questions are asked
+     * once keeps `{key: answer}`, and a block that is a row the filer adds to keeps
+     * `{rows: [{key: answer}, …]}`. A block the sub-category does not switch on has
+     * nothing here, so unticking a block never leaves a ghost on an old record.
+     *
+     * @see \Uhifadhi\Incident\Model\BlockQuestionCatalogue  what each block asks
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    #[ORM\Column(type: 'json')]
+    private array $blockAnswers = [];
+
+    /**
+     * WHAT WAS CLAIMED — OR ASSESSED — AT FILING, in whole units, or null where
+     * the money block asked nothing.
+     *
+     * THIS IS NOT THE MONEY RECORD. {@see $money} is opened by whoever assesses or
+     * approves, in the state the money flow names; this is the figure the claimant
+     * or the officer gave at the roadside, before anybody had judged it. Keeping
+     * them apart is the whole point: the claimant is standing there with a number,
+     * and throwing it away to ask again a week later is worse than recording it
+     * unjudged — but recording it as an assessment would make a filer the judge.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?int $claimedAtFiling = null;
+
     /** @var Collection<int, IncidentEvent> */
     #[ORM\OneToMany(targetEntity: IncidentEvent::class, mappedBy: 'incident', cascade: ['persist'], orphanRemoval: true)]
     #[ORM\OrderBy(['occurredAt' => 'ASC', 'id' => 'ASC'])]
@@ -591,6 +619,34 @@ class Incident
             }
         }
         $this->details = $kept;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, array<string, mixed>> keyed by the block's wire value
+     */
+    public function getBlockAnswers(): array
+    {
+        return $this->blockAnswers;
+    }
+
+    /** @param array<string, array<string, mixed>> $blockAnswers */
+    public function setBlockAnswers(array $blockAnswers): static
+    {
+        $this->blockAnswers = $blockAnswers;
+
+        return $this;
+    }
+
+    public function getClaimedAtFiling(): ?int
+    {
+        return $this->claimedAtFiling;
+    }
+
+    public function setClaimedAtFiling(?int $claimedAtFiling): static
+    {
+        $this->claimedAtFiling = null === $claimedAtFiling ? null : max(0, $claimedAtFiling);
 
         return $this;
     }
