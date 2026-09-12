@@ -303,6 +303,9 @@ final class TestKernel extends Kernel
             'incident.overview.pulse',
             'incident.overview.copy',
             'incident.transitions',
+            // What step 2's blocks asked, read and gated — the same object the
+            // report endpoint asks, so a test cannot gate by a rule of its own.
+            'incident.block_answers',
             // The case file's write surface — the durable half of a move.
             'incident.case',
             // The inert demo-content declaration devkit collects in a dev

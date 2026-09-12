@@ -23,7 +23,9 @@ use Uhifadhi\Incident\Entity\IncidentParty;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Enum\PartyRoleEnum;
+use Uhifadhi\Incident\Model\BlockAnswers;
 use Uhifadhi\Incident\Model\IncidentFilter;
+use Uhifadhi\Incident\Service\IncidentBlockAnswerService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentEvidenceKey;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
@@ -117,6 +119,52 @@ final class IncidentContentProviderTest extends IntegrationTestCase
         );
 
         self::assertContains(PartyRoleEnum::Animal->value, $roles);
+    }
+
+    /**
+     * EVERY SEEDED RECORD ANSWERS THE BLOCKS ITS WORD SWITCHED ON — every one of
+     * their DEFINING questions, because a seeded record the report form would have
+     * refused is a demo that teaches the wrong rule.
+     */
+    public function testEverySeededIncidentAnsweredTheBlocksItsWordAsks(): void
+    {
+        $this->anArea('Sample Area');
+        $this->provider()->load();
+
+        /** @var IncidentBlockAnswerService $gate */
+        $gate = static::getContainer()->get('test_public.incident.block_answers');
+
+        $unanswered = [];
+        foreach ($this->em->getRepository(Incident::class)->findAll() as $incident) {
+            $answers = new BlockAnswers($incident->getBlockAnswers(), $incident->getClaimedAtFiling());
+            foreach ($gate->missing($incident->getSubcategory(), $answers) as $missing) {
+                $unanswered[] = $incident->getReference().' · '.$incident->getSubcategory()->getCode().' · '.$missing;
+            }
+        }
+
+        self::assertSame([], $unanswered);
+    }
+
+    /** And the figure the money block asked is the claimed one, not a money record. */
+    public function testTheFigureAskedAtFilingIsKeptApartFromTheMoneyRecord(): void
+    {
+        $this->anArea('Sample Area');
+        $this->provider()->load();
+
+        $claimed = 0;
+        $judged = 0;
+        foreach ($this->em->getRepository(Incident::class)->findAll() as $incident) {
+            if (null !== $incident->getClaimedAtFiling()) {
+                ++$claimed;
+            }
+            if (null !== $incident->getMoney()) {
+                ++$judged;
+            }
+        }
+
+        // Every word that carries money asked its figure at filing, and far fewer
+        // records have reached the state where somebody judges one.
+        self::assertGreaterThan($judged, $claimed);
     }
 
     /**
