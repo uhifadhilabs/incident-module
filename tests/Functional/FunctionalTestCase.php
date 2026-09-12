@@ -22,6 +22,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Incident\Devkit\DemoMonth;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
@@ -247,14 +248,20 @@ abstract class FunctionalTestCase extends WebTestCase
         /** @var IncidentReportService $reports */
         $reports = static::getContainer()->get('test_public.incident.report');
 
+        $word = $this->subcategory($area, $subcategory);
+
         return $reports->file(
             area: $area,
-            subcategory: $this->subcategory($area, $subcategory),
+            subcategory: $word,
             title: $title,
             position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: new \DateTimeImmutable(),
             severity: $severity ?? IncidentSeverityEnum::Moderate,
             reportedBy: $reportedBy,
+            // ANSWERED THE WAY THE FORM WOULD HAVE BEEN: the demo's own answers to
+            // the blocks this word switched on, so a page under test is reading a
+            // record a filer could actually have produced.
+            blockAnswers: DemoMonth::blockAnswersFor($word, 0),
         );
     }
 

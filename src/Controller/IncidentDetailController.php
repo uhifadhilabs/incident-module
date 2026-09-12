@@ -34,6 +34,7 @@ use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 use Uhifadhi\Incident\Exception\IncidentTransitionException;
+use Uhifadhi\Incident\Model\BlockQuestionCatalogue;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Service\IncidentCaseService;
@@ -119,6 +120,14 @@ final class IncidentDetailController
             // alone, because that is the only kind on the plate.
             'map' => $this->map->forArea($area, [$incident], [$incident->getKind()]),
             'canManage' => $this->canManage(),
+            // WHAT THIS WORD ASKED, so the page can print the answers under the
+            // block that asked them and in the order the questions were put. The
+            // record keeps the answers; the catalogue keeps the questions, which is
+            // why a block unticked afterwards prints nothing rather than a ghost.
+            'blockSets' => BlockQuestionCatalogue::forBlocks(
+                $incident->getSubcategory()->getBlocks(),
+                $incident->getSubcategory()->getMoneyDirection(),
+            ),
             'csrfToken' => $this->csrfTokenManager?->getToken(self::csrfTokenId($area))->getValue(),
         ]));
     }

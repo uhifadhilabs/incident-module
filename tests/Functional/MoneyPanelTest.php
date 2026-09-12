@@ -145,8 +145,10 @@ final class MoneyPanelTest extends FunctionalTestCase
         $incident = $this->inProgress($area);
         $this->client->loginUser($this->aManager());
 
-        // No row, no card yet.
-        self::assertStringNotContainsString('i-moneyblock', $this->show($area, $incident));
+        // No row yet — the card is there, carrying the figure the money block
+        // asked at filing and nothing anybody has judged.
+        self::assertStringContainsString('claimed at filing', $this->show($area, $incident));
+        self::assertStringContainsString('nothing judged yet', $this->show($area, $incident));
 
         $this->client->request('POST', $this->moneyUrl($area, $incident), [
             '_token' => $this->csrfFor($area),

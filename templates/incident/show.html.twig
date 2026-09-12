@@ -14,9 +14,9 @@
       "resolution" form on a freshly reported incident inviting somebody to fill
       it in early, and `rail.hasReached()` is the whole of the mechanism.
 
-   The money card and the category's own field set are the third contract: a
-   category that carries no money has NO money card, and the fields a roadkill
-   asks for are not the fields a depredation asks for.
+   The money card and the word's own questions are the third contract: a category
+   that carries no money has NO money card, and the questions a roadkill asks are
+   the questions of ITS blocks, which are not a depredation's.
    ========================================================================== #}
 {% extends '@UhifadhiIncident/base.html.twig' %}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
@@ -141,18 +141,30 @@
         <div class="col">
             {# THE MONEY CARD EXISTS ONLY WHERE THE CATEGORY CARRIES MONEY. On a
                natural mortality there is no card at all — absent, not empty. #}
-            {% if money %}
+            {% set direction = money ? money.direction : incident.subcategory.moneyDirection %}
+            {% if money or incident.claimedAtFiling is not null %}
                 <div class="c">
-                    <span class="tab">Money<span class="src">· this category carries {{ money.direction.value }}</span></span>
+                    <span class="tab">Money<span class="src">· this category carries {{ direction.value }}</span></span>
                     <div class="i-moneyblock">
-                        <div class="hd">{{ ux_icon('incident:circle-dollar-sign') }}<b>{{ money.direction.heading }}</b></div>
-                        {% if money.claimed is not null %}<div class="i-mrow"><span>claimed</span>{{ ui.amount(money.currency, money.claimed) }}</div>{% endif %}
+                        <div class="hd">{{ ux_icon('incident:circle-dollar-sign') }}<b>{{ direction.heading }}</b></div>
+                        {# THE FIGURE THE MONEY BLOCK ASKED AT FILING — the claimant's
+                           own, or the officer's at the roadside, before anybody had
+                           judged it. It is NOT an assessment and it is not the money
+                           record: the four amounts below are written by whoever
+                           judges and pays, in the states the money flow names. #}
+                        {% if incident.claimedAtFiling is not null %}<div class="i-mrow"><span>claimed at filing</span>{{ ui.amount(money ? money.currency : 'TZS', incident.claimedAtFiling) }}</div>{% endif %}
+                        {% if money and money.claimed is not null %}<div class="i-mrow"><span>claimed</span>{{ ui.amount(money.currency, money.claimed) }}</div>{% endif %}
+                        {% if money %}
                         {% if money.assessed is not null %}<div class="i-mrow"><span>assessed</span>{{ ui.amount(money.currency, money.assessed) }}</div>{% endif %}
                         {% if money.approved is not null %}<div class="i-mrow"><span>approved</span>{{ ui.amount(money.currency, money.approved) }}</div>{% endif %}
                         <div class="i-mrow"><span>{{ money.direction.settledWord }}</span>{{ ui.amount(money.currency, money.settled, money.settled > 0 ? 'paid' : 'nil') }}</div>
                         <div class="i-mrow"><span>outstanding</span>{{ ui.amount(money.currency, money.outstanding, 'due') }}</div>
                         <div class="i-moneybar"><i style="width:{{ money.settledPercent }}%"></i></div>
                         <div class="i-kpi-note i-moneypct">{{ money.settledPercent }}% {{ money.direction.settledWord }}{% if money.isWaived %} · waived: {{ money.waivedReason }}{% endif %}</div>
+                        {% else %}
+                        <div class="i-kpi-note i-moneypct">nothing judged yet — a {{ direction.value }} record is opened
+                            in the state the money flow names, never at filing</div>
+                        {% endif %}
                         <div class="use i-moneywhy">Four amounts, not one, because they are four different facts — what was asked,
                             what was judged, what was signed off and what actually moved. A single “amount” field would lose the
                             argument this incident is about.</div>
@@ -279,19 +291,45 @@
         {% endfor %}
     </div>
 
-    <h2 class="zone">What this category asks for</h2>
-    <p class="pgsub">Every category brings its own fields. On a category that carries no money the money rows are
-        <b>absent</b>, not greyed out, and its own fields stand in their place.</p>
+    {# WHAT THIS WORD ASKED, AND WHAT WAS ANSWERED — one set per behaviour block
+       the sub-category switched on, in the order the kinds editor holds them and
+       in the order the block puts its questions. A block with no answers still
+       prints, with a dash under each question, because "nobody answered this" is
+       a fact about the record and an absent panel would hide it.
 
-    <div class="i-fieldset">
-        <div class="hd">{{ incident.subcategory.path }}</div>
-        {% for field in incident.subcategory.fieldSet %}
-            <div class="i-fld"><label>{{ field.label }}</label><span>{{ incident.details[field.key] ?? '—' }}</span></div>
-        {% endfor %}
-        {% if money %}
-            {% if money.claimed is not null %}<div class="i-fld only"><label>Claimed</label><span>{{ ui.amount(money.currency, money.claimed) }}</span></div>{% endif %}
-            <div class="i-fld only"><label>{{ money.direction.assessedWord|capitalize }}</label><span>{{ ui.amount(money.currency, money.payable) }}</span></div>
-            <div class="i-fld only"><label>{{ money.direction.settledWord|capitalize }}</label><span>{{ ui.amount(money.currency, money.settled, money.settled > 0 ? 'paid' : 'nil') }}</span></div>
-        {% endif %}
-    </div>
+       A REPEATING BLOCK PRINTS ITS ROWS AS ROWS. Twelve snares and two carcasses
+       were two answers when they were given and they stay two answers here. #}
+    <h2 class="zone">What this word asked</h2>
+    <p class="pgsub">A sub-category's questions are the questions of the <b>behaviour blocks</b> it switches on, and of
+        nothing else. On a word that carries no money there is no money question — absent, not greyed out.</p>
+
+    {% for set in blockSets %}
+        {% set answers = incident.blockAnswers[set.block.value]|default({}) %}
+        <div class="i-fieldset">
+            <div class="hd">{{ set.title }}<span class="src">· {{ set.caption }}</span></div>
+            {% if set.repeats %}
+                {% for row in answers.rows|default([]) %}
+                    {% set cells = [] %}
+                    {% for question in set.rowQuestions %}
+                        {% if row[question.key] is defined %}
+                            {% set cells = cells|merge([question.label|lower ~ ' ' ~ row[question.key]]) %}
+                        {% endif %}
+                    {% endfor %}
+                    <div class="i-fld"><label>{{ loop.index }}</label><span>{{ cells|join(' · ') }}</span></div>
+                {% else %}
+                    <div class="i-fld"><label>1</label><span>—</span></div>
+                {% endfor %}
+            {% endif %}
+            {% for question in set.questions %}
+                <div class="i-fld"><label>{{ question.label }}</label>
+                    <span>{% if set.block.isMoney %}{{ incident.claimedAtFiling is null ? '—' : ui.amount(money ? money.currency : 'TZS', incident.claimedAtFiling, 'claimed at filing') }}{% else %}{{ answers[question.key]|default('—') }}{% endif %}</span></div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="i-fieldset">
+            <div class="hd">{{ incident.subcategory.path }}</div>
+            <div class="i-fld"><label>Questions</label><span>this word switches on no behaviour block, so its form asks
+                    only what every incident answers</span></div>
+        </div>
+    {% endfor %}
 {% endblock %}

@@ -267,13 +267,14 @@ final class CaseFilePageTest extends FunctionalTestCase
     }
 
     /**
-     * THE MONEY CARD APPEARS WHEN THERE IS MONEY — absent otherwise, not empty
+     * THE MONEY CARD APPEARS WHEN THERE IS A FIGURE — absent otherwise, not empty
      * and not greyed.
      *
-     * Note what that is NOT: it is not "the category carries money". A conflict
-     * incident nobody has put a figure on yet has no card either, because there
-     * is nothing to show — and a roadkill where no driver was identified never
-     * grows one at all.
+     * Note what that is NOT: it is not "the category carries money". A word whose
+     * money block asked a figure at filing has a card showing that figure and
+     * saying nothing has been judged; a word that asked none, and that nobody has
+     * put a figure on, has no card at all — and a word carrying no money block
+     * never grows one.
      */
     public function testTheMoneyCardAppearsOnlyWhenThereIsMoney(): void
     {
@@ -282,9 +283,11 @@ final class CaseFilePageTest extends FunctionalTestCase
         $mortality = $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass, no injury pattern');
         $this->client->loginUser($this->aManager());
 
-        // Nothing assessed yet: no card, on either of them.
+        // Nothing judged yet: the card carries the figure the money block asked at
+        // filing, and says as much.
         $before = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $claim->getReference()));
-        self::assertCount(0, $before->filter('.i-moneyblock'));
+        self::assertStringContainsString('claimed at filing', $before->filter('.i-moneyblock')->text());
+        self::assertStringNotContainsString('assessed', $before->filter('.i-moneyblock')->text());
 
         // Somebody opens a claim — and the card is there.
         new IncidentMoney($claim, MoneyDirectionEnum::Compensation)
@@ -301,26 +304,55 @@ final class CaseFilePageTest extends FunctionalTestCase
     }
 
     /**
-     * THE CATEGORY DECIDES THE FORM. A depredation asks for the enclosure and the
-     * household; a roadkill asks for the road segment and the age class. Same
-     * page, same component, different questions.
+     * THE WORD'S BLOCKS DECIDE THE QUESTIONS. A depredation asks the species, a
+     * count and who was on the record; a roadkill asks the species, the condition
+     * and which named place. Same page, same component, different questions —
+     * and neither of them can ask one its blocks do not.
      */
-    public function testTheFieldSetIsTheCategorysOwn(): void
+    public function testTheQuestionsAreTheBlocksTheWordSwitchedOn(): void
     {
         $area = $this->anAreaWithKinds();
         $depredation = $this->anIncident($area, 'livestock-depredation');
-        $roadkill = $this->anIncident($area, 'roadkill', 'Zebra roadkill on the C-road, km 12');
+        $roadkill = $this->anIncident($area, 'roadkill', 'Zebra roadkill on a district road');
         $this->client->loginUser($this->aManager());
 
-        $first = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $depredation->getReference()))
-            ->filter('.i-fieldset')->text();
-        self::assertStringContainsString('Enclosure', $first);
-        self::assertStringNotContainsString('Road segment', $first);
+        $first = self::questionsOn($this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $depredation->getReference())));
+        self::assertStringContainsString('Counts', $first);
+        self::assertStringContainsString('head of stock', $first);
+        self::assertStringContainsString('A stock owner', $first);
+        self::assertStringNotContainsString('Condition & disposition', $first);
 
-        $second = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $roadkill->getReference()))
-            ->filter('.i-fieldset')->text();
-        self::assertStringContainsString('Road segment', $second);
-        self::assertStringNotContainsString('Enclosure', $second);
+        $second = self::questionsOn($this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $roadkill->getReference())));
+        self::assertStringContainsString('Condition & disposition', $second);
+        self::assertStringContainsString('dead, fresh', $second);
+        self::assertStringContainsString('road segment', $second);
+        self::assertStringNotContainsString('Parties', $second);
+    }
+
+    /** Every question panel on a case file, as one string — a word has several. */
+    private static function questionsOn(Crawler $page): string
+    {
+        return implode(' ', $page->filter('.i-fieldset')->each(static fn (Crawler $node): string => $node->text()));
+    }
+
+    /**
+     * THE FIGURE ASKED AT FILING IS SHOWN AS WHAT IT IS, and it does not make a
+     * money record: the card says "claimed at filing" and says out loud that
+     * nothing has been judged.
+     */
+    public function testTheFigureAskedAtFilingShowsOnTheMoneyCardWithoutAMoneyRecord(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $incident = $this->anIncident($area, 'livestock-depredation');
+        $this->client->loginUser($this->aManager());
+
+        $page = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents/%s', $this->uuidOf($area), $incident->getReference()));
+
+        self::assertNull($incident->getMoney());
+        $card = $page->filter('.i-moneyblock')->text();
+        self::assertStringContainsString('claimed at filing', $card);
+        self::assertStringContainsString('900,000', $card);
+        self::assertStringContainsString('nothing judged yet', $card);
     }
 
     /**
