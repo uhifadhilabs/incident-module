@@ -26,13 +26,12 @@ use Uhifadhi\Incident\Service\IncidentTransitionService;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
- * WHAT A DEPARTMENT'S PEOPLE DID WITH THIS MODULE — the platform's performance contract,
- * against real rows.
+ * THE INCIDENTS FIGURES A DEPARTMENT'S PERFORMANCE PAGE PRINTS, against real rows.
  *
- * THE SLICE IS THE THING UNDER TEST. An incident is a department's because the
- * person who RECORDED it holds a position filed under that department. Two
- * departments read the same rows and get different numbers, and neither is fenced
- * out of the other's.
+ * THE SCOPE IS THE THING UNDER TEST. The host asks only departments that attach
+ * this module, so the figures are the scope's incidents: one area's when the ref
+ * names an area, every area's when it names none — whoever recorded them, seated
+ * or not.
  */
 final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
 {
@@ -52,16 +51,10 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
         return $transitions;
     }
 
-    /**
-     * THE CONTRACT HANDS OVER A REF, NOT AN ENTITY — nothing publishes a contract for
-     * a department, so AreaBundle names one by its id, its name and its
-     * uuid. The tests still build a real Department, because the SLICE walks a
-     * real org chart; only the handover is the ref.
-     */
     private static function ref(Department $department, ?AreaOfInterest $area = null): DepartmentRef
     {
         $id = $department->getId();
-        self::assertNotNull($id, 'A department has to be stored before a figure can be filed under it.');
+        self::assertNotNull($id, 'A department has to be stored before a ref can name it.');
 
         return new DepartmentRef($id, (string) $department->getName(), null, $area?->getUuidString());
     }
@@ -77,11 +70,6 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
         return $byKey;
     }
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-    }
-
     /** The slug must match the module's, or the host never asks this provider anything. */
     public function testItAnswersForTheIncidentsModule(): void
     {
@@ -89,86 +77,112 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     }
 
     /**
-     * NOTHING RECORDED IS NOTHING REPORTED — not a row of zeros. The host draws a
-     * dashed labelled slot, which is the truthful rendering of "we have no
-     * reading".
+     * NOTHING IN SCOPE IS NOTHING REPORTED — not a row of zeros. Incidents
+     * elsewhere, or outside both windows, do not make a reading.
      */
-    public function testADepartmentThatRecordedNothingReportsNothing(): void
+    public function testNothingInScopeInEitherWindowReportsNothing(): void
     {
+        $north = $this->anAreaWithKinds('North Sector');
+        $south = $this->anAreaWithKinds('South Sector');
         $department = $this->aDepartment();
+        $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        self::assertSame([], $this->provider()->kpisFor(self::ref($department), new \DateTimeImmutable('2026-08-22')));
+        $this->anIncident($south, at: $now->modify('-1 day'));
+        $this->anIncident($north, at: new \DateTimeImmutable('2026-05-10 09:00:00'));
+
+        self::assertSame([], $this->provider()->kpisFor(self::ref($department, $north), $now));
+        self::assertSame([], $this->provider()->kpisFor(self::ref($department), new \DateTimeImmutable('2026-12-22')));
     }
 
-    public function testItCountsWhatThisDepartmentsPeopleRecorded(): void
+    public function testItCountsTheIncidentsRecordedInTheArea(): void
     {
         $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        $this->anIncident($area, at: $now->modify('-2 days'), reportedBy: $ranger);
-        $this->anIncident($area, 'snaring', 'Snare line lifted', $now->modify('-1 day'), $ranger);
+        $this->anIncident($area, at: $now->modify('-2 days'));
+        $this->anIncident($area, 'snaring', 'Snare line lifted', $now->modify('-1 day'));
 
-        $kpis = $this->kpisFor($department, $now);
+        $kpis = $this->kpisFor($department, $now, $area);
 
         self::assertSame(2.0, $kpis['incidents']->value);
         self::assertSame('Incidents recorded', $kpis['incidents']->label);
         self::assertSame('incidents', $kpis['incidents']->moduleSlug);
+        self::assertSame('Incidents module · incidents recorded in this area', $kpis['incidents']->caption);
     }
 
-    /**
-     * TWO DEPARTMENTS, THE SAME ROWS, DIFFERENT NUMBERS — and neither is fenced
-     * out of the other's. This is the whole model in one assertion.
-     */
-    public function testTwoDepartmentsReadTheSameRowsAndGetDifferentNumbers(): void
+    public function testAnOrganisationWideCaptionSaysTheOrganisation(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $department = $this->aDepartment();
+        $now = new \DateTimeImmutable('2026-08-22 09:00:00');
+
+        $this->anIncident($area, at: $now->modify('-1 day'));
+
+        self::assertSame('Incidents module · incidents recorded across the organisation', $this->kpisFor($department, $now)['incidents']->caption);
+    }
+
+    /** An incident filed by somebody who holds no position still counts for its area. */
+    public function testAnIncidentFiledBySomebodyWithNoPositionCountsForItsArea(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $department = $this->aDepartment();
+        $unseated = $this->aUser('volunteer@example.test', 'Neema', 'Laizer');
+        $now = new \DateTimeImmutable('2026-08-22 09:00:00');
+
+        $this->anIncident($area, at: $now->modify('-1 day'), reportedBy: $unseated);
+
+        self::assertSame(1.0, $this->kpisFor($department, $now, $area)['incidents']->value);
+    }
+
+    /** The recorder's seat in another department does not take the incident out of scope. */
+    public function testAnIncidentFiledBySomebodySeatedInAnotherDepartmentStillCounts(): void
     {
         $area = $this->anAreaWithKinds();
         $protection = $this->aDepartment('Protection Service');
         $ecology = $this->aDepartment('Ecology');
+        $ecologist = $this->aUser('ecologist@example.test', 'Anna', 'Kileo', $ecology);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $protection);
-        $ecologist = $this->aUser('ecologist@example.test', 'Anna', 'Kileo', $ecology);
-
-        $this->anIncident($area, at: $now->modify('-3 days'), reportedBy: $ranger);
-        $this->anIncident($area, 'snaring', 'Snare line lifted', $now->modify('-2 days'), $ranger);
         $this->anIncident($area, 'roadkill', 'Zebra roadkill', $now->modify('-1 day'), $ecologist);
 
-        self::assertSame(2.0, $this->kpisFor($protection, $now)['incidents']->value);
-        self::assertSame(1.0, $this->kpisFor($ecology, $now)['incidents']->value);
+        self::assertSame(1.0, $this->kpisFor($protection, $now, $area)['incidents']->value);
     }
 
-    /** An incident nobody's department can claim belongs to nobody's figures. */
-    public function testAnIncidentWithNoRecorderBelongsToNoDepartment(): void
+    /** Two departments scoped to the same area read the same figures. */
+    public function testTwoDepartmentsInTheSameAreaGetIdenticalFigures(): void
     {
         $area = $this->anAreaWithKinds();
-        $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
+        $protection = $this->aDepartment('Protection Service');
+        $ecology = $this->aDepartment('Ecology');
+        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $protection);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        $this->anIncident($area, at: $now->modify('-1 day'), reportedBy: $ranger);
-        // Recorded by nobody — a seeded or imported row.
-        $this->anIncident($area, 'snaring', 'Snare line lifted', $now->modify('-1 day'));
+        $this->anIncident($area, at: $now->modify('-3 days'), reportedBy: $ranger);
+        $fine = $this->anIncident($area, 'snaring', 'Snare line lifted', $now->modify('-2 days'));
+        new IncidentMoney($fine, MoneyDirectionEnum::Fine)->setAssessed(450_000);
+        $this->anIncident($area, 'roadkill', 'Zebra roadkill', new \DateTimeImmutable('2026-07-12 09:00:00'));
+        $this->em->flush();
 
-        self::assertSame(1.0, $this->kpisFor($department, $now)['incidents']->value);
+        $protectionKpis = $this->provider()->kpisFor(self::ref($protection, $area), $now);
+        $ecologyKpis = $this->provider()->kpisFor(self::ref($ecology, $area), $now);
+
+        self::assertNotSame([], $protectionKpis);
+        self::assertEquals($protectionKpis, $ecologyKpis);
     }
 
     /**
-     * "RESOLVED WITHIN TERM" IS THE HONEST READING OF BREACHES: the same fact,
-     * pointing the way the contract requires (bigger is better), and NULL —
-     * never 0% — while nothing has been resolved.
+     * "RESOLVED WITHIN TERM" IS NULL — never 0% — while nothing has been resolved.
      */
     public function testTheWithinTermShareIsNullUntilSomethingIsResolved(): void
     {
         $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        $this->anIncident($area, at: $now->modify('-1 day'), reportedBy: $ranger);
+        $this->anIncident($area, at: $now->modify('-1 day'));
 
-        $kpi = $this->kpisFor($department, $now)['incidents_in_term'];
+        $kpi = $this->kpisFor($department, $now, $area)['incidents_in_term'];
         self::assertFalse($kpi->isKnown(), 'A month with no finished work has no compliance rate.');
         self::assertSame("\u{2014}", $kpi->display());
         self::assertTrue($kpi->isShare());
@@ -178,18 +192,17 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     {
         $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
         // A mortality carries no money, so it walks straight through.
-        $incident = $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass', $now->modify('-3 days'), $ranger);
+        $incident = $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass', $now->modify('-3 days'));
         $at = $now->modify('-3 days');
         foreach ([IncidentTransitionEnum::Verify, IncidentTransitionEnum::Respond, IncidentTransitionEnum::Resolve] as $step) {
             $this->transitions()->apply($incident, $step, $at = $at->modify('+1 hour'));
         }
         $this->em->flush();
 
-        $kpis = $this->kpisFor($department, $now);
+        $kpis = $this->kpisFor($department, $now, $area);
         self::assertSame(1.0, $kpis['incidents_resolved']->value);
         // Resolved in three hours against a 168-hour term: fully within it.
         self::assertSame(100.0, $kpis['incidents_in_term']->value);
@@ -203,36 +216,33 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     {
         $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        $claim = $this->anIncident($area, at: $now->modify('-2 days'), reportedBy: $ranger);
+        $claim = $this->anIncident($area, at: $now->modify('-2 days'));
         new IncidentMoney($claim, MoneyDirectionEnum::Compensation)->setApproved(1_200_000);
-        $fine = $this->anIncident($area, 'snaring', 'Snare line lifted', $now->modify('-1 day'), $ranger);
+        $fine = $this->anIncident($area, 'snaring', 'Snare line lifted', $now->modify('-1 day'));
         new IncidentMoney($fine, MoneyDirectionEnum::Fine)->setAssessed(450_000);
         $this->em->flush();
 
-        $kpis = $this->kpisFor($department, $now);
+        $kpis = $this->kpisFor($department, $now, $area);
         self::assertSame(450_000.0, $kpis['incidents_fine']->value);
         self::assertSame(1_200_000.0, $kpis['incidents_compensation']->value);
         self::assertSame('TZS', $kpis['incidents_fine']->unit);
     }
 
     /**
-     * A department that has never touched money of a kind gets NO plate for it —
-     * absent, rather than a dashed slot. A dashed slot means "we could not
-     * measure"; this means "that is not our work".
+     * A scope with no money of a kind gets NO plate for it — absent, rather than
+     * a dashed slot.
      */
-    public function testADepartmentThatTouchesNoMoneyGetsNoMoneyPlates(): void
+    public function testAScopeWithNoMoneyGetsNoMoneyPlates(): void
     {
         $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass', $now->modify('-1 day'), $ranger);
+        $this->anIncident($area, 'natural-mortality', 'Wildebeest carcass', $now->modify('-1 day'));
 
-        $kpis = $this->kpisFor($department, $now);
+        $kpis = $this->kpisFor($department, $now, $area);
         self::assertArrayHasKey('incidents', $kpis);
         self::assertArrayNotHasKey('incidents_fine', $kpis);
         self::assertArrayNotHasKey('incidents_compensation', $kpis);
@@ -243,14 +253,13 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     {
         $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        $this->anIncident($area, at: new \DateTimeImmutable('2026-07-10 09:00:00'), reportedBy: $ranger);
-        $this->anIncident($area, 'snaring', 'Snare line lifted', new \DateTimeImmutable('2026-08-10 09:00:00'), $ranger);
-        $this->anIncident($area, 'bushmeat', 'Bushmeat seized', new \DateTimeImmutable('2026-08-11 09:00:00'), $ranger);
+        $this->anIncident($area, at: new \DateTimeImmutable('2026-07-10 09:00:00'));
+        $this->anIncident($area, 'snaring', 'Snare line lifted', new \DateTimeImmutable('2026-08-10 09:00:00'));
+        $this->anIncident($area, 'bushmeat', 'Bushmeat seized', new \DateTimeImmutable('2026-08-11 09:00:00'));
 
-        $kpi = $this->kpisFor($department, $now)['incidents'];
+        $kpi = $this->kpisFor($department, $now, $area)['incidents'];
 
         self::assertSame(2.0, $kpi->value);
         self::assertSame(1.0, $kpi->previous);
@@ -258,63 +267,77 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
         self::assertSame('good', $kpi->direction());
     }
 
-    /**
-     * AN AREA-LEVEL DEPARTMENT READS ITS OWN AREA AND NOTHING ELSE. The ref
-     * names the area the department is confined to, and the figures are that
-     * area's work — the same people's filings elsewhere are somebody else's
-     * performance.
-     */
+    /** Last month alone is still a reading: this month is zero, not absent. */
+    public function testLastMonthAloneIsStillAReading(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $department = $this->aDepartment();
+        $now = new \DateTimeImmutable('2026-08-22 09:00:00');
+
+        $this->anIncident($area, at: new \DateTimeImmutable('2026-07-10 09:00:00'));
+
+        $kpi = $this->kpisFor($department, $now, $area)['incidents'];
+        self::assertSame(0.0, $kpi->value);
+        self::assertSame(1.0, $kpi->previous);
+    }
+
+    /** An area-scoped ref reads its own area and nothing else. */
     public function testAnAreaScopedRefReportsThatAreaOnly(): void
     {
         $north = $this->anAreaWithKinds('North Sector');
         $south = $this->anAreaWithKinds('South Sector');
         $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        $this->anIncident($north, at: $now->modify('-3 days'), reportedBy: $ranger);
-        $this->anIncident($north, 'snaring', 'Snare line lifted', $now->modify('-2 days'), $ranger);
-        $this->anIncident($south, 'roadkill', 'Zebra roadkill', $now->modify('-1 day'), $ranger);
+        $this->anIncident($north, at: $now->modify('-3 days'));
+        $this->anIncident($north, 'snaring', 'Snare line lifted', $now->modify('-2 days'));
+        $this->anIncident($south, 'roadkill', 'Zebra roadkill', $now->modify('-1 day'));
 
         self::assertSame(2.0, $this->kpisFor($department, $now, $north)['incidents']->value);
         self::assertSame(1.0, $this->kpisFor($department, $now, $south)['incidents']->value);
     }
 
     /**
-     * AN ORGANISATION-WIDE REF ROLLS UP EVERY AREA INTO ONE READING — the counts
-     * sum, they are not reported area by area.
+     * AN ORGANISATION-WIDE REF SUMS EVERY AREA — counts and money alike — into one
+     * reading, whoever recorded the rows.
      */
-    public function testAnOrganisationWideRefRollsUpEveryArea(): void
+    public function testAnOrganisationWideRefSumsEveryAreaMoneyIncluded(): void
     {
         $north = $this->anAreaWithKinds('North Sector');
         $south = $this->anAreaWithKinds('South Sector');
         $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
+        $ecologist = $this->aUser('ecologist@example.test', 'Anna', 'Kileo', $this->aDepartment('Ecology'));
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        $this->anIncident($north, at: $now->modify('-3 days'), reportedBy: $ranger);
-        $this->anIncident($north, 'snaring', 'Snare line lifted', $now->modify('-2 days'), $ranger);
-        $this->anIncident($south, 'roadkill', 'Zebra roadkill', $now->modify('-1 day'), $ranger);
+        $first = $this->anIncident($north, 'snaring', 'Snare line lifted', $now->modify('-2 days'), $ecologist);
+        new IncidentMoney($first, MoneyDirectionEnum::Fine)->setAssessed(450_000);
+        $second = $this->anIncident($south, 'bushmeat', 'Bushmeat seized', $now->modify('-1 day'));
+        new IncidentMoney($second, MoneyDirectionEnum::Fine)->setAssessed(50_000);
+        $claim = $this->anIncident($south, at: $now->modify('-1 day'));
+        new IncidentMoney($claim, MoneyDirectionEnum::Compensation)->setApproved(1_200_000);
+        $this->em->flush();
 
-        self::assertSame(3.0, $this->kpisFor($department, $now)['incidents']->value);
+        $kpis = $this->kpisFor($department, $now);
+        self::assertSame(3.0, $kpis['incidents']->value);
+        self::assertSame(500_000.0, $kpis['incidents_fine']->value);
+        self::assertSame(1_200_000.0, $kpis['incidents_compensation']->value);
+        self::assertSame(450_000.0, $this->kpisFor($department, $now, $north)['incidents_fine']->value);
     }
 
     /**
-     * ONE SET OF KPIS PER CALL, whichever ref arrives. A provider that answered
-     * per area would hand the page the same plate several times over and the
-     * roll-up would be whatever the page happened to add up.
+     * ONE SET OF KPIS PER CALL, whichever ref arrives — a key appears once, never
+     * once per area.
      */
     public function testItReturnsExactlyOneSetOfKpisPerCall(): void
     {
         $north = $this->anAreaWithKinds('North Sector');
         $south = $this->anAreaWithKinds('South Sector');
         $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
 
-        $claim = $this->anIncident($north, at: $now->modify('-2 days'), reportedBy: $ranger);
+        $claim = $this->anIncident($north, at: $now->modify('-2 days'));
         new IncidentMoney($claim, MoneyDirectionEnum::Compensation)->setApproved(1_200_000);
-        $fine = $this->anIncident($south, 'snaring', 'Snare line lifted', $now->modify('-1 day'), $ranger);
+        $fine = $this->anIncident($south, 'snaring', 'Snare line lifted', $now->modify('-1 day'));
         new IncidentMoney($fine, MoneyDirectionEnum::Fine)->setAssessed(450_000);
         $this->em->flush();
 
@@ -324,45 +347,5 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
 
             self::assertSame($keys, array_values(array_unique($keys)), 'A key may appear once per call — never once per area.');
         }
-    }
-
-    /**
-     * Money rolls up across areas for an organisation-wide ref, and stays in the
-     * area for a scoped one: the arithmetic is the same rule as the counts.
-     */
-    public function testMoneyRollsUpOrgWideAndStaysInTheAreaWhenScoped(): void
-    {
-        $north = $this->anAreaWithKinds('North Sector');
-        $south = $this->anAreaWithKinds('South Sector');
-        $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
-        $now = new \DateTimeImmutable('2026-08-22 09:00:00');
-
-        $first = $this->anIncident($north, 'snaring', 'Snare line lifted', $now->modify('-2 days'), $ranger);
-        new IncidentMoney($first, MoneyDirectionEnum::Fine)->setAssessed(450_000);
-        $second = $this->anIncident($south, 'bushmeat', 'Bushmeat seized', $now->modify('-1 day'), $ranger);
-        new IncidentMoney($second, MoneyDirectionEnum::Fine)->setAssessed(50_000);
-        $this->em->flush();
-
-        self::assertSame(500_000.0, $this->kpisFor($department, $now)['incidents_fine']->value);
-        self::assertSame(450_000.0, $this->kpisFor($department, $now, $north)['incidents_fine']->value);
-    }
-
-    /**
-     * A department confined to an area where its people recorded nothing reports
-     * NOTHING — a dashed slot, not a row of zeros, exactly as for a department
-     * that recorded nothing anywhere.
-     */
-    public function testAnAreaScopedRefReportsNothingWhereThisDepartmentRecordedNothing(): void
-    {
-        $north = $this->anAreaWithKinds('North Sector');
-        $south = $this->anAreaWithKinds('South Sector');
-        $department = $this->aDepartment();
-        $ranger = $this->aUser('ranger@example.test', 'Joseph', 'Mollel', $department);
-        $now = new \DateTimeImmutable('2026-08-22 09:00:00');
-
-        $this->anIncident($north, at: $now->modify('-1 day'), reportedBy: $ranger);
-
-        self::assertSame([], $this->provider()->kpisFor(self::ref($department, $south), $now));
     }
 }

@@ -21,18 +21,14 @@ use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 
 /**
- * WHAT THIS DEPARTMENT'S PEOPLE DID WITH THE INCIDENTS MODULE, this month.
+ * THE INCIDENTS FIGURES A DEPARTMENT'S PERFORMANCE PAGE PRINTS, this month.
  *
- * THE SLICE. An incident is not a department's because of where it happened or
- * who may read it — the whole module refuses that idea. It is a department's
- * because THE PERSON WHO RECORDED IT holds a position filed under that
- * department: incident → reportedBy → position → department. Two departments
- * sharing this module therefore read the SAME ROWS and get DIFFERENT NUMBERS,
- * and neither is fenced out of the other's.
- *
- * An incident with no recorder, or whose recorder holds no position, or whose
- * position sits under no department, belongs to nobody's figures and is silently
- * absent from all of them rather than being shared out.
+ * THE SCOPE, NOT THE RECORDER'S SEAT. The host asks this provider only for
+ * departments that attach Incidents, so nothing here filters by department: a
+ * ref naming an area reads every incident recorded in that area, and a ref
+ * naming none reads every incident across all areas. Who recorded an incident,
+ * and whether they hold a position anywhere, plays no part — two departments
+ * scoped to the same area read the same figures.
  *
  * ── WHICH FIGURES, AND WHY THESE ─────────────────────────────────────────────
  * The contract states a rule that decides this list: EVERY KPI IT CARRIES IS
@@ -40,8 +36,8 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
  * before handing it over. "Open incidents" and "breaches" are both less-is-better
  * and neither inverts honestly — an area with more open incidents may simply be
  * an area where people are reporting, which is the behaviour this module exists
- * to encourage. Punishing a department's performance page for it would teach
- * exactly the wrong lesson.
+ * to encourage. Punishing a performance page for it would teach exactly the
+ * wrong lesson.
  *
  * So the plates are the work, not the backlog:
  *
@@ -54,8 +50,8 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
  *    because the design refuses to add the two directions together anywhere and a
  *    performance page is not an exception.
  *
- * NULL IS UNKNOWN AND UNKNOWN IS NOT ZERO. A department that recorded no incident
- * carrying money gets a dashed slot for the money plates, not a zero: "they
+ * NULL IS UNKNOWN AND UNKNOWN IS NOT ZERO. A scope with no incident carrying
+ * money gets a dashed slot for the money plates, not a zero: "they
  * assessed nothing" and "nothing they touched could carry a fine" are different
  * facts, and only one of them is about performance.
  */
@@ -79,19 +75,10 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
     }
 
     /**
-     * THE DEPARTMENT ARRIVES AS A REF, NOT AS AN ENTITY. Nothing publishes a
-     * contract for a department — there is no `DepartmentInterface` in
-     * uhifadhi/contracts and none in TeamBundle — so a contract
-     * typed against team's class would make every module that reports a figure
-     * hard-require team. {@see DepartmentRef} carries the whole of what a figure
-     * needs: the id rows are filed under, the name a plate prints, and the area
-     * an area-level department is confined to.
-     *
-     * ONE SET OF FIGURES PER CALL, whatever the ref says. A ref carrying an area
-     * reads that area's work and no other's; a ref carrying none is
-     * organisation-wide and every area's filings roll up into the same plates.
-     * Answering per area instead would print each plate several times over and
-     * leave the roll-up to whoever was drawing the page.
+     * ONE SET OF FIGURES PER CALL, at the ref's scope. A ref carrying an area
+     * reads that area's incidents and no other's; a ref carrying none is
+     * organisation-wide and every area's incidents roll up into the same plates.
+     * The department's id and name play no part in the figures.
      *
      * @return list<DepartmentKpi>
      */
@@ -101,17 +88,21 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
         $nextMonth = $monthStart->modify('+1 month');
         $previousStart = $monthStart->modify('-1 month');
 
-        $month = $this->incidents->findForDepartment($department->id, $monthStart, $nextMonth, $department->areaUuid);
-        $previous = $this->incidents->findForDepartment($department->id, $previousStart, $monthStart, $department->areaUuid);
+        $month = $this->incidents->findByScopeBetween($department->areaUuid, $monthStart, $nextMonth);
+        $previous = $this->incidents->findByScopeBetween($department->areaUuid, $previousStart, $monthStart);
 
-        // Nothing recorded by this department's people in either month: report
+        // Nothing recorded in scope in either month: report
         // NOTHING rather than a row of zeros. The host draws a dashed labelled
         // slot, which is the truthful rendering of "we have no reading".
         if ([] === $month && [] === $previous) {
             return [];
         }
 
-        $caption = \sprintf('%s module · recorded by this department', $this->name);
+        $caption = \sprintf(
+            '%s module · %s',
+            $this->name,
+            null === $department->areaUuid ? 'incidents recorded across the organisation' : 'incidents recorded in this area',
+        );
         $kpis = [
             new DepartmentKpi(
                 'incidents',
@@ -121,7 +112,7 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
                 (float) \count($month),
                 '',
                 (float) \count($previous),
-                $this->spark($department, $monthStart, static fn (array $rows): float => (float) \count($rows)),
+                $this->spark($department->areaUuid, $monthStart, static fn (array $rows): float => (float) \count($rows)),
                 $caption,
             ),
             new DepartmentKpi(
@@ -132,7 +123,7 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
                 (float) self::resolvedCount($month),
                 '',
                 (float) self::resolvedCount($previous),
-                $this->spark($department, $monthStart, static fn (array $rows): float => (float) self::resolvedCount($rows)),
+                $this->spark($department->areaUuid, $monthStart, static fn (array $rows): float => (float) self::resolvedCount($rows)),
                 $caption,
             ),
             new DepartmentKpi(
@@ -143,7 +134,7 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
                 self::withinTermShare($month),
                 DepartmentKpi::SHARE,
                 self::withinTermShare($previous),
-                $this->spark($department, $monthStart, static fn (array $rows): ?float => self::withinTermShare($rows)),
+                $this->spark($department->areaUuid, $monthStart, static fn (array $rows): ?float => self::withinTermShare($rows)),
                 // Its own provenance line: the term is the CATEGORY's, not a
                 // global setting, and a share printed without saying what it was
                 // measured against is unreadable.
@@ -161,8 +152,8 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
         ] as [$direction, $label]) {
             $value = self::money($month, $direction);
             $was = self::money($previous, $direction);
-            // Absent entirely rather than dashed, when this department has never
-            // touched money of this kind: a plate for a fact that does not apply
+            // Absent entirely rather than dashed, when nothing in scope carries
+            // money of this kind: a plate for a fact that does not apply
             // is clutter, and the host's dashed slot means "we could not measure",
             // not "this is not our work".
             if (null === $value && null === $was) {
@@ -177,7 +168,7 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
                 null === $value ? null : (float) $value,
                 $this->currency,
                 null === $was ? null : (float) $was,
-                $this->spark($department, $monthStart, static fn (array $rows): ?float => null === ($m = self::money($rows, $direction)) ? null : (float) $m),
+                $this->spark($department->areaUuid, $monthStart, static fn (array $rows): ?float => null === ($m = self::money($rows, $direction)) ? null : (float) $m),
                 $caption,
             );
         }
@@ -187,19 +178,19 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
 
     /**
      * The last {@see SPARK_MONTHS} months of one figure, oldest first. A month
-     * this department could not be measured in contributes nothing rather than a
+     * the scope could not be measured in contributes nothing rather than a
      * zero, so a sparkline never dips to the floor because a reading is missing.
      *
      * @param callable(list<Incident>): ?float $reading
      *
      * @return list<float>
      */
-    private function spark(DepartmentRef $department, \DateTimeImmutable $monthStart, callable $reading): array
+    private function spark(?string $areaUuid, \DateTimeImmutable $monthStart, callable $reading): array
     {
         $series = [];
         for ($back = self::SPARK_MONTHS - 1; $back >= 0; --$back) {
             $from = $monthStart->modify(\sprintf('-%d months', $back));
-            $value = $reading($this->incidents->findForDepartment($department->id, $from, $from->modify('+1 month'), $department->areaUuid));
+            $value = $reading($this->incidents->findByScopeBetween($areaUuid, $from, $from->modify('+1 month')));
             if (null !== $value) {
                 $series[] = $value;
             }
@@ -248,8 +239,8 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
     }
 
     /**
-     * The money this department's people put on the record, in one direction, or
-     * NULL where they recorded nothing that carries it.
+     * The money on the record in one direction, or NULL where nothing in scope
+     * carries it.
      *
      * @param list<Incident> $incidents
      */

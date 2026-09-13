@@ -36,12 +36,8 @@ use Uhifadhi\Incident\Workflow\IncidentWorkflow;
  * way ({@see applyFilter()}). A chart that quietly ignored the category chips
  * would make the dashboard lie about which numbers belong to which rows.
  *
- * THE DEPARTMENT SLICE IS REPORTING, NEVER PERMISSION. {@see findForDepartment()}
- * slices by the DEPARTMENT THE RECORDING PERSON'S POSITION IS FILED UNDER,
- * exactly as the KPI contract specifies. Two departments reading the same area
- * get two different numbers from the same rows — and neither is fenced out of the
- * other's rows, because nothing here ever filters what a screen may SEE by
- * department.
+ * NOTHING HERE FILTERS BY DEPARTMENT. {@see findByScopeBetween()} reads an
+ * area's incidents, or every area's, and never asks who recorded them.
  *
  * @extends ServiceEntityRepository<Incident>
  */
@@ -599,79 +595,39 @@ final class IncidentRepository extends ServiceEntityRepository
     }
 
     /**
-     * EVERY INCIDENT THIS DEPARTMENT'S PEOPLE RECORDED in a window, with the
-     * taxonomy and the money already loaded — the rows behind every department
-     * KPI plate.
+     * EVERY INCIDENT RECORDED IN A SCOPE in a window, with the taxonomy and the
+     * money already loaded — the rows behind every department KPI plate.
      *
-     * ONE query rather than one per figure, and the arithmetic in PHP: the four
-     * plates are four readings of the same month's work, and asking four times
-     * would let them disagree. The set is one department's filings in one month,
-     * which is the same order of magnitude as the register the module already
-     * draws.
+     * The scope is one area, named by its uuid, or every area when null. Who
+     * recorded an incident, and whether they hold a position anywhere, plays no
+     * part.
      *
-     * The slice is by the position the RECORDER holds, per the area module's
-     * contribution point. It is reporting and not permission: nothing else in this class
-     * filters by department, and no screen may.
-     *
-     * THE DEPARTMENT ARRIVES AS AN ID, because no package publishes a contract
-     * for one — {@see \Uhifadhi\Contracts\Kpi\DepartmentRef} is the same decision made
-     * one layer up, and by the time the question reaches SQL it is one integer
-     * anyway.
-     *
-     * An AREA UUID confines the slice to one area — an area-level department
-     * reads its own area's work and no other's. Null is organisation-wide: every
-     * area's filings in one set.
+     * ONE query rather than one per figure, and the arithmetic in PHP: the plates
+     * are readings of the same month's rows, and asking once per plate would let
+     * them disagree.
      *
      * @return list<Incident>
      */
-    public function findForDepartment(int $departmentId, \DateTimeImmutable $from, \DateTimeImmutable $to, ?string $areaUuid = null): array
+    public function findByScopeBetween(?string $areaUuid, \DateTimeImmutable $from, \DateTimeImmutable $until): array
     {
-        $scoped = $this->departmentScoped($departmentId, $from, $to, $areaUuid);
-        if (null === $scoped) {
-            return [];
-        }
-
-        /** @var list<Incident> $incidents */
-        $incidents = $scoped
+        $qb = $this->createQueryBuilder('i')
             ->join('i.subcategory', 's')->addSelect('s')
             ->join('s.kind', 'k')->addSelect('k')
             ->leftJoin('i.money', 'm')->addSelect('m')
-            ->orderBy('i.reportedAt', 'ASC')
-            ->getQuery()
-            ->getResult();
+            ->andWhere('i.reportedAt >= :from')->setParameter('from', $from)
+            ->andWhere('i.reportedAt < :until')->setParameter('until', $until)
+            ->orderBy('i.reportedAt', 'ASC');
+
+        if (null !== $areaUuid) {
+            $qb->join('i.area', 'sa')
+                ->andWhere('sa.uuid = :scope_area')
+                ->setParameter('scope_area', Uuid::fromString($areaUuid), 'uuid');
+        }
+
+        /** @var list<Incident> $incidents */
+        $incidents = $qb->getQuery()->getResult();
 
         return $incidents;
-    }
-
-    /**
-     * How many incidents this department's people recorded, per area — what the
-     * per-area performance widget reads. Keyed by area name because that is what
-     * the widget prints and the host's {@see \Uhifadhi\Contracts\Kpi\DepartmentKpi} keys
-     * an area's share by.
-     *
-     * @return array<string, int>
-     */
-    public function countForDepartmentByArea(int $departmentId, \DateTimeImmutable $from, \DateTimeImmutable $to): array
-    {
-        $scoped = $this->departmentScoped($departmentId, $from, $to);
-        if (null === $scoped) {
-            return [];
-        }
-
-        /** @var list<array{name: string, n: int|string}> $rows */
-        $rows = $scoped
-            ->join('i.area', 'a')
-            ->select('a.name AS name, COUNT(i.id) AS n')
-            ->groupBy('a.name')
-            ->getQuery()
-            ->getResult();
-
-        $counts = [];
-        foreach ($rows as $row) {
-            $counts[$row['name']] = (int) $row['n'];
-        }
-
-        return $counts;
     }
 
     /**
@@ -759,57 +715,6 @@ final class IncidentRepository extends ServiceEntityRepository
             // join that would break the callers that never join it.
             $qb->andWhere('LOWER(i.reference) LIKE :search OR LOWER(i.title) LIKE :search OR LOWER(i.narrative) LIKE :search OR LOWER(k.label) LIKE :search')
                 ->setParameter('search', '%'.mb_strtolower($filter->search).'%');
-        }
-
-        return $qb;
-    }
-
-    /**
-     * Incidents recorded in a window by somebody holding a position filed under
-     * this department — the area module's KPI slice, written once.
-     *
-     * THE CHAIN IS WALKED IN THE MAPPING, NOT ASSUMED. `incident → reportedBy`
-     * points at whatever class the installation resolved the person contract to,
-     * and only an installation that also has an ORG CHART gives that class a
-     * `position`, and the position a `department`. An installation with a bare
-     * account class of its own has neither, and asking for `u.position` there is
-     * not a wrong answer but a DQL error at query time.
-     *
-     * So the associations are checked before they are named, and NULL means "this
-     * installation cannot answer department questions at all" — which the callers
-     * report as no rows rather than as zero. That is the honest reading: nobody
-     * here holds a position, so nobody's filings are this department's.
-     */
-    private function departmentScoped(int $departmentId, \DateTimeImmutable $from, \DateTimeImmutable $to, ?string $areaUuid = null): ?QueryBuilder
-    {
-        $entityManager = $this->getEntityManager();
-        $account = $entityManager->getClassMetadata(Incident::class)->getAssociationTargetClass('reportedBy');
-        $accountMeta = $entityManager->getClassMetadata($account);
-        if (!$accountMeta->hasAssociation('position')) {
-            return null;
-        }
-        $positionMeta = $entityManager->getClassMetadata($accountMeta->getAssociationTargetClass('position'));
-        if (!$positionMeta->hasAssociation('department')) {
-            return null;
-        }
-
-        $qb = $this->createQueryBuilder('i')
-            ->join('i.reportedBy', 'u')
-            ->join('u.position', 'p')
-            // Compared against the IDENTIFIER, never against an entity: this
-            // repository is given an id precisely so it never has to name the
-            // class the id belongs to.
-            ->andWhere('p.department = :department')->setParameter('department', $departmentId)
-            ->andWhere('i.reportedAt >= :from')->setParameter('from', $from)
-            ->andWhere('i.reportedAt < :to')->setParameter('to', $to);
-
-        if (null !== $areaUuid) {
-            // The area arrives as the UUID a URL names it by, so the slice is
-            // taken against the area's own public identifier rather than against
-            // a row this repository would have to load first.
-            $qb->join('i.area', 'da')
-                ->andWhere('da.uuid = :department_area')
-                ->setParameter('department_area', Uuid::fromString($areaUuid), 'uuid');
         }
 
         return $qb;
