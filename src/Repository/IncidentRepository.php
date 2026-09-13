@@ -618,11 +618,15 @@ final class IncidentRepository extends ServiceEntityRepository
      * one layer up, and by the time the question reaches SQL it is one integer
      * anyway.
      *
+     * An AREA UUID confines the slice to one area — an area-level department
+     * reads its own area's work and no other's. Null is organisation-wide: every
+     * area's filings in one set.
+     *
      * @return list<Incident>
      */
-    public function findForDepartment(int $departmentId, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    public function findForDepartment(int $departmentId, \DateTimeImmutable $from, \DateTimeImmutable $to, ?string $areaUuid = null): array
     {
-        $scoped = $this->departmentScoped($departmentId, $from, $to);
+        $scoped = $this->departmentScoped($departmentId, $from, $to, $areaUuid);
         if (null === $scoped) {
             return [];
         }
@@ -776,7 +780,7 @@ final class IncidentRepository extends ServiceEntityRepository
      * report as no rows rather than as zero. That is the honest reading: nobody
      * here holds a position, so nobody's filings are this department's.
      */
-    private function departmentScoped(int $departmentId, \DateTimeImmutable $from, \DateTimeImmutable $to): ?QueryBuilder
+    private function departmentScoped(int $departmentId, \DateTimeImmutable $from, \DateTimeImmutable $to, ?string $areaUuid = null): ?QueryBuilder
     {
         $entityManager = $this->getEntityManager();
         $account = $entityManager->getClassMetadata(Incident::class)->getAssociationTargetClass('reportedBy');
@@ -789,7 +793,7 @@ final class IncidentRepository extends ServiceEntityRepository
             return null;
         }
 
-        return $this->createQueryBuilder('i')
+        $qb = $this->createQueryBuilder('i')
             ->join('i.reportedBy', 'u')
             ->join('u.position', 'p')
             // Compared against the IDENTIFIER, never against an entity: this
@@ -798,5 +802,16 @@ final class IncidentRepository extends ServiceEntityRepository
             ->andWhere('p.department = :department')->setParameter('department', $departmentId)
             ->andWhere('i.reportedAt >= :from')->setParameter('from', $from)
             ->andWhere('i.reportedAt < :to')->setParameter('to', $to);
+
+        if (null !== $areaUuid) {
+            // The area arrives as the UUID a URL names it by, so the slice is
+            // taken against the area's own public identifier rather than against
+            // a row this repository would have to load first.
+            $qb->join('i.area', 'da')
+                ->andWhere('da.uuid = :department_area')
+                ->setParameter('department_area', Uuid::fromString($areaUuid), 'uuid');
+        }
+
+        return $qb;
     }
 }
