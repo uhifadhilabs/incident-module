@@ -366,6 +366,10 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('incident.map'),
                     service('incident.case'),
                     service('incident.area_lists'),
+                    service('incident.file_source'),
+                    // The storage's own answer to "is there a page for a file",
+                    // read from the parameter it sets for exactly that question.
+                    param('storage.files.screens'),
                     service('security.authorization_checker'),
                     // FrameworkBundle defines this id whenever symfony/security-csrf
                     // is installed, which a host running SecurityBundle already has.

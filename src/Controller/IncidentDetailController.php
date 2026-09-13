@@ -41,6 +41,7 @@ use Uhifadhi\Incident\Service\AreaListService;
 use Uhifadhi\Incident\Service\IncidentCaseService;
 use Uhifadhi\Incident\Service\IncidentDashboardService;
 use Uhifadhi\Incident\Service\IncidentMapService;
+use Uhifadhi\Incident\Storage\IncidentFileSource;
 
 /**
  * ONE CASE FILE — the whole record on one page, and the one place an incident is
@@ -98,6 +99,20 @@ final class IncidentDetailController
          * still resolves, which is the whole promise retiring makes.
          */
         private readonly AreaListService $areaLists,
+        /**
+         * THE THREE THINGS A TILE MUST KNOW ABOUT A PHOTOGRAPH — where its bytes
+         * are, whether the one small picture was made, and what to call it — read
+         * from the same mapping the platform's files hub reads, so the tile on
+         * this page and the tile on /files never disagree about one file.
+         */
+        private readonly IncidentFileSource $files,
+        /**
+         * WHETHER THE FILE'S OWN PAGE EXISTS, which is the storage's answer and
+         * not this module's: an installation may run without the files hub, and
+         * there a tile has nothing to open rather than a link at a route nothing
+         * registered.
+         */
+        private readonly bool $filePages = false,
         private readonly ?AuthorizationCheckerInterface $authorization = null,
         private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
         private readonly ?TokenStorageInterface $tokenStorage = null,
@@ -121,6 +136,11 @@ final class IncidentDetailController
             'area' => $area,
             'now' => $now,
             'incident' => $incident,
+            // WHAT IS ATTACHED, as the platform describes a file — see the
+            // constructor. The record's own collection still says how much is
+            // attached; these are the tiles.
+            'evidenceFiles' => $this->files->entriesOf($incident->getEvidence()),
+            'filePages' => $this->filePages,
             'rail' => $this->dashboard->railFor($incident, $now),
             // The SAME builder the dashboard's maps use: one marker, one meaning,
             // wherever it is drawn. The legend states this incident's category

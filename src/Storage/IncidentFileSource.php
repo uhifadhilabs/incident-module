@@ -117,6 +117,35 @@ final class IncidentFileSource implements FileSourceInterface
         }
     }
 
+    /**
+     * A RUN OF EVIDENCE, DESCRIBED THE WAY THE HUB DESCRIBES IT — so an evidence
+     * tile on a case file, one on the dashboard and one on /files answer the same
+     * three questions about the same photograph from one mapping. Which state a
+     * picture is in is this module's answer to give ({@see entryFor()}); drawing
+     * it is the storage's, and a second opinion here is a queued spinner over a
+     * picture that has been sitting there for a month.
+     *
+     * A row with no path is not yielded, for the reason {@see files()} gives: a
+     * file is its key, and a tile for a key that names nothing has nothing to open.
+     *
+     * @param iterable<IncidentEvidence> $evidence
+     *
+     * @return list<FileEntry>
+     */
+    public function entriesOf(iterable $evidence): array
+    {
+        $entries = [];
+        foreach ($evidence as $item) {
+            if (null === $item->getPath()) {
+                continue;
+            }
+
+            $entries[] = self::entryFor($item, $this->caseFileUrl($item->getIncident()));
+        }
+
+        return $entries;
+    }
+
     public function guard(string $key, ?UserInterface $user): FileGuard
     {
         return self::guardFor($this->evidence->findOneByPath($key)?->getIncident());

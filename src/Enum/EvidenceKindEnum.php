@@ -30,13 +30,4 @@ enum EvidenceKindEnum: string
             self::Document => 'Document',
         };
     }
-
-    /** The modifier the `.i-ph` tile wears; a photograph is the tile's default. */
-    public function cssClass(): string
-    {
-        return match ($this) {
-            self::Photo => '',
-            self::Document => 'doc',
-        };
-    }
 }

@@ -15,11 +15,11 @@ namespace Uhifadhi\Incident\Model;
 
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 use Uhifadhi\Incident\Entity\Incident;
-use Uhifadhi\Incident\Entity\IncidentEvidence;
 use Uhifadhi\Incident\Entity\TaxonomyKind;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
+use Uhifadhi\Storage\Model\FileEntry;
 
 /**
  * EVERYTHING THE SIXTEEN WIDGETS DRAW, computed once.
@@ -54,7 +54,7 @@ final readonly class IncidentDashboard
      * @param list<Incident>                                                                                   $queue          what is waiting on the signed-in person, oldest first
      * @param list<Incident>                                                                                   $ageing         open work against its own term, worst first
      * @param array<string, list<Incident>>                                                                    $board          status value => the cards in that column
-     * @param list<IncidentEvidence>                                                                           $evidence       newest capture first
+     * @param list<FileEntry>                                                                                  $evidence       newest capture first, as the platform describes a file
      * @param IncidentRail|null                                                                                $rail           the one incident this person last touched, or null
      * @param AtlasMap                                                                                         $map            what every map on this screen draws, stated for the atlas
      */

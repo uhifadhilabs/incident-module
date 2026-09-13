@@ -23,6 +23,7 @@ use Uhifadhi\Incident\Model\IncidentFilter;
 use Uhifadhi\Incident\Model\IncidentRail;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\TaxonomyKindRepository;
+use Uhifadhi\Incident\Storage\IncidentFileSource;
 
 /**
  * BUILDS THE DASHBOARD, once per request.
@@ -60,6 +61,12 @@ final readonly class IncidentDashboardService
         private TaxonomyKindRepository $kinds,
         private IncidentTransitionService $transitions,
         private IncidentMapService $map,
+        /**
+         * WHAT AN ATTACHED FILE IS, in the platform's own words — the same mapping
+         * the files hub reads, so an evidence tile on this dashboard and one on
+         * /files never disagree about whether a picture was made.
+         */
+        private IncidentFileSource $files,
         private string $currency,
     ) {
     }
@@ -87,7 +94,7 @@ final readonly class IncidentDashboardService
             queue: null === $viewer ? [] : $this->incidents->queueFor($viewer, $filter->area),
             ageing: self::ageing($incidents, $now, self::AGEING_ROWS),
             board: self::board($incidents),
-            evidence: $this->incidents->latestEvidence($filter, self::EVIDENCE_TILES),
+            evidence: $this->files->entriesOf($this->incidents->latestEvidence($filter, self::EVIDENCE_TILES)),
             medianHoursToVerify: self::medianHoursToVerify($incidents),
             pastTermCount: self::pastTermCount($incidents, $now),
             rail: $this->rail($filter, $now, $viewer),

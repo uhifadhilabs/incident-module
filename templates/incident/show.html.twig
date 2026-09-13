@@ -20,6 +20,7 @@
    ========================================================================== #}
 {% extends '@UhifadhiIncident/base.html.twig' %}
 {% import '@UhifadhiIncident/dashboard/_ui.html.twig' as ui %}
+{% import '@UhifadhiStorage/upload/_tile.html.twig' as evidence %}
 
 {% block title %}{{ incident.reference }} — {{ incident.headline }}{% endblock %}
 
@@ -113,23 +114,18 @@
                 {# ONE GRID, ONE TILE. A file already attached and a file that arrived
                    a second ago must be the same box, or the card shows two kinds of
                    tile for the same thing — which is exactly the drift the one
-                   upload component exists to end. So a kept tile is the component's
-                   own finished state, `.upl-tile.done`, drawn by this template
-                   exactly as the controller draws it after an upload, hover remove
-                   and all. The vocabulary is the SHELL's; nothing here defines it.
+                   upload component exists to end. So a kept tile is the STORAGE's
+                   own finished state, drawn from the macro the component draws it
+                   with: a photograph shows the one small picture that was made for
+                   it and opens the file, and one without says which reason applies,
+                   in the storage's word. Nothing here defines a class or a state.
 
                    THE ADD TILE IS ONE TWIG LINE and is not drawn for somebody who
                    may not use it — storage asks the target's mayUpload() at render
                    time, so this template carries no permission check of its own. #}
                 <div class="i-evgrid">
-                    {% for item in incident.evidence %}
-                        <span class="upl-tile done">{{ ux_icon(item.kind.value == 'document' ? 'incident:file-text' : 'incident:camera', {width: 22, height: 22}) }}
-                            <span class="fn">{{ item.filename }}{% if item.capturedAt %} · <time datetime="{{ item.capturedAt|date('c') }}" data-localtime-format="clock">{{ item.capturedAt|date('H:i') }}</time>{% endif %}</span>
-                            {% if item.path %}
-                                <button type="button" class="rm" data-upl-remove data-upl-key="{{ item.path }}"
-                                        aria-label="Remove this evidence">&times;</button>
-                            {% endif %}
-                        </span>
+                    {% for file in evidenceFiles %}
+                        {{ evidence.entry(file, filePages ? path('storage_files_show', {key: file.key}) : '') }}
                     {% endfor %}
                     {{ render_upload('incident:' ~ incident.uuid, 'tile', {label: 'Add evidence'}) }}
                 </div>

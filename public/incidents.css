@@ -306,19 +306,10 @@ html.light{
 .i-tl-b .who{display:inline;color:var(--fog);font-weight:600}
 
 /* ── EVIDENCE ─────────────────────────────────────────────────────────────
-   Photo tiles. Theme-independent on purpose, like the map plate: a photograph
-   does not get lighter when the interface does.                              */
+   The GRID only. A kept evidence tile is the storage's `.upl-tile`, shipped in
+   the shell beside the upload component it belongs to, so a photograph on a case
+   file and the same photograph on the files hub are one box.                   */
 .i-evgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;margin-top:8px}
-.i-ph{aspect-ratio:4/3;border-radius:9px;border:1px solid var(--ln2);position:relative;overflow:hidden;
-  display:flex;align-items:center;justify-content:center;color:#8CA093;cursor:pointer;
-  background:radial-gradient(90px 60px at 40% 35%,#2A3327 0%,transparent 70%),#20241F}
-.i-ph:hover{border-color:color-mix(in srgb,var(--acc) 55%,transparent)}
-.i-ph i{position:absolute;left:6px;bottom:6px;right:6px;font-family:"JetBrains Mono",ui-monospace,monospace;
-  font-size:8.5px;font-weight:600;font-style:normal;color:#EAF2EC;background:rgba(10,14,11,.72);
-  padding:3px 6px;border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.i-ph.add{border-style:dashed;background:none;color:var(--fog)}
-.i-ph.add:hover{border-color:var(--acc);color:var(--acc)}
-.i-ph.doc{background:color-mix(in srgb,var(--fog) 8%,transparent);color:var(--fog)}
 
 /* ── INVOLVED PARTIES ─────────────────────────────────────────────────────
    People and organisations attached to an incident with a ROLE. A suspect, a

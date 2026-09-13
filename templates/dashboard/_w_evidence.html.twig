@@ -3,15 +3,26 @@
    EVIDENCE BELONGS TO THE INCIDENT, never to a person's upload: a photograph
    filed with a patrol observation travels with it when the observation becomes an
    incident, and keeps its ORIGINAL timestamp and position. So each tile names the
-   case it belongs to, and prints the moment the handset recorded. #}
+   case it belongs to, and opens that case rather than the file — this is a
+   dashboard, and what a tile here answers is "where did this turn up".
+
+   THE TILE IS THE STORAGE'S, drawn from the same macro the case file draws, in
+   the shape a read-only listing wants: nothing to remove, so the whole cell is
+   the link. #}
+{% import '@UhifadhiStorage/upload/_tile.html.twig' as evidence %}
 <div class="c" data-w="evidence">
     <span class="tab">Latest evidence<span class="src">· photographs and documents · newest first</span></span>
     <div class="i-evgrid">
-        {% for item in dashboard.evidence %}
-            <a class="i-ph {{ item.kind.cssClass }}" href="{{ path('incident_show', {uuid: area.uuid, reference: item.incident.reference}) }}">
-                {{ ux_icon(item.kind.value == 'document' ? 'incident:file-text' : 'incident:image') }}
-                <i>{{ item.incident.reference }} · {{ item.filename }}</i>
-            </a>
+        {% for file in dashboard.evidence %}
+            {%- set label = file.ownerLabel ~ ' · ' ~ file.name -%}
+            {{ evidence.kept({
+                name: file.name,
+                label: label,
+                thumbState: file.thumbState.value,
+                thumbUrl: file.hasThumbnail ? path('storage_evidence_show', {key: file.thumbKey}) : '',
+                detailUrl: file.ownerUrl,
+                title: 'none' == file.thumbState.value ? '' : label,
+            }) }}
         {% else %}
             <div class="use">No evidence attached in this window.</div>
         {% endfor %}

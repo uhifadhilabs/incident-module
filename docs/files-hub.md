@@ -34,10 +34,14 @@ No controller, no route, no JavaScript, no stylesheet. The component is not draw
 for somebody who may not use it — storage asks `mayUpload()` at render time — so
 the template carries no permission check of its own.
 
-**A kept tile is the component's own finished state.** The evidence card draws
-each attached file as `.upl-tile.done`, exactly as the controller draws a file
-that landed a second ago, hover remove and all. Two kinds of tile for the same
-thing on one card is precisely the drift the single component exists to end.
+**A kept tile is the component's own finished state, drawn from the component's
+own macro.** The evidence card and the dashboard's *Latest evidence* widget both
+render `@UhifadhiStorage/upload/_tile.html.twig`, so a file that landed a second
+ago and a file attached last season are one box — and a photograph shows the one
+small picture the storage made for it and opens the file, while one without says
+which reason applies in the storage's word and is deliberately not openable. This
+module ships no tile markup and no tile rules; what it supplies is the answer to
+*which state this file is in*, through `IncidentFileSource::entriesOf()`.
 
 **Removal is a recorded event.** `IncidentEvidenceService::detach()` drops the
 row and writes the case a timeline line saying the file went — the platform's

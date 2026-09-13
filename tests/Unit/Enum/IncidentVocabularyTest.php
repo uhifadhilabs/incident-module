@@ -104,8 +104,11 @@ final class IncidentVocabularyTest extends TestCase
             static fn (EvidenceKindEnum $k) => $k->value,
             EvidenceKindEnum::cases(),
         ));
-        self::assertSame('', EvidenceKindEnum::Photo->cssClass());
-        self::assertSame('doc', EvidenceKindEnum::Document->cssClass());
+        // And it wears no class of this module's: which box a kept file is drawn
+        // in is the storage's answer, read off the file rather than the record's
+        // word for it.
+        self::assertSame('Photograph', EvidenceKindEnum::Photo->label());
+        self::assertSame('Document', EvidenceKindEnum::Document->label());
     }
 
     public function testTimelineEntriesWearTheKindTheStylesheetColours(): void

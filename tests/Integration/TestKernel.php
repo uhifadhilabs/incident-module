@@ -50,6 +50,7 @@ use Uhifadhi\Incident\Tests\Integration\Fixtures\HeaderUserAuthenticator;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\StubRecordFileSource;
 use Uhifadhi\Incident\UhifadhiIncidentBundle;
 use Uhifadhi\Storage\Controller\EvidenceController;
+use Uhifadhi\Storage\Controller\FilesController;
 use Uhifadhi\Storage\Controller\UploadController;
 use Uhifadhi\Storage\Registry\FileSourceInterface;
 use Uhifadhi\Storage\UhifadhiStorageBundle;
@@ -382,6 +383,14 @@ final class TestKernel extends Kernel
         $upload = (new \ReflectionClass(UploadController::class))->getFileName();
         if (\is_string($upload)) {
             $routes->import($upload, 'attribute');
+        }
+
+        // THE FILE'S OWN PAGE, which an evidence tile opens. The hub's screens are
+        // on in this kernel, as they are in an installation that left them on, and
+        // a tile that says a file has a page must be able to reach it.
+        $files = (new \ReflectionClass(FilesController::class))->getFileName();
+        if (\is_string($files)) {
+            $routes->import($files, 'attribute');
         }
 
         // THE SCREENS THIS MODULE'S CRUMB POINTS AT, mounted from the bundles

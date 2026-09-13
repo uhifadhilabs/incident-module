@@ -110,6 +110,7 @@ return static function (ContainerConfigurator $container): void {
             service(TaxonomyKindRepository::class),
             service('incident.transitions'),
             service('incident.map'),
+            service('incident.file_source'),
             param('incident.currency'),
         ]);
 
