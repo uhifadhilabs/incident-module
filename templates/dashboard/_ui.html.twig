@@ -57,10 +57,19 @@
 {% endmacro %}
 
 {# When something happened, relative to the page's own "now" — the design writes
-   today and yesterday in words and everything older by date. #}
+   today and yesterday in words and everything older by date.
+
+   THE CLOCK AND THE DATE ARE EACH A `<time>` and the relative word is not, because
+   the frame rewrites the TEXT of a `<time>` to the reader's zone: wrapping the whole
+   phrase would throw "today" away, and leaving the clock bare would print the
+   server's zone. So the word stays prose and the two machine values carry their
+   instant. #}
 {% macro when(moment, now) %}
     {% set days = now|date('Y-m-d') == moment|date('Y-m-d') ? 0 : (now|date('U') - moment|date('U')) // 86400 %}
-    <span class="i-when">{% if days <= 0 %}today {{ moment|date('H:i') }}{% elseif days < 1.5 %}yesterday {{ moment|date('H:i') }}{% else %}{{ moment|date('D H:i') }}{% endif %} · {{ moment|date('j M') }}</span>
+    {%- set at = moment|date('c') -%}
+    <span class="i-when">{% if days <= 0 %}today {% elseif days < 1.5 %}yesterday {% endif %}<time datetime="{{ at }}"
+            data-localtime-format="clock">{% if days >= 1.5 %}{{ moment|date('D ') }}{% endif %}{{ moment|date('H:i') }}</time>
+        · <time datetime="{{ at }}" data-localtime-format="day">{{ moment|date('j M') }}</time></span>
 {% endmacro %}
 
 {# How long an incident has been open against ITS OWN category's term. One global

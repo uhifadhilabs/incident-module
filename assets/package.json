@@ -18,6 +18,11 @@
                 "main": "controllers/incident_report_controller.js",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "incident-local-moment": {
+                "main": "controllers/incident_local_moment_controller.js",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {}

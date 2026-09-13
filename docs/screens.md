@@ -8,6 +8,7 @@
 - [The five directions are presets, not pages](#the-five-directions-are-presets-not-pages)
 - [Filing from another module](#filing-from-another-module)
 - [The rail beside the report form](#the-rail-beside-the-report-form)
+- [Every moment reads in the reader's own zone](#every-moment-reads-in-the-readers-own-zone)
 - [The maps](#the-maps)
 
 ## The routes
@@ -182,6 +183,62 @@ hand-off without one leaves the words.
 **The design's card also carries a History row**, and the hand-off carries no
 history, so the app draws none: another thing waiting on the record-summary contract
 above.
+
+## Every moment reads in the reader's own zone
+
+A moment is stored as UTC and rendered once, on a server, in whatever single zone
+that server runs in — so a ranger in the field and an analyst three timezones away
+read the same wall clock off the same page and one of them reads it wrong. On a case
+file that is a claim about when something happened.
+
+**A printed instant is a `<time datetime>` and this module names no controller for
+it.** The shell mounts one `localtime` scanner on the document it owns and rewrites
+the text of every `time[datetime]` to the reader's locale and zone; a module's whole
+contribution is the element, which keeps rendering in a host that has no shell.
+
+```twig
+<time datetime="{{ t|date('c') }}" data-localtime-format="daystamp">{{ t|date('D j M Y · H:i')|lower }}</time>
+```
+
+The shape is asked for by `data-localtime-format` — `clock`, `day`, `daylong`,
+`stamp`, `daystamp`, or the verbose `time` / `date` / `datetime` — and each element
+asks for the shape its own design draws, so localising a tight cell does not blow it
+out to a full date. The text inside is the fallback a reader with no JavaScript sees.
+
+**A window is not an instant.** The month a filter is set to, the day a feed groups
+by, the bucket a chart is keyed on: those are boundaries the server chose and the
+reader asked for, and a browser three hours away rewriting one would file a row under
+the wrong heading. They stay plain text.
+`tests/Unit/VocabularyConformanceTest` tells the two apart by the two signals that
+make a print an instant — it shows a clock, or its subject is named `…At` — and fails
+the build for a bare one.
+
+**A `datetime-local` field is the hard half, and the shell does not solve it yet.**
+The field's value is a wall clock with no zone in it, so the same string is a
+different instant to every reader, and a server that parses it with no zone reads it
+in its own — which is how an 18:32Z observation gets stored as 18:32 in Nairobi's
+clock. The report form states both halves the field cannot:
+
+| | |
+|---|---|
+| `value` | the wall clock **in UTC** |
+| `data-instant` | the offset-qualified instant it was filled from |
+| `occurred_at_zone` | a hidden field the browser fills with its own IANA zone |
+
+`assets/controllers/incident_local_moment_controller.js` converts the instant to the
+reader's wall clock on connect and fills the zone field;
+`IncidentReportController::filersZone()` reads the posted clock in that zone, and in
+**UTC** where the field is empty — never in the server's own zone, so a reader with no
+JavaScript gets back exactly the instant the page showed them. The controller knows
+nothing about incidents and belongs beside `localtime` in the shell the day a second
+module has a moment field; **patrol-module's log form has the same defect** and is a
+follow-up.
+
+**Instants are normalised to the register's zone before they are stored**, because
+the columns are naive `datetime_immutable` and Doctrine persists the wall clock an
+object happens to carry — a moment held at `+03:00` would be written three hours
+early. `IncidentPrefill::moment()` and `occurredAtFrom()` both convert; the zone a
+reader sees is decided at render, never in the column.
 
 ## The maps
 

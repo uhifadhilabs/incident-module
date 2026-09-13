@@ -35,7 +35,7 @@
     <div class="srow{{ row.active ? '' : ' gone' }}">
         <span class="nm">{{ row.label }}</span>
         {% if row.note %}<span class="note">{{ row.note }}</span>{% endif %}
-        {% if not row.active %}<span class="chip idle">retired {{ row.retiredAt|date('j M')|lower }}</span>{% endif %}
+        {% if not row.active %}<span class="chip idle">retired <time datetime="{{ row.retiredAt|date('c') }}" data-localtime-format="day">{{ row.retiredAt|date('j M')|lower }}</time></span>{% endif %}
         <span class="n">{{ row.countsLabel }}</span>
         <span class="acts">
             {% if row.active %}

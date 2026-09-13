@@ -247,7 +247,13 @@ final readonly class IncidentPrefill
         }
 
         try {
-            return new \DateTimeImmutable($raw);
+            // THE INSTANT, IN THE ZONE THE REGISTER STORES INSTANTS IN. A hand-off
+            // states its moment with an offset — "08:15+03:00" — and the column it
+            // lands in is a naive `datetime_immutable`, so Doctrine would write the
+            // 08:15 and lose the offset. Converting here keeps the instant and
+            // leaves the rendering to say it in whatever zone a reader is in.
+            return new \DateTimeImmutable($raw)
+                ->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         } catch (\Exception) {
             // An unreadable timestamp means "we do not know when", which the form
             // already has a way to say. It is never worth a 500.

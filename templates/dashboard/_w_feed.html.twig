@@ -13,7 +13,7 @@
         <div class="i-day"><b>{{ day.day|date('j M')|lower }}</b><span class="cnt">{{ day.incidents|length }} filed · {{ stillOpen }} still open</span></div>
         {% for incident in day.incidents %}
             <a class="i-feed" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">
-                <span class="gut"><span class="hm">{{ incident.reportedAt|date('H:i') }}</span><span class="ago">{{ incident.ageInHours(dashboard.now) }} h ago</span></span>
+                <span class="gut"><span class="hm"><time datetime="{{ incident.reportedAt|date('c') }}" data-localtime-format="clock">{{ incident.reportedAt|date('H:i') }}</time></span><span class="ago">{{ incident.ageInHours(dashboard.now) }} h ago</span></span>
                 <span class="mark"><i class="i-hue-{{ incident.kind.colourKey }}"></i></span>
                 <span class="bd">
                     <span class="hl">{{ ui.id(incident.reference) }}{{ ui.cat(incident.kind, incident.subcategory.label) }}{{ ui.status(incident.status) }}</span>

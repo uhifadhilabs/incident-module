@@ -28,7 +28,7 @@
 {% block shell_page_title %}{{ incident.reference }} — {{ incident.title }}{% endblock %}
 
 {% block shell_page_subtitle %}{% set money = incident.money %}{{ incident.kind.label }} · {{ incident.subcategory.label }} · <b>{{ incident.status.label }}</b>
-    · {{ incident.zoneLabel }} · filed {{ incident.reportedAt|date('D j M H:i')|lower }}{% if incident.events|first and incident.events|first.actorName %} by {{ incident.events|first.actorName }}{% endif %}
+    · {{ incident.zoneLabel }} · filed <time datetime="{{ incident.reportedAt|date('c') }}" data-localtime-format="daystamp">{{ incident.reportedAt|date('D j M H:i')|lower }}</time>{% if incident.events|first and incident.events|first.actorName %} by {{ incident.events|first.actorName }}{% endif %}
     {%- if money and money.isAssessed %} · {{ incident.money.currency }} {{ money.payable|number_format(0, '.', ',') }} {{ money.direction.assessedWord }}, {{ money.settled|number_format(0, '.', ',') }} {{ money.direction.settledWord }}{% endif %}
     · {{ incident.evidence|length }} pieces of evidence · {{ incident.parties|length }} parties.{% endblock %}
 
@@ -51,8 +51,8 @@
         <span class="f"><span class="k">Status</span><span class="v">{{ incident.status.label }}</span></span>
         <span class="f"><span class="k">Severity</span><span class="v">{{ incident.severity.label }}</span></span>
         <span class="f"><span class="k">Zone</span><span class="v">{{ incident.zoneLabel }}</span></span>
-        {% if incident.occurredAt %}<span class="f"><span class="k">Occurred</span><span class="v">{{ incident.occurredAt|date('D j M')|lower }}<em>{{ incident.occurredAt|date('H:i') }}</em></span></span>{% endif %}
-        <span class="f"><span class="k">Filed</span><span class="v">{{ incident.reportedAt|date('D j M')|lower }}<em>{{ incident.reportedAt|date('H:i') }}</em></span></span>
+        {% if incident.occurredAt %}<span class="f"><span class="k">Occurred</span><span class="v"><time datetime="{{ incident.occurredAt|date('c') }}" data-localtime-format="day">{{ incident.occurredAt|date('D j M')|lower }}</time><em><time datetime="{{ incident.occurredAt|date('c') }}" data-localtime-format="clock">{{ incident.occurredAt|date('H:i') }}</time></em></span></span>{% endif %}
+        <span class="f"><span class="k">Filed</span><span class="v"><time datetime="{{ incident.reportedAt|date('c') }}" data-localtime-format="day">{{ incident.reportedAt|date('D j M')|lower }}</time><em><time datetime="{{ incident.reportedAt|date('c') }}" data-localtime-format="clock">{{ incident.reportedAt|date('H:i') }}</time></em></span></span>
         <span class="f"><span class="k">Verified in</span><span class="v">{% if incident.hoursToVerify is null %}—{% else %}{{ incident.hoursToVerify }} h{% endif %}<em>term {{ incident.subcategory.termLabel }}</em></span></span>
         {% if incident.assignedTo %}<span class="f"><span class="k">Responder</span><span class="v">{{ incident.assignedTo.firstName|slice(0, 1) }}. {{ incident.assignedTo.lastName }}</span></span>{% endif %}
         <span class="f"><span class="k">Source</span><span class="v">{{ incident.source.label }}<em>{{ incident.source.badge }}</em></span></span>
@@ -99,7 +99,7 @@
                 <div class="i-tl">
                     {% for event in incident.events %}
                         <div class="i-tl-item {{ event.kind.cssClass }}">
-                            <span class="i-tl-t">{{ event.occurredAt|date('D j M · H:i')|lower }} · {{ event.toStatus ? event.toStatus.label : event.kind.value }}</span>
+                            <span class="i-tl-t"><time datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="stamp">{{ event.occurredAt|date('D j M · H:i')|lower }}</time> · {{ event.toStatus ? event.toStatus.label : event.kind.value }}</span>
                             <span class="i-tl-b">{% if event.actorName %}<span class="who">{{ event.actorName }}</span> {% endif %}{{ event.body }}{% if event.detail %}<em>{{ event.detail }}</em>{% endif %}</span>
                         </div>
                     {% endfor %}
@@ -124,7 +124,7 @@
                 <div class="i-evgrid">
                     {% for item in incident.evidence %}
                         <span class="upl-tile done">{{ ux_icon(item.kind.value == 'document' ? 'incident:file-text' : 'incident:camera', {width: 22, height: 22}) }}
-                            <span class="fn">{{ item.filename }}{% if item.capturedAt %} · {{ item.capturedAt|date('H:i') }}{% endif %}</span>
+                            <span class="fn">{{ item.filename }}{% if item.capturedAt %} · <time datetime="{{ item.capturedAt|date('c') }}" data-localtime-format="clock">{{ item.capturedAt|date('H:i') }}</time>{% endif %}</span>
                             {% if item.path %}
                                 <button type="button" class="rm" data-upl-remove data-upl-key="{{ item.path }}"
                                         aria-label="Remove this evidence">&times;</button>
@@ -280,7 +280,7 @@
                     : incident.events|filter(e => e.toStatus and e.toStatus.value == step.place.value) %}
                 {% for event in stepEvents %}
                     <div class="rln"><span>{{ event.actorName ? 'By' : 'Recorded' }}</span><span>{{ event.actorName ?? 'the clock' }}</span></div>
-                    <div class="rln"><span>When</span><span>{{ event.occurredAt|date('D j M · H:i')|lower }}</span></div>
+                    <div class="rln"><span>When</span><span><time datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="daystamp">{{ event.occurredAt|date('D j M · H:i')|lower }}</time></span></div>
                     {% if event.detail %}<div class="rln"><span>How</span><span>{{ event.detail }}</span></div>{% endif %}
                 {% endfor %}
                 {% if step.state == 'now' %}

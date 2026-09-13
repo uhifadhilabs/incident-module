@@ -753,10 +753,17 @@ final class ReportFlowTest extends FunctionalTestCase
         $rows = $card->filter('.rln')->each(static fn (Crawler $row): string => $row->text());
         self::assertStringContainsString('P-0142 · foot patrol', implode(' | ', $rows));
         self::assertStringContainsString('S. Laizer · ranger', implode(' | ', $rows));
-        // THE TIME AS THE OBSERVER WROTE IT — 08:15 in the field, not 05:15 in
-        // UTC. A record meant to be recognised must not restate the moment in a
-        // zone nobody there was standing in.
-        self::assertStringContainsString('08:15', implode(' | ', $rows));
+        // THE MOMENT AS A MACHINE INSTANT: the row's text is the register's own
+        // zone — 05:15 for an 08:15+03:00 observation — and the `<time>` around it
+        // carries the instant, so the frame reads it in the zone of whoever is
+        // looking. A wall clock printed in a zone the reader is not in is the
+        // defect; printing the OBSERVER's zone beside a form that prints another
+        // is two of them.
+        self::assertStringContainsString('05:15', implode(' | ', $rows));
+        self::assertSame(
+            '2026-08-22T05:15:00+00:00',
+            $card->filter('.rln time')->attr('datetime'),
+        );
         // The position, in the observation page's own notation.
         self::assertStringContainsString('3°12\'05"S 29°32\'16"W', implode(' | ', $rows));
         // AND THE SOURCE ROW IS THE WAY BACK TO WHAT THE CARD LEAVES OUT: the

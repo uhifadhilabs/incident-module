@@ -314,6 +314,16 @@ final class IncidentReportController
         return \sprintf('{"type":"Point","coordinates":[%.6F,%.6F]}', (float) $lng, (float) $lat);
     }
 
+    /**
+     * WHEN IT HAPPENED, READ IN THE CLOCK THE FILER WAS LOOKING AT.
+     *
+     * A `datetime-local` field posts a WALL CLOCK and no zone, so the same string
+     * is a different instant to every reader. Parsing it with no zone at all reads
+     * it in whatever zone the SERVER runs in — a zone nobody on the page has any
+     * reason to be in, and the surest way to store 18:32 for an event at 21:32.
+     * So the form states the reader's zone beside the clock and this reads the one
+     * in the other.
+     */
     private static function occurredAtFrom(Request $request): ?\DateTimeImmutable
     {
         $raw = trim($request->request->getString('occurred_at'));
@@ -322,11 +332,38 @@ final class IncidentReportController
         }
 
         try {
-            return new \DateTimeImmutable($raw);
+            // THE REGISTER'S OWN ZONE, because the column is a naive
+            // `datetime_immutable`: Doctrine writes the WALL CLOCK the object
+            // carries, so a moment held at +03:00 would be stored three hours
+            // early. Converting here is what makes the zone above a reading
+            // instruction rather than a relabelling.
+            return new \DateTimeImmutable($raw, self::filersZone($request))
+                ->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         } catch (\Exception) {
             // "I do not know when" is a legitimate answer to that question, and a
             // typo in a date must never stand between a ranger and a filed report.
             return null;
+        }
+    }
+
+    /**
+     * THE ZONE THE FORM'S CLOCK WAS READ IN, and UTC wherever the form did not
+     * say.
+     *
+     * UTC IS THE FALLBACK AND THE SERVER'S OWN ZONE IS NEVER IT. A page with no
+     * JavaScript prints the field in UTC and leaves the zone field empty, so
+     * reading it as UTC gives that reader back exactly the instant they were
+     * shown. A zone this build of the tz database has never heard of answers the
+     * same way: a filing is not worth losing over it.
+     */
+    private static function filersZone(Request $request): \DateTimeZone
+    {
+        $named = trim($request->request->getString('occurred_at_zone'));
+
+        try {
+            return '' === $named ? new \DateTimeZone('UTC') : new \DateTimeZone($named);
+        } catch (\Exception) {
+            return new \DateTimeZone('UTC');
         }
     }
 

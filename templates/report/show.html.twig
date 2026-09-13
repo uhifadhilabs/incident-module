@@ -24,10 +24,16 @@
 {% block incident_trail_tail %} <a href="{{ path('incident_dashboard', {uuid: area.uuid}) }}">incidents</a> / report{% endblock %}
 
 {# THE FLOW BRINGS ITS OWN HEADING — the page's plate carries its own title, so
-   filling the frame's head socket would print the heading twice. #}
+   filling the frame's head socket would print the heading twice.
+
+   TWO CONTROLLERS, BOTH NAMED HERE so every asset path the flow mounts lives in one
+   place. The moment field's is its own and not a method on the flow's because
+   nothing about it is about incidents: a zoneless clock field read in the reader's
+   zone is the shell's problem the day a second module has one. #}
 {% block incident_page %}
     {{ include('@UhifadhiIncident/report/_page.html.twig', {
         controller: '@uhifadhi/incident-module/incident-report',
+        momentController: '@uhifadhi/incident-module/incident-local-moment',
         area: area,
         kinds: kinds,
         prefill: prefill,

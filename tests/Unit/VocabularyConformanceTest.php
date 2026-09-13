@@ -146,6 +146,96 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
     }
 
     /**
+     * EVERY INSTANT THE TEMPLATES PRINT IS A `<time datetime=…>`.
+     *
+     * A moment is stored as UTC and rendered once, on a server, in whatever single
+     * zone that server runs in — so a ranger in the field and an analyst three
+     * timezones away read the same wall clock off the same page and one of them
+     * reads it wrong. The frame fixes it for every module at once by rewriting the
+     * text of a `<time datetime>` to the reader's own zone, and a module's whole
+     * contribution is to emit the element. Nothing about a bare printed clock looks
+     * wrong on the page it was rendered on, which is why it is asserted here.
+     *
+     * TWO SIGNALS SAY A PRINT IS AN INSTANT, and both are checked:
+     *
+     *   IT PRINTS A CLOCK. A time of day is what a zone visibly moves.
+     *
+     *   IT PRINTS SOMETHING NAMED `…At`. `reportedAt`, `occurredAt`, `capturedAt`,
+     *   `retiredAt`, `closesAt` are moments by name even at day precision.
+     *
+     * A WINDOW IS NOT AN INSTANT AND MUST NOT BE LOCALISED. The month a filter is
+     * set to, a day a feed groups by, a bucket a chart is keyed on — those are
+     * boundaries the server chose and the reader asked for, and a browser three
+     * hours away rewriting one would put a row under the wrong heading or a filter
+     * under the wrong month.
+     *
+     * AND A MACHINE VALUE IN AN ATTRIBUTE IS NOT PRINTED TEXT: `datetime="…"`
+     * itself, and the wall clock a `datetime-local` field is filled with, are read
+     * by code, so they are exempt wherever they sit inside a tag.
+     */
+    public function testEveryInstantTheTemplatesPrintIsATimeElement(): void
+    {
+        $offenders = [];
+        foreach (self::templateFiles() as $file) {
+            $markup = (string) file_get_contents($file);
+            $localised = self::timeElementsIn($markup);
+
+            preg_match_all('/(\S{0,60}?)\|\s*date\(\s*\'([^\']*)\'/', $markup, $calls, \PREG_OFFSET_CAPTURE | \PREG_SET_ORDER);
+            foreach ($calls as $call) {
+                [$whole, $at] = [$call[0][0], $call[0][1]];
+                $subject = $call[1][0];
+                $format = $call[2][0];
+
+                $isInstant = preg_match('/[His]/', $format) || preg_match('/At$/', $subject);
+                if (!$isInstant || self::insideATag($markup, $at) || self::inAnyRange($localised, $at)) {
+                    continue;
+                }
+
+                $offenders[] = basename($file).':'.(1 + substr_count(substr($markup, 0, $at), "\n")).' '.$whole;
+            }
+        }
+
+        self::assertSame([], $offenders, 'These print a stored moment in the server\'s zone: an instant is a <time datetime>.');
+    }
+
+    /**
+     * Where each `<time datetime=…>` element begins and ends. A `<time>` with no
+     * `datetime` is not localised by anything, so it does not count as cover.
+     *
+     * @return list<array{int, int}>
+     */
+    private static function timeElementsIn(string $markup): array
+    {
+        preg_match_all('/<time\b[^>]*\bdatetime=.*?<\/time>/s', $markup, $matches, \PREG_OFFSET_CAPTURE);
+
+        return array_map(
+            static fn (array $m): array => [$m[1], $m[1] + \strlen($m[0])],
+            $matches[0],
+        );
+    }
+
+    /** @param list<array{int, int}> $ranges */
+    private static function inAnyRange(array $ranges, int $at): bool
+    {
+        foreach ($ranges as [$from, $to]) {
+            if ($at >= $from && $at < $to) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Whether an offset sits inside an HTML tag, which is to say in an attribute. */
+    private static function insideATag(string $markup, int $at): bool
+    {
+        $open = strrpos(substr($markup, 0, $at), '<');
+        $close = strrpos(substr($markup, 0, $at), '>');
+
+        return false !== $open && ($open > ($close ?: -1));
+    }
+
+    /**
      * @return list<string>
      */
     private static function templateFiles(): array

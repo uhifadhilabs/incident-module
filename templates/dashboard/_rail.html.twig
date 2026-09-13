@@ -20,8 +20,8 @@
         <div class="i-wfstep {{ step.state }}">
             <div class="n"><i>{{ step.state == 'done' ? '✓' : step.place.step }}</i><b>{{ step.place.label }}</b></div>
             <div class="mt">
-                {%- if step.at %}{{ step.at|date('D j M H:i') }}
-                {%- elseif step.place.value == 'closed' and rail.closesAt %}auto-closes {{ rail.closesAt|date('j M Y') }} · closing is automatic {{ constant('Uhifadhi\\Incident\\Workflow\\IncidentWorkflow::CLOSE_AFTER_DAYS') }} days after resolved
+                {%- if step.at %}<time datetime="{{ step.at|date('c') }}" data-localtime-format="daystamp">{{ step.at|date('D j M H:i') }}</time>
+                {%- elseif step.place.value == 'closed' and rail.closesAt %}auto-closes <time datetime="{{ rail.closesAt|date('c') }}" data-localtime-format="day">{{ rail.closesAt|date('j M Y') }}</time> · closing is automatic {{ constant('Uhifadhi\\Incident\\Workflow\\IncidentWorkflow::CLOSE_AFTER_DAYS') }} days after resolved
                 {%- elseif step.place.value == 'closed' %}auto-closes {{ constant('Uhifadhi\\Incident\\Workflow\\IncidentWorkflow::CLOSE_AFTER_DAYS') }} days after resolution
                 {%- else %}not reached{% endif -%}
             </div>

@@ -38,7 +38,7 @@
    The page writes the one line on a labelled row, in the same field set as where,
    when and how bad — one column with room for a caption under each answer.
 
-   Parameters: controller, kinds, chosen, prefill, blockSets, areaLists
+   Parameters: controller, momentController, kinds, chosen, prefill, blockSets, areaLists
    ========================================================================== #}
 <div class="i-fieldset">
     <div class="i-fld"><label for="report-title">What happened</label>
@@ -59,9 +59,22 @@
             <span class="ro-req">needed to file</span>
             {% if prefill.positionLabel %}<span class="i-kpi-note">{{ prefill.positionLabel }} · came with the {{ prefill.sourceLabel }}</span>{% endif %}</span></div>
 
+    {# WHEN IT HAPPENED, IN THE READER'S OWN CLOCK.
+
+       A `datetime-local` value has NO ZONE IN IT, so the same string means a
+       different instant to every reader and a server that parses it in its own zone
+       stores a moment nobody typed. So the page states both halves a reader cannot:
+       the field is printed in UTC and carries on `data-instant` the instant it was
+       filled from, and the hidden field carries the zone the browser says it is in.
+       The controller converts the one and fills the other; the server reads the wall
+       clock in that zone, and in UTC when the field is empty — which is what a
+       reader with no JavaScript was shown. #}
     <div class="i-fld"><label for="report-when">When</label>
-        <span><input type="datetime-local" id="report-when" name="occurred_at"
-                     value="{{ prefill.occurredAt ? prefill.occurredAt|date('Y-m-d\\TH:i', false) }}">
+        <span {{ stimulus_controller(momentController) }}><input type="datetime-local" id="report-when" name="occurred_at"
+                     {{ stimulus_target(momentController, 'input') }}
+                     {% if prefill.occurredAt %}data-instant="{{ prefill.occurredAt|date('c') }}"{% endif %}
+                     value="{{ prefill.occurredAt ? prefill.occurredAt|date('Y-m-d\\TH:i', 'UTC') }}">
+            <input type="hidden" name="occurred_at_zone" value="" {{ stimulus_target(momentController, 'zone') }}>
             {% if prefill.occurredAt %}<span class="i-kpi-note">from the {{ prefill.sourceLabel }}</span>{% endif %}</span></div>
 
     {# SECONDARY, AND SAID SO. Present — because the person filing may well know —

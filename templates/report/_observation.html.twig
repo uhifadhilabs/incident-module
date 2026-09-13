@@ -37,11 +37,17 @@
     <span class="rr-sub">The record itself · not editable</span>
     {% if prefill.patrol %}<div class="rln"><span>Patrol</span><span class="mono">{{ prefill.patrol }}</span></div>{% endif %}
     {% if prefill.ranger %}<div class="rln"><span>Recorded by</span><span class="mono">{{ prefill.ranger }}</span></div>{% endif %}
-    {# `false` KEEPS THE MOMENT'S OWN ZONE. The observation was made at 08:15 where
-       the observer was standing, and a record meant to be recognised must not
-       restate it in UTC. #}
+    {# THE MOMENT, AS A MACHINE INSTANT WITH A READABLE FALLBACK. `datetime` is the
+       offset-qualified instant and the frame rewrites the TEXT of the element to the
+       reader's own zone — which is the whole answer to "whose clock is this". An
+       instant with no offset on it is one a browser resolves in its own zone, so
+       `date('c')` is not optional. The text is what a reader with no JavaScript
+       sees, and it is the register's own zone rather than the observer's: the form
+       beside it says the same moment the same way, and two zones on one page is the
+       confusion this element removes. #}
     {% if prefill.occurredAt %}
-        <div class="rln"><span>When</span><span class="mono">{{ prefill.occurredAt|date('D j M Y · H:i', false)|lower }}</span></div>
+        <div class="rln"><span>When</span><span class="mono"><time datetime="{{ prefill.occurredAt|date('c') }}"
+                data-localtime-format="daystamp">{{ prefill.occurredAt|date('D j M Y · H:i')|lower }}</time></span></div>
     {% endif %}
     {% if prefill.positionLabel %}
         <div class="rln"><span>Where</span><span class="mono">{{ prefill.positionLabel }}</span></div>
