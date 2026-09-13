@@ -13,12 +13,13 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Integration\Fixtures;
 
-use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpiProviderInterface;
+use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
 
 /**
- * The HOST's DepartmentKpiService, played by a fixture: it receives every service
- * tagged "uhifadhi.department_kpi" exactly as the host's own does, so a test can
- * see what this bundle actually contributed to the performance contract.
+ * The core's department performance service, played by a fixture: it receives every
+ * service tagged {@see DepartmentKpiProviderInterface::TAG} exactly as the core's own
+ * does, so a test can see what this bundle actually contributed to the performance
+ * contract.
  *
  * The tag is applied BY HAND in the bundle's extension (a reusable bundle is not
  * autoconfigured), and this collector is what proves it stuck — a provider that

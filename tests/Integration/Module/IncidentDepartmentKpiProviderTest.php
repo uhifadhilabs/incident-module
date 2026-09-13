@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Tests\Integration\Module;
 
-use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpi;
-use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentRef;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Contracts\Kpi\DepartmentKpi;
+use Uhifadhi\Contracts\Kpi\DepartmentRef;
 use Uhifadhi\Incident\Entity\IncidentMoney;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;

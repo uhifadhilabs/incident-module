@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Module;
 
-use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpi;
-use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpiProviderInterface;
-use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentRef;
+use Uhifadhi\Contracts\Kpi\DepartmentKpi;
+use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
+use Uhifadhi\Contracts\Kpi\DepartmentRef;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Repository\IncidentRepository;

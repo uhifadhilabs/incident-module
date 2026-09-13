@@ -614,7 +614,7 @@ final class IncidentRepository extends ServiceEntityRepository
      * filters by department, and no screen may.
      *
      * THE DEPARTMENT ARRIVES AS AN ID, because no package publishes a contract
-     * for one — {@see \Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentRef} is the same decision made
+     * for one — {@see \Uhifadhi\Contracts\Kpi\DepartmentRef} is the same decision made
      * one layer up, and by the time the question reaches SQL it is one integer
      * anyway.
      *
@@ -642,7 +642,7 @@ final class IncidentRepository extends ServiceEntityRepository
     /**
      * How many incidents this department's people recorded, per area — what the
      * per-area performance widget reads. Keyed by area name because that is what
-     * the widget prints and the host's {@see \Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpi} keys
+     * the widget prints and the host's {@see \Uhifadhi\Contracts\Kpi\DepartmentKpi} keys
      * an area's share by.
      *
      * @return array<string, int>

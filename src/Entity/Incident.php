@@ -177,7 +177,7 @@ class Incident
      * and none in TeamBundle, so a `ManyToOne` here would name
      * somebody's class and make every installation that records an incident
      * hard-require the module that owns it. The fleet's rule for a department is
-     * to walk the mapping and never the type — {@see \Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentRef}
+     * to walk the mapping and never the type — {@see \Uhifadhi\Contracts\Kpi\DepartmentRef}
      * is the same decision made one layer up — and by the time the lens reaches
      * a column it is one integer.
      */

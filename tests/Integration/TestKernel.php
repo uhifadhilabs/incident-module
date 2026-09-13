@@ -38,6 +38,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
+use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
 use Uhifadhi\Incident\Repository\AreaListEntryRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
@@ -256,14 +257,14 @@ final class TestKernel extends Kernel
 
         $services = $container->services();
 
-        // Stands in for the REGISTRY's module catalogue collector and the area
-        // module's department-KPI service: both collect tagged services, and
+        // Stands in for the REGISTRY's module catalogue collector and the team
+        // module's department-performance service: both collect tagged services, and
         // tagged services are private, so these collectors are what make the
         // bundle's contributions observable.
         $services->set(CollectedModules::class)
             ->args([tagged_iterator('uhifadhi.module')])->public();
         $services->set(CollectedKpiProviders::class)
-            ->args([tagged_iterator('uhifadhi.department_kpi')])->public();
+            ->args([tagged_iterator(DepartmentKpiProviderInterface::TAG)])->public();
 
         // And for DEVKIT's content collector, which the migrations upgrade lock
         // seeds through: this module's demo month depends on team's people, and
