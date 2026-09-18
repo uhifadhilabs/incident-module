@@ -9,6 +9,7 @@
 - [A sub-category's questions come from its blocks](#a-sub-categorys-questions-come-from-its-blocks)
 - [One taxonomy, and it is the area’s](#one-taxonomy-and-it-is-the-areas)
 - [How this module references areas](#how-this-module-references-areas)
+- [The figures a zone publishes](#the-figures-a-zone-publishes)
 - [Provenance is written once](#provenance-is-written-once)
 
 ## The nine tables
@@ -145,6 +146,38 @@ overview contributions, so the concrete class costs it nothing it was avoiding a
 the area's own accessors in hand. Loose coupling through the interface is the
 right call for a module that has no other reason to depend on AreaBundle; that is
 not this one.
+
+## The figures a zone publishes
+
+**A zone's figures are decided by the ground, not by the stamp.**
+`Uhifadhi\Incident\Module\IncidentZoneFigureProvider` answers the core's
+`Kpi\ZoneFigureProviderInterface` for every zone of an area in one call — three
+queries however many zones are asked about — and each figure counts the
+incidents whose **point falls inside the ring** (`ST_Contains(zone.geom,
+incident.position)`), read from AreaBundle's `Zone` geometry. `incident.zone_id`
+is what the locator wrote at filing; these figures are not read from it, so an
+area that redraws its zones reads its history through the new geography at once.
+A point inside no zone counts for no zone — it is still the area's, and the
+area's own figures still hold it. `position` is `NOT NULL`, so there is no
+incident without one.
+
+| Key | What it is | Unit |
+|---|---|---|
+| `incidents` | Incidents **filed** in the period whose point is in the zone. | count |
+| `incidents_open` | How many on that ground were still open **at the instant the period closed** — filed before it, neither resolved nor closed by then. Whenever they were filed: a backlog is not a month's filings. | count |
+| `incidents_fine` | Fines on incidents filed in the period on that ground, summed as `IncidentMoney::payable()` defines (approved, else assessed, else claimed). Absent where nothing there carries a fine. | the configured currency |
+| `incidents_compensation` | The same, for compensation. Two plates, never one: the two directions are never added together. | the configured currency |
+
+The keys, labels and money definition are the **department seam's own**, so a
+zone card and a performance plate cannot disagree about what a fine was. Nothing
+here is scored against the month before: `DepartmentKpi::direction()` reads
+every figure as better when larger, which is true of filings and false of a
+backlog. The answer states the period it measured, which is the period asked
+for — every figure is read off timestamps this module records itself. A zone
+whose ground held neither a filing nor an open incident is **left out** of the
+answer rather than published at zero, and an area that has never had an incident
+is answered with `ZoneFigures::none()`. `ZoneFigureProviderInterface::COVERED` is
+not published: incidents are points, and a point covers no ground.
 
 ## Provenance is written once
 
