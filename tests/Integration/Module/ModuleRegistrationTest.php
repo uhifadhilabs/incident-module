@@ -18,6 +18,7 @@ use Uhifadhi\Contracts\ModulePermission;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedZoneFigureProviders;
 
 /**
  * The host contract: installing this bundle puts "incidents" in the catalogue.
@@ -74,6 +75,22 @@ final class ModuleRegistrationTest extends KernelTestCase
 
         /** @var CollectedKpiProviders $providers */
         $providers = self::getContainer()->get(CollectedKpiProviders::class);
+
+        self::assertArrayHasKey('incidents', $providers->bySlug());
+    }
+
+    /**
+     * THE ZONE FIGURE CONTRIBUTION POINT, tagged by hand in the extension for
+     * the same reason and with the same failure mode: an untagged provider is
+     * invisible everywhere except as incidents cards missing from every zone
+     * surface.
+     */
+    public function testItReachesTheZoneFigureContract(): void
+    {
+        self::bootKernel();
+
+        /** @var CollectedZoneFigureProviders $providers */
+        $providers = self::getContainer()->get(CollectedZoneFigureProviders::class);
 
         self::assertArrayHasKey('incidents', $providers->bySlug());
     }

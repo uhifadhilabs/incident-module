@@ -198,6 +198,7 @@ abstract class IntegrationTestCase extends KernelTestCase
         string $title = 'Lion killed four goats at Riverside',
         ?\DateTimeImmutable $at = null,
         ?User $reportedBy = null,
+        ?string $position = null,
     ): Incident {
         /** @var \Uhifadhi\Incident\Service\IncidentReportService $reports */
         $reports = static::getContainer()->get('test_public.incident.report');
@@ -206,7 +207,7 @@ abstract class IntegrationTestCase extends KernelTestCase
             area: $area,
             subcategory: $this->subcategory($area, $subcategory),
             title: $title,
-            position: '{"type":"Point","coordinates":[-29.75,-3.21]}',
+            position: $position ?? '{"type":"Point","coordinates":[-29.75,-3.21]}',
             now: $at ?? new \DateTimeImmutable('2026-08-20 05:41:00'),
             reportedBy: $reportedBy,
         );

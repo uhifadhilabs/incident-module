@@ -28,6 +28,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
+use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Incident\Command\CloseDueCommand;
 use Uhifadhi\Incident\Controller\IncidentAreaListController;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
@@ -40,6 +41,7 @@ use Uhifadhi\Incident\DependencyInjection\IncidentConfiguration;
 use Uhifadhi\Incident\Devkit\IncidentContentProvider;
 use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
+use Uhifadhi\Incident\Module\IncidentZoneFigureProvider;
 use Uhifadhi\Incident\Overview\IncidentAttention;
 use Uhifadhi\Incident\Overview\IncidentMapLayers;
 use Uhifadhi\Incident\Overview\IncidentNowTiles;
@@ -577,5 +579,18 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 $currency,
             ])
             ->tag(DepartmentKpiProviderInterface::TAG);
+
+        // THE ZONE FIGURE SEAM, tagged by hand like every other contribution
+        // point. A missing tag here looks like a module nobody installed: the
+        // incidents cards leave every zone surface, legend included, and
+        // nothing else changes.
+        $services->set('incident.zone_kpi_provider', IncidentZoneFigureProvider::class)
+            ->args([
+                service(IncidentRepository::class),
+                'incidents',
+                'Incidents',
+                $currency,
+            ])
+            ->tag(ZoneFigureProviderInterface::TAG);
     }
 }

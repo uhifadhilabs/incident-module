@@ -14,13 +14,17 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
+use Uhifadhi\Incident\Entity\IncidentMoney;
 use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
@@ -416,7 +420,7 @@ final class IncidentRepository extends ServiceEntityRepository
      * record has not been settled and has not been waived, oldest first.
      *
      * The outstanding balance is derived in PHP everywhere else
-     * ({@see \Uhifadhi\Incident\Entity\IncidentMoney::outstanding()}), and the
+     * ({@see IncidentMoney::outstanding()}), and the
      * SQL here says the same thing in SQL rather than loading every money record
      * an area has ever had to filter four of them out. The COALESCE is that
      * method's own fallback chain — approved, then assessed, then claimed — and if
@@ -628,6 +632,225 @@ final class IncidentRepository extends ServiceEntityRepository
         $incidents = $qb->getQuery()->getResult();
 
         return $incidents;
+    }
+
+    /*
+     * ── WHAT A ZONE'S FIGURES ASK ───────────────────────────────────────────
+     *
+     * Three questions, three queries, EACH ONE ANSWERING FOR THE WHOLE SET OF
+     * ZONES AT ONCE — the zone seam hands a provider every zone the caller is
+     * about to draw precisely so nothing runs a query per zone.
+     *
+     * Raw SQL, for the reason {@see IncidentZoneLocator} is raw SQL: DQL has no
+     * ST_Contains. Every table and column name is read from Doctrine's metadata
+     * rather than spelled out, because `zone` is AreaBundle's table and an
+     * installation may name its columns with a naming strategy of its own.
+     *
+     * THE POINT DECIDES, NOT THE STAMP. `incident.zone_id` is what the locator
+     * wrote at filing; these count what the ground holds NOW, so a zone set
+     * redrawn after an incident was filed reports the geography as it is rather
+     * than as it was. `position` is NOT NULL on this table, so every incident
+     * is somewhere — a point inside no zone simply matches no row.
+     */
+
+    /**
+     * HOW MANY WERE FILED ON EACH ZONE'S GROUND in a window, keyed by zone uuid.
+     *
+     * A zone with nothing is absent from the answer rather than present at zero:
+     * the caller renders an absence as an absence.
+     *
+     * @param list<string> $zoneUuids
+     *
+     * @return array<string, int>
+     */
+    public function countFiledByZoneBetween(array $zoneUuids, \DateTimeImmutable $from, \DateTimeImmutable $until): array
+    {
+        if ([] === $zoneUuids) {
+            return [];
+        }
+
+        $incident = $this->getClassMetadata();
+        $sql = \sprintf(
+            'SELECT %s, COUNT(i.%s) AS n %s WHERE z.%s IN (:zones) AND i.%s >= :from AND i.%s < :until GROUP BY z.%s',
+            $this->zoneKeySelect(),
+            $incident->getSingleIdentifierColumnName(),
+            $this->zoneGround(),
+            $this->zoneUuidColumn(),
+            $reportedAt = $incident->getColumnName('reportedAt'),
+            $reportedAt,
+            $this->zoneUuidColumn(),
+        );
+
+        /** @var list<array{zone: string, n: int|string}> $rows */
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative($sql, [
+            'zones' => $zoneUuids,
+            'from' => $from,
+            'until' => $until,
+        ], [
+            'zones' => ArrayParameterType::STRING,
+            'from' => Types::DATETIME_IMMUTABLE,
+            'until' => Types::DATETIME_IMMUTABLE,
+        ]);
+
+        return self::tally($rows);
+    }
+
+    /**
+     * HOW MANY WERE STILL OPEN ON EACH ZONE'S GROUND at one instant, keyed by
+     * zone uuid.
+     *
+     * OPEN IS RECONSTRUCTED FROM THE CLOCK, not read off `status`: a column says
+     * where an incident is today, and the question here is where it was when the
+     * period closed. It was open at that instant if it had been filed and had
+     * neither been resolved nor closed yet — which is what the workflow's two
+     * timestamps record ({@see \Uhifadhi\Incident\Service\IncidentTransitionService::apply()}).
+     * That also means the set is not "this month's filings": work filed long
+     * before the window and never finished is exactly what a backlog is.
+     *
+     * @param list<string> $zoneUuids
+     *
+     * @return array<string, int>
+     */
+    public function countOpenByZoneAt(array $zoneUuids, \DateTimeImmutable $at): array
+    {
+        if ([] === $zoneUuids) {
+            return [];
+        }
+
+        $incident = $this->getClassMetadata();
+        $sql = \sprintf(
+            'SELECT %s, COUNT(i.%s) AS n %s WHERE z.%s IN (:zones)'
+            .' AND i.%s < :at AND (i.%s IS NULL OR i.%s >= :at) AND (i.%s IS NULL OR i.%s >= :at) GROUP BY z.%s',
+            $this->zoneKeySelect(),
+            $incident->getSingleIdentifierColumnName(),
+            $this->zoneGround(),
+            $this->zoneUuidColumn(),
+            $incident->getColumnName('reportedAt'),
+            $resolvedAt = $incident->getColumnName('resolvedAt'),
+            $resolvedAt,
+            $closedAt = $incident->getColumnName('closedAt'),
+            $closedAt,
+            $this->zoneUuidColumn(),
+        );
+
+        /** @var list<array{zone: string, n: int|string}> $rows */
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative($sql, [
+            'zones' => $zoneUuids,
+            'at' => $at,
+        ], [
+            'zones' => ArrayParameterType::STRING,
+            'at' => Types::DATETIME_IMMUTABLE,
+        ]);
+
+        return self::tally($rows);
+    }
+
+    /**
+     * THE MONEY PUT ON THE RECORD ON EACH ZONE'S GROUND in a window, by
+     * direction, keyed by zone uuid.
+     *
+     * The COALESCE is {@see IncidentMoney::payable()}'s
+     * own fallback chain — approved, then assessed, then claimed — said in SQL,
+     * so a zone card and a performance plate cannot disagree about what a fine
+     * was; if one changes the other must. Windowed by when the INCIDENT was
+     * filed, for the reason {@see moneyAssessedBetween()} is: a figure has no
+     * timestamp of its own.
+     *
+     * @param list<string> $zoneUuids
+     *
+     * @return array<string, array<string, int>> zone uuid => direction value => the sum signed off
+     */
+    public function moneyByZoneBetween(array $zoneUuids, \DateTimeImmutable $from, \DateTimeImmutable $until): array
+    {
+        if ([] === $zoneUuids) {
+            return [];
+        }
+
+        $incident = $this->getClassMetadata();
+        $money = $this->getEntityManager()->getClassMetadata(IncidentMoney::class);
+        $sql = \sprintf(
+            'SELECT %s, m.%s AS direction, SUM(COALESCE(m.%s, m.%s, m.%s, 0)) AS total %s JOIN %s m ON m.%s = i.%s'
+            .' WHERE z.%s IN (:zones) AND i.%s >= :from AND i.%s < :until GROUP BY z.%s, m.%s',
+            $this->zoneKeySelect(),
+            $money->getColumnName('direction'),
+            $money->getColumnName('approved'),
+            $money->getColumnName('assessed'),
+            $money->getColumnName('claimed'),
+            $this->zoneGround(),
+            $money->getTableName(),
+            $money->getSingleAssociationJoinColumnName('incident'),
+            $incident->getSingleIdentifierColumnName(),
+            $this->zoneUuidColumn(),
+            $reportedAt = $incident->getColumnName('reportedAt'),
+            $reportedAt,
+            $this->zoneUuidColumn(),
+            $money->getColumnName('direction'),
+        );
+
+        /** @var list<array{zone: string, direction: string, total: int|string|null}> $rows */
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative($sql, [
+            'zones' => $zoneUuids,
+            'from' => $from,
+            'until' => $until,
+        ], [
+            'zones' => ArrayParameterType::STRING,
+            'from' => Types::DATETIME_IMMUTABLE,
+            'until' => Types::DATETIME_IMMUTABLE,
+        ]);
+
+        $byZone = [];
+        foreach ($rows as $row) {
+            $byZone[$row['zone']][$row['direction']] = (int) $row['total'];
+        }
+
+        return $byZone;
+    }
+
+    /**
+     * The ground itself: every incident whose point falls inside one of the
+     * named zones, narrowed first to the area that zone subdivides so the
+     * spatial test runs over an indexed set rather than the whole register.
+     */
+    private function zoneGround(): string
+    {
+        $zone = $this->getEntityManager()->getClassMetadata(Zone::class);
+        $incident = $this->getClassMetadata();
+
+        return \sprintf(
+            'FROM %s z JOIN %s i ON i.%s = z.%s AND ST_Contains(z.%s, i.%s)',
+            $zone->getTableName(),
+            $incident->getTableName(),
+            $incident->getSingleAssociationJoinColumnName('area'),
+            $zone->getSingleAssociationJoinColumnName('area'),
+            $zone->getColumnName('geom'),
+            $incident->getColumnName('position'),
+        );
+    }
+
+    /** The zone each row is about, under the one name every reader here expects. */
+    private function zoneKeySelect(): string
+    {
+        return \sprintf('z.%s AS zone', $this->zoneUuidColumn());
+    }
+
+    private function zoneUuidColumn(): string
+    {
+        return $this->getEntityManager()->getClassMetadata(Zone::class)->getColumnName('uuid');
+    }
+
+    /**
+     * @param list<array{zone: string, n: int|string}> $rows
+     *
+     * @return array<string, int>
+     */
+    private static function tally(array $rows): array
+    {
+        $tally = [];
+        foreach ($rows as $row) {
+            $tally[$row['zone']] = (int) $row['n'];
+        }
+
+        return $tally;
     }
 
     /**
