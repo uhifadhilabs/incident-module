@@ -560,14 +560,18 @@ html.light{
 .i-colhd .n{margin-left:auto;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;
   font-weight:700;color:var(--fog);font-variant-numeric:tabular-nums}
 .i-colhd .wip{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;color:var(--dim)}
+/* THE KIND IS A DOT, NOT A BAR. A card's left edge carries the focus line and
+   nothing else; the category wears the same 8px hue mark the filters, the
+   legend and the map already use, in the card's own id row. */
 .i-card{border:1px solid var(--ln2);border-radius:11px;padding:11px 12px;background:var(--p1);
-  display:block;text-decoration:none;color:var(--tx);cursor:grab;border-left:3px solid var(--fog)}
+  display:block;text-decoration:none;color:var(--tx);cursor:grab}
 .i-card:hover{border-color:color-mix(in srgb,var(--acc) 50%,transparent);text-decoration:none;
   box-shadow:var(--shadow)}
-.i-card.poach{border-left-color:var(--i-poach)}
-.i-card.hwc{border-left-color:var(--i-hwc)}
-.i-card.comp{border-left-color:var(--i-comp)}
-.i-card.mort{border-left-color:var(--i-mort)}
+.i-card>.id::before{content:"";width:8px;height:8px;border-radius:2px;flex:none;background:var(--fog)}
+.i-card.poach>.id::before{background:var(--i-poach)}
+.i-card.hwc>.id::before{background:var(--i-hwc)}
+.i-card.comp>.id::before{background:var(--i-comp)}
+.i-card.mort>.id::before{background:var(--i-mort)}
 .i-card .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
   color:var(--acc);display:flex;align-items:center;gap:8px}
 .i-card .id .age{margin-left:auto;color:var(--dim);font-weight:600}
