@@ -39,6 +39,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
+use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Incident\Repository\AreaListEntryRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
@@ -47,6 +48,7 @@ use Uhifadhi\Incident\Tests\Integration\Fixtures\AreaVocabulary;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedContentProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedStationFigureProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedZoneFigureProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\HeaderUserAuthenticator;
@@ -269,6 +271,8 @@ final class TestKernel extends Kernel
             ->args([tagged_iterator(DepartmentKpiProviderInterface::TAG)])->public();
         $services->set(CollectedZoneFigureProviders::class)
             ->args([tagged_iterator(ZoneFigureProviderInterface::TAG)])->public();
+        $services->set(CollectedStationFigureProviders::class)
+            ->args([tagged_iterator(StationFigureProviderInterface::TAG)])->public();
 
         // And for DEVKIT's content collector, which the migrations upgrade lock
         // seeds through: this module's demo month depends on team's people, and

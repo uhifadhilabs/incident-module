@@ -17,6 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
@@ -119,6 +120,21 @@ abstract class IntegrationTestCase extends KernelTestCase
         $this->em->flush();
 
         return $zone;
+    }
+
+    /**
+     * A station inside that area — a real point, so the distance test runs on
+     * PostGIS ground rather than on an arithmetic the test did itself.
+     */
+    protected function aStation(AreaOfInterest $area, string $name, float $longitude, float $latitude = -3.21): Station
+    {
+        $station = new Station();
+        $station->setArea($area)->setName($name);
+        $station->setPoint(\sprintf('{"type":"Point","coordinates":[%F,%F]}', $longitude, $latitude));
+        $this->em->persist($station);
+        $this->em->flush();
+
+        return $station;
     }
 
     protected function aUser(string $email, string $first = 'J', string $last = 'Mollel', ?Department $department = null): User

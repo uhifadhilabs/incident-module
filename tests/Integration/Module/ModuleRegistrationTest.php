@@ -18,6 +18,7 @@ use Uhifadhi\Contracts\ModulePermission;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedStationFigureProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedZoneFigureProviders;
 
 /**
@@ -91,6 +92,21 @@ final class ModuleRegistrationTest extends KernelTestCase
 
         /** @var CollectedZoneFigureProviders $providers */
         $providers = self::getContainer()->get(CollectedZoneFigureProviders::class);
+
+        self::assertArrayHasKey('incidents', $providers->bySlug());
+    }
+
+    /**
+     * THE STATION FIGURE CONTRIBUTION POINT, tagged by hand for the same
+     * reason: an untagged provider is invisible everywhere except as the
+     * incidents row missing from every station dock.
+     */
+    public function testItReachesTheStationFigureContract(): void
+    {
+        self::bootKernel();
+
+        /** @var CollectedStationFigureProviders $providers */
+        $providers = self::getContainer()->get(CollectedStationFigureProviders::class);
 
         self::assertArrayHasKey('incidents', $providers->bySlug());
     }

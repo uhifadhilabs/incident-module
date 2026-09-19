@@ -21,6 +21,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Incident\Entity\Incident;
@@ -681,7 +682,7 @@ final class IncidentRepository extends ServiceEntityRepository
             $this->zoneUuidColumn(),
         );
 
-        /** @var list<array{zone: string, n: int|string}> $rows */
+        /** @var list<array{ref: string, n: int|string}> $rows */
         $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative($sql, [
             'zones' => $zoneUuids,
             'from' => $from,
@@ -733,7 +734,7 @@ final class IncidentRepository extends ServiceEntityRepository
             $this->zoneUuidColumn(),
         );
 
-        /** @var list<array{zone: string, n: int|string}> $rows */
+        /** @var list<array{ref: string, n: int|string}> $rows */
         $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative($sql, [
             'zones' => $zoneUuids,
             'at' => $at,
@@ -787,7 +788,7 @@ final class IncidentRepository extends ServiceEntityRepository
             $money->getColumnName('direction'),
         );
 
-        /** @var list<array{zone: string, direction: string, total: int|string|null}> $rows */
+        /** @var list<array{ref: string, direction: string, total: int|string|null}> $rows */
         $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative($sql, [
             'zones' => $zoneUuids,
             'from' => $from,
@@ -800,7 +801,7 @@ final class IncidentRepository extends ServiceEntityRepository
 
         $byZone = [];
         foreach ($rows as $row) {
-            $byZone[$row['zone']][$row['direction']] = (int) $row['total'];
+            $byZone[$row['ref']][$row['direction']] = (int) $row['total'];
         }
 
         return $byZone;
@@ -830,7 +831,7 @@ final class IncidentRepository extends ServiceEntityRepository
     /** The zone each row is about, under the one name every reader here expects. */
     private function zoneKeySelect(): string
     {
-        return \sprintf('z.%s AS zone', $this->zoneUuidColumn());
+        return \sprintf('z.%s AS ref', $this->zoneUuidColumn());
     }
 
     private function zoneUuidColumn(): string
@@ -838,8 +839,165 @@ final class IncidentRepository extends ServiceEntityRepository
         return $this->getEntityManager()->getClassMetadata(Zone::class)->getColumnName('uuid');
     }
 
+    /*
+     * ── WHAT A STATION'S FIGURES ASK ────────────────────────────────────────
+     *
+     * Two questions, two queries, EACH ONE ANSWERING FOR EVERY STATION AT ONCE,
+     * for the reason the zone questions do: the seam hands a provider the whole
+     * set precisely so nothing runs a query per post.
+     *
+     * A POST IS A POINT AND HAS NO GROUND, so "here" is a distance and the
+     * distance is the caller's — this file is told the radius in metres and
+     * never decides it. `ST_DWithin` ON GEOGRAPHY, so the radius is metres on
+     * the spheroid rather than degrees of a grid, which at these latitudes are
+     * not the same thing in the two directions.
+     *
+     * NARROWED TO THE POST'S OWN AREA FIRST, both because a station's figures
+     * are its area's and because it puts the spatial test over an indexed set
+     * instead of the whole register.
+     *
+     * A RADIUS IS NOT A PARTITION. Two posts 15 km apart share the ground
+     * between them, so one incident may count for both — which is the honest
+     * reading of "incidents near this post" and the reason these counts are
+     * never summed into an area total.
+     */
+
     /**
-     * @param list<array{zone: string, n: int|string}> $rows
+     * HOW MANY WERE FILED WITHIN THE RADIUS OF EACH POST in a window, keyed by
+     * station uuid.
+     *
+     * A post with nothing near it is absent from the answer rather than present
+     * at zero: the caller renders an absence as an absence.
+     *
+     * @param list<string> $stationUuids
+     * @param int          $radiusM      how far from the post still counts as near it, in metres
+     *
+     * @return array<string, int>
+     */
+    public function countFiledNearStationsBetween(array $stationUuids, int $radiusM, \DateTimeImmutable $from, \DateTimeImmutable $until): array
+    {
+        if ([] === $stationUuids) {
+            return [];
+        }
+
+        $incident = $this->getClassMetadata();
+        $sql = \sprintf(
+            'SELECT %s, COUNT(i.%s) AS n %s WHERE s.%s IN (:stations) AND i.%s >= :from AND i.%s < :until GROUP BY s.%s',
+            $this->stationKeySelect(),
+            $incident->getSingleIdentifierColumnName(),
+            $this->stationGround(),
+            $this->stationUuidColumn(),
+            $reportedAt = $incident->getColumnName('reportedAt'),
+            $reportedAt,
+            $this->stationUuidColumn(),
+        );
+
+        /** @var list<array{ref: string, n: int|string}> $rows */
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative($sql, [
+            'stations' => $stationUuids,
+            'radius' => $radiusM,
+            'from' => $from,
+            'until' => $until,
+        ], [
+            'stations' => ArrayParameterType::STRING,
+            'radius' => Types::INTEGER,
+            'from' => Types::DATETIME_IMMUTABLE,
+            'until' => Types::DATETIME_IMMUTABLE,
+        ]);
+
+        return self::tally($rows);
+    }
+
+    /**
+     * HOW MANY WITHIN THE RADIUS OF EACH POST WERE STILL OPEN at one instant,
+     * keyed by station uuid.
+     *
+     * OPEN IS RECONSTRUCTED FROM THE CLOCK, exactly as {@see countOpenByZoneAt()}
+     * does it and for the same reason: `status` says where an incident is today,
+     * and the question is where it was when the period closed. Whenever it was
+     * filed — work older than the window and still unfinished is what a backlog
+     * is.
+     *
+     * @param list<string> $stationUuids
+     * @param int          $radiusM      how far from the post still counts as near it, in metres
+     *
+     * @return array<string, int>
+     */
+    public function countOpenNearStationsAt(array $stationUuids, int $radiusM, \DateTimeImmutable $at): array
+    {
+        if ([] === $stationUuids) {
+            return [];
+        }
+
+        $incident = $this->getClassMetadata();
+        $sql = \sprintf(
+            'SELECT %s, COUNT(i.%s) AS n %s WHERE s.%s IN (:stations)'
+            .' AND i.%s < :at AND (i.%s IS NULL OR i.%s >= :at) AND (i.%s IS NULL OR i.%s >= :at) GROUP BY s.%s',
+            $this->stationKeySelect(),
+            $incident->getSingleIdentifierColumnName(),
+            $this->stationGround(),
+            $this->stationUuidColumn(),
+            $incident->getColumnName('reportedAt'),
+            $resolvedAt = $incident->getColumnName('resolvedAt'),
+            $resolvedAt,
+            $closedAt = $incident->getColumnName('closedAt'),
+            $closedAt,
+            $this->stationUuidColumn(),
+        );
+
+        /** @var list<array{ref: string, n: int|string}> $rows */
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative($sql, [
+            'stations' => $stationUuids,
+            'radius' => $radiusM,
+            'at' => $at,
+        ], [
+            'stations' => ArrayParameterType::STRING,
+            'radius' => Types::INTEGER,
+            'at' => Types::DATETIME_IMMUTABLE,
+        ]);
+
+        return self::tally($rows);
+    }
+
+    /**
+     * The neighbourhood itself: every incident of the post's own area whose
+     * point lies within the radius of the post's point, measured on the
+     * spheroid. Both tables and both column names are AreaBundle's and this
+     * module's own metadata, never spelled out — an installation may name
+     * either with a naming strategy of its own.
+     */
+    private function stationGround(): string
+    {
+        $station = $this->getEntityManager()->getClassMetadata(Station::class);
+        $incident = $this->getClassMetadata();
+
+        return \sprintf(
+            'FROM %s s JOIN %s i ON i.%s = s.%s AND ST_DWithin(i.%s::geography, s.%s::geography, :radius)',
+            $station->getTableName(),
+            $incident->getTableName(),
+            $incident->getSingleAssociationJoinColumnName('area'),
+            $station->getSingleAssociationJoinColumnName('area'),
+            $incident->getColumnName('position'),
+            $station->getColumnName('point'),
+        );
+    }
+
+    /** The post each row is about, under the one name every reader here expects. */
+    private function stationKeySelect(): string
+    {
+        return \sprintf('s.%s AS ref', $this->stationUuidColumn());
+    }
+
+    private function stationUuidColumn(): string
+    {
+        return $this->getEntityManager()->getClassMetadata(Station::class)->getColumnName('uuid');
+    }
+
+    /**
+     * Rows of "one uuid, one count" as every grouped question here returns
+     * them, whatever ground they were grouped over.
+     *
+     * @param list<array{ref: string, n: int|string}> $rows
      *
      * @return array<string, int>
      */
@@ -847,7 +1005,7 @@ final class IncidentRepository extends ServiceEntityRepository
     {
         $tally = [];
         foreach ($rows as $row) {
-            $tally[$row['zone']] = (int) $row['n'];
+            $tally[$row['ref']] = (int) $row['n'];
         }
 
         return $tally;

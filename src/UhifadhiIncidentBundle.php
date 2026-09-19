@@ -28,6 +28,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
+use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Incident\Command\CloseDueCommand;
 use Uhifadhi\Incident\Controller\IncidentAreaListController;
@@ -41,6 +42,7 @@ use Uhifadhi\Incident\DependencyInjection\IncidentConfiguration;
 use Uhifadhi\Incident\Devkit\IncidentContentProvider;
 use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
+use Uhifadhi\Incident\Module\IncidentStationFigureProvider;
 use Uhifadhi\Incident\Module\IncidentZoneFigureProvider;
 use Uhifadhi\Incident\Overview\IncidentAttention;
 use Uhifadhi\Incident\Overview\IncidentMapLayers;
@@ -592,5 +594,16 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 $currency,
             ])
             ->tag(ZoneFigureProviderInterface::TAG);
+
+        // THE STATION FIGURE SEAM, tagged by hand for the same reason. The
+        // dock draws one row per module, so a missing tag here is the
+        // incidents row leaving every station dock and nothing else.
+        $services->set('incident.station_kpi_provider', IncidentStationFigureProvider::class)
+            ->args([
+                service(IncidentRepository::class),
+                'incidents',
+                'Incidents',
+            ])
+            ->tag(StationFigureProviderInterface::TAG);
     }
 }
