@@ -1093,7 +1093,10 @@ html.light .kheat{background:color-mix(in srgb,var(--heat,var(--acc)) calc(var(-
 
    None of it knows what an incident is, and all of it belongs upstream the day
    the shell ships it — at which point these rules are deleted here, not kept in
-   two places. `.fld`, which every one of them decorates, IS the shell's already.
+   two places. `.fld`, which every one of them decorates, IS the shell's already,
+   and `.fsel` now is too: the shell ships the house dropdown, so this sheet has
+   stopped restating it rather than keeping a second copy that would win by load
+   order and drift every other surface.
 
    ONE SUBSTITUTION, and it changes no colour: the design writes a fold's ground
    as `--card`, which its own sheet defines as `--raised`; the shell ships
@@ -1102,19 +1105,6 @@ html.light .kheat{background:color-mix(in srgb,var(--heat,var(--acc)) calc(var(-
    ONE HEIGHT, 34px, ACROSS THE WHOLE FAMILY: a select, a number and a yes/no
    standing in the same row sit on one baseline, and a control a few pixels short
    of its neighbour is the difference between a form and a tidy form.           */
-/* No raw dropdown ships anywhere: the house field with a chevron drawn on it. */
-.fsel{position:relative;display:inline-block;max-width:100%}
-.fsel>select.fld{appearance:none;-webkit-appearance:none;padding-right:30px;
-   font-size:12.5px;padding-top:7px;padding-bottom:8px;cursor:pointer}
-.fsel>select.fld:focus{outline:none;border-color:var(--acc)}
-.fsel::after{content:"";position:absolute;right:12px;top:50%;width:7px;height:7px;
-   margin-top:-5px;border-right:1.6px solid var(--fog);border-bottom:1.6px solid var(--fog);
-   transform:rotate(45deg);pointer-events:none}
-/* The wide select still leaves its row: the mark that says when the answer is
-   wanted sits beside it, not under it. */
-.fsel.w{width:100%;max-width:300px}
-.fsel.n>select.fld{width:158px}
-
 /* A number, and the unit it is counted in. */
 .fnum{display:inline-flex;align-items:center;gap:7px}
 .fnum>input.fld{width:104px;font-size:12.5px;padding-top:7px;padding-bottom:8px;
