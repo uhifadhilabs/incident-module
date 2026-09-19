@@ -10,6 +10,7 @@
 - [One taxonomy, and it is the area’s](#one-taxonomy-and-it-is-the-areas)
 - [How this module references areas](#how-this-module-references-areas)
 - [The figures a zone publishes](#the-figures-a-zone-publishes)
+- [The figure a station publishes](#the-figure-a-station-publishes)
 - [Provenance is written once](#provenance-is-written-once)
 
 ## The nine tables
@@ -178,6 +179,44 @@ whose ground held neither a filing nor an open incident is **left out** of the
 answer rather than published at zero, and an area that has never had an incident
 is answered with `ZoneFigures::none()`. `ZoneFigureProviderInterface::COVERED` is
 not published: incidents are points, and a point covers no ground.
+
+## The figure a station publishes
+
+**A post is a point, so its figure is a distance.**
+`Uhifadhi\Incident\Module\IncidentStationFigureProvider` answers the core's
+`Kpi\StationFigureProviderInterface` for every station of an area in one call —
+two queries however many posts are asked about — and what it counts is the
+incidents whose **point lies within 12 km of the post's point**
+(`ST_DWithin(incident.position::geography, station.point::geography, 12000)`,
+metres on the spheroid), read from AreaBundle's `Station` geometry and narrowed
+first to the post's own area. Not the incidents somebody posted there recorded,
+and not the ones stamped with the post's zone: who filed a row and which ring it
+fell in are other questions with their own seams. **A radius is not a
+partition** — two posts 15 km apart share the ground between them, so one
+incident may count for both, and these counts are never summed into an area
+total.
+
+**The radius is one named constant**, `IncidentStationFigureProvider::NEAR_M`
+(12 000 m), read by both the query and the caption so the number the dock prints
+cannot drift from the number it was measured with. Changing it changes both at
+once; nothing else in the module writes a distance.
+
+| Key | What it is | Unit |
+|---|---|---|
+| `StationFigureProviderInterface::HEADLINE` | Incidents **filed** in the period whose point is within 12 km of the post. | count |
+
+**One key, because the dock draws one row per module.** Everything else it has
+to say goes in the caption — `within 12 km · 1 open` — where the open count is
+how many incidents within the radius were still open **at the instant the period
+closed**, whenever they were filed: a backlog is not a month's filings. The
+period answered is the period asked for, every figure being read off timestamps
+this module records itself. No figure carries a URL: the core resolves the
+dock's `Open →` from this module's entry route and its slug. Nothing is scored
+against the month before (`previous` stays null) and `areaName` stays null — a
+station figure is nobody's share of a roll-up. A post with neither a filing in
+the period nor an open incident at its close is **left out** of the answer
+rather than published at zero, and an area whose posts saw nothing is answered
+with `StationFigures::none()`.
 
 ## Provenance is written once
 
