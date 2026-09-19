@@ -145,6 +145,13 @@ product has one palette.
   `MapLayer::$swatch`, `PulseEvent::$swatch`), and when they take a category INDEX the
   way `AreaNavChild::$cat` and `ChartSeries::$cat` already do, `HousePalette`
   goes away.
+- **The last two colour values are gone too.** `--crit` — the fourth step of
+  the severity alarm ramp — and the scrim under the filing bar were stated in
+  this sheet because the shell shipped no token for either. It ships both now,
+  so the sheet spends `var(--crit)` and `var(--scrim)` and states no colour at
+  all, with no exceptions. **This module therefore needs a core that ships
+  them**; an older one leaves the critical chip and the filing bar's scrim
+  falling back to inherited values.
 - **The token bridge is gone from `incidents.css`.** The sheet restated a dozen
   of the shell's own aliases in a `:root` block and, loading last, won with
   them — `--shadow` among them, stated once where the shell states two, so the

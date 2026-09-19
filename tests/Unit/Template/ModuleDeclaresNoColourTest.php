@@ -28,29 +28,12 @@ use Uhifadhi\Incident\Model\HousePalette;
  *
  * A literal is how that stops being true. It reads correctly in one theme, is
  * invisible in the other, and it is a second place the same decision is
- * written — so the sheets are read here for one, and the only one left is
- * named and explained.
+ * written — so the sheets are read here for one, AND THERE ARE NO EXCEPTIONS.
+ * The two that were listed — the fourth severity and the scrim under a sticky
+ * bar — are tokens the shell ships, so a value here has nowhere left to hide.
  */
 final class ModuleDeclaresNoColourTest extends TestCase
 {
-    /**
-     * The token whose value this sheet still states, because the shell ships
-     * none for it: `--crit`, the deepest step of the severity ALARM ramp above
-     * `--fail` — a meaning, not a category. It belongs beside `--fail` in the
-     * shell's semantic set, and until it is there it is FLAGGED rather than
-     * tolerated.
-     */
-    private const string FLAGGED_TOKEN = '--crit';
-
-    /**
-     * The other value the shell has no token for: the scrim under the filing
-     * bar, which the design spends as `--scrim`. Named here so the exemption
-     * is a line somebody has to delete rather than a hole in the rule.
-     *
-     * @var list<string>
-     */
-    private const array FLAGGED_LINES = ['box-shadow:0 -14px 20px -14px rgba(0,0,0,.55)}'];
-
     /**
      * Rules that paint a kind's mark, and what each one is. Every one of them
      * must resolve the position rather than name a hue, because they draw the
@@ -83,10 +66,6 @@ final class ModuleDeclaresNoColourTest extends TestCase
 
         foreach (self::ownSheets() as $name => $css) {
             foreach (explode("\n", $css) as $number => $line) {
-                if (str_contains($line, self::FLAGGED_TOKEN) || \in_array(trim($line), self::FLAGGED_LINES, true)) {
-                    continue;
-                }
-
                 if (1 === preg_match('/#[0-9A-Fa-f]{3,8}\b|\brgba?\(\s*\d|\bhsla?\(\s*\d/', $line)) {
                     $offenders[] = \sprintf('%s:%d — %s', $name, $number + 1, trim($line));
                 }
@@ -126,9 +105,7 @@ final class ModuleDeclaresNoColourTest extends TestCase
 
                 preg_match_all('/(?<token>--[a-z0-9-]+)\s*:/i', $rule['body'], $matches);
                 foreach ($matches['token'] as $token) {
-                    if (self::FLAGGED_TOKEN !== $token) {
-                        $declared[] = $name.' '.$selector.' '.$token;
-                    }
+                    $declared[] = $name.' '.$selector.' '.$token;
                 }
             }
         }

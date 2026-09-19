@@ -47,15 +47,9 @@
    MONEY IS NOT A CATEGORY. It takes the accent, and the amount's own state
    (paid, due, nil) says the rest in --ok/--warn/--dim.
 
-   FLAGGED: --crit is the deepest step of the severity ALARM ramp — a meaning,
-   not a category — and the shell ships no such token, so it is still stated
-   here. It belongs beside --fail in the shell's semantic set.                */
-:root{
-  --crit:#FF4A38;
-}
-html.light{
-  --crit:#8F1D0E;
-}
+   THE FOURTH SEVERITY IS A MEANING, AND THE HOUSE OWNS IT. --crit sits above
+   --fail in the shell's semantic set, so the alarm ramp is four tokens this
+   sheet spends and none it states.                                         */
 
 /* ── CATEGORY CHIP ────────────────────────────────────────────────────────
    A dot + the category name. The dot is the same square-ish 2px-radius mark
@@ -682,10 +676,9 @@ html.light{
    line stay in sight however long the form is. */
 .ro-filebar{position:sticky;bottom:0;display:flex;align-items:center;gap:12px;margin-top:22px;
   border-top:1px solid var(--ln);padding:13px 0 14px;background:var(--cv);
-  /* FLAGGED: the scrim under a sticky bar. The design spends --scrim and the
-     shell ships no such token, so the value is stated here until it does. It
-     is the one colour left in this sheet besides --crit. */
-  box-shadow:0 -14px 20px -14px rgba(0,0,0,.55)}
+  /* The scrim under a sticky bar is the house's ground for an overlay, not
+     a shadow this sheet mixes. */
+  box-shadow:0 -14px 20px -14px var(--scrim)}
 .ro-filebar .sp{flex:0 1 auto}
 .ro-filebar .hint,.ro-filebar .ro-gate{flex:1 1 auto;min-width:0}
 .ro-filebar .hint{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim)}
