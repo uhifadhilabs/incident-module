@@ -49,29 +49,33 @@ abstract class FunctionalTestCase extends WebTestCase
         $em = static::getContainer()->get('doctrine.orm.entity_manager');
         $this->em = $em;
 
-        // POSTGIS FIRST, because SchemaTool cannot create a `geometry` column in
-        // a database that has no such type, and a database with no PostGIS in it
-        // is a state this suite produces itself: the migrations lock tests drop
-        // the whole `public` schema, extension included, and a run that ends
-        // inside them leaves it that way for the next one. The statement is the
-        // core's own first version, so what SchemaTool builds on here is what an
-        // installation migrates into.
+        // A SCHEMA IS CREATED FROM AN EMPTY DATABASE, never from whatever the
+        // last test left behind. A metadata-driven drop can only drop the
+        // tables THIS kernel maps, and a suite before this one may have left
+        // others — a table holding a foreign key into one that is mapped
+        // blocks the drop, and the create then collides with the table that
+        // survived. So the database is taken back to the state a test database
+        // starts in: nothing but PostGIS. The extension is recreated with it,
+        // because SchemaTool cannot create a `geometry` column in a database
+        // that has no such type, and the statement is the core's own first
+        // version — what SchemaTool builds on here is what an installation
+        // migrates into.
         //
+        // @see vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/AreaBundle/tests/Integration/IntegrationTestCase.php
         // @see vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/AreaBundle/migrations/Version20260101000000.php
-        $this->em->getConnection()->executeStatement('CREATE EXTENSION IF NOT EXISTS postgis');
+        $connection = $this->em->getConnection();
+        $connection->executeStatement('DROP SCHEMA IF EXISTS public CASCADE');
+        $connection->executeStatement('CREATE SCHEMA public');
+        $connection->executeStatement('CREATE EXTENSION IF NOT EXISTS postgis');
 
         $schemaTool = new SchemaTool($this->em);
         $metadata = $this->em->getMetadataFactory()->getAllMetadata();
-        // Only the mapped tables, and only the ones actually deployed: dropSchema
-        // reconciles its statements against the introspected schema and swallows
-        // what still fails, so a database with none of them is not an error.
-        // dropDatabase() is the wrong neighbour — it drops everything the
-        // connection sees, and what it sees includes PostGIS's own
-        // `spatial_ref_sys`.
-        //
-        // @see vendor/doctrine/orm/src/Tools/SchemaTool.php — getDropSchemaSQL(), dropSchema()
-        $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
+
+        // Anything the boot left managed belongs to the schema that has just
+        // been dropped; ids restart at 1 and a stale object would collide with
+        // the first row this test writes.
+        $this->em->clear();
 
         // THE HALF A DEPLOY ALREADY DOES. In an installation the registry
         // reconciles itself on a cache warm-up, so the catalogue holds this
