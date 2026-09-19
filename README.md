@@ -108,8 +108,9 @@ Then, in the host:
    database on boot would be making that decision for them. In a development
    installation, `bin/console fixtures:demo` writes a month of sample incidents
    and the kinds they are filed under.
-The Stimulus controllers — `incident-board`, `incident-report` and the rest —
-need no step of their own: Flex synchronises
+The Stimulus controllers — `incident-board`, `incident-report` and the rest;
+`incident-filters` is deprecated, inert and off by default, and goes in 0.4.0
+(see [Upgrading](docs/upgrading.md)) — need no step of their own: Flex synchronises
 `assets/controllers.json` from this package's own `assets/package.json` on every
 `composer require`/`update`, because the package declares the `symfony-ux`
 keyword.
@@ -299,6 +300,8 @@ Two hatches, for the two ways this goes wrong:
   write yet.
 - [Development](docs/development.md) — `composer check`, the tooling levels, and
   the real-PostGIS test suites.
+- [Upgrading](docs/upgrading.md) — what a release asks of an installation, and the
+  two-release rule for anything this module ships into a host's own tree.
 
 ## License
 

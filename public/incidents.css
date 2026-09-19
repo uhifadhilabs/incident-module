@@ -196,9 +196,9 @@ html.light{
    a <details> whose <summary> is the chip — so nothing about them is written
    here. A rule restated in this sheet would render differently depending on
    which sheet loaded last, and the same control would read two ways on two
-   pages. What is still this module's is the hue dot inside an option: .i-dot's
-   four colours are the taxonomy colours defined at the top of this file. */
-.i-dot{width:8px;height:8px;border-radius:2px;flex:none;background:transparent}
+   pages. The dot inside an option is the shell's `.i-dot` too; what is still
+   this module's is the four HUES it can wear, which are the taxonomy colours
+   defined at the top of this file and belong to nobody else. */
 .i-dot.poach{background:var(--i-poach)}
 .i-dot.hwc{background:var(--i-hwc)}
 .i-dot.comp{background:var(--i-comp)}
