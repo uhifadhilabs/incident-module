@@ -142,8 +142,12 @@ final class ReportFlowTest extends FunctionalTestCase
      * of a form somebody is filling in is an exit offered where the decision is not
      * being made. Cancel sits in the file bar, beside File, and says where it goes.
      *
-     * THE MODULE'S ONE `Configure` ACTION STAYS, because it is the shell's action
-     * row and it is on every page of the module.
+     * AND NEITHER IS THERE A `Configure`. Configure is a TAB-PAGE action — it
+     * steps off the data of a surface and into how that surface is set up, so
+     * it rides the pages the tab strip is drawn on. A form inside a place is
+     * not one of the places, so the shell's frame publishes no Configure here
+     * ({@see \Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService::configure()}),
+     * and the head's action row is empty: Cancel is the one way out.
      */
     public function testThePageHeadCarriesNoBackLinkAndCancelIsTheOneWayOut(): void
     {
@@ -153,7 +157,7 @@ final class ReportFlowTest extends FunctionalTestCase
         $crawler = $this->client->request('GET', $this->reportUrl($this->uuidOf($area)));
 
         self::assertSame(
-            ['Configure'],
+            [],
             $crawler->filter('.pghead .pgact a')->each(static fn (Crawler $a): string => trim($a->text())),
         );
         self::assertCount(0, $crawler->filter('.pghead')->reduce(
@@ -174,8 +178,10 @@ final class ReportFlowTest extends FunctionalTestCase
 
         $crawler = $this->client->request('GET', $this->fromARecordUrl($this->uuidOf($area)));
 
+        // The head is bare here too: a filing is a form in a place, not one of
+        // the places, so it carries no Configure and no way back.
         self::assertSame(
-            ['Configure'],
+            [],
             $crawler->filter('.pghead .pgact a')->each(static fn (Crawler $a): string => trim($a->text())),
         );
         self::assertSame(
