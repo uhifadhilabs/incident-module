@@ -23,7 +23,6 @@ use Uhifadhi\Incident\Controller\IncidentController;
 use Uhifadhi\Incident\Controller\IncidentKindsOverviewController;
 use Uhifadhi\Incident\Controller\IncidentListController;
 use Uhifadhi\Incident\Repository\AreaListEntryRepository;
-use Uhifadhi\Incident\Repository\IncidentDepartmentLens;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 use Uhifadhi\Incident\Repository\IncidentLinkRepository;
@@ -84,14 +83,6 @@ return static function (ContainerConfigurator $container): void {
      * unit-testable without a database.
      */
     $services->set('incident.transitions', IncidentTransitionService::class);
-
-    /*
-     * "WHICH DEPARTMENT WAS THE RECORDER SITTING IN?" — the one walk
-     * department-as-a-lens needs, asked for a whole set at a time and only by
-     * the performance topic.
-     */
-    $services->set('incident.department_lens', IncidentDepartmentLens::class)
-        ->args([service('doctrine.orm.entity_manager')]);
 
     // "Which zone is this point in?" — asked once, when an incident is filed.
     $services->set('incident.zone_locator', IncidentZoneLocator::class)

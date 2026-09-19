@@ -14,12 +14,11 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Integration\Module;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
-use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\ChartKind;
-use Uhifadhi\Contracts\Performance\MatrixCell;
 use Uhifadhi\Contracts\Performance\MatrixRow;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\TopicKpi;
@@ -28,20 +27,24 @@ use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedTopicProviders;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
- * THE INCIDENTS TOPIC, against real rows in a real PostGIS database.
+ * THE TOPIC THE INCIDENTS MODULE PUBLISHES, against real rows in a real
+ * PostGIS database.
  *
- * FOUR THINGS ARE UNDER TEST HERE and nothing that a unit test already proves:
- * that five figures come out whatever the records say, that the rows are ONLY
- * the departments that attach this module, that a scope narrows both the
- * figures and the row set, and that the three absences the contract insists on
- * stay apart — a hole in a history, a figure nobody can compute, and a column
- * a department was never asked.
+ * Every assertion here is about the four things the contract holds a topic to:
+ * five figures whatever the month, rows only for the departments that read the
+ * module, the scope obeyed rather than assumed, and the three absences kept
+ * apart — a hole where the module was not yet running, a figure nobody can
+ * compute, and a column a department was never asked.
+ *
+ * AND ONE RULE THIS MODULE'S BRIEF NEARLY GOT WRONG: figures follow scope, not
+ * people. Two departments reading the same ground read identical figures, and
+ * who filed an incident decides nothing.
  */
 final class IncidentPerformanceTopicTest extends IntegrationTestCase
 {
     private const string AUGUST = '2026-08-19 09:00:00';
 
-    /** The topic is the wired one, so the tag and the arguments are under test too. */
+    /** The wired topic, so the tag and the arguments are under test too. */
     private function topic(): IncidentPerformanceTopic
     {
         /** @var IncidentPerformanceTopic $topic */
@@ -56,30 +59,52 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
     }
 
     /**
-     * THE CATALOGUE ROW THIS MODULE IS ATTACHED BY. In an installation the
-     * registry reconciles itself on a cache warm-up; the schema here is rebuilt
-     * after the kernel booted, so the reconciliation is run again by hand.
+     * TWO AREAS RUNNING INCIDENTS SINCE JUNE, three departments, and a handful
+     * of records — the world nearly every assertion below reads.
+     *
+     * @return array{north: AreaOfInterest, south: AreaOfInterest, module: Module}
      */
-    private function catalogueRow(): Module
+    private function world(): array
     {
-        /** @var RegistrySyncService $registry */
-        $registry = $this->service('registry.sync');
-        $registry->sync();
+        $north = $this->anAreaWithKinds('North Sector');
+        $south = $this->anAreaWithKinds('South Sector');
 
-        foreach ($this->em->getRepository(Module::class)->findAll() as $module) {
-            if ('incidents' === (string) $module->getSlug()) {
-                return $module;
-            }
-        }
+        $module = new Module()->setSlug('incidents')->setName('Incidents');
+        $this->em->persist($module);
 
-        self::fail('The registry holds no incidents row, so no department could attach the module.');
+        // Installed in June, so the periods before it are holes.
+        $this->install($module, $north, '2026-06-10 08:00:00');
+        $this->install($module, $south, '2026-06-10 08:00:00');
+
+        $this->reading('Ecology', $module);
+        $this->reading('Protection Service', $module, $north);
+
+        // Two in the north, one in the south, filed by nobody seated — which
+        // changes no figure, because figures follow scope.
+        $this->anIncident($north, at: new \DateTimeImmutable('2026-08-04 09:00:00'));
+        $this->anIncident($north, 'snaring', 'Snare line lifted', new \DateTimeImmutable('2026-08-06 09:00:00'));
+        $this->anIncident($south, 'roadkill', 'Zebra roadkill', new \DateTimeImmutable('2026-08-07 09:00:00'));
+        $this->em->flush();
+
+        return ['north' => $north, 'south' => $south, 'module' => $module];
+    }
+
+    private function install(Module $module, AreaOfInterest $area, string $at): AreaModule
+    {
+        $installed = new AreaModule()->setModule($module)
+            ->setArea($area)
+            ->setActive(true)
+            ->setInstalledAt(new \DateTimeImmutable($at));
+        $this->em->persist($installed);
+
+        return $installed;
     }
 
     /** A department that READS Incidents — the only kind this topic has a row for. */
-    private function aReadingDepartment(string $name, ?AreaOfInterest $area = null): Department
+    private function reading(string $name, Module $module, ?AreaOfInterest $area = null): Department
     {
         $department = $this->aDepartment($name);
-        $department->attachModule($this->catalogueRow());
+        $department->attachModule($module);
         if (null !== $area) {
             $department->setArea($area);
         }
@@ -127,13 +152,10 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
         self::assertInstanceOf(IncidentPerformanceTopic::class, $collected->byKey()['incidents']);
     }
 
-    /**
-     * FIVE, AND ALWAYS FIVE — with nothing recorded anywhere, so the row of
-     * five is not something the data happened to produce.
-     */
-    public function testFiveHeadlineFiguresEvenWithNothingRecorded(): void
+    /** FIVE, AND ALWAYS FIVE — including where no area runs the module at all. */
+    public function testFiveHeadlineFiguresAreAlwaysPublished(): void
     {
-        $kpis = $this->kpis(PerformanceScope::organisation());
+        $this->world();
 
         self::assertSame([
             IncidentPerformanceTopic::FILED,
@@ -141,32 +163,43 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
             IncidentPerformanceTopic::MEDIAN_DAYS_TO_CLOSE,
             IncidentPerformanceTopic::CLAIMS_OPEN,
             IncidentPerformanceTopic::RESOLVED,
-        ], array_keys($kpis));
-        self::assertCount(5, $kpis);
+        ], array_keys($this->kpis(PerformanceScope::organisation())));
     }
 
-    public function testTheHeadlineCountsEveryIncidentInScope(): void
+    /**
+     * A SCOPE NO AREA OF WHICH RUNS THE MODULE STILL PUBLISHES FIVE, and every
+     * one of them is null rather than nought.
+     */
+    public function testAScopeWhereNothingRunsTheModuleStillPublishesFiveUnknowns(): void
     {
-        $area = $this->anAreaWithKinds('North Sector');
-        $ranger = $this->aUser('ps@example.test', 'N', 'Kileo', $this->aReadingDepartment('Protection Service'));
-
-        $this->anIncident($area, at: new \DateTimeImmutable('2026-08-04 09:00:00'), reportedBy: $ranger);
-        $this->anIncident($area, 'snaring', 'Snare line lifted', new \DateTimeImmutable('2026-08-06 09:00:00'));
+        $this->world();
+        $elsewhere = $this->anArea('Unserved Reserve');
         $this->em->flush();
 
-        $kpis = $this->kpis(PerformanceScope::organisation());
+        $kpis = $this->kpis(PerformanceScope::area((string) $elsewhere->getUuidString(), 'Unserved Reserve'));
 
-        // Two filed, one of them by nobody seated — still in the headline.
-        self::assertSame(2.0, $kpis[IncidentPerformanceTopic::FILED]->value);
-        self::assertSame('1 Protection Service', $kpis[IncidentPerformanceTopic::FILED]->caption);
+        self::assertCount(5, $kpis);
+        foreach ($kpis as $kpi) {
+            self::assertNull($kpi->value, $kpi->key.' is not a nought where no area runs the module.');
+            self::assertStringContainsString('runs the Incidents module', $kpi->caption);
+        }
+    }
+
+    public function testTheHeadlineIsTheWholeScopesRecords(): void
+    {
+        $this->world();
+
+        self::assertSame(3.0, $this->kpis(PerformanceScope::organisation())[IncidentPerformanceTopic::FILED]->value);
+        self::assertSame(
+            'across 2 departments that read Incidents',
+            $this->kpis(PerformanceScope::organisation())[IncidentPerformanceTopic::FILED]->caption,
+        );
     }
 
     /** A median over nothing finished is NULL, and says so. */
     public function testTheMedianIsNullWhileNothingWasFinishedInThePeriod(): void
     {
-        $area = $this->anAreaWithKinds();
-        $this->anIncident($area, at: new \DateTimeImmutable('2026-08-04 09:00:00'));
-        $this->em->flush();
+        $this->world();
 
         $median = $this->kpis(PerformanceScope::organisation())[IncidentPerformanceTopic::MEDIAN_DAYS_TO_CLOSE];
 
@@ -176,192 +209,186 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
     }
 
     /**
-     * ONLY THE DEPARTMENTS THAT ATTACH INCIDENTS ARE ROWS. A department that
-     * does not read this module is not a row of dashes; it is not a row.
+     * ONLY THE DEPARTMENTS THAT ATTACH INCIDENTS ARE ROWS. One that attaches
+     * nothing of this module's is not a row of dashes; it is not a row.
      */
     public function testTheRowsAreOnlyTheDepartmentsThatAttachTheModule(): void
     {
-        $this->aReadingDepartment('Protection Service');
+        $this->world();
         $this->aDepartment('Human Resource');
+        $this->em->flush();
 
-        self::assertSame(['Protection Service'], array_keys($this->rows(PerformanceScope::organisation())));
+        self::assertSame(
+            ['Ecology', 'Protection Service'],
+            array_keys($this->rows(PerformanceScope::organisation())),
+        );
     }
 
     /**
-     * DEPARTMENT-AS-A-LENS: a department's figures are the incidents whose
-     * RECORDING POSITION sits in it — and a row nobody seated filed is in the
-     * headline and in nobody's row.
+     * EACH ROW READS THE GROUND ITS OWN SCOPE COVERS — and nothing about who
+     * filed anything. Ecology is org-wide and reads both areas; Protection
+     * Service is confined to the north and reads only it.
      */
-    public function testADepartmentsFiguresAreTheIncidentsItsOwnRecordersFiled(): void
+    public function testEachRowReadsTheGroundItsOwnScopeCovers(): void
     {
-        $area = $this->anAreaWithKinds();
-        $protection = $this->aReadingDepartment('Protection Service');
-        $community = $this->aReadingDepartment('Community Development');
-        $ranger = $this->aUser('ranger@example.test', 'N', 'Kileo', $protection);
-        $officer = $this->aUser('officer@example.test', 'A', 'Mollel', $community);
-
-        $this->anIncident($area, at: new \DateTimeImmutable('2026-08-04 09:00:00'), reportedBy: $ranger);
-        $this->anIncident($area, 'snaring', 'Snare one', new \DateTimeImmutable('2026-08-05 09:00:00'), $ranger);
-        $this->anIncident($area, 'crop-raiding', 'Maize trampled', new \DateTimeImmutable('2026-08-06 09:00:00'), $officer);
-        $this->anIncident($area, 'roadkill', 'Zebra roadkill', new \DateTimeImmutable('2026-08-07 09:00:00'));
-        $this->em->flush();
+        $this->world();
 
         $rows = $this->rows(PerformanceScope::organisation());
 
+        self::assertSame('Org-wide', $rows['Ecology']->band);
+        self::assertSame(3.0, $rows['Ecology']->cells[IncidentPerformanceTopic::FILED]->value);
+
+        self::assertSame('North Sector', $rows['Protection Service']->band);
         self::assertSame(2.0, $rows['Protection Service']->cells[IncidentPerformanceTopic::FILED]->value);
-        self::assertSame(1.0, $rows['Community Development']->cells[IncidentPerformanceTopic::FILED]->value);
-        self::assertSame(4.0, $this->kpis(PerformanceScope::organisation())[IncidentPerformanceTopic::FILED]->value);
     }
 
     /**
-     * A SCOPE NARROWS BOTH ENDS: the figures read that area's incidents, and
-     * the rows are that area's departments plus the organisation-wide ones.
+     * TWO DEPARTMENTS ON ONE AREA READ IDENTICAL FIGURES. This is the whole
+     * rule, and the one a "slice by the recorder's department" reading would
+     * have broken: a second northern department, with no people at all, reads
+     * exactly what Protection Service reads.
+     */
+    public function testTwoDepartmentsScopedToOneAreaReadIdenticalFigures(): void
+    {
+        $world = $this->world();
+        $this->reading('Community Development', $world['module'], $world['north']);
+
+        $rows = $this->rows(PerformanceScope::organisation());
+
+        self::assertEquals(
+            $rows['Protection Service']->cells,
+            $rows['Community Development']->cells,
+            'The same ground is the same figures, whoever recorded anything.',
+        );
+    }
+
+    /**
+     * A SCOPE NARROWS BOTH ENDS: the figures read that area's records, and the
+     * rows are that area's departments plus the organisation-wide ones — with
+     * an org-wide department now reading only the page's area.
      */
     public function testAnAreaScopeNarrowsTheFiguresAndTheRowSet(): void
     {
-        $north = $this->anAreaWithKinds('North Sector');
-        $south = $this->anAreaWithKinds('South Sector');
+        $world = $this->world();
+        $this->reading('South Ecology', $world['module'], $world['south']);
 
-        $orgWide = $this->aReadingDepartment('Protection Service');
-        $northDepartment = $this->aReadingDepartment('North Ecology', $north);
-        $this->aReadingDepartment('South Ecology', $south);
+        $scope = PerformanceScope::area((string) $world['north']->getUuidString(), 'North Sector');
 
-        $ranger = $this->aUser('ranger@example.test', 'N', 'Kileo', $orgWide);
-        $ecologist = $this->aUser('eco@example.test', 'A', 'Mollel', $northDepartment);
+        self::assertSame(2.0, $this->kpis($scope)[IncidentPerformanceTopic::FILED]->value);
 
-        $this->anIncident($north, at: new \DateTimeImmutable('2026-08-04 09:00:00'), reportedBy: $ranger);
-        $this->anIncident($south, 'snaring', 'Snare line', new \DateTimeImmutable('2026-08-05 09:00:00'), $ecologist);
-        $this->em->flush();
-
-        $scope = PerformanceScope::area((string) $north->getUuidString(), 'North Sector');
-
-        self::assertSame(1.0, $this->kpis($scope)[IncidentPerformanceTopic::FILED]->value);
-        // The area's own department AND the organisation-wide one, in the
-        // order the host keeps departments in.
-        self::assertSame(
-            ['North Ecology', 'Protection Service'],
-            array_keys($this->rows($scope)),
-        );
-        // The org-wide department's own row is that area's incidents too.
-        self::assertSame(1.0, $this->rows($scope)['Protection Service']->cells[IncidentPerformanceTopic::FILED]->value);
-        // And the incident the ecologist filed in the SOUTH is in no northern row.
-        self::assertSame(0.0, $this->rows($scope)['North Ecology']->cells[IncidentPerformanceTopic::FILED]->value);
-    }
-
-    /** The band is what a placing runs inside: the area's name, or org-wide. */
-    public function testEachRowSaysWhatItIsPlacedAmong(): void
-    {
-        $area = $this->anAreaWithKinds('North Sector');
-        $this->aReadingDepartment('Protection Service');
-        $this->aReadingDepartment('North Ecology', $area);
-
-        $rows = $this->rows(PerformanceScope::organisation());
-
-        self::assertSame('Org-wide', $rows['Protection Service']->band);
-        self::assertSame('North Sector', $rows['North Ecology']->band);
+        $rows = $this->rows($scope);
+        self::assertSame(['Ecology', 'Protection Service'], array_keys($rows));
+        self::assertSame(2.0, $rows['Ecology']->cells[IncidentPerformanceTopic::FILED]->value, 'Org-wide, but on this page it reads the north.');
     }
 
     /**
-     * A PERIOD THE SCOPE HOLDS NOTHING IN AT ALL IS A HOLE, not a nought —
-     * and a movement measured against a hole is no movement at all.
+     * A PERIOD BEFORE THIS MODULE WAS RUNNING OVER THE GROUND IS A HOLE, not a
+     * nought — and a movement measured against a hole is no movement at all.
      */
-    public function testAPeriodNobodyRecordedInIsAHoleInTheHistory(): void
+    public function testPeriodsBeforeTheModuleWasInstalledAreHoles(): void
     {
-        $area = $this->anAreaWithKinds();
-        $this->anIncident($area, at: new \DateTimeImmutable('2026-08-04 09:00:00'));
-        $this->em->flush();
+        $this->world();
 
         $filed = $this->kpis(PerformanceScope::organisation())[IncidentPerformanceTopic::FILED];
 
-        self::assertCount(6, $filed->history);
-        self::assertSame([null, null, null, null, null, 1.0], $filed->history);
-        self::assertNull($filed->delta, 'July recorded nothing, so nothing moved — it began.');
+        // Installed 10 June: March, April and May are holes; June and July are
+        // measured and genuinely nought.
+        self::assertCount(IncidentPerformanceTopic::PERIODS, $filed->history);
+        self::assertSame([null, null, null, 0.0, 0.0, 3.0], $filed->history);
+        self::assertSame(3.0, $filed->delta, 'July was recorded and held nothing, so this is a real rise.');
     }
 
-    /** With both periods recorded, the movement is a real one. */
-    public function testAMovementIsDrawnOnceThereAreTwoPeriodsToCompare(): void
+    /** A month the module WAS running in and nobody filed in is a real nought. */
+    public function testAMeasuredPeriodWithNoRecordsIsANoughtAndNotAHole(): void
     {
-        $area = $this->anAreaWithKinds();
-        $this->anIncident($area, at: new \DateTimeImmutable('2026-07-04 09:00:00'));
-        $this->anIncident($area, 'snaring', 'Snare one', new \DateTimeImmutable('2026-08-04 09:00:00'));
-        $this->anIncident($area, 'roadkill', 'Zebra', new \DateTimeImmutable('2026-08-06 09:00:00'));
-        $this->em->flush();
+        $this->world();
 
-        $filed = $this->kpis(PerformanceScope::organisation())[IncidentPerformanceTopic::FILED];
+        $filed = $this->kpis(PerformanceScope::organisation(), self::period('2026-07-19 09:00:00'))[IncidentPerformanceTopic::FILED];
 
-        self::assertSame([null, null, null, null, 1.0, 2.0], $filed->history);
-        self::assertSame(1.0, $filed->delta);
+        self::assertSame(0.0, $filed->value);
+        self::assertTrue($filed->isKnown(), 'Nobody filed in July, but somebody was looking.');
     }
 
     /**
-     * THE THIRD ABSENCE. A department whose areas have written no
-     * compensation-bearing words was never asked the question, and its cell is
-     * a dash rather than a nought — while a department whose areas do run
-     * compensation and claimed nothing scored a real nought.
+     * THE THIRD ABSENCE. A department that attaches Incidents while no area it
+     * reads runs the module gets four dashes, not four noughts: the columns
+     * are not its to answer.
      */
-    public function testTheCompensationColumnIsNotADepartmentsToAnswerWhereNothingRunsCompensation(): void
+    public function testADepartmentWhoseGroundRunsNothingIsNotAskedTheColumns(): void
     {
-        $wordless = $this->anArea('Wordless Sector');
-        $spoken = $this->anAreaWithKinds('North Sector');
+        $world = $this->world();
+        $unserved = $this->anArea('Unserved Reserve');
+        $this->reading('Unserved Ecology', $world['module'], $unserved);
 
-        $this->aReadingDepartment('Wordless Ecology', $wordless);
-        $this->aReadingDepartment('North Ecology', $spoken);
+        $cells = $this->rows(PerformanceScope::organisation())['Unserved Ecology']->cells;
 
-        $rows = $this->rows(PerformanceScope::organisation());
+        self::assertCount(4, $cells);
+        foreach ($cells as $key => $cell) {
+            self::assertTrue($cell->notMine, $key.' is not this department\'s to answer.');
+            self::assertFalse($cell->isKnown());
+        }
 
-        $notMine = $rows['Wordless Ecology']->cells[IncidentPerformanceTopic::COMPENSATION_CLAIMS];
-        self::assertEquals(MatrixCell::notMine(), $notMine);
-        self::assertTrue($notMine->notMine);
-        self::assertFalse($notMine->isKnown());
-
-        $asked = $rows['North Ecology']->cells[IncidentPerformanceTopic::COMPENSATION_CLAIMS];
-        self::assertFalse($asked->notMine, 'This area runs compensation, so the question was asked.');
+        // While a department whose ground DOES run it and filed nothing of
+        // that kind scores a real nought.
+        self::assertFalse($this->rows(PerformanceScope::organisation())['Ecology']->cells[IncidentPerformanceTopic::COMPENSATION_CLAIMS]->notMine);
     }
 
-    /** And a claim that arrived is counted in that column. */
+    /** A claim that arrived is counted in the column it belongs to. */
     public function testAClaimThatArrivedIsCountedInTheColumnAndInTheOpenFigure(): void
     {
-        $area = $this->anAreaWithKinds();
-        $department = $this->aReadingDepartment('Community Development', $area);
-        $officer = $this->aUser('officer@example.test', 'A', 'Mollel', $department);
+        $this->world();
 
-        // livestock-depredation runs compensation; snaring runs a fine.
-        $this->anIncident($area, at: new \DateTimeImmutable('2026-08-04 09:00:00'), reportedBy: $officer);
-        $this->anIncident($area, 'snaring', 'Snare line', new \DateTimeImmutable('2026-08-05 09:00:00'), $officer);
-        $this->em->flush();
-
-        $scope = PerformanceScope::area((string) $area->getUuidString(), 'Sample Area');
-
+        // livestock-depredation runs compensation; snaring and roadkill run fines.
         self::assertSame(
             1.0,
-            $this->rows($scope)['Community Development']->cells[IncidentPerformanceTopic::COMPENSATION_CLAIMS]->value,
+            $this->rows(PerformanceScope::organisation())['Ecology']->cells[IncidentPerformanceTopic::COMPENSATION_CLAIMS]->value,
         );
-        self::assertSame(1.0, $this->kpis($scope)[IncidentPerformanceTopic::CLAIMS_OPEN]->value);
+        self::assertSame(1.0, $this->kpis(PerformanceScope::organisation())[IncidentPerformanceTopic::CLAIMS_OPEN]->value);
     }
 
     /**
-     * TWO CHARTS, both stated as shapes over the same six periods the
-     * sparklines run on.
+     * TWELVE PERIODS ON A CHART, SIX ON A SPARKLINE — ruled, and the reason is
+     * that a season cannot be seen in six points.
      */
-    public function testItPublishesTheFlowAndTheBacklogCharts(): void
+    public function testTheChartsRunAFullYearWhileTheSparklinesRunSix(): void
     {
-        $area = $this->anAreaWithKinds();
-        $this->anIncident($area, at: new \DateTimeImmutable('2026-08-04 09:00:00'));
-        $this->em->flush();
+        $this->world();
 
         $charts = $this->topic()->charts(PerformanceScope::organisation(), self::period());
 
         self::assertCount(2, $charts);
         self::assertSame('incidents.flow', $charts[0]->key);
         self::assertSame(ChartKind::Line, $charts[0]->kind);
-        self::assertSame(['mar', 'apr', 'may', 'jun', 'jul', 'aug'], $charts[0]->labels);
-        self::assertCount(2, $charts[0]->series);
-        self::assertSame([null, null, null, null, null, 1.0], $charts[0]->series[0]->points);
+        self::assertCount(IncidentPerformanceTopic::CHART_PERIODS, $charts[0]->labels);
+        self::assertSame(
+            ['sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug'],
+            $charts[0]->labels,
+        );
+        foreach ($charts[0]->series as $series) {
+            self::assertCount(IncidentPerformanceTopic::CHART_PERIODS, $series->points);
+        }
+        // The nine periods before June are holes; June and July are noughts.
+        self::assertSame(
+            [null, null, null, null, null, null, null, null, null, 0.0, 0.0, 3.0],
+            $charts[0]->series[0]->points,
+        );
+
+        self::assertCount(
+            IncidentPerformanceTopic::PERIODS,
+            $this->kpis(PerformanceScope::organisation())[IncidentPerformanceTopic::FILED]->history,
+        );
+    }
+
+    public function testTheBacklogChartBucketsTheOpenWork(): void
+    {
+        $this->world();
+
+        $charts = $this->topic()->charts(PerformanceScope::organisation(), self::period());
 
         self::assertSame('incidents.age', $charts[1]->key);
         self::assertSame(ChartKind::Bar, $charts[1]->kind);
         self::assertSame(['0–7 d', '8–14 d', '15–21 d', 'over 21 d'], $charts[1]->labels);
-        self::assertFalse($charts[1]->isEmpty(), 'One incident is open, so the backlog has a bar.');
+        self::assertFalse($charts[1]->isEmpty(), 'Three incidents are open, so the backlog has bars.');
     }
 
     /** A backlog nobody has is an absence of bars, and the chart drops itself. */

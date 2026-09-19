@@ -328,7 +328,6 @@ final class TestKernel extends Kernel
             // reached directly and asked to do the one thing it does.
             'incident.devkit.content',
             'incident.zone_locator',
-            'incident.department_lens',
             // The whole performance section this module publishes.
             'incident.performance_topic',
             // The four per-area lists: the writes, and the editor's four folds.

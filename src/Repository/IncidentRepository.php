@@ -653,71 +653,107 @@ final class IncidentRepository extends ServiceEntityRepository
     }
 
     /**
-     * EVERY INCIDENT FINISHED IN A SCOPE in a window — the rows behind
-     * "resolved this period" and behind the closed line of the topic's flow
-     * chart.
+     * EVERY INCIDENT FILED ON A NAMED SET OF GROUND in a window.
+     *
+     * A LIST OF AREAS, NOT ONE OR ALL. The performance topic measures the
+     * areas that actually RUN this module — which is neither "this one area"
+     * nor "every area an installation has" — and an empty list is ground
+     * nobody runs it on, answered with nothing rather than with everything.
+     *
+     * @param list<string> $areaUuids
+     *
+     * @return list<Incident>
+     */
+    public function findFiledInAreasBetween(array $areaUuids, \DateTimeImmutable $from, \DateTimeImmutable $until): array
+    {
+        return $this->inAreasBetween($areaUuids, 'reportedAt', $from, $until);
+    }
+
+    /**
+     * EVERY INCIDENT FINISHED ON THAT GROUND in a window.
      *
      * A SECOND QUESTION, NOT A FILTER ON THE FIRST. What was filed in August
      * and what was finished in August are different sets, and a page that
      * derived one from the other could only ever report the overlap.
      *
+     * @param list<string> $areaUuids
+     *
      * @return list<Incident>
      */
-    public function findResolvedByScopeBetween(?string $areaUuid, \DateTimeImmutable $from, \DateTimeImmutable $until): array
+    public function findResolvedInAreasBetween(array $areaUuids, \DateTimeImmutable $from, \DateTimeImmutable $until): array
     {
-        $qb = $this->createQueryBuilder('i')
-            ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.kind', 'k')->addSelect('k')
-            ->leftJoin('i.money', 'm')->addSelect('m')
-            ->andWhere('i.resolvedAt >= :from')->setParameter('from', $from)
-            ->andWhere('i.resolvedAt < :until')->setParameter('until', $until)
-            ->orderBy('i.resolvedAt', 'ASC');
-
-        if (null !== $areaUuid) {
-            $qb->join('i.area', 'sa')
-                ->andWhere('sa.uuid = :scope_area')
-                ->setParameter('scope_area', Uuid::fromString($areaUuid), 'uuid');
-        }
-
-        /** @var list<Incident> $incidents */
-        $incidents = $qb->getQuery()->getResult();
-
-        return $incidents;
+        return $this->inAreasBetween($areaUuids, 'resolvedAt', $from, $until);
     }
 
     /**
-     * EVERY INCIDENT IN A SCOPE THAT IS STILL OPEN, whenever it was filed —
+     * EVERY INCIDENT ON THAT GROUND THAT IS STILL OPEN, whenever it was filed —
      * the stock behind "how long an open incident has been open".
      *
      * NOT A WINDOW. The question the chart asks is about the backlog as it
      * stands, and a backlog clipped to one month would hide exactly the rows
      * worth looking at.
      *
+     * @param list<string> $areaUuids
+     *
      * @return list<Incident>
      */
-    public function findOpenByScope(?string $areaUuid): array
+    public function findOpenInAreas(array $areaUuids): array
     {
-        $qb = $this->createQueryBuilder('i')
-            ->join('i.subcategory', 's')->addSelect('s')
-            ->join('s.kind', 'k')->addSelect('k')
-            ->leftJoin('i.money', 'm')->addSelect('m')
+        if ([] === $areaUuids) {
+            return [];
+        }
+
+        /** @var list<Incident> $incidents */
+        $incidents = $this->inAreas($areaUuids)
             ->andWhere('i.status IN (:open)')
             ->setParameter('open', array_map(
                 static fn (IncidentStatusEnum $place) => $place->value,
                 array_filter(IncidentStatusEnum::ordered(), static fn (IncidentStatusEnum $place) => $place->isOpen()),
             ))
-            ->orderBy('i.reportedAt', 'ASC');
+            ->orderBy('i.reportedAt', 'ASC')
+            ->getQuery()
+            ->getResult();
 
-        if (null !== $areaUuid) {
-            $qb->join('i.area', 'sa')
-                ->andWhere('sa.uuid = :scope_area')
-                ->setParameter('scope_area', Uuid::fromString($areaUuid), 'uuid');
+        return $incidents;
+    }
+
+    /**
+     * @param list<string> $areaUuids
+     *
+     * @return list<Incident>
+     */
+    private function inAreasBetween(array $areaUuids, string $field, \DateTimeImmutable $from, \DateTimeImmutable $until): array
+    {
+        if ([] === $areaUuids) {
+            return [];
         }
 
         /** @var list<Incident> $incidents */
-        $incidents = $qb->getQuery()->getResult();
+        $incidents = $this->inAreas($areaUuids)
+            ->andWhere(\sprintf('i.%s >= :from', $field))->setParameter('from', $from)
+            ->andWhere(\sprintf('i.%s < :until', $field))->setParameter('until', $until)
+            ->orderBy(\sprintf('i.%s', $field), 'ASC')
+            ->getQuery()
+            ->getResult();
 
         return $incidents;
+    }
+
+    /**
+     * The rows of a named set of areas, with the taxonomy and the money
+     * already loaded — the shape every performance figure is read off.
+     *
+     * @param list<string> $areaUuids
+     */
+    private function inAreas(array $areaUuids): QueryBuilder
+    {
+        return $this->createQueryBuilder('i')
+            ->join('i.subcategory', 's')->addSelect('s')
+            ->join('s.kind', 'k')->addSelect('k')
+            ->leftJoin('i.money', 'm')->addSelect('m')
+            ->join('i.area', 'sa')
+            ->andWhere('sa.uuid IN (:scope_areas)')
+            ->setParameter('scope_areas', array_map(static fn (string $uuid): Uuid => Uuid::fromString($uuid), $areaUuids));
     }
 
     /*

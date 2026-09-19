@@ -24,12 +24,11 @@ namespace Uhifadhi\Incident\Model;
  * calculation that cannot be tested without a database, a taxonomy and an
  * area.
  *
- * THE DEPARTMENT IS THE RECORDER'S, AND IT IS OFTEN NULL. A department's
- * figures are the incidents whose recording position sits in that department;
- * a seeded or imported row, or one filed by somebody holding no position,
- * belongs to no department and is counted in the topic's headline figures and
- * in nobody's row. That is the honest answer, and it is why null here is not a
- * department called "none".
+ * NOBODY IS ON IT, DELIBERATELY. FIGURES FOLLOW SCOPE, NOT PEOPLE: who
+ * recorded an incident, whether they hold a position and which department that
+ * position is filed under change no figure on any performance surface, and two
+ * departments reading the same ground read identical figures. A recorder
+ * carried here would be a filter waiting to be applied.
  */
 final readonly class IncidentReading
 {
@@ -45,8 +44,6 @@ final readonly class IncidentReading
         public bool $claimed = false,
         /** Whether that claim is neither settled nor waived. */
         public bool $claimOutstanding = false,
-        /** The department of the position the recorder holds, where there is one. */
-        public ?int $departmentId = null,
     ) {
     }
 

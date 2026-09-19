@@ -28,6 +28,10 @@ namespace Uhifadhi\Incident\Model;
  * are readings of the same rows, and asking the database once per plate is how
  * two figures on one card come to disagree.
  *
+ * THE LIST IS A PIECE OF GROUND'S, NEVER A PERSON'S. What narrows these rows
+ * is the scope they were recorded in; nothing here knows or asks who recorded
+ * them.
+ *
  * NOTHING RECORDED IS NOT NOUGHT. {@see isEmpty()} is what a caller turns into
  * a hole in a six-period history; a median over no finished work is null, not
  * zero; and a count of nothing that happened IS zero, because somebody looked.
@@ -144,44 +148,6 @@ final readonly class PerformanceReadings
         }
 
         return $resolved;
-    }
-
-    /**
-     * THE SAME WINDOW THROUGH ONE DEPARTMENT'S LENS: the records whose
-     * recording position sits in it. A record filed by nobody seated belongs
-     * to no department and is in no slice — it is still in the headline
-     * figures, which is why a topic's total may be larger than its rows.
-     */
-    public function forDepartment(int $departmentId): self
-    {
-        $mine = [];
-        foreach ($this->readings as $reading) {
-            if ($departmentId === $reading->departmentId) {
-                $mine[] = $reading;
-            }
-        }
-
-        return new self($mine);
-    }
-
-    /**
-     * WHAT THE HEADLINE'S SPLIT IS MADE OF: how many each department recorded,
-     * keyed by department id. A record nobody seated filed is absent rather
-     * than filed under a department called "none".
-     *
-     * @return array<int, int>
-     */
-    public function filedByDepartment(): array
-    {
-        $counts = [];
-        foreach ($this->readings as $reading) {
-            if (null === $reading->departmentId) {
-                continue;
-            }
-            $counts[$reading->departmentId] = ($counts[$reading->departmentId] ?? 0) + 1;
-        }
-
-        return $counts;
     }
 
     /**

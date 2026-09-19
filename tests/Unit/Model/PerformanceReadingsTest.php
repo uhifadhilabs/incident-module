@@ -16,6 +16,7 @@ namespace Uhifadhi\Incident\Tests\Unit\Model;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Incident\Model\IncidentReading;
+use Uhifadhi\Incident\Model\IncidentTopicSlice;
 use Uhifadhi\Incident\Model\PerformanceReadings;
 
 /**
@@ -23,8 +24,11 @@ use Uhifadhi\Incident\Model\PerformanceReadings;
  *
  * Every figure the performance page prints is a reading of a list of records:
  * how many arrived, how many are overdue, how long closing took, how many
- * claims came in, what got finished, and — the one this module's design turns
- * on — the same window seen through ONE DEPARTMENT'S LENS.
+ * claims came in and what got finished.
+ *
+ * NOBODY IS IN ANY OF IT. Figures follow scope, not people — what narrows a
+ * list is the ground it was recorded on, which {@see IncidentTopicSlice}
+ * resolves, and never who filed it.
  */
 #[CoversClass(PerformanceReadings::class)]
 #[CoversClass(IncidentReading::class)]
@@ -110,44 +114,6 @@ final class PerformanceReadingsTest extends TestCase
         );
     }
 
-    /**
-     * DEPARTMENT-AS-A-LENS. A department's figures are the records whose
-     * recording position sits in it, and a record nobody seated filed is in
-     * NOBODY'S slice — which is why the rows of a matrix may add up to less
-     * than its headline.
-     */
-    public function testASliceIsTheRecordsWhoseRecorderSatInThatDepartment(): void
-    {
-        $readings = $this->readings(
-            self::one(departmentId: 7),
-            self::one(departmentId: 7),
-            self::one(departmentId: 9),
-            self::one(),
-        );
-
-        self::assertSame(4, $readings->filed());
-        self::assertSame(2, $readings->forDepartment(7)->filed());
-        self::assertSame(1, $readings->forDepartment(9)->filed());
-        self::assertSame(0, $readings->forDepartment(11)->filed());
-        self::assertSame([7 => 2, 9 => 1], $readings->filedByDepartment());
-    }
-
-    /** Every reading in a slice is judged by the slice's own records. */
-    public function testASliceCarriesItsOwnMedianAndItsOwnBacklog(): void
-    {
-        $at = new \DateTimeImmutable('2026-08-20 08:00:00');
-
-        $readings = $this->readings(
-            self::one(departmentId: 7, termHours: 72),
-            self::one(departmentId: 9, resolvedAt: '2026-08-05 08:00:00'),
-        );
-
-        self::assertSame(1, $readings->forDepartment(7)->openPastTarget($at));
-        self::assertNull($readings->forDepartment(7)->medianDaysToClose());
-        self::assertSame(0, $readings->forDepartment(9)->openPastTarget($at));
-        self::assertSame(4.0, $readings->forDepartment(9)->medianDaysToClose());
-    }
-
     /** The distinct terms these records promised, in days, smallest first. */
     public function testItNamesTheTermsTheseRecordsWereJudgedAgainst(): void
     {
@@ -189,7 +155,6 @@ final class PerformanceReadingsTest extends TestCase
         int $termHours = 168,
         bool $claimed = false,
         bool $claimOutstanding = false,
-        ?int $departmentId = null,
     ): IncidentReading {
         return new IncidentReading(
             reportedAt: new \DateTimeImmutable(self::FILED),
@@ -198,7 +163,6 @@ final class PerformanceReadingsTest extends TestCase
             open: null === $resolvedAt,
             claimed: $claimed,
             claimOutstanding: $claimOutstanding,
-            departmentId: $departmentId,
         );
     }
 }

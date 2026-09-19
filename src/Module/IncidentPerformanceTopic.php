@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Module;
 
+use Doctrine\ORM\EntityManagerInterface;
+use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
-use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\ChartKind;
 use Uhifadhi\Contracts\Performance\ChartSeries;
@@ -30,10 +32,10 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\IncidentReading;
+use Uhifadhi\Incident\Model\IncidentTopicGround;
+use Uhifadhi\Incident\Model\IncidentTopicSlice;
 use Uhifadhi\Incident\Model\PerformanceReadings;
-use Uhifadhi\Incident\Repository\IncidentDepartmentLens;
 use Uhifadhi\Incident\Repository\IncidentRepository;
-use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 
 /**
  * THE INCIDENTS TOPIC ON THE PERFORMANCE PAGE — five figures, two charts and
@@ -47,53 +49,58 @@ use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
  * THAT ATTACH INCIDENTS. A department that does not read this module is not a
  * row of dashes here; it is not a row.
  *
- * ── WHAT A DEPARTMENT'S FIGURES ARE ──────────────────────────────────────────
- * DEPARTMENT-AS-A-LENS, exactly as the record states it: an incident belongs to
- * its AREA, and a department's figures are the incidents WHOSE RECORDING
- * POSITION SITS IN THAT DEPARTMENT. Nothing here restricts anybody's reading —
- * two departments in one area see the same incidents on every screen in the
- * product — this is a way of totting up who was working, and it is the only
- * slicing this topic does. {@see IncidentDepartmentLens} makes that walk.
- *
- * A row nobody seated filed — a seeded or imported one, or one filed by
- * somebody holding no position — is counted in the HEADLINE figures and in no
- * department's row. So the rows may add up to less than the headline, and
- * that difference is a real fact about the records rather than an arithmetic
- * error.
+ * ── FIGURES FOLLOW SCOPE, NOT PEOPLE ─────────────────────────────────────────
+ * A DEPARTMENT IS A LENS OVER GROUND, NEVER A FILTER ON RECORDS. Who filed an
+ * incident, whether they hold a position and which department that position
+ * sits in change no figure on this page — exactly as
+ * {@see IncidentDepartmentKpiProvider} states for the KPI plates. All a
+ * department contributes to a row is WHICH GROUND it reads, which
+ * {@see IncidentTopicSlice} resolves as the intersection of its scope with the
+ * page's: an organisation-wide department reads every area running the module,
+ * an area-level one reads its own. Two departments scoped to the same area
+ * therefore read identical figures, and no surface adds them together.
  *
  * ── WHERE THE HISTORY COMES FROM ─────────────────────────────────────────────
  * OUT OF THIS MODULE'S OWN RECORDS, period by period — never out of a
  * remembered figure. The host's own topics read what was written down in a
  * closed period because seats and goals cannot be recomputed; an incident can:
  * it carries when it was filed, when it was finished and what its sub-category
- * promised, so every one of the six periods behind a sparkline is recomputed
- * from the rows themselves. Nothing is stored for this page, and a figure is
- * never stale.
+ * promised, so every period behind a sparkline or a chart is re-measured from
+ * the rows themselves and gives the same answer today as it did then. Nothing
+ * here writes a figure down, and nothing here can go stale.
  *
  * ── THE THREE ABSENCES, KEPT APART ───────────────────────────────────────────
- *  - A PERIOD THE SCOPE HOLDS NO RECORD IN AT ALL is a HOLE: null in the
- *    history, and the chart draws a gap. Nobody was recording; nought would say
- *    they recorded nothing.
- *  - A FIGURE THAT CANNOT BE COMPUTED is NULL: a median time to close over a
- *    period where nothing was finished is not nought days.
- *  - A COLUMN A DEPARTMENT WAS NEVER ASKED is {@see MatrixCell::notMine()}:
- *    compensation claims, where the department's areas have written no
- *    compensation-bearing sub-category at all. Where they have and nobody
- *    claimed, the cell is a real nought.
+ *  - A HOLE IN A HISTORY is a period this module was not yet installed over
+ *    that ground: nobody was recording, and a nought there would draw a
+ *    collapse where there was simply no module.
+ *  - A NULL VALUE is a figure that cannot be computed — a median time to close
+ *    over a period where nothing was finished is not nought days, and every
+ *    figure of a scope no area of which runs this module is unknown rather
+ *    than empty.
+ *  - {@see MatrixCell::notMine()} is a department that attaches Incidents in
+ *    the register while NO AREA IT READS ACTUALLY RUNS IT. The columns are not
+ *    its to answer, and no amount of publishing by this module will make them
+ *    so.
  *
  * ── POLARITY ─────────────────────────────────────────────────────────────────
  * FILING IS NEITHER GOOD NOR BAD and says so ({@see ColumnPolarity::None}): an
  * area with more incidents filed may simply be an area where people are
  * reporting, which is the behaviour this module exists to encourage, and
  * tinting a department for it would teach exactly the wrong lesson. The same
- * goes for how many compensation claims arrived. Overdue work and a slower
- * close are {@see ColumnPolarity::Down}; finished work is
- * {@see ColumnPolarity::Up}.
+ * goes for how many compensation claims arrived — that is how many people
+ * asked, not how well anybody worked. Overdue work and a slower close are
+ * {@see ColumnPolarity::Down}; finished work is {@see ColumnPolarity::Up}.
  */
 final readonly class IncidentPerformanceTopic implements PerformanceTopicProviderInterface
 {
     /** The topic's own address, in the URL and in the page's order. */
     public const string KEY = 'incidents';
+
+    /** What a sparkline and a matrix cell's run are drawn over. */
+    public const int PERIODS = 6;
+
+    /** What the charts are drawn over — a full year of the page's period. */
+    public const int CHART_PERIODS = 12;
 
     public const string FILED = 'incidents.filed';
     public const string OPEN_PAST_TARGET = 'incidents.open_past_target';
@@ -102,18 +109,13 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     public const string CLAIMS_OPEN = 'incidents.claims_open';
     public const string RESOLVED = 'incidents.resolved';
 
-    /** What a sparkline is drawn over, and the run the flow chart uses. */
-    private const int PERIODS = 6;
-
-    /** The upper edge of the first three age buckets, in days. */
+    /** The four buckets the backlog chart draws. */
     private const array AGE_LABELS = ['0–7 d', '8–14 d', '15–21 d', 'over 21 d'];
 
     public function __construct(
+        private EntityManagerInterface $entityManager,
         private IncidentRepository $incidents,
-        private IncidentDepartmentLens $lens,
-        private DepartmentRepository $departments,
-        private TaxonomySubcategoryRepository $subcategories,
-        /** The slug this module is registered under in the host's catalogue. */
+        /** The slug this module is registered under in the registry's catalogue. */
         private string $slug,
         private string $name = 'Incidents',
     ) {
@@ -135,146 +137,9 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     }
 
     /**
-     * FIVE, AND ALWAYS FIVE — filed, open past target, the median time to
-     * close, compensation claims still open, and what was finished.
-     *
-     * @return list<TopicKpi>
-     */
-    public function kpis(PerformanceScope $scope, FigurePeriod $period): array
-    {
-        $run = $this->run($scope, $period);
-        $latest = $run[self::PERIODS - 1];
-
-        return [
-            self::figure($run, self::FILED, 'Filed', ColumnPolarity::None,
-                static fn (array $p): float => (float) $p['filed']->filed(),
-                caption: $this->splitCaption($scope, $latest['filed']),
-            ),
-            self::figure($run, self::OPEN_PAST_TARGET, 'Open', ColumnPolarity::Down,
-                static fn (array $p): float => (float) $p['filed']->openPastTarget($p['period']->until),
-                caption: 'past their target',
-            ),
-            self::figure($run, self::MEDIAN_DAYS_TO_CLOSE, 'Median days to close', ColumnPolarity::Down,
-                static fn (array $p): ?float => $p['resolved']->medianDaysToClose(),
-                caption: self::targetsCaption($latest['resolved']),
-                unit: 'd',
-            ),
-            self::figure($run, self::CLAIMS_OPEN, 'Claims open', ColumnPolarity::Down,
-                static fn (array $p): float => (float) $p['filed']->claimsOpen(),
-                caption: 'compensation neither settled nor waived',
-            ),
-            self::figure($run, self::RESOLVED, 'Resolved', ColumnPolarity::Up,
-                static fn (array $p): float => (float) $p['resolved']->filed(),
-                caption: 'this period',
-            ),
-        ];
-    }
-
-    /**
-     * TWO CHARTS, both stated as shapes: the run of filing against closing,
-     * and how long the work still open has been open.
-     *
-     * @return list<TopicChart>
-     */
-    public function charts(PerformanceScope $scope, FigurePeriod $period): array
-    {
-        $run = $this->run($scope, $period);
-
-        $flow = new TopicChart(
-            key: 'incidents.flow',
-            title: 'Filed against closed, per period',
-            kind: ChartKind::Line,
-            labels: array_map(
-                static fn (array $p): string => mb_strtolower($p['period']->from->format('M')),
-                $run,
-            ),
-            series: [
-                new ChartSeries('Filed', self::series($run, static fn (array $p): float => (float) $p['filed']->filed())),
-                new ChartSeries('Closed', self::series($run, static fn (array $p): float => (float) $p['resolved']->filed())),
-            ],
-            caption: 'Recomputed from the records of each period — a period nobody filed in is a gap, not a nought.',
-        );
-
-        $open = $this->readingsOf($this->incidents->findOpenByScope($scope->areaUuid));
-        $buckets = $open->openAgeBuckets($period->until);
-        $age = new TopicChart(
-            key: 'incidents.age',
-            title: 'How long an open incident has been open',
-            kind: ChartKind::Bar,
-            labels: self::AGE_LABELS,
-            // NOTHING OPEN IS NOT FOUR NOUGHTS. A backlog nobody has is an
-            // absence of bars, and the chart drops itself rather than drawing
-            // an empty floor that reads as a measured one.
-            series: [new ChartSeries(
-                'Open incidents',
-                $open->isEmpty()
-                    ? [null, null, null, null]
-                    : array_map(static fn (int $n): float => (float) $n, $buckets),
-            )],
-            unit: 'incidents',
-            caption: 'The backlog as it stands, whenever each one was filed.',
-        );
-
-        return [$flow, $age];
-    }
-
-    public function matrix(PerformanceScope $scope, FigurePeriod $period): TopicMatrix
-    {
-        $run = $this->run($scope, $period);
-        $columns = self::columns();
-
-        $rows = [];
-        foreach ($this->departmentsIn($scope) as $department) {
-            $id = $department->getId();
-            if (null === $id) {
-                continue;
-            }
-
-            $area = $department->getArea();
-            $moneyScope = $area?->getUuidString() ?? $scope->areaUuid;
-            $runsCompensation = $this->subcategories->scopeRunsMoney($moneyScope, MoneyDirectionEnum::Compensation);
-
-            /** @var list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, silent: bool}> $mine */
-            $mine = array_map(
-                static fn (array $p): array => [
-                    'period' => $p['period'],
-                    'filed' => $p['filed']->forDepartment($id),
-                    'resolved' => $p['resolved']->forDepartment($id),
-                    // The SCOPE's silence, carried through unchanged.
-                    'silent' => $p['silent'],
-                ],
-                $run,
-            );
-            $cells = [
-                self::FILED => self::cell($mine, static fn (array $p): float => (float) $p['filed']->filed()),
-                self::OPEN_PAST_TARGET => self::cell($mine, static fn (array $p): float => (float) $p['filed']->openPastTarget($p['period']->until)),
-                self::MEDIAN_DAYS_TO_CLOSE => self::cell($mine, static fn (array $p): ?float => $p['resolved']->medianDaysToClose()),
-                // THE COLUMN A DEPARTMENT WAS NEVER ASKED. Its areas run no
-                // compensation-bearing sub-category, so there is no claim it
-                // could have filed — a dash, never a nought.
-                self::COMPENSATION_CLAIMS => $runsCompensation
-                    ? self::cell($mine, static fn (array $p): float => (float) $p['filed']->claimsFiled())
-                    : MatrixCell::notMine(),
-            ];
-
-            $rows[] = new MatrixRow(
-                departmentUuid: (string) $department->getUuidString(),
-                departmentName: (string) $department->getName(),
-                cells: $cells,
-                band: null === $area ? 'Org-wide' : (string) $area->getName(),
-            );
-        }
-
-        return new TopicMatrix(
-            $columns,
-            $rows,
-            'Only the departments that attach Incidents are rows, and a department’s figures are the incidents whose recording position sits in it.',
-        );
-    }
-
-    /**
-     * THE FOUR COLUMNS AND THEIR DIRECTIONS, stated once so a test can read
-     * them without a database.
+     * THE FOUR COLUMNS AND THEIR DIRECTIONS, stated once and statically so a
+     * test can read them without a database: a column's polarity is a property
+     * of the figure, not of a request.
      *
      * @return list<MatrixColumn>
      */
@@ -285,7 +150,7 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
                 self::FILED,
                 'Filed',
                 polarity: ColumnPolarity::None,
-                caption: 'Incidents recorded in the period. Filing is neither an achievement nor a failure, so this is never tinted.',
+                caption: 'Incidents recorded on this ground in the period. Filing is neither an achievement nor a failure, so this is never tinted.',
             ),
             new MatrixColumn(
                 self::OPEN_PAST_TARGET,
@@ -310,38 +175,274 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     }
 
     /**
-     * SIX PERIODS OF THE SCOPE'S RECORDS, oldest first and ending with the one
-     * asked about — each recomputed from the rows themselves.
+     * FIVE, AND ALWAYS FIVE — filed, open past target, the median time to
+     * close, compensation claims still open, and what was finished.
+     *
+     * @return list<TopicKpi>
+     */
+    public function kpis(PerformanceScope $scope, FigurePeriod $period): array
+    {
+        $ground = $this->groundOf($scope->areaUuid);
+        if ($ground->isUnrun()) {
+            return $this->nothingRunsHere($scope);
+        }
+
+        $run = $this->readingsOver($ground, self::run($period, self::PERIODS));
+        $rows = \count($this->rowsIn($scope));
+
+        return [
+            self::figure($run, self::FILED, 'Filed', ColumnPolarity::None,
+                static fn (array $p): float => (float) $p['filed']->filed(),
+                caption: \sprintf('across %d department%s that read %s', $rows, 1 === $rows ? '' : 's', $this->name),
+            ),
+            self::figure($run, self::OPEN_PAST_TARGET, 'Open', ColumnPolarity::Down,
+                static fn (array $p): float => (float) $p['filed']->openPastTarget($p['period']->until),
+                caption: 'past their target',
+            ),
+            self::figure($run, self::MEDIAN_DAYS_TO_CLOSE, 'Median days to close', ColumnPolarity::Down,
+                static fn (array $p): ?float => $p['resolved']->medianDaysToClose(),
+                caption: self::targetsCaption($run[self::PERIODS - 1]['resolved']),
+                unit: 'd',
+            ),
+            self::figure($run, self::CLAIMS_OPEN, 'Claims open', ColumnPolarity::Down,
+                static fn (array $p): float => (float) $p['filed']->claimsOpen(),
+                caption: 'compensation neither settled nor waived',
+            ),
+            self::figure($run, self::RESOLVED, 'Resolved', ColumnPolarity::Up,
+                static fn (array $p): float => (float) $p['resolved']->filed(),
+                caption: 'this period',
+            ),
+        ];
+    }
+
+    /**
+     * TWO CHARTS, both stated as shapes: the run of filing against closing
+     * over A FULL YEAR of the page's period, and how long the work still open
+     * has been open.
+     *
+     * THE CHARTS RUN LONGER THAN THE SPARKLINES ON PURPOSE. A card's figure
+     * shows its own recent movement; a chart is where a season is supposed to
+     * become visible, and six points cannot show one.
+     *
+     * @return list<TopicChart>
+     */
+    public function charts(PerformanceScope $scope, FigurePeriod $period): array
+    {
+        $ground = $this->groundOf($scope->areaUuid);
+        $periods = self::run($period, self::CHART_PERIODS);
+        $run = $this->readingsOver($ground, $periods);
+
+        $flow = new TopicChart(
+            key: 'incidents.flow',
+            title: 'Filed against closed, per period',
+            kind: ChartKind::Line,
+            labels: array_map(static fn (FigurePeriod $past): string => mb_strtolower($past->from->format('M')), $periods),
+            series: [
+                new ChartSeries('Filed', self::series($run, static fn (array $p): float => (float) $p['filed']->filed())),
+                new ChartSeries('Closed', self::series($run, static fn (array $p): float => (float) $p['resolved']->filed())),
+            ],
+            caption: 'Re-measured from the records of each period — a period before this module was running is a gap, not a nought.',
+        );
+
+        $open = $this->readingsOf($this->incidents->findOpenInAreas($ground->areaUuids));
+        $buckets = $open->openAgeBuckets($period->until);
+
+        $age = new TopicChart(
+            key: 'incidents.age',
+            title: 'How long an open incident has been open',
+            kind: ChartKind::Bar,
+            labels: self::AGE_LABELS,
+            // NOTHING OPEN IS NOT FOUR NOUGHTS. A backlog nobody has is an
+            // absence of bars, and the chart drops itself rather than drawing
+            // an empty floor that reads as a measured one.
+            series: [new ChartSeries(
+                'Open incidents',
+                $open->isEmpty()
+                    ? [null, null, null, null]
+                    : array_map(static fn (int $n): float => (float) $n, $buckets),
+            )],
+            unit: 'incidents',
+            caption: 'The backlog as it stands, whenever each one was filed.',
+        );
+
+        return [$flow, $age];
+    }
+
+    public function matrix(PerformanceScope $scope, FigurePeriod $period): TopicMatrix
+    {
+        $periods = self::run($period, self::PERIODS);
+
+        $rows = [];
+        foreach ($this->rowsIn($scope) as $department) {
+            $slice = IncidentTopicSlice::of($scope->areaUuid, $department->getArea()?->getUuidString());
+            \assert(null !== $slice);
+
+            $area = $department->getArea();
+
+            $rows[] = new MatrixRow(
+                departmentUuid: (string) $department->getUuidString(),
+                departmentName: (string) $department->getName(),
+                cells: $this->cellsFor($this->groundOf($slice->areaUuid), $periods),
+                band: null === $area ? 'Org-wide' : (string) $area->getName(),
+            );
+        }
+
+        return new TopicMatrix(
+            self::columns(),
+            $rows,
+            \sprintf('Only the departments that read the %s module are rows, and each reads the ground its own scope covers.', $this->name),
+        );
+    }
+
+    /**
+     * ONE DEPARTMENT'S FOUR CELLS.
+     *
+     * Ground no running area falls on is four `notMine` cells, not four
+     * dashes: the department attached this module in the register, but nothing
+     * it reads is running it, so the columns are not its to answer.
+     *
+     * @param list<FigurePeriod> $periods
+     *
+     * @return array<string, MatrixCell>
+     */
+    private function cellsFor(IncidentTopicGround $ground, array $periods): array
+    {
+        if ($ground->isUnrun()) {
+            $cells = [];
+            foreach (self::columns() as $column) {
+                $cells[$column->key] = MatrixCell::notMine();
+            }
+
+            return $cells;
+        }
+
+        $run = $this->readingsOver($ground, $periods);
+
+        return [
+            self::FILED => self::cell($run, static fn (array $p): float => (float) $p['filed']->filed()),
+            self::OPEN_PAST_TARGET => self::cell($run, static fn (array $p): float => (float) $p['filed']->openPastTarget($p['period']->until)),
+            self::MEDIAN_DAYS_TO_CLOSE => self::cell($run, static fn (array $p): ?float => $p['resolved']->medianDaysToClose()),
+            self::COMPENSATION_CLAIMS => self::cell($run, static fn (array $p): float => (float) $p['filed']->claimsFiled()),
+        ];
+    }
+
+    /**
+     * THE DEPARTMENTS THIS PAGE HOLDS — the ones that attach this module and
+     * whose scope the page's scope reaches.
+     *
+     * A department that attaches nothing of this module's is not a row of
+     * empties here, it is not a row: that is the whole difference between a
+     * topic and the board of everybody's columns it replaces.
+     *
+     * @return list<Department>
+     */
+    private function rowsIn(PerformanceScope $scope): array
+    {
+        /** @var list<Department> $attaching */
+        $attaching = $this->entityManager->createQueryBuilder()
+            ->select('d')
+            ->from(Department::class, 'd')
+            ->innerJoin('d.modules', 'm')
+            ->andWhere('m.slug = :slug')
+            ->andWhere('d.active = true')
+            ->setParameter('slug', $this->slug)
+            ->orderBy('d.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return array_values(array_filter(
+            $attaching,
+            static fn (Department $department): bool => null !== IncidentTopicSlice::of($scope->areaUuid, $department->getArea()?->getUuidString()),
+        ));
+    }
+
+    /**
+     * THE GROUND OF ONE SLICE — the areas of it that actually run this module,
+     * and the instant recording began over them.
+     *
+     * Read from the registry's area × module ledger rather than from the
+     * incidents table, and deliberately not the question
+     * {@see IncidentDepartmentKpiProvider} asks: a KPI plate is about rows
+     * that exist, while a matrix row has to tell "this ground runs Incidents
+     * and filed nothing" from "this ground does not run Incidents at all", and
+     * only the ledger knows the second.
+     */
+    private function groundOf(?string $areaUuid): IncidentTopicGround
+    {
+        /** @var list<AreaModule> $installed */
+        $installed = $this->entityManager->createQueryBuilder()
+            ->select('am')
+            ->from(AreaModule::class, 'am')
+            ->innerJoin('am.module', 'm')
+            ->andWhere('m.slug = :slug')
+            ->andWhere('am.active = true')
+            ->setParameter('slug', $this->slug)
+            ->getQuery()
+            ->getResult();
+
+        $areas = [];
+        $measuredFrom = null;
+        $unbounded = false;
+
+        foreach ($installed as $row) {
+            $area = $row->getArea();
+            if (!$area instanceof AreaInterface) {
+                continue;
+            }
+
+            $uuid = $area->getUuidString();
+            if (null === $uuid || (null !== $areaUuid && $areaUuid !== $uuid)) {
+                continue;
+            }
+
+            $areas[] = $uuid;
+
+            $installedAt = $row->getInstalledAt();
+            if (null === $installedAt) {
+                // THE LEDGER DOES NOT SAY WHEN. Rather than invent a start and
+                // punch holes in periods that may well have been recorded, the
+                // ground is treated as always measured — an honest "we cannot
+                // date this" instead of a fabricated gap.
+                $unbounded = true;
+
+                continue;
+            }
+
+            $measuredFrom = null === $measuredFrom || $installedAt < $measuredFrom ? $installedAt : $measuredFrom;
+        }
+
+        sort($areas);
+
+        return new IncidentTopicGround($areas, $unbounded ? null : $measuredFrom);
+    }
+
+    /**
+     * WHAT THE GROUND HELD IN EACH OF A RUN OF PERIODS.
      *
      * TWO SETS PER PERIOD, because what was FILED in a period and what was
      * FINISHED in it are different questions, and a page that derived one from
-     * the other could only report the overlap.
+     * the other could only report the overlap. A period before the module was
+     * installed over the ground is not asked at all: it is a hole.
      *
-     * @return list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, silent: bool}>
+     * @param list<FigurePeriod> $periods
+     *
+     * @return list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, measured: bool}>
      */
-    private function run(PerformanceScope $scope, FigurePeriod $period): array
+    private function readingsOver(IncidentTopicGround $ground, array $periods): array
     {
-        $periods = [$period];
-        while (\count($periods) < self::PERIODS) {
-            $periods[] = $periods[\count($periods) - 1]->previous();
-        }
-        $periods = array_reverse($periods);
-
         $run = [];
         foreach ($periods as $window) {
-            $filed = $this->readingsOf($this->incidents->findByScopeBetween($scope->areaUuid, $window->from, $window->until));
-            $resolved = $this->readingsOf($this->incidents->findResolvedByScopeBetween($scope->areaUuid, $window->from, $window->until));
+            $measured = $ground->measured($window);
 
             $run[] = [
                 'period' => $window,
-                'filed' => $filed,
-                'resolved' => $resolved,
-                // SILENCE IS THE SCOPE'S, NEVER A DEPARTMENT'S. A period the
-                // whole scope holds no record in is a hole in every history
-                // drawn over it; a department that filed nothing in a period
-                // the scope WAS recording in scored a real nought, and the two
-                // must not be drawn the same way.
-                'silent' => $filed->isEmpty() && $resolved->isEmpty(),
+                'filed' => $measured
+                    ? $this->readingsOf($this->incidents->findFiledInAreasBetween($ground->areaUuids, $window->from, $window->until))
+                    : PerformanceReadings::none(),
+                'resolved' => $measured
+                    ? $this->readingsOf($this->incidents->findResolvedInAreasBetween($ground->areaUuids, $window->from, $window->until))
+                    : PerformanceReadings::none(),
+                'measured' => $measured,
             ];
         }
 
@@ -349,22 +450,13 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     }
 
     /**
-     * THE ROWS, REDUCED TO WHAT A FIGURE IS MADE OF — and the recorder walked
-     * to a department, once for the whole set rather than once per row.
+     * THE ROWS, REDUCED TO WHAT A FIGURE IS MADE OF. Nobody is on a reading:
+     * figures follow scope, not people.
      *
      * @param list<Incident> $incidents
      */
     private function readingsOf(array $incidents): PerformanceReadings
     {
-        $recorders = [];
-        foreach ($incidents as $incident) {
-            $id = $incident->getReportedBy()?->getId();
-            if (null !== $id) {
-                $recorders[] = $id;
-            }
-        }
-        $byUser = $this->lens->departmentByUser(array_values(array_unique($recorders)));
-
         $readings = [];
         foreach ($incidents as $incident) {
             $subcategory = $incident->getSubcategory();
@@ -374,7 +466,6 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
             // nobody has costed yet is still a claim.
             $claimed = MoneyDirectionEnum::Compensation === $subcategory->getMoneyDirection();
             $money = $incident->getMoney();
-            $recorder = $incident->getReportedBy()?->getId();
 
             $readings[] = new IncidentReading(
                 reportedAt: $incident->getReportedAt(),
@@ -383,7 +474,6 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
                 open: $incident->getStatus()->isOpen(),
                 claimed: $claimed,
                 claimOutstanding: $claimed && (null === $money || (!$money->isSettled() && !$money->isWaived())),
-                departmentId: null === $recorder ? null : ($byUser[$recorder] ?? null),
             );
         }
 
@@ -391,50 +481,33 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     }
 
     /**
-     * THE DEPARTMENTS THAT READ THIS MODULE, in the scope asked about: an
-     * area's own departments and the organisation-wide ones, which is what
-     * "reads this area" means everywhere else in the product.
+     * FIVE FIGURES THAT SAY THEY HAVE NOTHING, for a scope where no area runs
+     * this module. A row of none where the page draws five is a different
+     * page, and a reader cannot tell a missing topic from a quiet month.
      *
-     * @return list<Department>
+     * @return list<TopicKpi>
      */
-    private function departmentsIn(PerformanceScope $scope): array
+    private function nothingRunsHere(PerformanceScope $scope): array
     {
-        $reading = [];
-        foreach ($this->departments->findAllActiveOrdered() as $department) {
-            if (!$this->attachesThisModule($department)) {
-                continue;
-            }
+        $why = \sprintf('no area of %s runs the %s module', mb_strtolower($scope->label), $this->name);
 
-            $area = $department->getArea();
-            if (!$scope->isOrganisation() && null !== $area && $scope->areaUuid !== $area->getUuidString()) {
-                continue;
-            }
-
-            $reading[] = $department;
-        }
-
-        return $reading;
-    }
-
-    private function attachesThisModule(Department $department): bool
-    {
-        foreach ($department->getModules() as $module) {
-            if ($this->slug === (string) $module->getSlug()) {
-                return true;
-            }
-        }
-
-        return false;
+        return [
+            new TopicKpi(self::FILED, 'Filed', null, caption: $why, polarity: ColumnPolarity::None),
+            new TopicKpi(self::OPEN_PAST_TARGET, 'Open', null, caption: $why, polarity: ColumnPolarity::Down),
+            new TopicKpi(self::MEDIAN_DAYS_TO_CLOSE, 'Median days to close', null, 'd', caption: $why, polarity: ColumnPolarity::Down),
+            new TopicKpi(self::CLAIMS_OPEN, 'Claims open', null, caption: $why, polarity: ColumnPolarity::Down),
+            new TopicKpi(self::RESOLVED, 'Resolved', null, caption: $why, polarity: ColumnPolarity::Up),
+        ];
     }
 
     /**
      * ONE HEADLINE FIGURE, with its movement and its run — the value read out
      * of the history's last point rather than computed a second time, so a
-     * period the scope was silent in reads "no figure" on the card and as a
-     * hole in the sparkline instead of disagreeing with itself.
+     * period the module was not running in reads "no figure" on the card and
+     * as a hole in the sparkline instead of disagreeing with itself.
      *
-     * @param list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, silent: bool}>             $run
-     * @param callable(array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, silent: bool}): ?float $reading
+     * @param list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, measured: bool}>             $run
+     * @param callable(array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, measured: bool}): ?float $reading
      */
     private static function figure(
         array $run,
@@ -450,7 +523,7 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
         return new TopicKpi(
             key: $key,
             label: $label,
-            value: $history[self::PERIODS - 1],
+            value: $history[\count($history) - 1],
             unit: $unit,
             delta: self::delta($run, $reading),
             history: $history,
@@ -460,30 +533,29 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     }
 
     /**
-     * ONE CELL, with its movement and its run — and a hole wherever the scope
-     * holds no record at all for that period.
+     * ONE CELL, with its movement and its run.
      *
-     * @param list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, silent: bool}>             $run
-     * @param callable(array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, silent: bool}): ?float $reading
+     * @param list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, measured: bool}>             $run
+     * @param callable(array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, measured: bool}): ?float $reading
      */
     private static function cell(array $run, callable $reading): MatrixCell
     {
         $history = self::series($run, $reading);
 
         return new MatrixCell(
-            value: $history[self::PERIODS - 1],
+            value: $history[\count($history) - 1],
             delta: self::delta($run, $reading),
             history: $history,
         );
     }
 
     /**
-     * SIX POINTS, OLDEST FIRST, HOLES KEPT. A period the scope holds nothing
-     * in at all is null — nobody was recording, which is not the same fact as
-     * recording nothing.
+     * THE POINTS, OLDEST FIRST, HOLES KEPT. A period before this module was
+     * installed over the ground is null — nobody was recording, which is not
+     * the same fact as recording nothing.
      *
-     * @param list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, silent: bool}>             $run
-     * @param callable(array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, silent: bool}): ?float $reading
+     * @param list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, measured: bool}>             $run
+     * @param callable(array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, measured: bool}): ?float $reading
      *
      * @return list<float|null>
      */
@@ -491,7 +563,7 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     {
         $points = [];
         foreach ($run as $snapshot) {
-            $points[] = $snapshot['silent'] ? null : $reading($snapshot);
+            $points[] = $snapshot['measured'] ? $reading($snapshot) : null;
         }
 
         return $points;
@@ -502,40 +574,36 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
      * comparison has no figure — "it moved" is a claim, and a claim needs two
      * readings.
      *
-     * @param list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, silent: bool}>             $run
-     * @param callable(array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, silent: bool}): ?float $reading
+     * @param list<array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, measured: bool}>             $run
+     * @param callable(array{period: FigurePeriod, filed: PerformanceReadings, resolved: PerformanceReadings, measured: bool}): ?float $reading
      */
     private static function delta(array $run, callable $reading): ?float
     {
         $history = self::series($run, $reading);
-        $now = $history[self::PERIODS - 1];
-        $was = $history[self::PERIODS - 2];
+        $last = \count($history) - 1;
+        $now = $history[$last];
+        $was = $history[$last - 1] ?? null;
 
         return null === $now || null === $was ? null : $now - $was;
     }
 
     /**
-     * WHO THE HEADLINE IS MADE OF — "24 Protection Service · 37 Community
-     * Development", the split the design prints under the filed figure. A
-     * department that recorded nothing is left out; so is every row nobody
-     * seated filed, which is why the parts can add up to less than the whole.
+     * THE RUN A FIGURE IS DRAWN OVER — so many periods ending at this one,
+     * oldest first, each the same length as the one the page asked for.
+     *
+     * Stepped back through {@see FigurePeriod::previous()} rather than assumed
+     * to be months, so a page reading quarters gets quarters.
+     *
+     * @return list<FigurePeriod>
      */
-    private function splitCaption(PerformanceScope $scope, PerformanceReadings $filed): string
+    private static function run(FigurePeriod $period, int $count): array
     {
-        $counts = $filed->filedByDepartment();
-        if ([] === $counts) {
-            return 'nobody seated recorded any of these';
+        $run = [$period];
+        for ($step = 1; $step < $count; ++$step) {
+            array_unshift($run, $run[0]->previous());
         }
 
-        $parts = [];
-        foreach ($this->departmentsIn($scope) as $department) {
-            $id = $department->getId();
-            if (null !== $id && ($counts[$id] ?? 0) > 0) {
-                $parts[] = \sprintf('%d %s', $counts[$id], (string) $department->getName());
-            }
-        }
-
-        return [] === $parts ? 'nobody seated recorded any of these' : implode(' · ', $parts);
+        return $run;
     }
 
     /**
@@ -552,7 +620,10 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
 
         return \sprintf(
             'targets %s',
-            implode(' and ', array_map(static fn (float $days): string => rtrim(rtrim(number_format($days, 1, '.', ''), '0'), '.'), $terms)),
+            implode(' and ', array_map(
+                static fn (float $days): string => rtrim(rtrim(number_format($days, 1, '.', ''), '0'), '.'),
+                $terms,
+            )),
         );
     }
 }
