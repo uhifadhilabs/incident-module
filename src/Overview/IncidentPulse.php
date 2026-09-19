@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Overview\PulseEvent;
 use Uhifadhi\Bundle\AreaBundle\Overview\PulseProviderInterface;
-use Uhifadhi\Incident\Model\IncidentHues;
+use Uhifadhi\Incident\Model\HousePalette;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Repository\IncidentEventRepository;
 
@@ -75,9 +75,9 @@ final readonly class IncidentPulse implements PulseProviderInterface
                     'uuid' => $area->getUuidString(),
                     'reference' => $incident->getReference(),
                 ]),
-                // The kind of incident, as a colour — the same hue its pin wears
-                // on the plate above and its chip wears on the card beside it.
-                swatch: IncidentHues::of($incident->getKind()->getColourKey()),
+                // The kind of incident, as the house position its pin wears on
+                // the plate above and its chip wears on the card beside it.
+                swatch: HousePalette::token($incident->getKind()->catIndex()),
                 state: $landed?->label(),
                 stateClass: $landed?->cssClass(),
                 meta: array_values(array_filter([

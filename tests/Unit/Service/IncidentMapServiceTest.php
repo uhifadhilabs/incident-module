@@ -23,7 +23,7 @@ use Uhifadhi\Incident\Entity\TaxonomyKind;
 use Uhifadhi\Incident\Entity\TaxonomySubcategory;
 use Uhifadhi\Incident\Enum\IncidentSeverityEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
-use Uhifadhi\Incident\Model\IncidentHues;
+use Uhifadhi\Incident\Model\HousePalette;
 use Uhifadhi\Incident\Service\IncidentMapService;
 
 /**
@@ -61,7 +61,8 @@ final class IncidentMapServiceTest extends TestCase
 
     /**
      * ONE LAYER PER CATEGORY, in the taxonomy's own order, each carrying the
-     * hue that category is drawn in everywhere else.
+     * house position that category is drawn in everywhere else — the token,
+     * never a colour of this module's own.
      */
     public function testEachCategoryIsItsOwnLayerInItsOwnHue(): void
     {
@@ -71,8 +72,8 @@ final class IncidentMapServiceTest extends TestCase
             ['incident.zones', 'incident.poaching', 'incident.mortality'],
             array_column($layers, 'id'),
         );
-        self::assertSame(IncidentHues::of('poach'), $layers[1]['swatch']);
-        self::assertSame(IncidentHues::of('mort'), $layers[2]['swatch']);
+        self::assertSame(HousePalette::token(1), $layers[1]['swatch']);
+        self::assertSame(HousePalette::token(4), $layers[2]['swatch']);
         self::assertSame('point', $layers[1]['shape']);
     }
 
@@ -92,7 +93,7 @@ final class IncidentMapServiceTest extends TestCase
     public function testACategoryWithNothingFiledKeepsItsRowSwitchedOff(): void
     {
         $layers = self::compose(self::BOUNDARY, categories: [
-            ['slug' => 'compensation', 'label' => 'Compensation', 'colourKey' => 'comp'],
+            ['slug' => 'compensation', 'label' => 'Compensation', 'cat' => 3],
         ])->toArray()['layers'];
 
         self::assertSame('incident.compensation', $layers[1]['id']);
@@ -261,10 +262,11 @@ final class IncidentMapServiceTest extends TestCase
         self::assertCount(1, $collection['features']);
         $properties = $collection['features'][0]['properties'];
 
-        // Hue is the CATEGORY: the layer is split on this key and drawn in that
-        // category's own colour.
+        // Hue is the CATEGORY: the layer is split on this key and drawn in the
+        // house hue the category's POSITION points at — the token, never a
+        // colour of this module's own.
         self::assertSame('conflict', $properties['slug']);
-        self::assertSame('hwc', $properties['colour']);
+        self::assertSame('var(--cat-1)', $properties['colour']);
         // Filled is open; hollow is resolved or closed.
         self::assertTrue($properties['open']);
         // The dashed ring is read off the severity.
@@ -294,7 +296,7 @@ final class IncidentMapServiceTest extends TestCase
         $area = new AreaOfInterest()->setSource('test fixture');
         $area->setName('Kifaru Sector');
 
-        $kind = new TaxonomyKind($area, 'conflict', 'Human–wildlife conflict', 'hwc');
+        $kind = new TaxonomyKind($area, 'conflict', 'Human–wildlife conflict');
         $subcategory = new TaxonomySubcategory($kind, 'livestock-depredation', 'livestock depredation');
 
         return new Incident(
@@ -310,8 +312,8 @@ final class IncidentMapServiceTest extends TestCase
     }
 
     /**
-     * @param list<array{slug: string, label: string, colourKey: string}>|null $categories
-     * @param list<array{name: string, geom: string|null}>|null                $zones
+     * @param list<array{slug: string, label: string, cat: int}>|null $categories
+     * @param list<array{name: string, geom: string|null}>|null       $zones
      */
     private static function compose(?string $boundary, ?array $categories = null, ?array $zones = null): AtlasMap
     {
@@ -320,8 +322,8 @@ final class IncidentMapServiceTest extends TestCase
             $boundary,
             self::collection(),
             $categories ?? [
-                ['slug' => 'poaching', 'label' => 'Poaching', 'colourKey' => 'poach'],
-                ['slug' => 'mortality', 'label' => 'Mortality', 'colourKey' => 'mort'],
+                ['slug' => 'poaching', 'label' => 'Poaching', 'cat' => 1],
+                ['slug' => 'mortality', 'label' => 'Mortality', 'cat' => 4],
             ],
             $zones ?? [['name' => 'The northern block', 'geom' => self::ZONE]],
         );

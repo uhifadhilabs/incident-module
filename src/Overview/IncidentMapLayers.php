@@ -16,7 +16,7 @@ namespace Uhifadhi\Incident\Overview;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayer;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayerProviderInterface;
-use Uhifadhi\Incident\Model\IncidentHues;
+use Uhifadhi\Incident\Model\HousePalette;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Service\IncidentMapService;
@@ -70,9 +70,10 @@ final readonly class IncidentMapLayers implements MapLayerProviderInterface
                 // person can tell why a layer vanished.
                 groupLabel: 'Incidents',
                 label: 'Open',
-                // A LAYER'S COLOUR IS DATA, so it is stated once and is the same
-                // in light and dark. Open work wears the register's leading hue.
-                swatch: IncidentHues::of('poach'),
+                // A LAYER NAMES A POSITION, NOT A COLOUR. Open work wears the
+                // first of the house set — the register's leading mark — and
+                // the plate decides what that reads as over imagery.
+                swatch: HousePalette::token(1),
                 features: IncidentMapService::featuresFor($open),
                 count: \count($open),
             ),
@@ -81,7 +82,9 @@ final readonly class IncidentMapLayers implements MapLayerProviderInterface
                 moduleSlug: $this->moduleSlug(),
                 groupLabel: 'Incidents',
                 label: 'Resolved & closed · 30 days',
-                swatch: IncidentHues::of('mort'),
+                // Finished work is told apart from open work, so it takes the
+                // next position rather than a meaning.
+                swatch: HousePalette::token(4),
                 features: IncidentMapService::featuresFor($done),
                 count: \count($done),
                 // Off before anybody touches the legend, and its entry is drawn

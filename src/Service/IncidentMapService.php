@@ -27,7 +27,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\LayerStyle;
 use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\TaxonomyKind;
-use Uhifadhi\Incident\Model\IncidentHues;
+use Uhifadhi\Incident\Model\HousePalette;
 
 /**
  * WHERE EVERY INCIDENT WAS FILED, STATED IN PHP.
@@ -41,8 +41,9 @@ use Uhifadhi\Incident\Model\IncidentHues;
  * stack, the legend with a switch per row, and fullscreen.
  *
  * ONE LAYER PER KIND, because a kind is what a person switches on and off.
- * The hue is the kind's own, read from {@see IncidentHues} — the same
- * value the chips are drawn in — so a marker and a chip cannot drift apart.
+ * What it wears is the kind's POSITION in the area's list, published as the
+ * house token ({@see HousePalette}) — the same position the chips read — so a
+ * marker and a chip cannot drift apart, and neither names a colour.
  *
  * AND A MARK MEANS WHAT THE LEGEND PROMISES: filled is still open, hollow is
  * resolved or closed, a dashed ring is the serious end. All three are stated —
@@ -70,22 +71,22 @@ final readonly class IncidentMapService
     /**
      * The quiet outline the area's zones are drawn in.
      *
-     * A layer's colour is data, and the atlas offers no token for it: a legend
-     * swatch is handed over as a colour, not as a class the host would have to
-     * have read this module's stylesheet to understand.
+     * The atlas takes a swatch as a STRING, so this is the house token for the
+     * muted mark on imagery — named, not valued. A zone is not a category and
+     * takes none of the nine; it is the ground the categories are drawn on.
      */
-    public const string ZONE_SWATCH = '#B9C8BD';
+    public const string ZONE_SWATCH = 'var(--plate-dim)';
 
     /**
      * WHAT A MARK MEANS, AND THE LEGEND SAYS EXACTLY THIS.
      *
-     *   hue          the kind — the layer's own swatch
+     *   hue          the kind's position in the area's list — the layer's swatch
      *   filled       still open · hollow = resolved or closed
      *   dashed ring  the serious end: high OR critical, never high alone
      *
-     * Numbers rather than tokens, because a mark is drawn over imagery that is
-     * dark in both themes, and because the atlas draws the whole platform's
-     * layers from data — a class name would mean nothing to it.
+     * Numbers rather than tokens for the geometry of a mark; the COLOUR is the
+     * house's, handed over as the token that names the position
+     * ({@see HousePalette}) so the plate repaints it for imagery itself.
      */
     public const float OPEN_FILL = 0.85;
     public const float MARK_RADIUS = 5.5;
@@ -130,7 +131,7 @@ final readonly class IncidentMapService
             array_map(static fn (TaxonomyKind $kind): array => [
                 'slug' => $kind->getCode(),
                 'label' => $kind->getLabel(),
-                'colourKey' => $kind->getColourKey(),
+                'cat' => $kind->catIndex(),
             ], $kinds),
             array_map(static fn (Zone $zone): array => [
                 // A zone with no name is drawn without a label rather than left
@@ -147,10 +148,10 @@ final readonly class IncidentMapService
      * Static and entity-free so the shape of the plate — which layer, which
      * hue, which legend row — is unit-tested without a database behind it.
      *
-     * @param string|null                                                 $boundary   the area's geom as GeoJSON text
-     * @param array<string, mixed>                                        $collection the FeatureCollection {@see featuresFor()} builds
-     * @param list<array{slug: string, label: string, colourKey: string}> $kinds
-     * @param list<array{name: string, geom: string|null}>                $zones
+     * @param string|null                                        $boundary   the area's geom as GeoJSON text
+     * @param array<string, mixed>                               $collection the FeatureCollection {@see featuresFor()} builds
+     * @param list<array{slug: string, label: string, cat: int}> $kinds
+     * @param list<array{name: string, geom: string|null}>       $zones
      */
     public static function compose(
         MapBuilderInterface $maps,
@@ -200,7 +201,7 @@ final readonly class IncidentMapService
                 id: 'incident.'.$kind['slug'],
                 label: $kind['label'],
                 features: self::collection($own),
-                swatch: IncidentHues::of($kind['colourKey']),
+                swatch: HousePalette::token($kind['cat']),
                 shape: LayerShape::Point,
                 visible: [] !== $own,
                 count: \count($own),
@@ -280,7 +281,7 @@ final readonly class IncidentMapService
                     // The key the plate's layers are split by: one layer per
                     // kind, so a legend row switches a kind on and off.
                     'slug' => $incident->getKind()->getCode(),
-                    'colour' => $incident->getKind()->getColourKey(),
+                    'colour' => HousePalette::token($incident->getKind()->catIndex()),
                     'category' => $incident->getKind()->getLabel(),
                     'subcategory' => $incident->getSubcategory()->getLabel(),
                     'status' => $incident->getStatus()->value,
