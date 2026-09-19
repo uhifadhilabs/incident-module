@@ -55,11 +55,11 @@
         <div class="i-ddmenu" aria-label="Filter by category">
             <span class="i-ddhead">category</span>
             <a class="i-ddopt{{ filter.kindCodes is empty ? ' on' }}"
-               href="{{ path(here, {uuid: area.uuid}|merge(filter.withoutKinds.toQuery)) }}"><span class="i-dot"></span><span class="i-ddopt-l">All categories</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
+               href="{{ path(here, {uuid: area.uuid}|merge(filter.withoutKinds.toQuery)) }}"><span class="i-dot" data-cat=""></span><span class="i-ddopt-l">All categories</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
             <span class="i-ddsep"></span>
             {% for kind in dashboard.kinds %}
                 <a class="i-ddopt{{ kind.code in filter.kindCodes ? ' on' }}"
-                   href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyKind(kind.code).toQuery)) }}"><span class="i-dot {{ kind.colourKey }}" data-cat="{{ kind.catIndex }}"></span><span class="i-ddopt-l">{{ kind.label|lower }}</span><span class="i-ddopt-n">{{ dashboard.kindCount(kind) }}</span></a>
+                   href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyKind(kind.code).toQuery)) }}"><span class="i-dot" data-cat="{{ kind.catIndex }}"></span><span class="i-ddopt-l">{{ kind.label|lower }}</span><span class="i-ddopt-n">{{ dashboard.kindCount(kind) }}</span></a>
             {% endfor %}
         </div>
     </details>
@@ -136,11 +136,11 @@
         <div class="i-ddmenu" aria-label="Order by department lens">
             <span class="i-ddhead">lens</span>
             <a class="i-ddopt{{ filter.lens == 'all' ? ' on' }}" data-lens="all"
-               href="{{ path(here, {uuid: area.uuid}|merge(filter.toQuery|merge({lens: 'all'}))) }}"><span class="i-dot"></span><span class="i-ddopt-l">Every category</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
+               href="{{ path(here, {uuid: area.uuid}|merge(filter.toQuery|merge({lens: 'all'}))) }}"><span class="i-dot" data-cat=""></span><span class="i-ddopt-l">Every category</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
             <span class="i-ddsep"></span>
             {% for key, label in lenses %}
                 <a class="i-ddopt{{ filter.lens == key ? ' on' }}" data-lens="{{ key }}"
-                   href="{{ path(here, {uuid: area.uuid}|merge(filter.toQuery|merge({lens: key}))) }}"><span class="i-dot"></span><span class="i-ddopt-l">{{ label }}</span></a>
+                   href="{{ path(here, {uuid: area.uuid}|merge(filter.toQuery|merge({lens: key}))) }}"><span class="i-dot" data-cat=""></span><span class="i-ddopt-l">{{ label }}</span></a>
             {% endfor %}
         </div>
     </details>

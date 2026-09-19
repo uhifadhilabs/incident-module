@@ -117,7 +117,9 @@ final class OverviewPartialsTest extends OverviewTestCase
         self::assertStringNotContainsString("IN\u{00B7}A3", $html);
         self::assertStringContainsString('class="i-hit"', $html);
         self::assertStringContainsString('<span class="id">INC-0003</span>', $html);
-        self::assertStringContainsString('class="i-cat mort"', $html);
+        // The chip says WHICH of the house's nine the kind is, not a colour:
+        // mortality is the fourth word this area wrote.
+        self::assertStringContainsString('class="i-cat" data-cat="4"', $html);
         self::assertStringContainsString('class="i-st ver"', $html);
         // Open AND past its own term earns the tag; finished work does not.
         self::assertStringContainsString('<span class="i-mtag due">past term</span>', $html);

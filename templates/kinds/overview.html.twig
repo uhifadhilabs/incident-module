@@ -27,7 +27,7 @@
         {% for kind in kinds.kinds %}
             <a class="krow{{ kinds.selected is same as(kind) ? ' on' }}{{ kind.active ? '' : ' gone' }}" role="listitem"
                href="{{ path('incident_kinds_overview', {uuid: area.uuid, kind: kind.code}) }}">
-                <i class="dot" style="background:var(--i-{{ kind.colourKey }})" data-cat="{{ kind.catIndex }}"></i>
+                <i class="dot" data-cat="{{ kind.catIndex }}"></i>
                 <span class="nm">{{ kind.label }}<em>{{ kind.code }}{{ kind.active ? '' : ' · retired' }}</em></span>
                 <span class="n">{{ kind.active ? kind.thisMonth : '—' }}<em>this month</em></span>
                 <span class="n" style="min-width:34px">{{ kind.subcategoryCount }}<em>subs</em></span>
@@ -36,7 +36,7 @@
     </div>
     <div class="r">
         {% if kinds.selected %}
-            <div style="--heat:var(--i-{{ kinds.selected.colourKey }})" data-cat="{{ kinds.selected.catIndex }}">
+            <div style="--heat:var(--cat)" data-cat="{{ kinds.selected.catIndex }}">
                 <table class="kmatrix">
                     <tr><th>sub-category</th><th>this month</th><th>last month</th><th>all time</th><th>money</th><th>term</th></tr>
                     <tr class="all">

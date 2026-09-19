@@ -11,7 +11,7 @@
     <div class="kx">
         {% for kind in dashboard.kinds %}
             <div class="kx-k">
-                <div class="kx-h"><i class="dot i-hue-{{ kind.colourKey }}" data-cat="{{ kind.catIndex }}"></i><b>{{ kind.label }}</b><span class="n">{{ dashboard.kindCount(kind) }}<em>this month</em></span></div>
+                <div class="kx-h"><i class="dot" data-cat="{{ kind.catIndex }}"></i><b>{{ kind.label }}</b><span class="n">{{ dashboard.kindCount(kind) }}<em>this month</em></span></div>
                 <div class="kx-s">
                     {%- for subcategory in kind.subcategories -%}
                         {% if not loop.first %} · {% endif %}<i class="{{ subcategory.moneyDirection ? 'm' }}">{{ subcategory.label|lower }}</i>

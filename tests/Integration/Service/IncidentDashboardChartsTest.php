@@ -62,7 +62,7 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
     }
 
     /** The category donut reads the month's mix, biggest share first, zeroes dropped. */
-    public function testCategorySharesAreBiggestFirstAndCarryTheirColour(): void
+    public function testCategorySharesAreBiggestFirstAndCarryTheirPlaceInTheList(): void
     {
         $area = $this->anAreaWithKinds();
         $august = new \DateTimeImmutable('2026-08-10 08:00:00');
@@ -78,7 +78,9 @@ final class IncidentDashboardChartsTest extends IntegrationTestCase
         );
         $shares = $this->dashboard()->build($window, new \DateTimeImmutable(self::ANCHOR))->kindShares();
 
-        self::assertSame(['hwc', 'poach'], array_map(static fn (array $s) => $s['kind']->getColourKey(), $shares));
+        // The arcs are told apart by the kinds' places in the area's list —
+        // conflict is the second word written, poaching the first.
+        self::assertSame([2, 1], array_map(static fn (array $s) => $s['kind']->catIndex(), $shares));
         self::assertSame([2, 1], array_map(static fn (array $s) => $s['count'], $shares));
     }
 

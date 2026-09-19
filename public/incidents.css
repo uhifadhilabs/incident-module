@@ -17,44 +17,47 @@
    DIRECTION C blocks say where and why: the docked map split and the
    day-grouped feed row are drawn on the host's area overview as well as here,
    and a rule that two surfaces depend on is not a module's to keep. The
-   module's own pages get them from the host — every incidents page extends
-   layout.html.twig, so app.css loads before this file.
+   module's own pages get them from the shell — every incidents page extends
+   @UhifadhiShell/page.html.twig, so shell.css loads before this file.
 
    THE LAST BLOCK IS THE OTHER DIRECTION: the host's area overview leaves a
    contributor's colour to the contributor, so the module paints its own dots
    and its own status chips into the host's neutral slots there.
    ========================================================================== */
 
-/* TOKEN BRIDGE — byte-faithful port of the design's incidents.css, which
-   speaks the design tokens (--p1, --cv, --ln…); the host speaks rgb triplets
-   (--c-*). Defined once here so modals/cards stop rendering transparent and
-   the module flips themes with the app. Same pattern as storage-module. */
-:root{
-  --cv:rgb(var(--c-cv)); --p1:rgb(var(--c-p1)); --p2:rgb(var(--c-p2));
-  --tx:rgb(var(--c-tx)); --fog:rgb(var(--c-fog)); --dim:rgb(var(--c-dim));
-  --acc:rgb(var(--c-acc)); --accT:rgb(var(--c-accT));
-  --ln:var(--c-ln); --ln2:var(--c-ln2); --raised:rgb(var(--c-raised));
-  --warn:rgb(var(--c-warn));
-  --shadow:0 18px 40px rgba(0,0,0,.28);
-}
+/* NO TOKEN BRIDGE. The aliases this sheet spends — --cv --p1 --p2 --tx --fog
+   --dim --acc --accT --ln --ln2 --raised --ok --warn --fail --shadow — are the
+   SHELL's, declared once in shell.css for both themes and linked on every page
+   before this file. A bridge restating them here was a second copy of the same
+   dozen decisions, and because this sheet loads last that copy won on every
+   page any incidents screen was on: --shadow, stated once, stopped turning
+   over with the theme. */
 
 
-/* ── THE TAXONOMY PALETTE ─────────────────────────────────────────────────
-   Four top-level categories. Each owns one hue everywhere it appears: the
-   category chip, the map marker, the matrix column, the kanban card rule.
-   → Uhifadhi\Incident\Enum\IncidentCategory::colour()                    */
+/* ── THIS MODULE DECLARES NO COLOUR ───────────────────────────────────────
+   RULED 2026-09-21. Five hues used to be stated here — --i-poach, --i-hwc,
+   --i-comp, --i-mort, --i-money — and they were a tenth place a colour was
+   written down. They are gone.
+
+   What this module owns is the ORDER of an area's kinds. A kind's place in
+   that list is published as `data-cat="1".."9"` on the markup
+   ({@see Uhifadhi\Incident\Entity\TaxonomyKind::catIndex()}), the shell's
+   `[data-cat="n"]` rules resolve it to `--cat`, and every mark below — the
+   chip, the dot, the donut arc, the legend square, the card's id row, the
+   matrix row and the map pin — reads that one variable. Nothing here knows a
+   hue, and reordering the kinds moves the hues with them.
+
+   MONEY IS NOT A CATEGORY. Its token's value was, in both themes,
+   byte-identical to the accent, so the accent is what it always was; the
+   amount's own state (paid, due, nil) still says the rest in --ok/--warn/--dim.
+
+   FLAGGED: --crit is the deepest step of the severity ALARM ramp — a meaning,
+   not a category — and the shell ships no such token, so it is still stated
+   here. It belongs beside --fail in the shell's semantic set.                */
 :root{
-  --i-poach:#E05B41;   /* poaching & wildlife crime      — Protection        */
-  --i-hwc:#DBA33F;     /* human–wildlife conflict        — Protection + Ecology */
-  --i-comp:#8E7BE0;    /* compliance & encroachment      — Protection        */
-  --i-mort:#5FA8E0;    /* wildlife mortality & roadkill  — Ecology           */
-  --i-money:#3ED9A8;   /* anything denominated in money                      */
-  /* The deepest step of the severity alarm ramp, above the host's --fail; the
-     other three severity chips reuse --fail/--warn/--dim from the host. */
   --crit:#FF4A38;
 }
 html.light{
-  --i-poach:#BA4227; --i-hwc:#9A6B14; --i-comp:#5A44B8; --i-mort:#2C6FA8; --i-money:#0F8A68;
   --crit:#8F1D0E;
 }
 
@@ -66,15 +69,9 @@ html.light{
   font-size:10px;font-weight:700;letter-spacing:.02em;white-space:nowrap;line-height:1;
   border:1px solid var(--ln2);border-radius:6px;padding:4px 9px 3px;color:var(--tx);
   background:color-mix(in srgb,var(--fog) 6%,transparent);text-decoration:none}
-.i-cat i{width:7px;height:7px;border-radius:2px;flex:none;font-style:normal}
-.i-cat.poach{border-color:color-mix(in srgb,var(--i-poach) 45%,transparent)}
-.i-cat.poach i{background:var(--i-poach)}
-.i-cat.hwc{border-color:color-mix(in srgb,var(--i-hwc) 45%,transparent)}
-.i-cat.hwc i{background:var(--i-hwc)}
-.i-cat.comp{border-color:color-mix(in srgb,var(--i-comp) 45%,transparent)}
-.i-cat.comp i{background:var(--i-comp)}
-.i-cat.mort{border-color:color-mix(in srgb,var(--i-mort) 45%,transparent)}
-.i-cat.mort i{background:var(--i-mort)}
+.i-cat i{width:7px;height:7px;border-radius:2px;flex:none;font-style:normal;
+  background:var(--cat,var(--dim))}
+.i-cat[data-cat]{border-color:color-mix(in srgb,var(--cat) 45%,transparent)}
 .i-cat.ghost{border-style:dashed;color:var(--dim);background:none;cursor:pointer}
 .i-cat.ghost i{background:var(--dim)}
 
@@ -121,16 +118,11 @@ html.light{
 .legend.legend-v b{color:var(--tx);font-weight:700;margin-left:auto}
 .legend.legend-v em{font-style:normal;color:var(--dim);min-width:34px;text-align:right}
 /* THE ONLY MODULE-SPECIFIC CHART RULES: the donut's arcs and the legend's
-   swatches read from the SAME four hues the map paints an incident with, so the
-   donut, the legend and the map are one palette. */
-.ch .arc.poach{stroke:var(--i-poach)}
-.ch .arc.hwc{stroke:var(--i-hwc)}
-.ch .arc.comp{stroke:var(--i-comp)}
-.ch .arc.mort{stroke:var(--i-mort)}
-.legend i.poach{background:var(--i-poach)}
-.legend i.hwc{background:var(--i-hwc)}
-.legend i.comp{background:var(--i-comp)}
-.legend i.mort{background:var(--i-mort)}
+   swatches read the SAME resolved position the map pin and the register chip
+   read, so an arc, a square and a pin can never drift apart. The shapes stay
+   generic in the shell's sheet; only the indirection is stated here. */
+.ch .arc[data-cat]{stroke:var(--cat)}
+.legend i[data-cat]{background:var(--cat)}
 /* The sub-category, when a page shows the full path. Never bolder than its parent. */
 .i-sub{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:var(--fog);
   letter-spacing:.02em;white-space:nowrap}
@@ -152,8 +144,14 @@ html.light{
    (the 7px progress bar), and `.i-st.prog` inherited its height and overflow,
    which clipped the label to a sliver. A module must not reuse a bare host
    class name even in a compound selector. */
-.i-st.wip{color:var(--i-mort);border-color:color-mix(in srgb,var(--i-mort) 45%,transparent);
-  background:color-mix(in srgb,var(--i-mort) 9%,transparent)}
+/* AND NOTE THE COLOUR: the other four states each have a semantic token that
+   means what they mean — reported needs a look, verified is live, resolved
+   went well, closed is spent. "In progress" has no fifth meaning, so it is
+   told apart rather than judged, and a told-apart thing takes the categorical
+   set. FLAGGED: the one place a status borrows a category token, and a ruling
+   on it is pending. */
+.i-st.wip{color:var(--cat-3);border-color:color-mix(in srgb,var(--cat-3) 45%,transparent);
+  background:color-mix(in srgb,var(--cat-3) 9%,transparent)}
 .i-st.res{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 42%,transparent);
   background:color-mix(in srgb,var(--ok) 9%,transparent)}
 .i-st.cls{color:var(--dim);border:1px dashed color-mix(in srgb,var(--fog) 45%,transparent);font-weight:600}
@@ -196,13 +194,9 @@ html.light{
    a <details> whose <summary> is the chip — so nothing about them is written
    here. A rule restated in this sheet would render differently depending on
    which sheet loaded last, and the same control would read two ways on two
-   pages. The dot inside an option is the shell's `.i-dot` too; what is still
-   this module's is the four HUES it can wear, which are the taxonomy colours
-   defined at the top of this file and belong to nobody else. */
-.i-dot.poach{background:var(--i-poach)}
-.i-dot.hwc{background:var(--i-hwc)}
-.i-dot.comp{background:var(--i-comp)}
-.i-dot.mort{background:var(--i-mort)}
+   pages. The dot inside an option is the shell's `.i-dot` too; what this
+   module adds is only what it wears — whatever position the kind resolved to. */
+.i-dot[data-cat]{background:var(--cat)}
 
 /* THE FILTER ROW IS THE SHELL'S `.lfilt` AND `.lsearch` now. It was this
    module's own `.i-filters` / `.i-search` until the frame shipped the row every
@@ -232,12 +226,12 @@ html.light{
    authority vs owed by it) and its settlement state, because an unpaid fine
    and a paid one are different facts.
    → Uhifadhi\Incident\ValueObject\Money (integer minor units + currency)  */
-.i-moneyblock{border:1px solid color-mix(in srgb,var(--i-money) 30%,transparent);border-radius:12px;
-  padding:14px 16px 12px;background:color-mix(in srgb,var(--i-money) 5%,transparent)}
+.i-moneyblock{border:1px solid color-mix(in srgb,var(--acc) 30%,transparent);border-radius:12px;
+  padding:14px 16px 12px;background:color-mix(in srgb,var(--acc) 5%,transparent)}
 .i-moneyblock .hd{display:flex;align-items:center;gap:8px;margin:0 0 10px}
-.i-moneyblock .hd svg{width:14px;height:14px;color:var(--i-money);flex:none}
+.i-moneyblock .hd svg{width:14px;height:14px;color:var(--acc);flex:none}
 .i-moneyblock .hd b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:700;
-  letter-spacing:.16em;text-transform:uppercase;color:var(--i-money)}
+  letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
 .i-mrow{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:7px 0;
   border-bottom:1px dashed color-mix(in srgb,var(--fog) 18%,transparent)}
 .i-mrow:last-child{border-bottom:0}
@@ -250,10 +244,10 @@ html.light{
 .i-amt.due{color:var(--warn)}
 .i-amt.nil{color:var(--dim);font-weight:600}
 .i-moneybar{height:6px;border-radius:4px;background:var(--raised);overflow:hidden;margin-top:9px}
-.i-moneybar i{display:block;height:100%;border-radius:4px;background:var(--i-money)}
+.i-moneybar i{display:block;height:100%;border-radius:4px;background:var(--acc)}
 /* The one-line money summary a register row shows. */
 .i-mtag{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
-  color:var(--i-money);white-space:nowrap;font-variant-numeric:tabular-nums}
+  color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}
 .i-mtag.due{color:var(--warn)}
 .i-mtag.nil{color:var(--dim);font-weight:500}
 
@@ -270,7 +264,7 @@ html.light{
   background:var(--cv);border:2px solid var(--fog)}
 .i-tl-item.tr::before{border-color:var(--acc)}
 .i-tl-item.ev::before{border-color:var(--warn)}
-.i-tl-item.mo::before{border-color:var(--i-money)}
+.i-tl-item.mo::before{border-color:var(--acc)}
 .i-tl-item.now::before{border-color:var(--acc);background:var(--acc);
   box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 18%,transparent)}
 .i-tl-t{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:600;
@@ -307,7 +301,7 @@ html.light{
   letter-spacing:.12em;text-transform:uppercase;color:var(--fog);border:1px solid var(--ln2);
   border-radius:99px;padding:4px 9px 3px;white-space:nowrap;line-height:1;flex:none}
 .i-role.suspect{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 40%,transparent)}
-.i-role.claimant{color:var(--i-money);border-color:color-mix(in srgb,var(--i-money) 40%,transparent)}
+.i-role.claimant{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
 .i-role.reporter{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
 
 /* ── PROVENANCE ───────────────────────────────────────────────────────────
@@ -544,7 +538,7 @@ html.light{
 .i-fld>label{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:600;
   letter-spacing:.1em;text-transform:uppercase;color:var(--fog)}
 .i-fld>span{font-size:12.5px;color:var(--tx)}
-.i-fld.only{border-left:2px solid color-mix(in srgb,var(--i-money) 55%,transparent);padding-left:12px;
+.i-fld.only{border-left:2px solid color-mix(in srgb,var(--acc) 55%,transparent);padding-left:12px;
   margin-left:-14px}
 
 /* ── DIRECTION E · WORKFLOW BOARD ─────────────────────────────────────────
@@ -567,11 +561,8 @@ html.light{
   display:block;text-decoration:none;color:var(--tx);cursor:grab}
 .i-card:hover{border-color:color-mix(in srgb,var(--acc) 50%,transparent);text-decoration:none;
   box-shadow:var(--shadow)}
-.i-card>.id::before{content:"";width:8px;height:8px;border-radius:2px;flex:none;background:var(--fog)}
-.i-card.poach>.id::before{background:var(--i-poach)}
-.i-card.hwc>.id::before{background:var(--i-hwc)}
-.i-card.comp>.id::before{background:var(--i-comp)}
-.i-card.mort>.id::before{background:var(--i-mort)}
+.i-card>.id::before{content:"";width:8px;height:8px;border-radius:2px;flex:none;
+  background:var(--cat,var(--fog))}
 .i-card .id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;font-weight:700;
   color:var(--acc);display:flex;align-items:center;gap:8px}
 .i-card .id .age{margin-left:auto;color:var(--dim);font-weight:600}
@@ -636,7 +627,7 @@ html.light{
   white-space:nowrap}
 .i-zone{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:var(--fog);
   display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
-.i-zone::before{content:"";width:6px;height:6px;border-radius:50%;background:#5FA8E0;flex:none}
+.i-zone::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--cat,var(--fog));flex:none}
 .i-sla{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;font-weight:700;color:var(--fog)}
 .i-sla.late{color:var(--fail)}
 .i-sla.due{color:var(--warn)}
@@ -695,6 +686,9 @@ html.light{
    line stay in sight however long the form is. */
 .ro-filebar{position:sticky;bottom:0;display:flex;align-items:center;gap:12px;margin-top:22px;
   border-top:1px solid var(--ln);padding:13px 0 14px;background:var(--cv);
+  /* FLAGGED: the scrim under a sticky bar. The design spends --scrim and the
+     shell ships no such token, so the value is stated here until it does. It
+     is the one colour left in this sheet besides --crit. */
   box-shadow:0 -14px 20px -14px rgba(0,0,0,.55)}
 .ro-filebar .sp{flex:0 1 auto}
 .ro-filebar .hint,.ro-filebar .ro-gate{flex:1 1 auto;min-width:0}
@@ -893,12 +887,9 @@ html.light{
    so the row of buttons needs the forms to sit inline like the buttons did. */
 .i-transform{display:contents}
 
-/* The category hue as a class, for the marks the design set with an inline
-   `style="background:var(--i-poach)"`. Same four hues, named once. */
-.i-hue-poach{background:var(--i-poach)}
-.i-hue-hwc{background:var(--i-hwc)}
-.i-hue-comp{background:var(--i-comp)}
-.i-hue-mort{background:var(--i-mort)}
+/* The kind's mark, wherever a bare square is drawn for one: the position on
+   the element decides the hue and this rule spends it. */
+.i-hue{background:var(--cat,var(--dim))}
 
 /* Small typographic slots the design set inline. */
 .i-queuenote{margin:0 2px 8px}
@@ -942,7 +933,7 @@ html.light{
    fixed, un-editable heading — a fine is owed one way and compensation the
    other, and the panel never offers that as a choice.                        */
 .i-moneyedit .i-moneyedit-dir{display:flex;align-items:center;gap:8px;margin:0 0 10px}
-.i-moneyedit .i-moneyedit-dir svg{width:14px;height:14px;color:var(--i-money);flex:none}
+.i-moneyedit .i-moneyedit-dir svg{width:14px;height:14px;color:var(--acc);flex:none}
 .i-moneyedit .i-moneyedit-dir b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9.5px;
   font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--tx)}
 .i-moneyform{margin:0}
@@ -952,7 +943,7 @@ html.light{
 .i-moneyact{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
 .i-moneyhint{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;color:var(--dim);
   flex:1 1 160px;line-height:1.5}
-.i-errors{border:1px solid color-mix(in srgb,var(--bad,#E05B41) 45%,transparent);border-radius:10px;
+.i-errors{border:1px solid color-mix(in srgb,var(--fail) 45%,transparent);border-radius:10px;
   padding:10px 12px;margin-bottom:14px;font-size:12px}
 .i-errors p{margin:0 0 4px}
 .i-errors p:last-child{margin:0}
@@ -973,8 +964,8 @@ html.light{
 .ao-att .m i.incidents,
 .ao-col i.incidents,
 .ao-legend .grp > b i.incidents,
-.ao-dot.incidents{background:var(--i-poach)}
-.ao-board a.dot-incidents .k::before{background:var(--i-poach)}
+.ao-dot.incidents{background:var(--cat-1)}
+.ao-board a.dot-incidents .k::before{background:var(--cat-1)}
 
 /* THE PULSE ROW IS THE HOST'S; THE STATE ON IT IS THIS MODULE'S. The host
    prints a move inside a neutral .ao-move and adds whatever stateClass the
@@ -983,7 +974,7 @@ html.light{
    stream. See IncidentPulse and IncidentStatusEnum::cssClass().             */
 .ao-move.rep{color:var(--warn)}
 .ao-move.ver{color:var(--acc)}
-.ao-move.wip{color:var(--i-mort)}
+.ao-move.wip{color:var(--cat-3)}
 .ao-move.res{color:var(--ok)}
 .ao-move.cls{color:var(--dim)}
 
@@ -995,6 +986,10 @@ html.light{
   background:color-mix(in srgb,var(--fog) 3%,transparent)}
 .kx-h{display:flex;align-items:center;gap:8px}
 .kx-h .dot{width:9px;height:9px;border-radius:3px;flex:none;background:var(--acc)}
+/* AND WHEN THAT DOT IS A KIND, it wears the kind's place. The line above is
+   the pane's own default and out-ranks the bare mark rule by specificity, so
+   the position is resolved HERE or the mark draws the accent for every kind. */
+.kx-h .dot[data-cat]{background:var(--cat)}
 .kx-h b{font-size:12.5px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis}
 .kx-h .n{margin-left:auto;flex:none;font:600 10px "JetBrains Mono",ui-monospace,monospace;color:var(--acc);
@@ -1037,6 +1032,7 @@ html.light{
    text-align:left;background:none;border-left:0;border-right:0;border-top:0;cursor:pointer;font-family:inherit}
 .krow:last-child{border-bottom:0}
 .krow i.dot{width:9px;height:9px;border-radius:3px;flex:none;background:var(--acc)}
+.krow i.dot[data-cat]{background:var(--cat)}
 .krow .nm{font-size:12.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .krow .nm em{display:block;font:500 9px "JetBrains Mono",monospace;font-style:normal;color:var(--dim);
    margin-top:2px}
@@ -1076,8 +1072,8 @@ html.light .kheat{background:color-mix(in srgb,var(--heat,var(--acc)) calc(var(-
 .kmark{flex:none;font:600 8.5px "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;
    border:1px solid var(--ln2);border-radius:5px;padding:2px 6px 3px;color:var(--fog);line-height:1;
    display:inline-block}
-.kmark.money{color:var(--i-money,var(--acc));
-   border-color:color-mix(in srgb,var(--i-money,var(--acc)) 40%,transparent)}
+.kmark.money{color:var(--acc);
+   border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
 .kkey{font:500 9.5px "JetBrains Mono",monospace;color:var(--dim)}
 @media(max-width:900px){.kpane{grid-template-columns:minmax(0,1fr)}
    .kpane .l{border-right:0;border-bottom:1px solid var(--ln);max-height:none}}
@@ -1184,8 +1180,8 @@ html.light .kheat{background:color-mix(in srgb,var(--heat,var(--acc)) calc(var(-
    money token. A money fold reads as the money card does, because it is the same
    fact on a different surface.                                                 */
 .i-blocks{margin-top:12px}
-.i-blocks .fold.money{border-color:color-mix(in srgb,var(--i-money) 30%,transparent)}
-.i-blocks .fold.money>.sum>b{color:var(--i-money)}
+.i-blocks .fold.money{border-color:color-mix(in srgb,var(--acc) 30%,transparent)}
+.i-blocks .fold.money>.sum>b{color:var(--acc)}
 
 /* A FOLD THAT IS ONLY A SPACE SAVER SAYS SO IN A WORD. Where the group is
    optional — step 2's behaviour blocks — the caret is the whole story. Where it

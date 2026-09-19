@@ -1,0 +1,246 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the UhifadhiLabs Incidents Module.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Incident\Tests\Unit\Template;
+
+use PHPUnit\Framework\TestCase;
+use Uhifadhi\Bundle\ShellBundle\ShellBundle;
+use Uhifadhi\Incident\Model\HousePalette;
+
+/**
+ * THIS MODULE DECLARES NO COLOUR.
+ *
+ * RULED 2026-09-21. A hue is the house's, and a module reaches one of two ways:
+ * by naming a semantic token the shell defines (--acc, --ok, --warn, --fail,
+ * --dim), or — for a category — by publishing the POSITION its kind holds in
+ * the area's list and letting the shell's `[data-cat="n"]` rules resolve it.
+ * Either way the value lives in one sheet and it is not this one.
+ *
+ * A literal is how that stops being true. It reads correctly in one theme, is
+ * invisible in the other, and it is a second place the same decision is
+ * written — so the sheets are read here for one, and the only one left is
+ * named and explained.
+ */
+final class ModuleDeclaresNoColourTest extends TestCase
+{
+    /**
+     * The token whose value this sheet still states, because the shell ships
+     * none for it: `--crit`, the deepest step of the severity ALARM ramp above
+     * `--fail` — a meaning, not a category. It belongs beside `--fail` in the
+     * shell's semantic set, and until it is there it is FLAGGED rather than
+     * tolerated.
+     */
+    private const string FLAGGED_TOKEN = '--crit';
+
+    /**
+     * The other value the shell has no token for: the scrim under the filing
+     * bar, which the design spends as `--scrim`. Named here so the exemption
+     * is a line somebody has to delete rather than a hole in the rule.
+     *
+     * @var list<string>
+     */
+    private const array FLAGGED_LINES = ['box-shadow:0 -14px 20px -14px rgba(0,0,0,.55)}'];
+
+    /**
+     * Rules that paint a kind's mark, and what each one is. Every one of them
+     * must resolve the position rather than name a hue, because they draw the
+     * SAME fact: this row, this arc, this pin and this square are one kind.
+     *
+     * THREE OF THEM CARRY A CONTEXT. A pane that states its own `.dot`
+     * background — the kinds strip, the kinds widget, the taxonomy manager —
+     * out-ranks a bare `.i-hue` by specificity, so the token has to be spent
+     * in the pane's own rule or the mark silently draws the pane's default.
+     *
+     * @var array<string, list<string>> stylesheet => the selectors in it
+     */
+    private const array MARK_RULES = [
+        'incidents.css' => [
+            '.i-cat[data-cat]',      // the register chip's border
+            '.ch .arc[data-cat]',    // a donut arc
+            '.legend i[data-cat]',   // a legend square
+            '.i-dot[data-cat]',      // the dot inside a filter option
+            '.kx-h .dot[data-cat]',  // the kinds widget's card head
+            '.krow i.dot[data-cat]', // a row of the kinds strip
+        ],
+        'taxonomy.css' => [
+            '.tx-kind .dot[data-cat]', // a row of the manager's left pane
+        ],
+    ];
+
+    public function testNeitherSheetWritesAColourValue(): void
+    {
+        $offenders = [];
+
+        foreach (self::ownSheets() as $name => $css) {
+            foreach (explode("\n", $css) as $number => $line) {
+                if (str_contains($line, self::FLAGGED_TOKEN) || \in_array(trim($line), self::FLAGGED_LINES, true)) {
+                    continue;
+                }
+
+                if (1 === preg_match('/#[0-9A-Fa-f]{3,8}\b|\brgba?\(\s*\d|\bhsla?\(\s*\d/', $line)) {
+                    $offenders[] = \sprintf('%s:%d — %s', $name, $number + 1, trim($line));
+                }
+            }
+        }
+
+        self::assertSame([], $offenders, \sprintf(
+            "A colour is written down in this module's own sheets:\n%s",
+            implode("\n", $offenders),
+        ));
+    }
+
+    /**
+     * AND IT DECLARES NO PAGE-WIDE TOKEN EITHER — which is the same rule seen
+     * from the other side. The five `--i-*` hues lived in a `:root` block, and
+     * so did a bridge that restated a dozen of the shell's own aliases: two
+     * copies of one decision, of which the sheet that loads last wins
+     * everywhere, in every module that happens to be on the page.
+     *
+     * A token SET inside a component's own selector is not this. `--heat` on
+     * the kinds overview and `--map-plate-height` on a plate are parameters
+     * handed to a rule that reads them, scoped to the element that hands them
+     * over; they leave the rest of the page alone.
+     */
+    public function testNeitherSheetDeclaresAPageWideToken(): void
+    {
+        $declared = [];
+
+        foreach (self::ownSheets() as $name => $css) {
+            preg_match_all('/(?<selector>[^{}]*)\{(?<body>[^}]*)\}/', $css, $rules, \PREG_SET_ORDER);
+
+            foreach ($rules as $rule) {
+                $selector = trim(preg_replace('/\/\*.*?\*\//s', '', $rule['selector']) ?? '');
+                if (1 !== preg_match('/(^|,)\s*(:root|html)\b[^,]*$/', $selector)) {
+                    continue;
+                }
+
+                preg_match_all('/(?<token>--[a-z0-9-]+)\s*:/i', $rule['body'], $matches);
+                foreach ($matches['token'] as $token) {
+                    if (self::FLAGGED_TOKEN !== $token) {
+                        $declared[] = $name.' '.$selector.' '.$token;
+                    }
+                }
+            }
+        }
+
+        self::assertSame([], $declared, \sprintf(
+            "These declare a page-wide design token this module does not own:\n%s",
+            implode("\n", $declared),
+        ));
+    }
+
+    public function testEveryRuleThatPaintsAKindsMarkResolvesThePosition(): void
+    {
+        $sheets = self::ownSheets();
+        $missing = [];
+
+        foreach (self::MARK_RULES as $name => $selectors) {
+            foreach ($selectors as $selector) {
+                $declarations = self::declarationsFor($sheets[$name], $selector);
+
+                if (null === $declarations) {
+                    $missing[] = \sprintf('%s — %s is not shipped', $name, $selector);
+
+                    continue;
+                }
+
+                if (!str_contains($declarations, 'var(--cat')) {
+                    $missing[] = \sprintf('%s — %s spends no --cat: %s', $name, $selector, trim($declarations));
+                }
+            }
+        }
+
+        self::assertSame([], $missing, \sprintf(
+            "A kind's mark is drawn without resolving the position it wears:\n%s",
+            implode("\n", $missing),
+        ));
+    }
+
+    /**
+     * THE SEAM BETWEEN THE PHP AND THE SHEET THAT REPAINTS IT.
+     *
+     * {@see HousePalette} hands a host the token BY NAME, because the atlas's
+     * swatch and the overview's `MapLayer` still take a colour string. The
+     * shell's plate rules match that string as a presentation attribute —
+     * `.viewer [fill="var(--cat-3)"]` — so a marker authored with the ordinary
+     * token is repainted for imagery without this module knowing a value.
+     *
+     * Spell it differently on either side and nothing errors: the pin just
+     * draws black over the photograph. So the two strings are compared here.
+     */
+    public function testTheTokenThePhpPublishesIsTheOneTheShellRepaints(): void
+    {
+        $shell = self::read(self::shellDirectory().'/shell.css');
+
+        for ($position = 1; $position <= HousePalette::CATEGORIES; ++$position) {
+            $token = HousePalette::token($position);
+
+            self::assertStringContainsString(
+                \sprintf('[data-cat="%d"] { --cat: %s;', $position, $token),
+                $shell,
+                'The shell resolves a different spelling of this position than HousePalette publishes.',
+            );
+            self::assertStringContainsString(
+                \sprintf('.viewer [fill="%s"]', $token),
+                $shell,
+                'A map marker painted with this token would not be repainted for imagery.',
+            );
+        }
+    }
+
+    /**
+     * AND THE FALLBACK IS THE SHELL'S OWN. An unindexed mark draws the muted
+     * grey the shell's `[data-cat]` base rule gives it, so PHP and CSS answer
+     * "no position" the same way.
+     */
+    public function testAnUnknownPositionFallsBackToWhatTheShellFallsBackTo(): void
+    {
+        $shell = self::read(self::shellDirectory().'/shell.css');
+
+        self::assertSame('var(--fog)', HousePalette::UNKNOWN);
+        self::assertStringContainsString('[data-cat] { --cat: var(--fog);', $shell);
+    }
+
+    /** The declarations inside the first rule with exactly this selector. */
+    private static function declarationsFor(string $css, string $selector): ?string
+    {
+        $pattern = '/(?:^|[}\n])\s*'.preg_quote($selector, '/').'\s*\{(?<body>[^}]*)\}/';
+
+        return 1 === preg_match($pattern, $css, $matches) ? $matches['body'] : null;
+    }
+
+    /** @return array<string, string> file name to its text */
+    private static function ownSheets(): array
+    {
+        $public = \dirname(__DIR__, 3).'/public';
+
+        return [
+            'incidents.css' => self::read($public.'/incidents.css'),
+            'taxonomy.css' => self::read($public.'/taxonomy.css'),
+        ];
+    }
+
+    private static function shellDirectory(): string
+    {
+        $bundle = new \ReflectionClass(ShellBundle::class)->getFileName();
+
+        return \dirname((string) $bundle).'/public';
+    }
+
+    private static function read(string $path): string
+    {
+        self::assertFileExists($path);
+
+        return (string) file_get_contents($path);
+    }
+}

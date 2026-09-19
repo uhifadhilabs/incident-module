@@ -16,7 +16,7 @@
                {{ stimulus_target(controller, 'category')|stimulus_action(controller, 'choose', 'click') }}
                data-subcategory="{{ codes|first }}"
                data-subcategories="{{ codes|join(',') }}">
-            <span class="r"><i class="i-hue-{{ kind.colourKey }}" data-cat="{{ kind.catIndex }}"></i><b>{{ kind.label }}</b></span>
+            <span class="r"><i class="i-hue" data-cat="{{ kind.catIndex }}"></i><b>{{ kind.label }}</b></span>
             <span class="d">{% for sub in kind.subcategories %}{{ sub.label }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
         </label>
     {% endfor %}

@@ -400,9 +400,10 @@ final class DashboardPageTest extends FunctionalTestCase
         self::assertCount(5, $register->filter('details.i-dd > summary.mchip.i-ddt'));
         self::assertCount(0, $register->filter('[data-controller*="incident-filters"], [data-action*="incident-filters"]'));
 
-        // Category dropdown: an "all" option plus one hue-dot option per kind, each
-        // a real link carrying its count.
-        self::assertGreaterThan(0, $register->filter('.i-dd .i-ddmenu a.i-ddopt .i-dot.poach')->count());
+        // Category dropdown: an "all" option plus one option per kind, each a
+        // real link carrying its count and saying which of the house's nine
+        // hues the kind wears — poaching is the first word this area wrote.
+        self::assertGreaterThan(0, $register->filter('.i-dd .i-ddmenu a.i-ddopt .i-dot[data-cat="1"]')->count());
         self::assertGreaterThan(0, $register->filter('.i-dd a.i-ddopt[href*="category=poaching"]')->count());
         // Status and month options drive their own params.
         self::assertGreaterThan(0, $register->filter('.i-dd a.i-ddopt[href*="status="]')->count());
