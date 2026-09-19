@@ -85,11 +85,11 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
  *    than empty.
  *  - {@see MatrixCell::notMine()} is a department that attaches Incidents
  *    while NO AREA IT READS ACTUALLY RUNS IT —
- *    {@see DepartmentEntry::canAnswerFor()} is the whole test. The columns are
- *    not its to answer, and no amount of publishing by this module will make
- *    them so. The directory already keeps such a department out of
- *    `answeringFor()`, so a row of dashes is the state this guards against
- *    rather than one the page normally draws.
+ *    {@see DepartmentEntry::canAnswerFor()} is the whole test. It IS a row,
+ *    drawn as four dashes: "you attached this and nothing on your ground runs
+ *    it" is a fact a director should see, and dropping the department would
+ *    hide it. The columns were never put to it, so nought would be a lie
+ *    about a question nobody asked.
  *
  * ── POLARITY ─────────────────────────────────────────────────────────────────
  * FILING IS NEITHER GOOD NOR BAD and says so ({@see ColumnPolarity::None}): an
@@ -281,7 +281,7 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
         $periods = self::run($period, self::PERIODS);
 
         $rows = [];
-        foreach ($this->directory->forScope($scope)->answeringFor($this->slug) as $entry) {
+        foreach ($this->rowsIn($scope) as $entry) {
             $rows[] = new MatrixRow(
                 departmentUuid: $entry->uuid,
                 departmentName: $entry->name,
@@ -301,12 +301,10 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     /**
      * ONE DEPARTMENT'S FOUR CELLS.
      *
-     * A department that cannot be asked about this module gets four
-     * `notMine` cells, not four dashes and never four noughts: it attached
-     * Incidents in the register, but no area it reads is running it, so the
-     * columns are not its to answer. The directory already leaves such a
-     * department out of `answeringFor()`, so this is the guard that keeps the
-     * rule true if a caller ever draws one anyway.
+     * A department that cannot be asked about this module gets four `notMine`
+     * cells — dashes, never noughts: it attached Incidents in the register,
+     * but no area it reads is running it, so the columns were never put to
+     * it.
      *
      * @param list<FigurePeriod> $periods
      *
@@ -347,6 +345,28 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
         }
 
         return $cells;
+    }
+
+    /**
+     * THE ROWS OF THIS MATRIX: every department in the scope that ATTACHES
+     * Incidents — including the ones nothing on their ground runs it for.
+     *
+     * ATTACHING IS WHAT MAKES A ROW, NOT BEING ANSWERABLE. "You attached this
+     * module and nothing on your ground is running it" is a fact a director
+     * needs to see, and a department quietly dropped from the table is a fact
+     * nobody sees. Such a row is four dashes — {@see MatrixCell::notMine()},
+     * never noughts — so it reads as "never asked" rather than "answered
+     * nothing". A department that attaches nothing of this module's is a
+     * different case entirely and is no row at all.
+     *
+     * @return list<DepartmentEntry>
+     */
+    private function rowsIn(PerformanceScope $scope): array
+    {
+        return array_values(array_filter(
+            $this->directory->forScope($scope)->entries,
+            fn (DepartmentEntry $entry): bool => $entry->attaches($this->slug),
+        ));
     }
 
     /**

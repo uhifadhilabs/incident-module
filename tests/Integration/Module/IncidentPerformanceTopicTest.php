@@ -317,12 +317,13 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
     }
 
     /**
-     * THE THIRD ABSENCE, AND WHERE THE DIRECTORY DRAWS IT. A department that
-     * attaches Incidents while no area it reads runs the module CANNOT BE
-     * ASKED, so it is not a row at all — the columns were never put to it, and
-     * a row of dashes would say it answered nothing.
+     * THE THIRD ABSENCE. A department that attaches Incidents while no area it
+     * reads runs the module IS A ROW — of four dashes, never four noughts.
+     * "You attached this and nothing on your ground runs it" is a fact the
+     * director should see, and a department quietly dropped from the table is
+     * a fact nobody sees.
      */
-    public function testADepartmentWhoseGroundRunsNothingIsNotARowAtAll(): void
+    public function testADepartmentWhoseGroundRunsNothingIsARowOfDashes(): void
     {
         $world = $this->world();
         $unserved = $this->anArea('Unserved Reserve');
@@ -330,19 +331,30 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
 
         $rows = $this->rows(PerformanceScope::organisation());
 
-        self::assertArrayNotHasKey('Unserved Ecology', $rows);
-        self::assertSame(['Ecology', 'Protection Service'], array_keys($rows));
+        self::assertSame(['Ecology', 'Protection Service', 'Unserved Ecology'], array_keys($rows));
 
-        // And what such a row WOULD carry, if a caller ever drew one: four
-        // dashes, never four noughts.
-        foreach (IncidentPerformanceTopic::notMineCells() as $key => $cell) {
+        $cells = $rows['Unserved Ecology']->cells;
+        self::assertCount(4, $cells);
+        foreach ($cells as $key => $cell) {
             self::assertTrue($cell->notMine, $key.' is not that department\'s to answer.');
             self::assertFalse($cell->isKnown());
+            self::assertNull($cell->delta, 'A question nobody asked did not move.');
         }
 
-        // While a department that CAN be asked and filed nothing of that kind
-        // scores a real nought.
+        // While a department that CAN be asked has real figures in the same
+        // columns — the dashes above are about the question, not the data.
         self::assertFalse($rows['Protection Service']->cells[IncidentPerformanceTopic::COMPENSATION_CLAIMS]->notMine);
+        self::assertSame(1.0, $rows['Protection Service']->cells[IncidentPerformanceTopic::COMPENSATION_CLAIMS]->value);
+    }
+
+    /** A department that attaches nothing of this module's is no row at all. */
+    public function testADepartmentThatAttachesNothingIsNoRowAtAll(): void
+    {
+        $this->world();
+        $this->aDepartment('Human Resource');
+        $this->em->flush();
+
+        self::assertArrayNotHasKey('Human Resource', $this->rows(PerformanceScope::organisation()));
     }
 
     /** A claim that arrived is counted in the column it belongs to. */
