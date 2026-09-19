@@ -27,9 +27,11 @@ use Uhifadhi\Bundle\AreaBundle\Overview\PulseProviderInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
+use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Incident\Command\CloseDueCommand;
 use Uhifadhi\Incident\Controller\IncidentAreaListController;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
@@ -42,6 +44,7 @@ use Uhifadhi\Incident\DependencyInjection\IncidentConfiguration;
 use Uhifadhi\Incident\Devkit\IncidentContentProvider;
 use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
+use Uhifadhi\Incident\Module\IncidentPerformanceTopic;
 use Uhifadhi\Incident\Module\IncidentStationFigureProvider;
 use Uhifadhi\Incident\Module\IncidentZoneFigureProvider;
 use Uhifadhi\Incident\Overview\IncidentAttention;
@@ -581,6 +584,24 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 $currency,
             ])
             ->tag(DepartmentKpiProviderInterface::TAG);
+
+        /*
+         * THE PERFORMANCE TOPIC — this module's whole section of the
+         * performance page: five figures, two charts and a matrix over the
+         * departments that attach Incidents. Tagged by hand like every other
+         * contribution point; without the tag the page simply has no Incidents
+         * section, and nothing else changes.
+         */
+        $services->set('incident.performance_topic', IncidentPerformanceTopic::class)
+            ->args([
+                service(IncidentRepository::class),
+                service('incident.department_lens'),
+                service(DepartmentRepository::class),
+                service(TaxonomySubcategoryRepository::class),
+                'incidents',
+                'Incidents',
+            ])
+            ->tag(PerformanceTopicProviderInterface::TAG);
 
         // THE ZONE FIGURE SEAM, tagged by hand like every other contribution
         // point. A missing tag here looks like a module nobody installed: the

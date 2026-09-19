@@ -20,6 +20,7 @@ use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Entity\TaxonomyKind;
 use Uhifadhi\Incident\Entity\TaxonomySubcategory;
+use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 
 /**
  * The area-scoped taxonomy's second level. Uniqueness here is TWO-SCOPED, as the
@@ -108,6 +109,35 @@ final class TaxonomySubcategoryRepository extends ServiceEntityRepository
             ->andWhere('s.code = :value')->setParameter('value', $code);
 
         return $this->countExceeds($qb, $except);
+    }
+
+    /**
+     * WHETHER A SCOPE CAN EVER ANSWER A MONEY QUESTION: does any sub-category
+     * in it run money this way at all?
+     *
+     * IT SEPARATES TWO ABSENCES THE PERFORMANCE PAGE MUST NOT COLLAPSE. A
+     * department whose areas do carry compensation and claimed nothing scored
+     * nought, and says so; a department whose areas have written no
+     * compensation-bearing words has not been asked the question, and its cell
+     * is {@see \Uhifadhi\Contracts\Performance\MatrixCell::notMine()}. Drawn
+     * the same way, the second becomes a department that failed.
+     *
+     * The scope is one area, named by its uuid, or every area when null.
+     */
+    public function scopeRunsMoney(?string $areaUuid, MoneyDirectionEnum $direction): bool
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->select('COUNT(s.id)')
+            ->join('s.kind', 'k')
+            ->andWhere('s.moneyDirection = :direction')->setParameter('direction', $direction);
+
+        if (null !== $areaUuid) {
+            $qb->join('k.area', 'a')
+                ->andWhere('a.uuid = :area')
+                ->setParameter('area', Uuid::fromString($areaUuid), 'uuid');
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult() > 0;
     }
 
     private function countExceeds(QueryBuilder $qb, ?TaxonomySubcategory $except): bool

@@ -652,6 +652,74 @@ final class IncidentRepository extends ServiceEntityRepository
         return $incidents;
     }
 
+    /**
+     * EVERY INCIDENT FINISHED IN A SCOPE in a window — the rows behind
+     * "resolved this period" and behind the closed line of the topic's flow
+     * chart.
+     *
+     * A SECOND QUESTION, NOT A FILTER ON THE FIRST. What was filed in August
+     * and what was finished in August are different sets, and a page that
+     * derived one from the other could only ever report the overlap.
+     *
+     * @return list<Incident>
+     */
+    public function findResolvedByScopeBetween(?string $areaUuid, \DateTimeImmutable $from, \DateTimeImmutable $until): array
+    {
+        $qb = $this->createQueryBuilder('i')
+            ->join('i.subcategory', 's')->addSelect('s')
+            ->join('s.kind', 'k')->addSelect('k')
+            ->leftJoin('i.money', 'm')->addSelect('m')
+            ->andWhere('i.resolvedAt >= :from')->setParameter('from', $from)
+            ->andWhere('i.resolvedAt < :until')->setParameter('until', $until)
+            ->orderBy('i.resolvedAt', 'ASC');
+
+        if (null !== $areaUuid) {
+            $qb->join('i.area', 'sa')
+                ->andWhere('sa.uuid = :scope_area')
+                ->setParameter('scope_area', Uuid::fromString($areaUuid), 'uuid');
+        }
+
+        /** @var list<Incident> $incidents */
+        $incidents = $qb->getQuery()->getResult();
+
+        return $incidents;
+    }
+
+    /**
+     * EVERY INCIDENT IN A SCOPE THAT IS STILL OPEN, whenever it was filed —
+     * the stock behind "how long an open incident has been open".
+     *
+     * NOT A WINDOW. The question the chart asks is about the backlog as it
+     * stands, and a backlog clipped to one month would hide exactly the rows
+     * worth looking at.
+     *
+     * @return list<Incident>
+     */
+    public function findOpenByScope(?string $areaUuid): array
+    {
+        $qb = $this->createQueryBuilder('i')
+            ->join('i.subcategory', 's')->addSelect('s')
+            ->join('s.kind', 'k')->addSelect('k')
+            ->leftJoin('i.money', 'm')->addSelect('m')
+            ->andWhere('i.status IN (:open)')
+            ->setParameter('open', array_map(
+                static fn (IncidentStatusEnum $place) => $place->value,
+                array_filter(IncidentStatusEnum::ordered(), static fn (IncidentStatusEnum $place) => $place->isOpen()),
+            ))
+            ->orderBy('i.reportedAt', 'ASC');
+
+        if (null !== $areaUuid) {
+            $qb->join('i.area', 'sa')
+                ->andWhere('sa.uuid = :scope_area')
+                ->setParameter('scope_area', Uuid::fromString($areaUuid), 'uuid');
+        }
+
+        /** @var list<Incident> $incidents */
+        $incidents = $qb->getQuery()->getResult();
+
+        return $incidents;
+    }
+
     /*
      * ── WHAT A ZONE'S FIGURES ASK ───────────────────────────────────────────
      *
