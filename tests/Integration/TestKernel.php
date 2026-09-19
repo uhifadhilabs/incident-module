@@ -41,12 +41,14 @@ use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
+use Uhifadhi\Contracts\Performance\PerformanceGeoProviderInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Incident\Repository\AreaListEntryRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\AreaVocabulary;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedContentProviders;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedGeoProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedStationFigureProviders;
@@ -277,6 +279,8 @@ final class TestKernel extends Kernel
             ->args([tagged_iterator(StationFigureProviderInterface::TAG)])->public();
         $services->set(CollectedTopicProviders::class)
             ->args([tagged_iterator(PerformanceTopicProviderInterface::TAG)])->public();
+        $services->set(CollectedGeoProviders::class)
+            ->args([tagged_iterator(PerformanceGeoProviderInterface::TAG)])->public();
 
         // And for DEVKIT's content collector, which the migrations upgrade lock
         // seeds through: this module's demo month depends on team's people, and
@@ -328,8 +332,10 @@ final class TestKernel extends Kernel
             // reached directly and asked to do the one thing it does.
             'incident.devkit.content',
             'incident.zone_locator',
-            // The whole performance section this module publishes.
+            // The whole performance section this module publishes, and the
+            // ground figures that go on the plate beside it.
             'incident.performance_topic',
+            'incident.performance_geo',
             // The four per-area lists: the writes, and the editor's four folds.
             'incident.area_lists',
             'incident.area_list_board',

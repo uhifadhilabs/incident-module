@@ -24,6 +24,8 @@ use Uhifadhi\Bundle\AreaBundle\Overview\NowTileProviderInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewCopyProviderInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\PulseProviderInterface;
+use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
@@ -31,6 +33,7 @@ use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
+use Uhifadhi\Contracts\Performance\PerformanceGeoProviderInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Incident\Command\CloseDueCommand;
 use Uhifadhi\Incident\Controller\IncidentAreaListController;
@@ -44,6 +47,7 @@ use Uhifadhi\Incident\DependencyInjection\IncidentConfiguration;
 use Uhifadhi\Incident\Devkit\IncidentContentProvider;
 use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
+use Uhifadhi\Incident\Module\IncidentPerformanceGeo;
 use Uhifadhi\Incident\Module\IncidentPerformanceTopic;
 use Uhifadhi\Incident\Module\IncidentStationFigureProvider;
 use Uhifadhi\Incident\Module\IncidentZoneFigureProvider;
@@ -605,6 +609,25 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 'Incidents',
             ])
             ->tag(PerformanceTopicProviderInterface::TAG);
+
+        /*
+         * THE GROUND FIGURES THAT GO WITH THAT TOPIC — filings per area, and
+         * per zone of one area for the overview's "Incidents by zone" card.
+         * A SEPARATE, OPTIONAL SEAM: most topics have nothing to say about
+         * where, so this is its own tag rather than a method on the topic.
+         * Without the tag the atlas plate simply says nobody publishes ground
+         * figures, and nothing else changes.
+         */
+        $services->set('incident.performance_geo', IncidentPerformanceGeo::class)
+            ->args([
+                service(IncidentRepository::class),
+                // The ground itself is the area module's: this module names it
+                // by identifier and carries no geometry across the seam.
+                service(AreaOfInterestRepository::class),
+                service(ZoneRepository::class),
+                'incidents',
+            ])
+            ->tag(PerformanceGeoProviderInterface::TAG);
 
         // THE ZONE FIGURE SEAM, tagged by hand like every other contribution
         // point. A missing tag here looks like a module nobody installed: the
