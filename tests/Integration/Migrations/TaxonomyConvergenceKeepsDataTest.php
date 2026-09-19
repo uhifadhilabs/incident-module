@@ -106,6 +106,14 @@ final class TaxonomyConvergenceKeepsDataTest extends MigrationsTestCase
                 'SELECT m.claimed FROM incident_money m JOIN incident i ON i.id = m.incident_id ORDER BY i.reference',
             ),
         );
+
+        // AND THE SHARED VOCABULARY IS GONE, on a database that was filled by
+        // the old model — which is the only database the drop can go wrong on.
+        // It ran AFTER the convergence above, so every assertion in this test is
+        // also the proof that the drop waited for the data to be carried over.
+        $tables = $this->connection()->createSchemaManager()->listTableNames();
+        self::assertNotContains('incident_subcategory', $tables);
+        self::assertNotContains('incident_category', $tables);
     }
 
     /**

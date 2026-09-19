@@ -201,9 +201,20 @@ it does, because it moves data rather than only schema:
   `incident_category` are kept, still populated, for one release, so you can read
   what a record used to say and can roll the code back. A later release drops all
   three in a version marked `@destructive`.
-- **Until that release, `doctrine:migrations:diff` proposes dropping those
-  three things**, because the mapping no longer knows them. That proposal is the
-  deferral working, not drift — do not apply it.
+- **That release is 0.4** — `Version20260919210000`, above. Between the two,
+  `doctrine:migrations:diff` proposed dropping those three things, because the
+  mapping no longer knew them; that proposal was the deferral working, not
+  drift, and applying it fails. From 0.4 there is nothing left to propose.
+
+### Upgrading to 0.4: the shared taxonomy is dropped
+
+`Uhifadhi\Incident\Migrations\Version20260919210000` drops
+`incident.subcategory_id`, `incident_subcategory` and `incident_category` — the
+release the convergence below deferred them to. Nothing is asked of you, and
+after it `doctrine:migrations:diff` reports no changes again. If you generated
+that drop yourself while it was deferred, delete the version you generated: it
+plans the `DROP TABLE` before the key that references it and fails, blocking
+every later version. See [Upgrading](docs/upgrading.md).
 
 ### Upgrading to 0.3: a word's questions come from its blocks
 

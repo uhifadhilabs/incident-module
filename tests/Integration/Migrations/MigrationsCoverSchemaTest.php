@@ -49,20 +49,17 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
      * Schema the mapping has already let go of and a later version drops, with
      * the version that drops it. Nothing else may appear in a proposed diff.
      *
+     * EMPTY, AND THAT IS THE POINT. The installation-wide taxonomy that used to
+     * be listed here — `incident_category`, `incident_subcategory` and
+     * `incident.subcategory_id` — is dropped by
+     * {@see \Uhifadhi\Incident\Migrations\Version20260919210000}, so the diff
+     * an installation runs has nothing left to propose. A deferral that is never
+     * collected is how an installer ends up generating the drop itself, in an
+     * order PostgreSQL refuses.
+     *
      * @var array<string, string>
      */
-    private const array RETIRED_UNTIL_DROPPED = [
-        // The installation-wide taxonomy, converged into the per-area one by
-        // Version20260911140000 and kept one release so an installation can read
-        // what a record used to say and can roll the code back.
-        'incident_category' => '0.4',
-        'incident_subcategory' => '0.4',
-        'subcategory_id' => '0.4',
-        // The foreign key and index on that column, by the names Doctrine
-        // generated for them — the statements that drop those never spell the
-        // column out.
-        '3d03a11a5dc6fe57' => '0.4',
-    ];
+    private const array RETIRED_UNTIL_DROPPED = [];
 
     public function testAFreshDatabaseMigratedLeavesNothingButRetiredSchemaToDiff(): void
     {
@@ -132,11 +129,6 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
 
         foreach ([
             'incident',
-            // Still here, and deliberately: the classes behind these two are
-            // retired, the rows are kept for a release, and a later @destructive
-            // version drops them. See RETIRED_UNTIL_DROPPED.
-            'incident_category',
-            'incident_subcategory',
             'incident_event',
             'incident_evidence',
             'incident_link',
@@ -148,5 +140,30 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
         ] as $table) {
             self::assertContains($table, $tables, \sprintf('No shipped version creates "%s".', $table));
         }
+    }
+
+    /**
+     * AND THE SHARED TAXONOMY IS GONE. It was kept one release so an
+     * installation could read what a record used to say; the version that
+     * collects the deferral drops both tables and the column that pointed at
+     * them, in the one order PostgreSQL accepts — the referencing key first.
+     *
+     * @see \Uhifadhi\Incident\Migrations\Version20260919210000
+     */
+    public function testTheRetiredInstallationWideTaxonomyIsDropped(): void
+    {
+        $this->migrateToLatest();
+
+        $schema = $this->connection()->createSchemaManager();
+        $tables = $schema->listTableNames();
+
+        self::assertNotContains('incident_subcategory', $tables);
+        self::assertNotContains('incident_category', $tables);
+
+        $columns = array_map(
+            static fn (\Doctrine\DBAL\Schema\Column $column): string => $column->getName(),
+            $schema->listTableColumns('incident'),
+        );
+        self::assertNotContains('subcategory_id', $columns);
     }
 }

@@ -8,6 +8,7 @@ hand is a release with a note under it.
 
 - [The rule for anything this module ships to a host](#the-rule-for-anything-this-module-ships-to-a-host)
 - [0.3.0 — the filter dropdowns became the shell's](#030--the-filter-dropdowns-became-the-shells)
+- [0.4.0 — the shared taxonomy is dropped](#040--the-shared-taxonomy-is-dropped)
 
 ## The rule for anything this module ships to a host
 
@@ -40,3 +41,28 @@ deleted in 0.4.0**, together with its `assets/package.json` entry. An
 installation that wants to be done with it now can drop the
 `@uhifadhi/incident-module/incident-filters` entry from its own
 `assets/controllers.json`; nothing in this module mounts it.
+
+## 0.4.0 — the shared taxonomy is dropped
+
+`Uhifadhi\Incident\Migrations\Version20260919210000` collects the deferral
+0.3 opened: `incident.subcategory_id`, `incident_subcategory` and
+`incident_category` are dropped, the referencing key and its index first, then
+the column, then the key between the two tables, then the tables. It is marked
+`@destructive` and runs with `doctrine:migrations:migrate` like anything else.
+**No step is required of an installation** — every record has been filed
+against its own area's word since 0.3, in
+`incident.taxonomy_subcategory_id`, and what goes here is the copy nothing has
+read since.
+
+**If you want to keep what the old tables held, dump them before you migrate**
+— `pg_dump -t incident_category -t incident_subcategory …` — because a
+`down()` brings the tables back empty and no rollback brings the rows back.
+
+**And `doctrine:migrations:diff` goes quiet again.** Until this release it
+proposed dropping those three things on every run, because the mapping had
+already let them go. If an installation generated that proposal and kept the
+file, **delete it**: it plans `DROP TABLE incident_subcategory` while
+`incident.subcategory_id` still references the table, PostgreSQL refuses with
+*cannot drop table incident_subcategory because other objects depend on it*,
+and the failure blocks every later version behind it. This release's version
+does the same job in the order the database accepts.
