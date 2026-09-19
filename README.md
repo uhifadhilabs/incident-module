@@ -121,8 +121,11 @@ area an incident happens in and its zones, ShellBundle for the page frame and
 the widget machinery the dashboard is, AtlasBundle for the maps, RegistryBundle
 for the per-area catalogue this module registers itself
 in, and TeamBundle for the account class. The contracts it implements ship
-inside it. One further package is required: `uhifadhi/storage-module` stores
-the photographs an incident is filed with and puts them on the Files hub.
+inside it. Two further packages are required: `uhifadhi/storage-module` stores
+the photographs an incident is filed with and puts them on the Files hub, and
+`utafitilabs/postgis-bundle` is where an incident's point and its evidence's
+point are stored — the spatial types, the GiST indexes and the `ST_*` DQL this
+module's repositories ask in.
 
 The one thing an installation still provides is the ACCOUNT CLASS behind the
 person contract — see the user contract above. TeamBundle answers it from its

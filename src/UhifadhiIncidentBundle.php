@@ -82,7 +82,7 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
  *
  * Zero-config: registering the bundle maps its own entities (no host doctrine
  * block needed), registers the dashboard and reaches the host's module catalogue
- * and its department-KPI contribution point. Spatial columns ride on fundistadi/postgis-bundle.
+ * and its department-KPI contribution point. Spatial columns ride on utafitilabs/postgis-bundle.
  *
  * AN AREA STARTS EMPTY, and that is the design. The module ships no kinds of
  * incident, seeds none and suggests none: an area writes its own in the kinds

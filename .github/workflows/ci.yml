@@ -25,7 +25,7 @@ jobs:
     # in, so a suite that only ever saw a mock would prove nothing about that.
     services:
       postgres:
-        image: ghcr.io/fundistadi/postgis:17
+        image: ghcr.io/utafitilabs/postgis:17
         env:
           POSTGRES_USER: app
           POSTGRES_PASSWORD: app

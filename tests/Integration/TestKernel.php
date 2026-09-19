@@ -15,7 +15,6 @@ namespace Uhifadhi\Incident\Tests\Integration;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
-use FundiStadi\PostGISBundle\FundiStadiPostGISBundle;
 use League\FlysystemBundle\FlysystemBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
@@ -63,6 +62,7 @@ use Uhifadhi\Storage\Controller\FilesController;
 use Uhifadhi\Storage\Controller\UploadController;
 use Uhifadhi\Storage\Registry\FileSourceInterface;
 use Uhifadhi\Storage\UhifadhiStorageBundle;
+use UtafitiLabs\PostGISBundle\UtafitiLabsPostGISBundle;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -105,7 +105,7 @@ final class TestKernel extends Kernel
         // with SchemaTool — but the locks under Integration/Migrations are about
         // the shipped versions, and those need the bundle that finds them.
         yield new DoctrineMigrationsBundle();
-        yield new FundiStadiPostGISBundle();
+        yield new UtafitiLabsPostGISBundle();
         yield new SecurityBundle();
         // The per-area catalogue this module registers itself in, and the gate
         // that closes a parked module's pages. TeamBundle requires it too.

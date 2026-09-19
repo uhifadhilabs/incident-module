@@ -9,6 +9,7 @@ hand is a release with a note under it.
 - [The rule for anything this module ships to a host](#the-rule-for-anything-this-module-ships-to-a-host)
 - [0.3.0 — the filter dropdowns became the shell's](#030--the-filter-dropdowns-became-the-shells)
 - [0.4.0 — the shared taxonomy is dropped](#040--the-shared-taxonomy-is-dropped)
+- [0.4.0 — the PostGIS bundle is `utafitilabs/postgis-bundle` (BREAKING)](#040--the-postgis-bundle-is-utafitilabspostgis-bundle-breaking)
 
 ## The rule for anything this module ships to a host
 
@@ -66,3 +67,36 @@ file, **delete it**: it plans `DROP TABLE incident_subcategory` while
 *cannot drop table incident_subcategory because other objects depend on it*,
 and the failure blocks every later version behind it. This release's version
 does the same job in the order the database accepts.
+
+## 0.4.0 — the PostGIS bundle is `utafitilabs/postgis-bundle` (BREAKING)
+
+The spatial types this module's points are stored in now come from
+`utafitilabs/postgis-bundle` instead of `fundistadi/postgis-bundle`. The two
+register the same DBAL types under the same names, so **no column, no index
+and no stored geometry changes, and there is no migration**. What changes is
+the class an installation registers and the config key it would configure it
+under:
+
+| | before | after |
+|---|---|---|
+| package | `fundistadi/postgis-bundle` | `utafitilabs/postgis-bundle` |
+| namespace | `FundiStadi\PostGISBundle\` | `UtafitiLabs\PostGISBundle\` |
+| bundle class | `FundiStadiPostGISBundle` | `UtafitiLabsPostGISBundle` |
+| config key | `fundi_stadi_post_gis` | `utafiti_labs_post_gis` |
+
+What an installation does:
+
+```diff
+ // config/bundles.php
+-FundiStadi\PostGISBundle\FundiStadiPostGISBundle::class => ['all' => true],
++UtafitiLabs\PostGISBundle\UtafitiLabsPostGISBundle::class => ['all' => true],
+```
+
+…then `composer update`, and rename `config/packages/fundi_stadi_post_gis.yaml`
+and its root key if the installation wrote one (most have not: the bundle
+needs no configuration). **Register only one of the two.** Both declare the
+same type names, and Doctrine refuses a type registered twice.
+
+Own code that extends `SpatialEntityRepository` or type-hints a geometry type
+changes its `use` line and nothing else — the class names below the namespace
+are unchanged.
