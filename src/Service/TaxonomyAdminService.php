@@ -47,15 +47,6 @@ use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
  */
 final class TaxonomyAdminService
 {
-    /**
-     * The hues a kind may wear — the keys incidents.css actually declares. An
-     * area that picks anything else would paint an invisible mark on the map, so
-     * a stray value is clamped to the first rather than stored.
-     *
-     * @var list<string>
-     */
-    public const array COLOUR_KEYS = ['poach', 'hwc', 'comp', 'mort'];
-
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly TaxonomyKindRepository $kinds,
@@ -71,7 +62,7 @@ final class TaxonomyAdminService
      *
      * @throws TaxonomyConflictException on a duplicate label or wire-code
      */
-    public function createKind(AreaOfInterest $area, string $label, string $colourKey = '', string $code = ''): TaxonomyKind
+    public function createKind(AreaOfInterest $area, string $label, string $code = ''): TaxonomyKind
     {
         $label = $this->cleanLabel($label);
         if ('' === $label) {
@@ -83,7 +74,10 @@ final class TaxonomyAdminService
 
         $code = $this->resolveKindCode($area, '' !== $code ? $code : $label);
 
-        $kind = new TaxonomyKind($area, $code, $label, $this->clampColour($colourKey));
+        // THE PLACE IN THE LIST IS THE ONLY THING A NEW KIND IS GIVEN, and it
+        // is what it wears: the next position takes the next house hue, with
+        // nobody choosing anything. {@see TaxonomyKind::catIndex()}
+        $kind = new TaxonomyKind($area, $code, $label);
         $kind->setPosition($this->kinds->maxPositionForArea($area) + 1);
 
         $this->em->persist($kind);
@@ -104,14 +98,6 @@ final class TaxonomyAdminService
         }
 
         $kind->setLabel($label); // the wire-code is deliberately untouched
-        $this->em->flush();
-
-        return $kind;
-    }
-
-    public function setKindColour(TaxonomyKind $kind, string $colourKey): TaxonomyKind
-    {
-        $kind->setColourKey($this->clampColour($colourKey));
         $this->em->flush();
 
         return $kind;
@@ -285,10 +271,5 @@ final class TaxonomyAdminService
     private function cleanLabel(string $label): string
     {
         return trim(preg_replace('/\s+/', ' ', $label) ?? '');
-    }
-
-    private function clampColour(string $colourKey): string
-    {
-        return \in_array($colourKey, self::COLOUR_KEYS, true) ? $colourKey : self::COLOUR_KEYS[0];
     }
 }

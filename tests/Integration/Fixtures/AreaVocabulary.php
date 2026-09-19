@@ -49,7 +49,7 @@ final readonly class AreaVocabulary
     public function write(AreaOfInterest $area): void
     {
         foreach (DemoMonth::kinds() as $code => $definition) {
-            $kind = $this->admin->createKind($area, $definition['label'], $definition['colour'], $code);
+            $kind = $this->admin->createKind($area, $definition['label'], $code);
             $this->admin->setKindLeads($kind, $definition['leads']);
 
             foreach ($definition['subcategories'] as $subCode => $sub) {

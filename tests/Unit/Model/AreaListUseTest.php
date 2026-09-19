@@ -81,7 +81,7 @@ final class AreaListUseTest extends TestCase
     public function testItCountsTheSubcategoriesThatSwitchedTheBlockOn(): void
     {
         $area = new AreaOfInterest();
-        $poaching = new TaxonomyKind($area, 'poaching', 'Poaching', 'poach');
+        $poaching = new TaxonomyKind($area, 'poaching', 'Poaching');
         $snaring = self::sub($poaching, 'snaring', 'snaring', [BehaviorBlockEnum::Species, BehaviorBlockEnum::Method]);
         self::sub($poaching, 'bushmeat', 'bushmeat', [BehaviorBlockEnum::Species]);
         // A word that asks for neither.
@@ -104,7 +104,7 @@ final class AreaListUseTest extends TestCase
     public function testARetiredKindReadsNothing(): void
     {
         $area = new AreaOfInterest();
-        $kind = new TaxonomyKind($area, 'mortality', 'Mortality', 'mort');
+        $kind = new TaxonomyKind($area, 'mortality', 'Mortality');
         self::sub($kind, 'roadkill', 'roadkill', [BehaviorBlockEnum::Species]);
         $kind->deactivate();
 
@@ -118,7 +118,7 @@ final class AreaListUseTest extends TestCase
     public function testAKindWhoseEveryWordAsksIsAbbreviated(): void
     {
         $area = new AreaOfInterest();
-        $kind = new TaxonomyKind($area, 'mortality', 'Mortality', 'mort');
+        $kind = new TaxonomyKind($area, 'mortality', 'Mortality');
         foreach (['roadkill', 'poisoning', 'natural', 'unknown'] as $code) {
             self::sub($kind, $code, $code, [BehaviorBlockEnum::Species]);
         }
@@ -130,7 +130,7 @@ final class AreaListUseTest extends TestCase
     public function testAKindWhereOnlySomeWordsAskNamesThem(): void
     {
         $area = new AreaOfInterest();
-        $kind = new TaxonomyKind($area, 'conflict', 'Conflict', 'hwc');
+        $kind = new TaxonomyKind($area, 'conflict', 'Conflict');
         self::sub($kind, 'depredation', 'depredation', [BehaviorBlockEnum::Species]);
         self::sub($kind, 'injury', 'human injury', [BehaviorBlockEnum::Species]);
         self::sub($kind, 'damage', 'property damage', [BehaviorBlockEnum::Extent]);

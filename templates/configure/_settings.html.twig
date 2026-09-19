@@ -34,7 +34,7 @@
 
 {# ── SET·11 · Kinds ───────────────────────────────────────────────────────── #}
 <div class="c" style="margin-bottom:20px">
-    <span class="tab">Kinds<span class="src">· colour, who sees it first, money, term and fields</span></span>
+    <span class="tab">Kinds<span class="src">· the hue each one is given, who sees it first, money, term and fields</span></span>
     <div class="sout" style="margin-bottom:14px">
         <span class="bd"><b>Creating, renaming and retiring a kind or a sub-category happens in the <em>Incident kinds</em> section.</b>
         {{ kinds|length }} {{ kinds|length == 1 ? 'kind' : 'kinds' }}, {{ subcategoryCount }}
@@ -44,19 +44,20 @@
     </div>
 
     {% for kind in kinds %}
-        {# NO COLOUR SWATCH HERE. A kind's hue is this module's own token, and
-           this module's stylesheet is not linked on the shell's configure page —
-           a swatch would draw an empty square. The colour is named, and edited,
-           in the Incident kinds section, where the sheet is. #}
-        <div class="srow"><span class="nm">{{ kind.label }}</span><span class="cd">{{ kind.code }}</span><span class="n">{{ kind.subcategories|length }} subs</span></div>
+        {# THE SWATCH IS THE SHELL'S `.catsw`, and so is the `[data-cat]` rule
+           that fills it, which is why it draws here on a page that links only
+           the shell's sheet. It is a square and not a button: the hue is shown,
+           never picked. #}
+        <div class="srow"><i class="catsw" data-cat="{{ kind.catIndex }}"></i><span class="nm">{{ kind.label }}</span><span class="cd">{{ kind.code }}</span><span class="n">{{ kind.subcategories|length }} subs</span></div>
     {% else %}
         <div class="srow"><span class="nm">This area has not written its own kinds yet.</span></div>
     {% endfor %}
 
     <div class="sout" style="margin-top:12px">
-        <span class="bd"><b>What each kind and sub-category DOES is edited in the <em>Incident kinds</em> section.</b> A kind's
-        colour, a sub-category's behaviour blocks, which way its money runs, the term it promises and the fields its form
-        asks for are all stored on the area's own rows, and that section is where they are written.</span>
+        <span class="bd"><b>Assigned, not chosen</b> &mdash; the first kind in the list takes the first hue of the house set,
+        and wears it on the map, in the list of incidents and on every chart. Reorder the kinds in <em>Incident kinds</em> and the hue
+        follows. <b>What each kind and sub-category DOES is edited there too</b>: a sub-category's behaviour blocks, which way
+        its money runs, the term it promises and the fields its form asks for are all stored on the area's own rows.</span>
     </div>
 </div>
 

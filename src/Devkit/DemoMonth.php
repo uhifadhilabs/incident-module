@@ -56,7 +56,7 @@ final class DemoMonth
     /**
      * THE VOCABULARY THE SAMPLE MONTH IS FILED AGAINST — the design's reference
      * card (IN·09), as data: four kinds and the sixteen sub-categories under
-     * them, with the colour each wears, the departments its lens leads with, which
+     * them, the departments each one's lens leads with, which
      * way money runs on it, what it promises and which BEHAVIOUR BLOCKS it
      * switches on — which is the whole of what its form asks.
      *
@@ -97,7 +97,6 @@ final class DemoMonth
      *
      * @return array<string, array{
      *     label: string,
-     *     colour: string,
      *     leads: list<string>,
      *     subcategories: array<string, array{label: string, money: string|null, term_hours: int, blocks: list<string>}>
      * }>
@@ -107,7 +106,6 @@ final class DemoMonth
         return [
             'poaching' => [
                 'label' => 'Poaching & wildlife crime',
-                'colour' => 'poach',
                 'leads' => [self::PROTECTION],
                 'subcategories' => [
                     'snaring' => [
@@ -138,7 +136,6 @@ final class DemoMonth
             ],
             'conflict' => [
                 'label' => 'Human–wildlife conflict',
-                'colour' => 'hwc',
                 // BOTH lenses lead with conflict — the design's reference card
                 // prints "leads: Protection · Ecology" against this one row.
                 'leads' => [self::PROTECTION, self::ECOLOGY],
@@ -171,7 +168,6 @@ final class DemoMonth
             ],
             'compliance' => [
                 'label' => 'Compliance & encroachment',
-                'colour' => 'comp',
                 'leads' => [self::PROTECTION],
                 'subcategories' => [
                     'unauthorized-construction' => [
@@ -202,7 +198,6 @@ final class DemoMonth
             ],
             'mortality' => [
                 'label' => 'Wildlife mortality',
-                'colour' => 'mort',
                 'leads' => [self::ECOLOGY],
                 'subcategories' => [
                     // THE ROADKILL RULING, as one row: one entry, and it may carry

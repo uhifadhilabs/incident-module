@@ -265,7 +265,7 @@ final readonly class IncidentContentProvider implements ContentProviderInterface
         }
 
         foreach (DemoMonth::kinds() as $code => $definition) {
-            $kind = $this->taxonomy->createKind($area, $definition['label'], $definition['colour'], $code);
+            $kind = $this->taxonomy->createKind($area, $definition['label'], $code);
             $this->taxonomy->setKindLeads($kind, $definition['leads']);
 
             foreach ($definition['subcategories'] as $subCode => $sub) {

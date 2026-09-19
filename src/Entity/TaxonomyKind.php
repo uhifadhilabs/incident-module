@@ -89,15 +89,6 @@ class TaxonomyKind
     private string $label;
 
     /**
-     * The hue this kind wears on the map pin, register chip and taxonomy row.
-     * One of the keys incidents.css declares (`poach`, `hwc`, `comp`, `mort`);
-     * an area choosing a fifth kind reuses one rather than inventing a colour the
-     * stylesheet has never heard of.
-     */
-    #[ORM\Column(length: 16)]
-    private string $colourKey;
-
-    /**
      * The departments whose lens puts this kind first. Emphasis only — see the
      * class docblock.
      *
@@ -118,13 +109,12 @@ class TaxonomyKind
     #[ORM\OrderBy(['position' => 'ASC', 'id' => 'ASC'])]
     private Collection $subcategories;
 
-    public function __construct(AreaOfInterest $area, string $code, string $label, string $colourKey)
+    public function __construct(AreaOfInterest $area, string $code, string $label)
     {
         $this->uuid = Uuid::v7();
         $this->area = $area;
         $this->code = $code;
         $this->label = $label;
-        $this->colourKey = $colourKey;
         $this->subcategories = new ArrayCollection();
         $this->initTimestamps();
     }
@@ -157,18 +147,6 @@ class TaxonomyKind
     public function setLabel(string $label): static
     {
         $this->label = $label;
-
-        return $this;
-    }
-
-    public function getColourKey(): string
-    {
-        return $this->colourKey;
-    }
-
-    public function setColourKey(string $colourKey): static
-    {
-        $this->colourKey = $colourKey;
 
         return $this;
     }

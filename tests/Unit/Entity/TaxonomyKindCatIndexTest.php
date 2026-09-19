@@ -43,7 +43,7 @@ final class TaxonomyKindCatIndexTest extends TestCase
     #[DataProvider('positions')]
     public function testThePositionInTheAreasListIsTheHueItWears(int $position, int $expected): void
     {
-        $kind = new TaxonomyKind(new AreaOfInterest(), 'poaching', 'Poaching', 'poach');
+        $kind = new TaxonomyKind(new AreaOfInterest(), 'poaching', 'Poaching');
         $kind->setPosition($position);
 
         self::assertSame($expected, $kind->catIndex());

@@ -109,4 +109,17 @@ final class MigrationLintTest extends KernelTestCase
         self::assertStringContainsString('down() plans no statements', $violations[0]);
         self::assertStringContainsString('@irreversible', $violations[0]);
     }
+
+    /**
+     * AND LOOSENING A COLUMN IS NOT TIGHTENING ONE. `ALTER … DROP NOT NULL`
+     * carries the words the first rule looks for and is its opposite: every
+     * row already satisfies a weaker constraint, so there is nothing to
+     * backfill and nothing that can fail.
+     */
+    public function testItDoesNotMistakeDroppingNotNullForAddingIt(): void
+    {
+        $violations = $this->lint()->violations(\Uhifadhi\Incident\Migrations\Version20260919230000::class);
+
+        self::assertSame([], $violations, implode("\n", $violations));
+    }
 }

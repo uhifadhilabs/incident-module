@@ -210,7 +210,7 @@ final class IncidentFileSourceTest extends TestCase
         $area = new AreaOfInterest()->setSource('test fixture');
         $area->setName('Kifaru Sector');
 
-        $kind = new TaxonomyKind($area, 'conflict', 'Human–wildlife conflict', 'hwc');
+        $kind = new TaxonomyKind($area, 'conflict', 'Human–wildlife conflict');
         $subcategory = new TaxonomySubcategory($kind, 'livestock-depredation', 'livestock depredation');
 
         $incident = new Incident(

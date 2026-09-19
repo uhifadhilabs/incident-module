@@ -5,7 +5,7 @@
    so the whole screen works with no JavaScript.
 
    `kinds`, `selected`, `editingBlocks`, `blockCatalogue`, `moneyDirections`,
-   `colourKeys`, `csrfToken`, `area` are supplied by IncidentTaxonomyController.
+   `csrfToken`, `area` are supplied by IncidentTaxonomyController.
    ========================================================================== #}
 {% set activeKinds = kinds|filter(k => k.active)|length %}
 {% set retiredKinds = kinds|length - activeKinds %}
@@ -16,20 +16,17 @@
     {% for kind in kinds %}
       <a class="tx-kind{{ kind is same as(selected) ? ' on' }}{{ not kind.active ? ' off' }}" href="{{ path('incident_kinds', {uuid: area.uuid, kind: kind.uuid}) }}">
         <span class="grip">{{ ux_icon('shell:grip-vertical', {width: 11, height: 11}) }}</span>
-        <span class="dot" style="{{ kind.active ? 'background:var(--i-' ~ kind.colourKey ~ ')' }}" data-cat="{{ kind.catIndex }}"></span>
+        <span class="dot"{% if kind.active %} data-cat="{{ kind.catIndex }}"{% endif %}></span>
         <span class="nm">{{ kind.label }}<em>{{ kind.code }}</em></span>
         <span class="n">{{ kind.activeSubcategoryCount }} subs</span>
       </a>
     {% endfor %}
 
-    {# → POST …/taxonomy/kinds {label, colour} — the empty-start "write the first
-       kind" path reaches the same endpoint. #}
+    {# → POST …/taxonomy/kinds {label} — the empty-start "write the first kind"
+       path reaches the same endpoint. The hue is the next place in the list. #}
     <form class="tx-form" method="post" action="{{ path('incident_kinds_kind_create', {uuid: area.uuid}) }}" style="padding:11px 13px;gap:7px;border-top:1px dashed color-mix(in srgb,var(--fog) 28%,transparent)">
       <input type="hidden" name="_token" value="{{ csrfToken }}">
       <input class="tx-input" type="text" name="label" placeholder="New kind of incident" required style="flex:1">
-      <select class="fld" name="colour" aria-label="Colour">
-        {% for key in colourKeys %}<option value="{{ key }}">{{ key }}</option>{% endfor %}
-      </select>
       <button class="tx-cta" type="submit">{{ ux_icon('shell:plus', {width: 13, height: 13}) }} Add</button>
     </form>
   </div>
@@ -42,7 +39,10 @@
         <h3>{{ selected.label }}</h3>
         <div class="meta">
           <span class="tx-code locked">{{ selected.code }}</span>
-          <span class="i-cat {{ selected.colourKey }}" data-cat="{{ selected.catIndex }}"><i></i>{{ selected.colourKey }}</span>
+          {# ASSIGNED, NOT CHOSEN — the swatch is shown and there is nothing to
+             press. Which of the nine it is comes off the kind's place in the
+             list; reorder the kinds and the hue follows. #}
+          <span class="tx-hue"><i class="catsw" data-cat="{{ selected.catIndex }}"></i>hue {{ selected.catIndex }} of nine &middot; assigned, not chosen</span>
         </div>
         {# → PATCH …/kinds/{uuid} {label} — the wire-code never changes #}
         <form class="tx-form" method="post" action="{{ path('incident_kinds_kind_rename', {uuid: area.uuid, kind: selected.uuid}) }}" style="margin-top:10px">

@@ -51,7 +51,7 @@ final class IncidentTransitionServiceTest extends TestCase
     private function incident(bool $withMoney = false): Incident
     {
         $area = new AreaOfInterest()->setSource('test fixture');
-        $kind = new TaxonomyKind($area, 'conflict', 'Human–wildlife conflict', 'hwc');
+        $kind = new TaxonomyKind($area, 'conflict', 'Human–wildlife conflict');
         $subcategory = new TaxonomySubcategory($kind, 'livestock-depredation', 'livestock depredation');
         if ($withMoney) {
             // The money block is what makes the row exist at all; the direction

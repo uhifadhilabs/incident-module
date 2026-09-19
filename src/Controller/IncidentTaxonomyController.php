@@ -121,7 +121,6 @@ final class IncidentTaxonomyController
             // Which sub-category (if any) has its behaviour-block editor open.
             'editingBlocks' => null === $selected ? null : $this->openBlockEditor($selected, $request->query->getString('blocks')),
             'blockCatalogue' => BehaviorBlockEnum::inPickerOrder(),
-            'colourKeys' => TaxonomyAdminService::COLOUR_KEYS,
             'moneyDirections' => MoneyDirectionEnum::cases(),
             // The one page action this screen draws. The way back is the strip,
             // the lit Configure and the crumb — never a button of its own.
@@ -158,11 +157,7 @@ final class IncidentTaxonomyController
         $this->guardWrite($request);
 
         try {
-            $kind = $this->admin->createKind(
-                $area,
-                $request->request->getString('label'),
-                $request->request->getString('colour'),
-            );
+            $kind = $this->admin->createKind($area, $request->request->getString('label'));
 
             return $this->backToManager($area, $kind);
         } catch (TaxonomyConflictException $e) {
@@ -181,16 +176,6 @@ final class IncidentTaxonomyController
         } catch (TaxonomyConflictException $e) {
             return $this->refused($request, $area, $entity, $e);
         }
-
-        return $this->backToManager($area, $entity);
-    }
-
-    #[Route('/areas/{uuid}/modules/incidents/kinds/{kind}/colour', name: 'incident_kinds_kind_colour', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
-    public function recolourKind(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $kind): Response
-    {
-        $this->guardWrite($request);
-        $entity = $this->kind($area, $kind);
-        $this->admin->setKindColour($entity, $request->request->getString('colour'));
 
         return $this->backToManager($area, $entity);
     }

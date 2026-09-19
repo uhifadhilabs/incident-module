@@ -224,7 +224,7 @@ final class IncidentBlockAnswerServiceTest extends TestCase
     /** @param list<BehaviorBlockEnum> $blocks */
     private static function subcategoryWith(array $blocks, ?MoneyDirectionEnum $direction = null): TaxonomySubcategory
     {
-        $kind = new TaxonomyKind(new AreaOfInterest(), 'conflict', 'Conflict', 'hwc');
+        $kind = new TaxonomyKind(new AreaOfInterest(), 'conflict', 'Conflict');
         $subcategory = new TaxonomySubcategory($kind, 'depredation', 'depredation');
         $subcategory->setBlocks($blocks);
         if (null !== $direction) {

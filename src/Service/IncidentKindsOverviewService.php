@@ -96,7 +96,6 @@ final readonly class IncidentKindsOverviewService
         return new IncidentKindFigures(
             label: $kind->getLabel(),
             code: $kind->getCode(),
-            colourKey: $kind->getColourKey(),
             catIndex: $kind->catIndex(),
             active: $kind->isActive(),
             subcategories: $rows,

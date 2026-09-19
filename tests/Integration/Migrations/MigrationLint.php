@@ -87,6 +87,13 @@ final readonly class MigrationLint
             if (1 !== preg_match('/\bNOT\s+NULL\b/i', $sql)) {
                 continue;
             }
+            // `DROP NOT NULL` LOOSENS A COLUMN. It reads as "NOT NULL" to a
+            // regex and is the opposite of the thing this rule is about: it
+            // can never fail on a table with rows in it, because every row
+            // already satisfies a weaker constraint.
+            if (1 === preg_match('/\bDROP\s+NOT\s+NULL\b/i', $sql)) {
+                continue;
+            }
 
             $table = strtolower($match['table']);
             if (isset($created[$table]) || isset($backfilled[$table])) {

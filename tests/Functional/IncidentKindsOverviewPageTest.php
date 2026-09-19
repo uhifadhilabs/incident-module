@@ -43,15 +43,15 @@ final class IncidentKindsOverviewPageTest extends FunctionalTestCase
     /** The area's own vocabulary: two live kinds and one retired. */
     private function aTaxonomy(AreaOfInterest $area): TaxonomyKind
     {
-        $conflict = $this->admin()->createKind($area, 'Human–wildlife conflict', 'hwc');
+        $conflict = $this->admin()->createKind($area, 'Human–wildlife conflict');
         $depredation = $this->admin()->createSubcategory($conflict, 'Livestock depredation');
         $this->admin()->setBlocks($depredation, [BehaviorBlockEnum::Money], MoneyDirectionEnum::Compensation);
         $this->admin()->createSubcategory($conflict, 'Crop raiding');
 
-        $mortality = $this->admin()->createKind($area, 'Wildlife mortality', 'mort');
+        $mortality = $this->admin()->createKind($area, 'Wildlife mortality');
         $this->admin()->createSubcategory($mortality, 'Roadkill');
 
-        $retired = $this->admin()->createKind($area, 'Fisheries', 'mort');
+        $retired = $this->admin()->createKind($area, 'Fisheries');
         $this->admin()->deactivateKind($retired);
 
         return $conflict;

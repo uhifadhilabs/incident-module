@@ -49,17 +49,25 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
      * Schema the mapping has already let go of and a later version drops, with
      * the version that drops it. Nothing else may appear in a proposed diff.
      *
-     * EMPTY, AND THAT IS THE POINT. The installation-wide taxonomy that used to
-     * be listed here — `incident_category`, `incident_subcategory` and
-     * `incident.subcategory_id` — is dropped by
-     * {@see \Uhifadhi\Incident\Migrations\Version20260919210000}, so the diff
-     * an installation runs has nothing left to propose. A deferral that is never
-     * collected is how an installer ends up generating the drop itself, in an
-     * order PostgreSQL refuses.
+     * ONE ENTRY, AND IT IS SPENT WITHIN A RELEASE. The installation-wide
+     * taxonomy that was listed here — `incident_category`,
+     * `incident_subcategory` and `incident.subcategory_id` — is dropped by
+     * {@see \Uhifadhi\Incident\Migrations\Version20260919210000}, which is what
+     * collecting a deferral looks like; what is listed now takes its place and
+     * is due one release later. A deferral that is never collected is how an
+     * installer ends up generating the drop itself, in an order PostgreSQL
+     * refuses.
      *
      * @var array<string, string>
      */
-    private const array RETIRED_UNTIL_DROPPED = [];
+    private const array RETIRED_UNTIL_DROPPED = [
+        // The colour an administrator used to pick. A kind wears the house hue
+        // its place in the area's list points at from 0.4, so the mapping has
+        // let the column go; Version20260919230000 made it nullable and a later
+        // @destructive version drops it, one release on, so an installation can
+        // still read what each kind used to be set to.
+        'colour_key' => '0.5',
+    ];
 
     public function testAFreshDatabaseMigratedLeavesNothingButRetiredSchemaToDiff(): void
     {

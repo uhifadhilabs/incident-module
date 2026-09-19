@@ -53,8 +53,8 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
         $northern = $this->anArea('Northern Reserve');
         $southern = $this->anArea('Southern Reserve');
 
-        $this->admin()->createKind($northern, 'Poaching & wildlife crime', 'poach');
-        $this->admin()->createKind($southern, 'Fire', 'mort');
+        $this->admin()->createKind($northern, 'Poaching & wildlife crime');
+        $this->admin()->createKind($southern, 'Fire');
 
         $here = $this->kinds()->forArea($northern);
         $there = $this->kinds()->forArea($southern);
@@ -71,8 +71,8 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
         $a = $this->anArea('Area A');
         $b = $this->anArea('Area B');
 
-        $this->admin()->createKind($a, 'Fire', 'mort');
-        $this->admin()->createKind($b, 'Fire', 'mort');
+        $this->admin()->createKind($a, 'Fire');
+        $this->admin()->createKind($b, 'Fire');
 
         self::assertCount(1, $this->kinds()->forArea($a));
         self::assertCount(1, $this->kinds()->forArea($b));
@@ -93,7 +93,7 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     public function testAWireCodeIsSluggedFromTheLabel(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Human–wildlife conflict', 'hwc');
+        $kind = $this->admin()->createKind($area, 'Human–wildlife conflict');
 
         self::assertSame('human-wildlife-conflict', $kind->getCode());
     }
@@ -102,8 +102,8 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     public function testWireCodesAreMadeUniqueWithinTheArea(): void
     {
         $area = $this->anArea();
-        $first = $this->admin()->createKind($area, 'Fire', 'mort');
-        $second = $this->admin()->createKind($area, 'FIRE!', 'mort');
+        $first = $this->admin()->createKind($area, 'Fire');
+        $second = $this->admin()->createKind($area, 'FIRE!');
 
         self::assertSame('fire', $first->getCode());
         self::assertSame('fire-2', $second->getCode());
@@ -113,7 +113,7 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     public function testRenamingAKindKeepsItsWireCode(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Poaching', 'poach');
+        $kind = $this->admin()->createKind($area, 'Poaching');
         $code = $kind->getCode();
 
         $this->admin()->renameKind($kind, 'Poaching & wildlife crime');
@@ -127,16 +127,16 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     public function testADuplicateKindLabelInTheSameAreaIsRefused(): void
     {
         $area = $this->anArea();
-        $this->admin()->createKind($area, 'Fire', 'mort');
+        $this->admin()->createKind($area, 'Fire');
 
         $this->expectException(TaxonomyConflictException::class);
-        $this->admin()->createKind($area, 'fire', 'mort');
+        $this->admin()->createKind($area, 'fire');
     }
 
     public function testADuplicateSubLabelUnderTheSameKindIsRefused(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Poaching', 'poach');
+        $kind = $this->admin()->createKind($area, 'Poaching');
         $this->admin()->createSubcategory($kind, 'Snaring');
 
         $this->expectException(TaxonomyConflictException::class);
@@ -147,8 +147,8 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     public function testTheSameSubLabelMayLiveUnderTwoKinds(): void
     {
         $area = $this->anArea();
-        $poaching = $this->admin()->createKind($area, 'Poaching', 'poach');
-        $mortality = $this->admin()->createKind($area, 'Wildlife mortality', 'mort');
+        $poaching = $this->admin()->createKind($area, 'Poaching');
+        $mortality = $this->admin()->createKind($area, 'Wildlife mortality');
 
         $this->admin()->createSubcategory($poaching, 'Poisoning');
         $second = $this->admin()->createSubcategory($mortality, 'Poisoning');
@@ -165,7 +165,7 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     public function testBlocksComposeFreelyAndAreReplacedWhole(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Poaching', 'poach');
+        $kind = $this->admin()->createKind($area, 'Poaching');
         $sub = $this->admin()->createSubcategory($kind, 'Snaring');
 
         $this->admin()->setBlocks($sub, [BehaviorBlockEnum::Species, BehaviorBlockEnum::Counts, BehaviorBlockEnum::Parties]);
@@ -182,7 +182,7 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     public function testMoneyBlockCarriesADirectionAndClearsWhenRemoved(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
+        $kind = $this->admin()->createKind($area, 'Conflict');
         $sub = $this->admin()->createSubcategory($kind, 'Livestock depredation');
 
         $this->admin()->setBlocks($sub, [BehaviorBlockEnum::Money], MoneyDirectionEnum::Compensation);
@@ -205,7 +205,7 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     public function testTheTermIsThisWordsOwnAndCannotBeLessThanAnHour(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Compliance', 'comp');
+        $kind = $this->admin()->createKind($area, 'Compliance');
         $notice = $this->admin()->createSubcategory($kind, 'Unauthorized construction');
         $injury = $this->admin()->createSubcategory($kind, 'Human injury');
 
@@ -245,7 +245,7 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     public function testTheDepartmentsAKindLeadsWithAreTheAreasOwn(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
+        $kind = $this->admin()->createKind($area, 'Conflict');
 
         $this->admin()->setKindLeads($kind, ['Protection Service', '  ', 'Ecology & Wildlife Mgmt', 'Protection Service']);
 
@@ -258,7 +258,7 @@ final class TaxonomyAdminServiceTest extends IntegrationTestCase
     public function testDeactivatingAKindDimsItButKeepsItAndItsSubs(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Fire', 'mort');
+        $kind = $this->admin()->createKind($area, 'Fire');
         $sub = $this->admin()->createSubcategory($kind, 'Wildfire');
 
         $this->admin()->deactivateKind($kind);

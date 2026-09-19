@@ -169,7 +169,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     public function testTheManagerRendersSubsTheirBlocksAndTheToggleEditor(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Poaching', 'poach');
+        $kind = $this->admin()->createKind($area, 'Poaching');
         $sub = $this->admin()->createSubcategory($kind, 'Snaring');
         $this->admin()->setBlocks($sub, [BehaviorBlockEnum::Species, BehaviorBlockEnum::Counts]);
         $this->client->loginUser($this->aManager());
@@ -197,7 +197,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     public function testASwitchedOnBlockIsSaidByItsCheckboxAlone(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Poaching', 'poach');
+        $kind = $this->admin()->createKind($area, 'Poaching');
         $sub = $this->admin()->createSubcategory($kind, 'Snaring');
         $this->admin()->setBlocks($sub, [BehaviorBlockEnum::Species, BehaviorBlockEnum::Counts]);
         $this->client->loginUser($this->aManager());
@@ -224,7 +224,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     public function testComposingAWordsBehaviourThroughTheEditorPersists(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
+        $kind = $this->admin()->createKind($area, 'Conflict');
         $sub = $this->admin()->createSubcategory($kind, 'Livestock depredation');
         $this->client->loginUser($this->aManager());
 
@@ -260,7 +260,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     public function testTheBehaviourPanelDrawsTheTermAndAsksForNoFields(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
+        $kind = $this->admin()->createKind($area, 'Conflict');
         $sub = $this->admin()->createSubcategory($kind, 'Livestock depredation');
         $this->client->loginUser($this->aManager());
 
@@ -279,7 +279,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     public function testTheSubcategoryRowCarriesBlockChipsAndNoFieldCount(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Conflict', 'hwc');
+        $kind = $this->admin()->createKind($area, 'Conflict');
         $sub = $this->admin()->createSubcategory($kind, 'Livestock depredation');
         $this->admin()->setBlocks($sub, [BehaviorBlockEnum::Species, BehaviorBlockEnum::Money], MoneyDirectionEnum::Compensation);
         $this->client->loginUser($this->aManager());
@@ -310,7 +310,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     public function testDeactivatingAKindDimsItInPlaceAndReactivateBringsItBack(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Fire', 'mort');
+        $kind = $this->admin()->createKind($area, 'Fire');
         $this->client->loginUser($this->aManager());
 
         $html = $this->client->request('GET', $this->kindsUrl($area))->html();
@@ -335,7 +335,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     public function testThereIsNoDeleteControlAnywhere(): void
     {
         $area = $this->anArea();
-        $kind = $this->admin()->createKind($area, 'Poaching', 'poach');
+        $kind = $this->admin()->createKind($area, 'Poaching');
         $this->admin()->createSubcategory($kind, 'Snaring');
         $this->client->loginUser($this->aManager());
 
@@ -351,7 +351,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     {
         $northern = $this->anArea('Northern Reserve');
         $southern = $this->anArea('Southern Reserve');
-        $this->admin()->createKind($northern, 'Poaching', 'poach');
+        $this->admin()->createKind($northern, 'Poaching');
         $this->client->loginUser($this->aManager());
 
         // Southern Reserve sees its own (empty) list, not Northern Reserve's kind.
@@ -365,7 +365,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     {
         $northern = $this->anArea('Northern Reserve');
         $southern = $this->anArea('Southern Reserve');
-        $kind = $this->admin()->createKind($northern, 'Poaching', 'poach');
+        $kind = $this->admin()->createKind($northern, 'Poaching');
         $this->client->loginUser($this->aManager());
 
         $html = $this->client->request('GET', $this->kindsUrl($southern))->html();
@@ -382,7 +382,7 @@ final class TaxonomyAdminPageTest extends FunctionalTestCase
     public function testADuplicateKindLabelIsRefusedWithoutCreatingASecondRow(): void
     {
         $area = $this->anArea();
-        $this->admin()->createKind($area, 'Fire', 'mort');
+        $this->admin()->createKind($area, 'Fire');
         $this->client->loginUser($this->aManager());
 
         $html = $this->client->request('GET', $this->kindsUrl($area))->html();
