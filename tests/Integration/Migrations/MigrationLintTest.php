@@ -19,6 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Uhifadhi\Incident\Tests\Integration\Migrations\Fixtures\Migrations\Version29991231000100;
 use Uhifadhi\Incident\Tests\Integration\Migrations\Fixtures\Migrations\Version29991231000200;
 use Uhifadhi\Incident\Tests\Integration\Migrations\Fixtures\Migrations\Version29991231000300;
+use Uhifadhi\Incident\Tests\Integration\Migrations\Fixtures\Migrations\Version29991231000400;
 
 /**
  * THE LINT, AND THE PROOF THAT IT CAN FAIL.
@@ -92,5 +93,20 @@ final class MigrationLintTest extends KernelTestCase
 
         self::assertCount(1, $violations);
         self::assertStringContainsString('down() plans no statements', $violations[0]);
+    }
+
+    /**
+     * THE ONE EXEMPTION, AND ITS PRICE. A version that changes only DATA has
+     * no schema to bring back, so it may unwind to nothing — but only by
+     * saying `@irreversible` and why. Touching no schema is not on its own a
+     * way past the rule.
+     */
+    public function testItCatchesADataOnlyVersionThatNeverDeclaredItselfIrreversible(): void
+    {
+        $violations = $this->lint()->violations(Version29991231000400::class);
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('down() plans no statements', $violations[0]);
+        self::assertStringContainsString('@irreversible', $violations[0]);
     }
 }

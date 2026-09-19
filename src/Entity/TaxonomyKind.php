@@ -57,6 +57,12 @@ class TaxonomyKind
 {
     use TimestampableTrait;
 
+    /**
+     * How many hues the house's categorical set has. The set is the shell's —
+     * this is only how far the counting goes before it starts again.
+     */
+    private const int HOUSE_HUES = 9;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -190,6 +196,31 @@ class TaxonomyKind
     public function getPosition(): int
     {
         return $this->position;
+    }
+
+    /**
+     * WHICH OF THE NINE HOUSE HUES THIS KIND WEARS — 1..9, read off its place
+     * in the area's list and never stored as a choice.
+     *
+     * RULED 2026-09-21: a module declares no colour and a user picks none. The
+     * house owns one categorical set; what this module owns is the ORDER its
+     * kinds are in, and the first kind takes the first hue. Reordering the
+     * list moves the hues with it, which is the whole of the editing story.
+     *
+     * It wraps past nine — a tenth kind starts again at one rather than asking
+     * for a colour nothing defines — and it clamps, because `position` is an
+     * ordinary integer column that older rows left zeroes and gaps in.
+     *
+     * The value is spent as `data-cat` on the markup; the shell's
+     * `[data-cat="n"]` rules resolve it to a hue. {@see UhifadhiIncidentBundle}
+     */
+    public function catIndex(): int
+    {
+        // A position below zero is not a place in the list at all, so it is
+        // read as the front of it rather than wrapped to an arbitrary hue.
+        $ordinal = max(0, $this->position);
+
+        return $ordinal % self::HOUSE_HUES + 1;
     }
 
     public function setPosition(int $position): static

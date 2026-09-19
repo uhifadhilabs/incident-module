@@ -11,7 +11,7 @@
         {% for kind in dashboard.kinds %}
             <div class="i-taxg{{ kind.code in dashboard.filter.kindCodes ? ' on' }}">
                 <a class="r" href="{{ path('incident_dashboard', {uuid: area.uuid}|merge(dashboard.filter.onlyKind(kind.code).toQuery)) }}">
-                    <i class="i-hue-{{ kind.colourKey }}"></i><b>{{ kind.label }}</b><span class="n">{{ dashboard.kindCount(kind) }}</span>
+                    <i class="i-hue-{{ kind.colourKey }}" data-cat="{{ kind.catIndex }}"></i><b>{{ kind.label }}</b><span class="n">{{ dashboard.kindCount(kind) }}</span>
                 </a>
                 <span class="lens">leads: {{ kind.leadsLine }}</span>
                 <span class="i-taxrun">{% for subcategory in kind.subcategories %}<span>{{ subcategory.label }}</span>{% endfor %}</span>

@@ -49,7 +49,7 @@ final readonly class MigrationLint
         return [
             ...$this->notNullWithoutBackfill($class, $up),
             ...$this->dropWithoutDestructiveMarker($class, $up),
-            ...$this->emptyDown($class, $down),
+            ...$this->emptyDown($class, $up, $down),
         ];
     }
 
@@ -142,24 +142,63 @@ final readonly class MigrationLint
     }
 
     /**
-     * A `down()` that plans nothing is a rollback nobody can run. The schema has
-     * to round-trip — that is the rehearsal an installation gets before it
+     * A `down()` that plans nothing is a rollback nobody can run. The schema
+     * has to round-trip — that is the rehearsal an installation gets before it
      * upgrades for real.
      *
-     * @param list<string> $down
+     * THE ONE EXEMPTION: a version that changes only DATA — no CREATE, no
+     * ALTER, no DROP, no RENAME — has no schema to bring back, and inventing
+     * one to satisfy this rule would write rows nobody recorded. Such a
+     * version may unwind to nothing, and it says so in its docblock with
+     * `@irreversible` and the reason. Both halves are required: touching no
+     * schema is not on its own a way past the rule, and a marker on a version
+     * that does touch schema buys nothing.
+     *
+     * @param class-string<AbstractMigration> $class
+     * @param list<string>                    $up
+     * @param list<string>                    $down
      *
      * @return list<string>
      */
-    private function emptyDown(string $class, array $down): array
+    private function emptyDown(string $class, array $up, array $down): array
     {
         if ([] !== $down) {
             return [];
         }
 
+        if (self::changesDataOnly($up) && self::declares($class, '@irreversible')) {
+            return [];
+        }
+
         return [\sprintf(
-            '%s: down() plans no statements, so the version cannot be unwound and its up() has never been rehearsed.',
+            '%s: down() plans no statements, so the version cannot be unwound and its up() has never been rehearsed. '
+            .'A version that changes only data may unwind to nothing, and then it says "@irreversible" in its docblock and why.',
             self::shortName($class),
         )];
+    }
+
+    /**
+     * @param list<string> $up
+     */
+    private static function changesDataOnly(array $up): bool
+    {
+        foreach ($up as $sql) {
+            if (1 === preg_match('/\b(CREATE|ALTER|DROP|RENAME)\b/i', $sql)) {
+                return false;
+            }
+        }
+
+        return [] !== $up;
+    }
+
+    /**
+     * @param class-string<AbstractMigration> $class
+     */
+    private static function declares(string $class, string $marker): bool
+    {
+        $docblock = new \ReflectionClass($class)->getDocComment();
+
+        return \is_string($docblock) && str_contains($docblock, $marker);
     }
 
     /**

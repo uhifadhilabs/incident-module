@@ -87,7 +87,7 @@
                    an offset is the sum of the arcs actually painted before it — the
                    ring closes on itself to the tenth. #}
                 {% set arc = (total > 0 ? segment.count / total * circumference : 0)|round(1) %}
-                <circle class="arc {{ segment.class }}" cx="80" cy="80" r="{{ radius }}" stroke-dasharray="{{ arc }} {{ (circumference - arc)|round(1) }}" stroke-dashoffset="{{ travelled > 0 ? '-' ~ travelled : '0' }}"><title>{{ segment.label }}: {{ segment.count }} of {{ total }}</title></circle>
+                <circle class="arc {{ segment.class }}"{% if segment.cat is defined %} data-cat="{{ segment.cat }}"{% endif %} cx="80" cy="80" r="{{ radius }}" stroke-dasharray="{{ arc }} {{ (circumference - arc)|round(1) }}" stroke-dashoffset="{{ travelled > 0 ? '-' ~ travelled : '0' }}"><title>{{ segment.label }}: {{ segment.count }} of {{ total }}</title></circle>
                 {% set travelled = (travelled + arc)|round(1) %}
             {% endfor %}
         </g>
@@ -96,7 +96,7 @@
     </svg>
     <div class="legend legend-v">
         {% for segment in segments %}
-            <span><i class="{{ segment.class }}"></i>{{ segment.label }}<b>{{ segment.count }}</b><em>{{ total > 0 ? (segment.count / total * 100)|round : 0 }}%</em></span>
+            <span><i class="{{ segment.class }}"{% if segment.cat is defined %} data-cat="{{ segment.cat }}"{% endif %}></i>{{ segment.label }}<b>{{ segment.count }}</b><em>{{ total > 0 ? (segment.count / total * 100)|round : 0 }}%</em></span>
         {% endfor %}
     </div>
 {% endmacro %}

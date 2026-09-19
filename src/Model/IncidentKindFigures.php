@@ -26,6 +26,7 @@ final readonly class IncidentKindFigures
      * @param string                           $label         the name an editor typed
      * @param string                           $code          the wire-code, and this kind's address
      * @param string                           $colourKey     the hue key the stylesheet declares
+     * @param int                              $catIndex      which of the nine house hues — the kind's place in the area's list
      * @param bool                             $active        a retired kind is dimmed, never hidden
      * @param list<IncidentSubcategoryFigures> $subcategories the kind's words, in the editor's order
      * @param int                              $thisMonth     filed under any of them in the month on screen
@@ -36,6 +37,7 @@ final readonly class IncidentKindFigures
         public string $label,
         public string $code,
         public string $colourKey,
+        public int $catIndex,
         public bool $active,
         public array $subcategories,
         public int $thisMonth,

@@ -59,7 +59,7 @@
             <span class="i-ddsep"></span>
             {% for kind in dashboard.kinds %}
                 <a class="i-ddopt{{ kind.code in filter.kindCodes ? ' on' }}"
-                   href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyKind(kind.code).toQuery)) }}"><span class="i-dot {{ kind.colourKey }}"></span><span class="i-ddopt-l">{{ kind.label|lower }}</span><span class="i-ddopt-n">{{ dashboard.kindCount(kind) }}</span></a>
+                   href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyKind(kind.code).toQuery)) }}"><span class="i-dot {{ kind.colourKey }}" data-cat="{{ kind.catIndex }}"></span><span class="i-ddopt-l">{{ kind.label|lower }}</span><span class="i-ddopt-n">{{ dashboard.kindCount(kind) }}</span></a>
             {% endfor %}
         </div>
     </details>

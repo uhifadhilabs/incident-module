@@ -97,6 +97,7 @@ final readonly class IncidentKindsOverviewService
             label: $kind->getLabel(),
             code: $kind->getCode(),
             colourKey: $kind->getColourKey(),
+            catIndex: $kind->catIndex(),
             active: $kind->isActive(),
             subcategories: $rows,
             thisMonth: $month,

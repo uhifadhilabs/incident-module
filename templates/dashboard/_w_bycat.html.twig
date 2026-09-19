@@ -17,6 +17,7 @@
         {% set segments = segments|merge([{
             label: share.kind.label,
             class: share.kind.colourKey,
+            cat: share.kind.catIndex,
             count: share.count,
         }]) %}
     {% endfor %}
