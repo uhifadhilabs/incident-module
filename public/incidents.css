@@ -28,16 +28,13 @@
 /* NO TOKEN BRIDGE. The aliases this sheet spends — --cv --p1 --p2 --tx --fog
    --dim --acc --accT --ln --ln2 --raised --ok --warn --fail --shadow — are the
    SHELL's, declared once in shell.css for both themes and linked on every page
-   before this file. A bridge restating them here was a second copy of the same
-   dozen decisions, and because this sheet loads last that copy won on every
-   page any incidents screen was on: --shadow, stated once, stopped turning
-   over with the theme. */
+   before this file. Restating one here would be a second copy of the same
+   decision, and because this sheet loads last that copy would win on every
+   page any incidents screen is on. */
 
 
 /* ── THIS MODULE DECLARES NO COLOUR ───────────────────────────────────────
-   RULED 2026-09-21. Five hues used to be stated here — --i-poach, --i-hwc,
-   --i-comp, --i-mort, --i-money — and they were a tenth place a colour was
-   written down. They are gone.
+   RULED 2026-09-21. A hue belongs to the house, and nothing below states one.
 
    What this module owns is the ORDER of an area's kinds. A kind's place in
    that list is published as `data-cat="1".."9"` on the markup
@@ -47,9 +44,8 @@
    matrix row and the map pin — reads that one variable. Nothing here knows a
    hue, and reordering the kinds moves the hues with them.
 
-   MONEY IS NOT A CATEGORY. Its token's value was, in both themes,
-   byte-identical to the accent, so the accent is what it always was; the
-   amount's own state (paid, due, nil) still says the rest in --ok/--warn/--dim.
+   MONEY IS NOT A CATEGORY. It takes the accent, and the amount's own state
+   (paid, due, nil) says the rest in --ok/--warn/--dim.
 
    FLAGGED: --crit is the deepest step of the severity ALARM ramp — a meaning,
    not a category — and the shell ships no such token, so it is still stated

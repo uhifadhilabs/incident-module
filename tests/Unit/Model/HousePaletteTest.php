@@ -39,6 +39,18 @@ final class HousePaletteTest extends TestCase
         self::assertSame('var(--cat-9)', HousePalette::token(9));
     }
 
+    /**
+     * AND A THING THAT MEANS SOMETHING TAKES THE TOKEN THAT MEANS IT. The
+     * area overview's two incident layers are the case: open work and
+     * finished work are two STATES of one thing, not two of an area's words,
+     * so a position would have said something untrue about them.
+     */
+    public function testAStateIsPublishedAsTheSemanticTokenThatMeansIt(): void
+    {
+        self::assertSame('var(--warn)', HousePalette::OPEN);
+        self::assertSame('var(--ok)', HousePalette::DONE);
+    }
+
     public function testAPositionOutsideTheSetIsNotInventedButFallsBackToTheMutedMark(): void
     {
         // Nothing should ask this — `catIndex()` already wraps and clamps — so

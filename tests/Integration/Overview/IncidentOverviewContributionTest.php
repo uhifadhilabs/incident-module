@@ -187,6 +187,12 @@ final class IncidentOverviewContributionTest extends OverviewTestCase
         self::assertSame(['incidents.open', 'incidents.done'], array_map(static fn (MapLayer $layer) => $layer->id, $layers));
         self::assertSame('Incidents', $layers[0]->groupLabel);
         self::assertSame('Open', $layers[0]->label);
+        // THESE TWO ARE STATES, NOT CATEGORIES. Open work needs a look and
+        // finished work went well, so they wear the semantic tokens that mean
+        // exactly that — never two of the nine, which are for the words an
+        // area wrote.
+        self::assertSame('var(--warn)', $layers[0]->swatch);
+        self::assertSame('var(--ok)', $layers[1]->swatch);
         self::assertSame(7, $layers[0]->count);
         self::assertTrue($layers[0]->on);
         self::assertIsArray($layers[0]->features['features']);

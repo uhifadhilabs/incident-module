@@ -249,6 +249,23 @@ final class ModuleDeclaresNoColourTest extends TestCase
         self::assertStringContainsString('[data-cat] { --cat: var(--fog);', $shell);
     }
 
+    /**
+     * AND THE SEMANTIC TOKENS IT PUBLISHES ARE THE SHELL'S TOO. A state handed
+     * to a host as `var(--warn)` is resolved by the same sheet that resolves a
+     * position, so a legend swatch and a status chip cannot mean the same
+     * thing in two colours.
+     */
+    public function testTheSemanticTokensItPublishesAreOnesTheShellDefines(): void
+    {
+        $shell = self::read(self::shellDirectory().'/shell.css');
+
+        foreach ([HousePalette::OPEN, HousePalette::DONE] as $token) {
+            $name = trim($token, 'var()');
+
+            self::assertStringContainsString($name.': rgb(', $shell, $token.' is not a token the shell defines.');
+        }
+    }
+
     /** The declarations inside the first rule with exactly this selector. */
     private static function declarationsFor(string $css, string $selector): ?string
     {

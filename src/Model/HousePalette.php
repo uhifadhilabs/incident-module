@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Model;
 
 /**
- * THE HOUSE POSITION, NAMED — for the contracts that still take a colour.
+ * THE HOUSE TOKEN, NAMED — for the contracts that still take a colour.
  *
  * RULED 2026-09-21: a module declares no colour. A category is a POSITION in a
  * declared order, and the house owns the nine hues those positions resolve to.
@@ -26,6 +26,11 @@ namespace Uhifadhi\Incident\Model;
  * token BY NAME, `var(--cat-3)`, resolved wherever it is drawn. The module
  * still states no value, and the string is written in one place so it cannot
  * drift from the one the shell defines.
+ *
+ * AND NOT EVERY MARK IS A CATEGORY. A thing told apart from its siblings takes
+ * a position; a thing that MEANS something takes the semantic token that means
+ * it, down the same path and as the same kind of string — which is what the
+ * constants below are for.
  *
  * The spelling is load-bearing twice. It is the token the shell's palette
  * declares, and it is what the shell's plate rules match on —
@@ -42,6 +47,12 @@ final class HousePalette
 
     /** What an unknown position wears: the muted mark, which is the shell's own fallback. */
     public const string UNKNOWN = 'var(--fog)';
+
+    /** Work that still needs doing. A state, so a meaning and not a position. */
+    public const string OPEN = 'var(--warn)';
+
+    /** Work that went well and is finished with. */
+    public const string DONE = 'var(--ok)';
 
     /**
      * @param int $catIndex a position in the house's set, 1 to 9

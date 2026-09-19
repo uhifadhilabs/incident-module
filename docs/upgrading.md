@@ -128,6 +128,10 @@ product has one palette.
 - **`POST …/kinds/{uuid}/colour` (`incident_kinds_kind_colour`) is removed.**
   Nothing in the product posted to it but a form this release deletes; an
   installation that scripted it has nothing to send it.
+- **The area overview's two incident layers are states, not categories.**
+  `Open` wears `--warn` and `Resolved & closed · 30 days` wears `--ok`, which
+  is what those tokens mean everywhere else in the product. The nine house
+  hues are for the words an area wrote, and neither of those is one.
 - **Money is the accent**, on the money card, the money fold, the claimant role
   and the money chip. The fifth token this sheet used to state had, in both
   themes, the same value as the accent, so nothing moves.

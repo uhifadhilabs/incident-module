@@ -70,10 +70,12 @@ final readonly class IncidentMapLayers implements MapLayerProviderInterface
                 // person can tell why a layer vanished.
                 groupLabel: 'Incidents',
                 label: 'Open',
-                // A LAYER NAMES A POSITION, NOT A COLOUR. Open work wears the
-                // first of the house set — the register's leading mark — and
-                // the plate decides what that reads as over imagery.
-                swatch: HousePalette::token(1),
+                // A LAYER NAMES A TOKEN, NOT A COLOUR — and these two are
+                // STATES rather than categories: open work needs a look and
+                // finished work went well, which is what --warn and --ok mean
+                // everywhere else in the product. A position would have said
+                // they were two words an area wrote, which they are not.
+                swatch: HousePalette::OPEN,
                 features: IncidentMapService::featuresFor($open),
                 count: \count($open),
             ),
@@ -82,9 +84,7 @@ final readonly class IncidentMapLayers implements MapLayerProviderInterface
                 moduleSlug: $this->moduleSlug(),
                 groupLabel: 'Incidents',
                 label: 'Resolved & closed · 30 days',
-                // Finished work is told apart from open work, so it takes the
-                // next position rather than a meaning.
-                swatch: HousePalette::token(4),
+                swatch: HousePalette::DONE,
                 features: IncidentMapService::featuresFor($done),
                 count: \count($done),
                 // Off before anybody touches the legend, and its entry is drawn
