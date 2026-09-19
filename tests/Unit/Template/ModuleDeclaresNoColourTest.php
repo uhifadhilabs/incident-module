@@ -139,6 +139,44 @@ final class ModuleDeclaresNoColourTest extends TestCase
         ));
     }
 
+    /**
+     * AND A SHEET NEVER PICKS ONE OF THE NINE. `--cat-1` spelled into a rule is
+     * this module deciding which hue something wears, which is the ruling read
+     * backwards: a mark takes the position the MARKUP publishes, through
+     * `--cat`, and a surface that is not a category takes a semantic token
+     * instead. It is how a module grew an identity colour once — the area
+     * overview's contributor dots — and a module has no hue.
+     *
+     * The two exceptions are the in-progress status, which has no fifth
+     * meaning to take and is told apart rather than judged. Both are FLAGGED
+     * in the sheet and both await a ruling.
+     */
+    public function testNeitherSheetPicksOneOfTheNineForItself(): void
+    {
+        $picked = [];
+        $flagged = ['.i-st.wip', '.ao-move.wip'];
+
+        foreach (self::ownSheets() as $name => $css) {
+            preg_match_all('/(?<selector>[^{};]*)\{(?<body>[^}]*)\}/', $css, $rules, \PREG_SET_ORDER);
+
+            foreach ($rules as $rule) {
+                if (1 !== preg_match('/var\(--cat-[1-9]\)/', $rule['body'])) {
+                    continue;
+                }
+
+                $selector = trim(preg_replace('/\s+/', ' ', preg_replace('/\/\*.*?\*\//s', '', $rule['selector']) ?? '') ?? '');
+                if (!\in_array($selector, $flagged, true)) {
+                    $picked[] = $name.' — '.$selector;
+                }
+            }
+        }
+
+        self::assertSame([], $picked, \sprintf(
+            "These pick one of the house's nine instead of resolving a published position:\n%s",
+            implode("\n", $picked),
+        ));
+    }
+
     public function testEveryRuleThatPaintsAKindsMarkResolvesThePosition(): void
     {
         $sheets = self::ownSheets();

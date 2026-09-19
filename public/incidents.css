@@ -957,15 +957,16 @@ html.light{
    everything about itself, and uninstalling the module takes its colour with
    it rather than leaving an orphaned rule in the host's stylesheet.
 
-   The hue is the register's leading category, which is what the module's pins,
-   its chips and its map layer already wear — so "incidents" is one colour
-   wherever it is named, on this page and on the module's own.                */
+   A MODULE HAS NO HUE. These dots name the contributor, not a category, and a
+   contributor takes the house accent — the same mark patrols draws for itself,
+   so the overview reads as one page rather than as a row of brands. The nine
+   are for the words an area wrote, and "incidents" is not one of them.       */
 .ao-by.incidents i,
 .ao-att .m i.incidents,
 .ao-col i.incidents,
 .ao-legend .grp > b i.incidents,
-.ao-dot.incidents{background:var(--cat-1)}
-.ao-board a.dot-incidents .k::before{background:var(--cat-1)}
+.ao-dot.incidents{background:var(--acc)}
+.ao-board a.dot-incidents .k::before{background:var(--acc)}
 
 /* THE PULSE ROW IS THE HOST'S; THE STATE ON IT IS THIS MODULE'S. The host
    prints a move inside a neutral .ao-move and adds whatever stateClass the
