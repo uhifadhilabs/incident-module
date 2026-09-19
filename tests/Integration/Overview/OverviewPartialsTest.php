@@ -38,6 +38,11 @@ final class OverviewPartialsTest extends OverviewTestCase
         $html = $this->render('in_flow', $this->aRegister());
 
         self::assertStringContainsString('data-w="in_flow"', $html);
+
+        // THE CAPTION NAMES ITS MONTH, because the filed figure is the month's
+        // intake and a bare "47 filed" beside it would read as the register.
+        // Seven of the register's eight came in this august.
+        self::assertStringContainsString('7 filed in august', $html);
         // Provenance survives a screenshot: the index prefix and the tag.
         // The workshop’s own reference for this frame stays in the design files.
         self::assertStringNotContainsString("IN\u{00B7}A1", $html);

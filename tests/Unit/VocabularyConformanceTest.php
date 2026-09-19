@@ -33,26 +33,6 @@ use Uhifadhi\Bundle\ShellBundle\Test\VocabularyConformanceTestCase;
  */
 final class VocabularyConformanceTest extends VocabularyConformanceTestCase
 {
-    /**
-     * HOST VOCABULARY THE CORE HAS NOT SHIPPED YET, named here rather than
-     * silently absent from the markup — because leaving the wrapper out is
-     * exactly the defect this whole file exists to catch, and a cell that omits
-     * one renders as browser defaults.
-     *
-     * @var list<string>
-     */
-    private const array AWAITING_THE_CORE = [
-        // THE MODULE-COLUMN HEADING, which `_w_in_column.html.twig` writes and
-        // no sheet in the chain defines: the area's own sheet carries `.ao-by`,
-        // `.ao-live`, `.ao-att` and `.ao-flow` but not `.ao-col`, and this
-        // module may not answer that by writing the rule itself. Its stack
-        // wrapper `.ao-colstack` is missing from the markup for the same
-        // reason and goes in the moment the core ships both. Delete this list
-        // then; it is the only thing keeping the check quiet about a heading
-        // that renders as browser defaults today.
-        'ao-col',
-    ];
-
     protected static function bundlePath(): string
     {
         return \dirname(__DIR__, 2);
@@ -203,10 +183,6 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
             }
 
             foreach (self::literalClassesIn((string) file_get_contents($file)) as $class) {
-                if (\in_array($class, self::AWAITING_THE_CORE, true)) {
-                    continue;
-                }
-
                 if (!\in_array($class, $surface, true) && !\in_array($class, $own, true)) {
                     $offenders[] = basename($file).': .'.$class;
                 }

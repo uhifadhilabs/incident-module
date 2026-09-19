@@ -46,6 +46,28 @@ final class IncidentOverviewFiguresTest extends OverviewTestCase
     }
 
     /**
+     * THE CARD'S CAPTION IS MONTH-SCOPED AND THE BAR IS NOT, which is why the
+     * two figures are held apart rather than derived from each other. The bar
+     * answers "where is the work now" over the whole register; the caption
+     * answers "how much came in this month", and a register with ten years in
+     * it must not print ten years as the month's intake.
+     *
+     * The fixture proves the scope rather than asserting a tautology: eight
+     * incidents are on the register and one of them — the compensation claim —
+     * was filed in july, so the month's count is seven and the register's eight.
+     */
+    public function testTheMonthsFiledCountIsTheMonthsAndNotTheRegisters(): void
+    {
+        $area = $this->aRegister();
+
+        $overview = $this->figures()->for($area, self::now());
+
+        self::assertSame(8, $overview->total, 'The register is the whole register.');
+        self::assertSame(7, $overview->filedThisMonth, 'July’s claim is not this month’s intake.');
+        self::assertSame('2026-08-01', $overview->month->format('Y-m-d'), 'The month is the one the page is being read in.');
+    }
+
+    /**
      * EVERY PLACE IS PRESENT, at zero where nothing is there. A bar that dropped
      * an empty segment would redraw itself on a quiet week and a reader would
      * think the workflow had changed.

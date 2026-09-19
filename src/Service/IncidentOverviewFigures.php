@@ -102,6 +102,8 @@ final class IncidentOverviewFigures
             currency: $this->currency,
             dashboardUrl: $dashboardUrl,
             total: $this->incidents->countFor($area),
+            month: $monthFrom,
+            filedThisMonth: $this->incidents->countFiledBetween($area, $monthFrom, $monthFrom->modify('+1 month')),
             kinds: $this->kinds->forArea($area),
             statusTally: $this->incidents->statusTallyFor($area),
             pastTerm: self::pastTerm($open, $now),

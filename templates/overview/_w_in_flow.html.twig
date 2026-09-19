@@ -12,7 +12,12 @@
    → Uhifadhi\Incident\Overview\IncidentOverviewContributor #}
 {% set o = by.incidents.overview %}
 <div class="c" data-w="in_flow">
-    <span class="tab">Open by state<span class="src">· {{ o.openCount }} open of {{ o.total }} filed</span></span>
+    {# THE CAPTION IS MONTH-SCOPED, as the design's is: the filed figure is this
+       month's intake and it says which month, because "47 filed" beside a bar
+       drawn from the whole register reads as the register. The two figures are
+       two windows and the wording keeps them apart rather than joining them
+       with an "of" that would claim the open work all arrived this month. #}
+    <span class="tab">Open by state<span class="src">· {{ o.openCount }} open · {{ o.filedThisMonth }} filed in {{ o.month|date('F')|lower }}</span></span>
     {# THE CONTRIBUTOR TAG. Provenance has to survive a screenshot: this card came
        from the incidents module and leaves with it. #}
     <span class="ao-by incidents"><i></i>incidents</span>

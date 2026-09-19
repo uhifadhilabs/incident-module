@@ -57,6 +57,12 @@ final readonly class IncidentOverview
      * @param TaxonomySubcategory|null $shortestTerm  the tightest promise this area is held to
      * @param TaxonomySubcategory|null $longestTerm   the loosest one
      * @param array<string, string>    $statusUrls    status value => the module list filtered to it
+     *
+     * `$total` is the whole register and `$filedThisMonth` is the intake since
+     * the first of `$month`. THEY ARE DELIBERATELY NOT THE SAME NUMBER and
+     * neither is derived from the other: the flow bar draws the register, the
+     * card's caption names the month, and an area with ten years of filings
+     * would otherwise read its whole history as august.
      */
     public function __construct(
         public \DateTimeImmutable $now,
@@ -65,6 +71,8 @@ final readonly class IncidentOverview
         public string $currency,
         public string $dashboardUrl,
         public int $total,
+        public \DateTimeImmutable $month,
+        public int $filedThisMonth,
         public array $kinds,
         public array $statusTally,
         public array $pastTerm,

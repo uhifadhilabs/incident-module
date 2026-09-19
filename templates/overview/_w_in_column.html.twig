@@ -22,7 +22,10 @@
         <span class="n">{{ o.openCount }} open · {{ o.today|length }} filed today</span>
         <a href="{{ o.dashboardUrl }}">Open the module &rarr;</a>
     </div>
-    <div>
+    {# THE STACK IS `.ao-colstack`, which is the surface's and not this module's:
+       one module column, one rhythm, whichever module drew it. Without the
+       wrapper the cards sit flush against each other. #}
+    <div class="ao-colstack">
         {{ include('@UhifadhiIncident/overview/_w_in_flow.html.twig', _context, with_context: false) }}
         {{ include('@UhifadhiIncident/overview/_w_in_today.html.twig', _context, with_context: false) }}
         {{ include('@UhifadhiIncident/overview/_w_in_money.html.twig', _context, with_context: false) }}

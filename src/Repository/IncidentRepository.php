@@ -373,6 +373,23 @@ final class IncidentRepository extends ServiceEntityRepository
      * they were filed. A different question from {@see filedBetween()} and
      * deliberately not reconcilable with it: a day's work is not a day's filings.
      */
+    /**
+     * HOW MANY CAME IN INSIDE A WINDOW — counted in SQL, because the caller
+     * wants the number and not the rows. `filedBetween()` is the other half of
+     * this and hydrates a day's worth; a month's worth, loaded to be counted,
+     * is a page that gets slower every year it runs.
+     */
+    public function countFiledBetween(AreaOfInterest $area, \DateTimeImmutable $from, \DateTimeImmutable $to): int
+    {
+        return (int) $this->createQueryBuilder('i')
+            ->select('COUNT(i.id)')
+            ->andWhere('i.area = :area')->setParameter('area', $area)
+            ->andWhere('i.reportedAt >= :from')->setParameter('from', $from)
+            ->andWhere('i.reportedAt < :to')->setParameter('to', $to)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function countClosedOutBetween(AreaOfInterest $area, \DateTimeImmutable $from, \DateTimeImmutable $to): int
     {
         return (int) $this->closedOut($area, $from, $to)
