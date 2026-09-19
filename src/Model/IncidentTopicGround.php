@@ -16,43 +16,38 @@ namespace Uhifadhi\Incident\Model;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 
 /**
- * THE GROUND A SLICE OF THE PERFORMANCE PAGE IS ACTUALLY MEASURED OVER — the
- * areas of it that RUN this module, and since when.
+ * THE GROUND A SLICE OF THE PERFORMANCE PAGE IS MEASURED OVER, AND SINCE WHEN
+ * — the two facts every figure on the page needs and neither of which is a
+ * record of this module's.
  *
- * READ FROM THE AREA × MODULE LEDGER, never from the incidents table. A matrix
- * row has to tell "this ground runs Incidents and filed nothing" from "this
- * ground does not run Incidents at all", and only the ledger knows the second:
- * an area with no incidents looks identical to an area that has never had the
- * module, and the two are drawn differently on purpose.
+ * WHY "SINCE WHEN" TRAVELS WITH THE GROUND. Every period before this module
+ * was switched on where the reader can see it is a period nobody was
+ * recording, and a nought drawn there is a collapse the organisation never
+ * had. The distinction has to be made wherever a run of periods is built, so
+ * the fact that decides it rides along rather than being fetched again at each
+ * call site.
  *
- * WHY "SINCE WHEN" TRAVELS WITH IT. Every period before the module was
- * installed over this ground is a period nobody was recording, and a nought
- * drawn there is a collapse the organisation never had. The distinction has to
- * be made wherever a run of periods is built, so the fact that decides it
- * rides along with the ground rather than being fetched again at each call
- * site.
+ * BOTH FACTS COME FROM THE HOST'S DIRECTORY, never from a read of somebody
+ * else's tables: {@see \Uhifadhi\Contracts\Performance\DepartmentEntry}
+ * carries the area a row reads and its `runningSince` for this module's slug.
  */
 final readonly class IncidentTopicGround
 {
-    /**
-     * @param list<string>            $areaUuids    every area of the slice that runs the module
-     * @param \DateTimeImmutable|null $measuredFrom the earliest this module was installed over the ground, null where the ledger does not say
-     */
     public function __construct(
-        public array $areaUuids,
-        public ?\DateTimeImmutable $measuredFrom = null,
+        /** The one area this reads, or NULL to roll every area up. */
+        public ?string $areaUuid,
+        /**
+         * When this module started running where this ground's reader can see
+         * it. Null dates no holes — the ledger simply does not say, which is
+         * not a reason to invent a gap.
+         */
+        public ?\DateTimeImmutable $runningSince = null,
     ) {
-    }
-
-    /** No area here runs the module: the columns are nobody's to answer. */
-    public function isUnrun(): bool
-    {
-        return [] === $this->areaUuids;
     }
 
     /** Whether this module was recording over the ground at any instant of a period. */
     public function measured(FigurePeriod $period): bool
     {
-        return null === $this->measuredFrom || $this->measuredFrom < $period->until;
+        return null === $this->runningSince || $this->runningSince < $period->until;
     }
 }

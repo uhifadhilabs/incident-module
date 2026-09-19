@@ -39,6 +39,11 @@ use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
  * AND ONE RULE THIS MODULE'S BRIEF NEARLY GOT WRONG: figures follow scope, not
  * people. Two departments reading the same ground read identical figures, and
  * who filed an incident decides nothing.
+ *
+ * WHO THE ROWS ARE COMES THROUGH THE HOST'S DIRECTORY, so these fixtures write
+ * the world an installation writes — areas, a catalogue row, the day each area
+ * switched the module on, and departments that attach it — and then read the
+ * topic, never a department table.
  */
 final class IncidentPerformanceTopicTest extends IntegrationTestCase
 {
@@ -167,10 +172,10 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
     }
 
     /**
-     * A SCOPE NO AREA OF WHICH RUNS THE MODULE STILL PUBLISHES FIVE, and every
-     * one of them is null rather than nought.
+     * A SCOPE WHERE NOBODY CAN BE ASKED STILL PUBLISHES FIVE, and every one of
+     * them is null rather than nought.
      */
-    public function testAScopeWhereNothingRunsTheModuleStillPublishesFiveUnknowns(): void
+    public function testAScopeWhereNobodyCanBeAskedStillPublishesFiveUnknowns(): void
     {
         $this->world();
         $elsewhere = $this->anArea('Unserved Reserve');
@@ -180,8 +185,8 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
 
         self::assertCount(5, $kpis);
         foreach ($kpis as $kpi) {
-            self::assertNull($kpi->value, $kpi->key.' is not a nought where no area runs the module.');
-            self::assertStringContainsString('runs the Incidents module', $kpi->caption);
+            self::assertNull($kpi->value, $kpi->key.' is not a nought where nobody can be asked.');
+            self::assertStringContainsString('asked about the Incidents module', $kpi->caption);
         }
     }
 
@@ -236,9 +241,11 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
         $rows = $this->rows(PerformanceScope::organisation());
 
         self::assertSame('Org-wide', $rows['Ecology']->band);
+        self::assertSame('EC', $rows['Ecology']->mark, 'The mark comes from the directory, not from this module.');
         self::assertSame(3.0, $rows['Ecology']->cells[IncidentPerformanceTopic::FILED]->value);
 
         self::assertSame('North Sector', $rows['Protection Service']->band);
+        self::assertSame('PS', $rows['Protection Service']->mark);
         self::assertSame(2.0, $rows['Protection Service']->cells[IncidentPerformanceTopic::FILED]->value);
     }
 
@@ -310,27 +317,32 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
     }
 
     /**
-     * THE THIRD ABSENCE. A department that attaches Incidents while no area it
-     * reads runs the module gets four dashes, not four noughts: the columns
-     * are not its to answer.
+     * THE THIRD ABSENCE, AND WHERE THE DIRECTORY DRAWS IT. A department that
+     * attaches Incidents while no area it reads runs the module CANNOT BE
+     * ASKED, so it is not a row at all — the columns were never put to it, and
+     * a row of dashes would say it answered nothing.
      */
-    public function testADepartmentWhoseGroundRunsNothingIsNotAskedTheColumns(): void
+    public function testADepartmentWhoseGroundRunsNothingIsNotARowAtAll(): void
     {
         $world = $this->world();
         $unserved = $this->anArea('Unserved Reserve');
         $this->reading('Unserved Ecology', $world['module'], $unserved);
 
-        $cells = $this->rows(PerformanceScope::organisation())['Unserved Ecology']->cells;
+        $rows = $this->rows(PerformanceScope::organisation());
 
-        self::assertCount(4, $cells);
-        foreach ($cells as $key => $cell) {
-            self::assertTrue($cell->notMine, $key.' is not this department\'s to answer.');
+        self::assertArrayNotHasKey('Unserved Ecology', $rows);
+        self::assertSame(['Ecology', 'Protection Service'], array_keys($rows));
+
+        // And what such a row WOULD carry, if a caller ever drew one: four
+        // dashes, never four noughts.
+        foreach (IncidentPerformanceTopic::notMineCells() as $key => $cell) {
+            self::assertTrue($cell->notMine, $key.' is not that department\'s to answer.');
             self::assertFalse($cell->isKnown());
         }
 
-        // While a department whose ground DOES run it and filed nothing of
-        // that kind scores a real nought.
-        self::assertFalse($this->rows(PerformanceScope::organisation())['Ecology']->cells[IncidentPerformanceTopic::COMPENSATION_CLAIMS]->notMine);
+        // While a department that CAN be asked and filed nothing of that kind
+        // scores a real nought.
+        self::assertFalse($rows['Protection Service']->cells[IncidentPerformanceTopic::COMPENSATION_CLAIMS]->notMine);
     }
 
     /** A claim that arrived is counted in the column it belongs to. */

@@ -13,14 +13,12 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Module;
 
-use Doctrine\ORM\EntityManagerInterface;
-use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
-use Uhifadhi\Bundle\TeamBundle\Entity\Department;
-use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\ChartKind;
 use Uhifadhi\Contracts\Performance\ChartSeries;
 use Uhifadhi\Contracts\Performance\ColumnPolarity;
+use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
+use Uhifadhi\Contracts\Performance\DepartmentEntry;
 use Uhifadhi\Contracts\Performance\MatrixCell;
 use Uhifadhi\Contracts\Performance\MatrixColumn;
 use Uhifadhi\Contracts\Performance\MatrixRow;
@@ -56,9 +54,17 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
  * {@see IncidentDepartmentKpiProvider} states for the KPI plates. All a
  * department contributes to a row is WHICH GROUND it reads, which
  * {@see IncidentTopicSlice} resolves as the intersection of its scope with the
- * page's: an organisation-wide department reads every area running the module,
- * an area-level one reads its own. Two departments scoped to the same area
- * therefore read identical figures, and no surface adds them together.
+ * page's: an organisation-wide department reads every area, an area-level one
+ * reads its own. Two departments scoped to the same area therefore read
+ * identical figures, and no surface adds them together.
+ *
+ * ── WHO THE ROWS ARE IS ASKED, NOT QUERIED ───────────────────────────────────
+ * {@see DepartmentDirectoryInterface} answers it in ONE READ: who the
+ * departments are, what each is placed among, what each attaches, and since
+ * when this module has been running somewhere each can see it. This module
+ * reads no department table and no area x module ledger — those live in two
+ * packages it does not depend on, and the host joins them once so that every
+ * topic joins them the same way.
  *
  * ── WHERE THE HISTORY COMES FROM ─────────────────────────────────────────────
  * OUT OF THIS MODULE'S OWN RECORDS, period by period — never out of a
@@ -77,10 +83,13 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
  *    over a period where nothing was finished is not nought days, and every
  *    figure of a scope no area of which runs this module is unknown rather
  *    than empty.
- *  - {@see MatrixCell::notMine()} is a department that attaches Incidents in
- *    the register while NO AREA IT READS ACTUALLY RUNS IT. The columns are not
- *    its to answer, and no amount of publishing by this module will make them
- *    so.
+ *  - {@see MatrixCell::notMine()} is a department that attaches Incidents
+ *    while NO AREA IT READS ACTUALLY RUNS IT —
+ *    {@see DepartmentEntry::canAnswerFor()} is the whole test. The columns are
+ *    not its to answer, and no amount of publishing by this module will make
+ *    them so. The directory already keeps such a department out of
+ *    `answeringFor()`, so a row of dashes is the state this guards against
+ *    rather than one the page normally draws.
  *
  * ── POLARITY ─────────────────────────────────────────────────────────────────
  * FILING IS NEITHER GOOD NOR BAD and says so ({@see ColumnPolarity::None}): an
@@ -113,7 +122,7 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     private const array AGE_LABELS = ['0–7 d', '8–14 d', '15–21 d', 'over 21 d'];
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private DepartmentDirectoryInterface $directory,
         private IncidentRepository $incidents,
         /** The slug this module is registered under in the registry's catalogue. */
         private string $slug,
@@ -182,18 +191,17 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
      */
     public function kpis(PerformanceScope $scope, FigurePeriod $period): array
     {
-        $ground = $this->groundOf($scope->areaUuid);
-        if ($ground->isUnrun()) {
+        $rows = $this->directory->forScope($scope)->answeringFor($this->slug);
+        if ([] === $rows) {
             return $this->nothingRunsHere($scope);
         }
 
-        $run = $this->readingsOver($ground, self::run($period, self::PERIODS));
-        $rows = \count($this->rowsIn($scope));
+        $run = $this->readingsOver($this->pageGround($scope, $rows), self::run($period, self::PERIODS));
 
         return [
             self::figure($run, self::FILED, 'Filed', ColumnPolarity::None,
                 static fn (array $p): float => (float) $p['filed']->filed(),
-                caption: \sprintf('across %d department%s that read %s', $rows, 1 === $rows ? '' : 's', $this->name),
+                caption: \sprintf('across %d department%s that read %s', \count($rows), 1 === \count($rows) ? '' : 's', $this->name),
             ),
             self::figure($run, self::OPEN_PAST_TARGET, 'Open', ColumnPolarity::Down,
                 static fn (array $p): float => (float) $p['filed']->openPastTarget($p['period']->until),
@@ -228,7 +236,7 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
      */
     public function charts(PerformanceScope $scope, FigurePeriod $period): array
     {
-        $ground = $this->groundOf($scope->areaUuid);
+        $ground = $this->pageGround($scope, $this->directory->forScope($scope)->answeringFor($this->slug));
         $periods = self::run($period, self::CHART_PERIODS);
         $run = $this->readingsOver($ground, $periods);
 
@@ -244,7 +252,7 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
             caption: 'Re-measured from the records of each period — a period before this module was running is a gap, not a nought.',
         );
 
-        $open = $this->readingsOf($this->incidents->findOpenInAreas($ground->areaUuids));
+        $open = $this->readingsOf($this->incidents->findOpenByScope($ground->areaUuid));
         $buckets = $open->openAgeBuckets($period->until);
 
         $age = new TopicChart(
@@ -273,17 +281,13 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
         $periods = self::run($period, self::PERIODS);
 
         $rows = [];
-        foreach ($this->rowsIn($scope) as $department) {
-            $slice = IncidentTopicSlice::of($scope->areaUuid, $department->getArea()?->getUuidString());
-            \assert(null !== $slice);
-
-            $area = $department->getArea();
-
+        foreach ($this->directory->forScope($scope)->answeringFor($this->slug) as $entry) {
             $rows[] = new MatrixRow(
-                departmentUuid: (string) $department->getUuidString(),
-                departmentName: (string) $department->getName(),
-                cells: $this->cellsFor($this->groundOf($slice->areaUuid), $periods),
-                band: null === $area ? 'Org-wide' : (string) $area->getName(),
+                departmentUuid: $entry->uuid,
+                departmentName: $entry->name,
+                cells: $this->cellsFor($entry, $scope, $periods),
+                band: $entry->band,
+                mark: $entry->mark,
             );
         }
 
@@ -297,26 +301,30 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     /**
      * ONE DEPARTMENT'S FOUR CELLS.
      *
-     * Ground no running area falls on is four `notMine` cells, not four
-     * dashes: the department attached this module in the register, but nothing
-     * it reads is running it, so the columns are not its to answer.
+     * A department that cannot be asked about this module gets four
+     * `notMine` cells, not four dashes and never four noughts: it attached
+     * Incidents in the register, but no area it reads is running it, so the
+     * columns are not its to answer. The directory already leaves such a
+     * department out of `answeringFor()`, so this is the guard that keeps the
+     * rule true if a caller ever draws one anyway.
      *
      * @param list<FigurePeriod> $periods
      *
      * @return array<string, MatrixCell>
      */
-    private function cellsFor(IncidentTopicGround $ground, array $periods): array
+    private function cellsFor(DepartmentEntry $entry, PerformanceScope $scope, array $periods): array
     {
-        if ($ground->isUnrun()) {
-            $cells = [];
-            foreach (self::columns() as $column) {
-                $cells[$column->key] = MatrixCell::notMine();
-            }
-
-            return $cells;
+        if (!$entry->canAnswerFor($this->slug)) {
+            return self::notMineCells();
         }
 
-        $run = $this->readingsOver($ground, $periods);
+        $slice = IncidentTopicSlice::of($scope->areaUuid, $entry->areaUuid);
+        \assert(null !== $slice);
+
+        $run = $this->readingsOver(
+            new IncidentTopicGround($slice->areaUuid, $entry->runningSince[$this->slug] ?? null),
+            $periods,
+        );
 
         return [
             self::FILED => self::cell($run, static fn (array $p): float => (float) $p['filed']->filed()),
@@ -327,93 +335,44 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     }
 
     /**
-     * THE DEPARTMENTS THIS PAGE HOLDS — the ones that attach this module and
-     * whose scope the page's scope reaches.
+     * THE ROW OF A DEPARTMENT NOBODY ASKED — one dash per column.
      *
-     * A department that attaches nothing of this module's is not a row of
-     * empties here, it is not a row: that is the whole difference between a
-     * topic and the board of everybody's columns it replaces.
-     *
-     * @return list<Department>
+     * @return array<string, MatrixCell>
      */
-    private function rowsIn(PerformanceScope $scope): array
+    public static function notMineCells(): array
     {
-        /** @var list<Department> $attaching */
-        $attaching = $this->entityManager->createQueryBuilder()
-            ->select('d')
-            ->from(Department::class, 'd')
-            ->innerJoin('d.modules', 'm')
-            ->andWhere('m.slug = :slug')
-            ->andWhere('d.active = true')
-            ->setParameter('slug', $this->slug)
-            ->orderBy('d.name', 'ASC')
-            ->getQuery()
-            ->getResult();
+        $cells = [];
+        foreach (self::columns() as $column) {
+            $cells[$column->key] = MatrixCell::notMine();
+        }
 
-        return array_values(array_filter(
-            $attaching,
-            static fn (Department $department): bool => null !== IncidentTopicSlice::of($scope->areaUuid, $department->getArea()?->getUuidString()),
-        ));
+        return $cells;
     }
 
     /**
-     * THE GROUND OF ONE SLICE — the areas of it that actually run this module,
-     * and the instant recording began over them.
+     * THE GROUND THE PAGE'S OWN FIGURES ARE READ OVER, and since when.
      *
-     * Read from the registry's area × module ledger rather than from the
-     * incidents table, and deliberately not the question
-     * {@see IncidentDepartmentKpiProvider} asks: a KPI plate is about rows
-     * that exist, while a matrix row has to tell "this ground runs Incidents
-     * and filed nothing" from "this ground does not run Incidents at all", and
-     * only the ledger knows the second.
+     * The area is the page's — every area on the organisation's page, one on
+     * an area's. The date is THE EARLIEST any of the rows could have been
+     * asked: the module has been recording somewhere on this page since then,
+     * and every period before it is a hole for the headline exactly as it is
+     * for the row that dates it.
+     *
+     * @param list<DepartmentEntry> $rows the departments that can be asked about this module
      */
-    private function groundOf(?string $areaUuid): IncidentTopicGround
+    private function pageGround(PerformanceScope $scope, array $rows): IncidentTopicGround
     {
-        /** @var list<AreaModule> $installed */
-        $installed = $this->entityManager->createQueryBuilder()
-            ->select('am')
-            ->from(AreaModule::class, 'am')
-            ->innerJoin('am.module', 'm')
-            ->andWhere('m.slug = :slug')
-            ->andWhere('am.active = true')
-            ->setParameter('slug', $this->slug)
-            ->getQuery()
-            ->getResult();
-
-        $areas = [];
-        $measuredFrom = null;
-        $unbounded = false;
-
-        foreach ($installed as $row) {
-            $area = $row->getArea();
-            if (!$area instanceof AreaInterface) {
+        $earliest = null;
+        foreach ($rows as $entry) {
+            $since = $entry->runningSince[$this->slug] ?? null;
+            if (null === $since) {
                 continue;
             }
 
-            $uuid = $area->getUuidString();
-            if (null === $uuid || (null !== $areaUuid && $areaUuid !== $uuid)) {
-                continue;
-            }
-
-            $areas[] = $uuid;
-
-            $installedAt = $row->getInstalledAt();
-            if (null === $installedAt) {
-                // THE LEDGER DOES NOT SAY WHEN. Rather than invent a start and
-                // punch holes in periods that may well have been recorded, the
-                // ground is treated as always measured — an honest "we cannot
-                // date this" instead of a fabricated gap.
-                $unbounded = true;
-
-                continue;
-            }
-
-            $measuredFrom = null === $measuredFrom || $installedAt < $measuredFrom ? $installedAt : $measuredFrom;
+            $earliest = null === $earliest || $since < $earliest ? $since : $earliest;
         }
 
-        sort($areas);
-
-        return new IncidentTopicGround($areas, $unbounded ? null : $measuredFrom);
+        return new IncidentTopicGround($scope->areaUuid, $earliest);
     }
 
     /**
@@ -422,7 +381,7 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
      * TWO SETS PER PERIOD, because what was FILED in a period and what was
      * FINISHED in it are different questions, and a page that derived one from
      * the other could only report the overlap. A period before the module was
-     * installed over the ground is not asked at all: it is a hole.
+     * running over the ground is not asked at all: it is a hole.
      *
      * @param list<FigurePeriod> $periods
      *
@@ -437,10 +396,10 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
             $run[] = [
                 'period' => $window,
                 'filed' => $measured
-                    ? $this->readingsOf($this->incidents->findFiledInAreasBetween($ground->areaUuids, $window->from, $window->until))
+                    ? $this->readingsOf($this->incidents->findByScopeBetween($ground->areaUuid, $window->from, $window->until))
                     : PerformanceReadings::none(),
                 'resolved' => $measured
-                    ? $this->readingsOf($this->incidents->findResolvedInAreasBetween($ground->areaUuids, $window->from, $window->until))
+                    ? $this->readingsOf($this->incidents->findResolvedByScopeBetween($ground->areaUuid, $window->from, $window->until))
                     : PerformanceReadings::none(),
                 'measured' => $measured,
             ];
@@ -481,15 +440,16 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     }
 
     /**
-     * FIVE FIGURES THAT SAY THEY HAVE NOTHING, for a scope where no area runs
-     * this module. A row of none where the page draws five is a different
-     * page, and a reader cannot tell a missing topic from a quiet month.
+     * FIVE FIGURES THAT SAY THEY HAVE NOTHING, for a scope where no department
+     * can be asked about this module at all. A row of none where the page
+     * draws five is a different page, and a reader cannot tell a missing topic
+     * from a quiet month.
      *
      * @return list<TopicKpi>
      */
     private function nothingRunsHere(PerformanceScope $scope): array
     {
-        $why = \sprintf('no area of %s runs the %s module', mb_strtolower($scope->label), $this->name);
+        $why = \sprintf('no department of %s can be asked about the %s module', mb_strtolower($scope->label), $this->name);
 
         return [
             new TopicKpi(self::FILED, 'Filed', null, caption: $why, polarity: ColumnPolarity::None),

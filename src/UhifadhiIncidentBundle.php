@@ -30,6 +30,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
+use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Incident\Command\CloseDueCommand;
 use Uhifadhi\Incident\Controller\IncidentAreaListController;
@@ -593,11 +594,12 @@ final class UhifadhiIncidentBundle extends AbstractBundle
          */
         $services->set('incident.performance_topic', IncidentPerformanceTopic::class)
             ->args([
-                // The registry's area x module ledger and the departments that
-                // attach this module: both are read straight, because no
-                // contract publishes a department's identity or an area's
-                // install date and a matrix row needs each of them.
-                service('doctrine.orm.entity_manager'),
+                // WHO THE ROWS ARE, ASKED THROUGH THE PUBLISHED SEAM. The
+                // departments and the area x module ledger live in two
+                // packages this module does not depend on; the host joins them
+                // once and answers in one read, so nothing here reaches across
+                // a boundary to enumerate anybody.
+                service(DepartmentDirectoryInterface::class),
                 service(IncidentRepository::class),
                 'incidents',
                 'Incidents',
