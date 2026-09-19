@@ -26,9 +26,15 @@ area and written in the **Incident kinds** editor
 module ships none, seeds none and suggests none: a new area starts empty and
 names its own words before the first incident is filed there.
 
-A colour, the departments a lens leads with, the behaviour blocks a sub-category
-switches on, which way its money runs and the term it promises all live on those
-rows and are all edited in that section.
+The departments a lens leads with, the behaviour blocks a sub-category switches
+on, which way its money runs and the term it promises all live on those rows and
+are all edited in that section.
+
+**A hue is not among them.** A kind wears the house hue its POSITION in the
+area's list points at — first kind, first hue — so there is nothing to pick and
+reordering the kinds moves the hues with them. The module declares no colour of
+its own; the nine belong to the shell, and `[data-cat="1".."9"]` is how a kind
+reaches one.
 
 **What the form asks is not on those rows.** A sub-category's questions are the
 questions of the blocks it switches on — the catalogue in

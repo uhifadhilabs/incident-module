@@ -10,6 +10,8 @@ hand is a release with a note under it.
 - [0.3.0 — the filter dropdowns became the shell's](#030--the-filter-dropdowns-became-the-shells)
 - [0.4.0 — the shared taxonomy is dropped](#040--the-shared-taxonomy-is-dropped)
 - [0.4.0 — the PostGIS bundle is `utafitilabs/postgis-bundle` (BREAKING)](#040--the-postgis-bundle-is-utafitilabspostgis-bundle-breaking)
+- [0.4.0 — a kind's hue is its place in the list](#040--a-kinds-hue-is-its-place-in-the-list)
+- [Queued: 0.5.0 — `incident_taxonomy_kind.colour_key` is dropped](#queued-050--incident_taxonomy_kindcolour_key-is-dropped)
 
 ## The rule for anything this module ships to a host
 
@@ -100,3 +102,67 @@ same type names, and Doctrine refuses a type registered twice.
 Own code that extends `SpatialEntityRepository` or type-hints a geometry type
 changes its `use` line and nothing else — the class names below the namespace
 are unchanged.
+
+## 0.4.0 — a kind's hue is its place in the list
+
+**This module declares no colour from this release.** A kind used to carry a
+`colourKey` an administrator picked from a dropdown of four, and this module's
+stylesheet turned that key into one of five hues it stated itself. Both halves
+are gone. A kind now wears the hue its POSITION in the area's list points at —
+first kind, first hue — reached through the shell's nine `--cat-1..9` and the
+`[data-cat="1".."9"]` rules that resolve them, so the chip, the dot, the donut
+arc, the legend square, the matrix row and the map pin are one decision and the
+product has one palette.
+
+**No step is required of an installation.** What changes on screen:
+
+- **A kind's hue may move.** It is now read off the order of the kinds, and the
+  nine house hues are not the four this module used to state. Reordering the
+  kinds in *Incident kinds* moves the hues with them, which is the only control
+  there is over which kind wears which.
+- **The colour dropdown is gone** from *Incident kinds*, and from the create
+  form under it. In its place the kind's swatch is SHOWN, read-only, in the
+  manager's head and beside every kind on the `Settings` configure section —
+  which can draw it now that the swatch is the shell's `.catsw` rather than
+  this module's.
+- **`POST …/kinds/{uuid}/colour` (`incident_kinds_kind_colour`) is removed.**
+  Nothing in the product posted to it but a form this release deletes; an
+  installation that scripted it has nothing to send it.
+- **Money is the accent**, on the money card, the money fold, the claimant role
+  and the money chip. The fifth token this sheet used to state had, in both
+  themes, the same value as the accent, so nothing moves.
+- **`Uhifadhi\Incident\Model\IncidentHues` is deleted.** Where a platform
+  contract still takes a colour STRING — the atlas layer's `swatch`, the
+  overview's `MapLayer` and `PulseEvent` — this module now hands over the house
+  token BY NAME (`var(--cat-3)`), which the host resolves and the shell's plate
+  rules repaint for imagery. `Uhifadhi\Incident\Model\HousePalette` is where
+  that string is written, once. **It is a workaround and it is flagged**: those
+  three fields are `string` colours (`GeoJsonLayer::$swatch`,
+  `MapLayer::$swatch`, `PulseEvent::$swatch`), and when they take a category INDEX the
+  way `AreaNavChild::$cat` and `ChartSeries::$cat` already do, `HousePalette`
+  goes away.
+- **The token bridge is gone from `incidents.css`.** The sheet restated a dozen
+  of the shell's own aliases in a `:root` block and, loading last, won with
+  them — `--shadow` among them, stated once where the shell states two, so the
+  light theme wore the dark theme's shadow on every page an incidents screen
+  was on. The shell's are now the only copy.
+
+`Uhifadhi\Incident\Migrations\Version20260919230000` drops the `NOT NULL` on
+`incident_taxonomy_kind.colour_key`, because nothing writes it any more. **The
+values stay**, so an installation can still read what each kind used to be set
+to, and a rollback to 0.3 finds them where it left them.
+
+## Queued: 0.5.0 — `incident_taxonomy_kind.colour_key` is dropped
+
+The deferral 0.4 opens, named here so it is collected rather than remembered.
+**0.5.0 ships a migration marked `@destructive` whose `up()` is
+`ALTER TABLE incident_taxonomy_kind DROP colour_key`**, and its release note
+tells an installation to `pg_dump -t incident_taxonomy_kind` first if it wants
+to keep what the column held.
+
+Until that version ships, `doctrine:migrations:diff` proposes dropping the
+column on every run, because the mapping let it go in 0.4. **That proposal is
+the deferral working — do not keep the file it writes.** The drift lock names
+`colour_key` as the whole of what may appear in such a proposal
+(`MigrationsCoverSchemaTest::RETIRED_UNTIL_DROPPED`), and removing the entry is
+what the 0.5.0 migration does alongside the SQL.

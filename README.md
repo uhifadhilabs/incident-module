@@ -26,7 +26,7 @@ sixteen-widget dashboard surface composed on the shell's widget machinery, and
 the **Incident kinds** editor each area writes its own classification in.
 
 **An area starts empty.** The module ships no kinds of incident, seeds none and
-suggests none: a kind, its colour, the departments a lens puts it in front of,
+suggests none: a kind, the departments a lens puts it in front of,
 and under it the sub-categories — their behaviour blocks, which way money runs
 and the term each promises — are all the area's own, written in the kinds editor
 before the first incident is filed there. **What a sub-category's form asks is
@@ -146,10 +146,10 @@ no chrome: it states what is on a plate in PHP and renders it with one Twig call
 ```php
 // src/Service/IncidentMapService.php
 $map->addLayer(new GeoJsonLayer(
-    id: 'incident.'.$category['slug'],
-    label: $category['label'],
+    id: 'incident.'.$kind['slug'],
+    label: $kind['label'],
     features: $collection,
-    swatch: IncidentHues::of($category['colourKey']),
+    swatch: HousePalette::token($kind['cat']),
     shape: LayerShape::Point,
     count: \count($own),
     group: IncidentMapService::GROUP,
@@ -160,7 +160,9 @@ $map->addLayer(new GeoJsonLayer(
 {{ render_map(dashboard.map, {'role': 'img', 'aria-label': 'Where every incident was filed'}, filters) }}
 ```
 
-One layer per category in that category's own hue, each legend row a switch; the
+One layer per category in the house hue that category's PLACE in the area's
+list points at — this module names no colour, it names a position and the shell
+resolves it — each legend row a switch; the
 area's zones underneath, wearing their names; the boundary in the platform's one
 treatment. The imagery, the control stack, the floating legend and fullscreen are
 the atlas's, which is why an incident map, a patrol map and the area map read

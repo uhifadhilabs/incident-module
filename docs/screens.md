@@ -54,9 +54,11 @@ the three ways back.
 The `Settings` section reads and writes one row per area (`incident_settings`).
 An area that has never saved counts money in the installation's own `incident:`
 currency, so an untouched default and a chosen one stay distinguishable. The
-per-kind colour, the "shown first to" departments and a sub-category's term are
-**not editable there yet** — the section says so, and the kinds section is where a
-colour, a money direction, the behaviour blocks and the term are edited today.
+"shown first to" departments and a sub-category's term are **not editable there
+yet** — the section says so, and the kinds section is where a money direction,
+the behaviour blocks and the term are edited today. **A kind's hue is editable
+nowhere**: it is the kind's place in the area's list, and the section shows the
+swatch beside each row so that reading is available without opening the editor.
 
 ## Parking closes every one of them
 
@@ -248,7 +250,7 @@ file's **Where** card. All three are the atlas's plate, stated by
 
 | What is on it | How it is stated |
 |---|---|
-| one layer per category, in that category's hue | `GeoJsonLayer`, `shape: LayerShape::Point`, `swatch: IncidentHues::of(...)` |
+| one layer per category, in the hue its place points at | `GeoJsonLayer`, `shape: LayerShape::Point`, `swatch: HousePalette::token(...)` |
 | the area's zones, quiet, wearing their names | `GeoJsonLayer`, `shape: LayerShape::Line`, a `label` on each feature |
 | the area boundary and its scrim | `Boundary` |
 | the legend, one switching row per layer | the layers' own rows, under one group |
