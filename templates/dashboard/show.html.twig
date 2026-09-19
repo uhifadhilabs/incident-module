@@ -71,10 +71,5 @@
                 </div>
             </div>
         {% endfor %}
-        {% if widgetScreens %}
-            <a class="w-cell w-span-12 w-addtile" href="{{ path('incident_widgets', {uuid: area.uuid}) }}">
-                {{ ux_icon('shell:plus') }}<span>Add widgets — open the library</span>
-            </a>
-        {% endif %}
     </div>
 {% endblock %}

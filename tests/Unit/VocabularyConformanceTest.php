@@ -78,6 +78,33 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
     }
 
     /**
+     * A CLASS THE CHAIN NO LONGER SHIPS IS FORBIDDEN BY NAME. `w-addtile` is
+     * the shell's tile for "Add widgets — open the library", the door at the
+     * foot of a surface that the designs dropped: the library is reached only
+     * through the page head's quiet `Configure` action. The shell is dropping
+     * the rule, so a template that still writes the class would render an
+     * unstyled anchor spanning the grid — and the base conformance check only
+     * notices once the shell's release actually lands. Naming it here fails the
+     * day somebody reintroduces it, in this repository, where the fix is.
+     */
+    public function testNoTemplateWritesAClassTheDesignsRetired(): void
+    {
+        $retired = ['w-addtile'];
+
+        $offenders = [];
+        foreach (self::templateFiles() as $file) {
+            $markup = (string) file_get_contents($file);
+            foreach ($retired as $class) {
+                if (\in_array($class, self::literalClassesIn($markup), true)) {
+                    $offenders[] = basename($file).': .'.$class;
+                }
+            }
+        }
+
+        self::assertSame([], $offenders, 'These write a retired class: the widget library is reached from the page head, not from a tile at the foot of the grid.');
+    }
+
+    /**
      * NO MODULE DRAWS ITS OWN MAP. Maps come from the atlas: a module states
      * what is on one in PHP and calls render_map(). A template that names a map
      * controller of its own has a second opinion about imagery, chrome and

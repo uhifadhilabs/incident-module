@@ -609,4 +609,36 @@ final class DashboardPageTest extends FunctionalTestCase
         self::assertStringContainsString('category=poaching', $href);
         self::assertStringContainsString('q=snare', $href);
     }
+
+    /**
+     * THE DASHBOARD HAS NO DOOR OF ITS OWN TO THE WIDGET LIBRARY. The tile at
+     * the foot of a surface — "Add widgets — open the library" — was removed
+     * from the designs: a surface ends with the last widget on it, and the
+     * library is reached the way every other configuration screen is, through
+     * the one quiet `Configure` action the shell draws in the page head from
+     * this module's declared sections.
+     *
+     * Asserted here rather than left to the eye because the tile renders as a
+     * perfectly ordinary cell: nothing about it fails until somebody looks.
+     */
+    public function testTheDashboardDrawsNoAddWidgetsDoorAtItsFoot(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->anIncident($area);
+        $this->client->loginUser($this->aReporter());
+
+        $crawler = $this->client->request('GET', \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area)));
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('.w-addtile'), 'the surface ends with its last widget, not with a door');
+        self::assertStringNotContainsString('open the library', (string) $this->client->getResponse()->getContent());
+
+        // …and the way there is still open: the shell's one Configure action,
+        // whose widgets section IS the library.
+        self::assertNotSame(
+            0,
+            $crawler->filter('.pgact a[href*="/incidents/configure"]')->count(),
+            'the page head keeps the quiet Configure action the library is a section of',
+        );
+    }
 }
