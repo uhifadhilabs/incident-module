@@ -393,6 +393,13 @@ final class DashboardPageTest extends FunctionalTestCase
         $register = $crawler->filter('[data-w="register"] .lfilt')->first();
         self::assertCount(5, $register->filter('.i-dd'));
 
+        // AND EACH IS THE CHAIN'S OWN CONTROL: a <details> whose <summary> is
+        // the chip. The dropdown is the shell's, chrome and behaviour both, so
+        // it opens with no script of this module's and this module's sheet
+        // restates none of its rules.
+        self::assertCount(5, $register->filter('details.i-dd > summary.mchip.i-ddt'));
+        self::assertCount(0, $register->filter('[data-controller*="incident-filters"], [data-action*="incident-filters"]'));
+
         // Category dropdown: an "all" option plus one hue-dot option per kind, each
         // a real link carrying its count.
         self::assertGreaterThan(0, $register->filter('.i-dd .i-ddmenu a.i-ddopt .i-dot.poach')->count());

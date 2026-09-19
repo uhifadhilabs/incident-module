@@ -108,8 +108,8 @@ Then, in the host:
    database on boot would be making that decision for them. In a development
    installation, `bin/console fixtures:demo` writes a month of sample incidents
    and the kinds they are filed under.
-The three Stimulus controllers — `incident-filters`, `incident-board`,
-`incident-report` — need no step of their own: Flex synchronises
+The Stimulus controllers — `incident-board`, `incident-report` and the rest —
+need no step of their own: Flex synchronises
 `assets/controllers.json` from this package's own `assets/package.json` on every
 `composer require`/`update`, because the package declares the `symfony-ux`
 keyword.

@@ -192,33 +192,12 @@ html.light{
    One filter drives everything on the page — the map, the list, the charts —
    exactly as the patrols module's does.                                      */
 
-/* THE FILTER DROPDOWNS — category, status, zone and month. Each is a .mchip
-   trigger (.i-ddt) opening a floating .i-ddmenu, hidden until the .i-dd carries
-   .open (the incident-filters controller toggles it, one at a time). Ported from
-   the design's uhifadhi.css onto this module's token bridge — the same self-
-   sufficiency as .mchip and .factband, so an incidents page carries its own
-   filter chrome without depending on the host stylesheet. .i-dot's four hues are
-   the taxonomy colours defined at the top of this file. */
-.i-dd{position:relative;display:inline-flex}
-.i-ddt{cursor:pointer;background:none}
-.i-ddt .i-ddcaret{font-size:9px;line-height:1;opacity:.7;transition:transform .12s}
-.i-dd.open .i-ddt .i-ddcaret{transform:rotate(180deg)}
-.i-ddmenu{position:absolute;top:calc(100% + 6px);left:0;z-index:50;display:none;
-  flex-direction:column;min-width:196px;padding:5px;gap:1px;
-  background:var(--p1);border:1px solid var(--ln2);border-radius:11px;box-shadow:var(--shadow)}
-.i-dd.open .i-ddmenu{display:flex}
-.i-ddhead{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8.5px;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--dim);padding:6px 9px 4px}
-.i-ddopt{display:flex;align-items:center;gap:9px;width:100%;text-align:left;cursor:pointer;
-  border:0;background:none;color:var(--tx);font-family:inherit;font-size:12px;
-  padding:7px 9px;border-radius:7px;text-decoration:none}
-.i-ddopt:hover{background:var(--raised);text-decoration:none}
-.i-ddopt.on{background:color-mix(in srgb,var(--acc) 12%,transparent)}
-.i-ddopt-l{flex:1;white-space:nowrap}
-.i-ddopt-n{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10.5px;color:var(--dim);
-  font-variant-numeric:tabular-nums}
-.i-ddopt.on .i-ddopt-n{color:var(--acc)}
-.i-ddsep{height:1px;background:var(--ln);margin:4px 2px}
+/* THE FILTER DROPDOWNS ARE THE SHELL'S `.i-dd`, chrome and behaviour both —
+   a <details> whose <summary> is the chip — so nothing about them is written
+   here. A rule restated in this sheet would render differently depending on
+   which sheet loaded last, and the same control would read two ways on two
+   pages. What is still this module's is the hue dot inside an option: .i-dot's
+   four colours are the taxonomy colours defined at the top of this file. */
 .i-dot{width:8px;height:8px;border-radius:2px;flex:none;background:transparent}
 .i-dot.poach{background:var(--i-poach)}
 .i-dot.hwc{background:var(--i-hwc)}
@@ -227,8 +206,7 @@ html.light{
 
 /* THE FILTER ROW IS THE SHELL'S `.lfilt` AND `.lsearch` now. It was this
    module's own `.i-filters` / `.i-search` until the frame shipped the row every
-   list in the platform wears; the dropdown chrome inside it (.i-dd*) is still
-   this module's, because the shell ships no dropdown. */
+   list in the platform wears, and the dropdowns inside it are the shell's too. */
 /* CATEGORY DROPDOWN — the row of pills is one themed select now. Styled to sit
    in the chip row the way the design's "status ▾" chips do: a rounded ghost
    pill in the uppercase mono the chips use, with its own chevron (a native

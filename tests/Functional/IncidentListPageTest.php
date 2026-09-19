@@ -72,6 +72,7 @@ final class IncidentListPageTest extends FunctionalTestCase
 
         $row = $crawler->filter('.lfilt')->first();
         self::assertCount(5, $row->filter('.i-dd'));
+        self::assertCount(5, $row->filter('details.i-dd > summary.mchip.i-ddt'));
         self::assertCount(1, $row->filter('.i-ddmenu[aria-label="Order by department lens"]'));
         self::assertCount(1, $row->filter('.lsearch input[name="q"]'));
         // Every option re-queries THIS page, never the dashboard.

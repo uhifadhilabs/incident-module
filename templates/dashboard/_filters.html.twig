@@ -7,31 +7,31 @@
    the same element in four places, because they are four readings of one answer.
 
    FOUR DROPDOWNS AND A SEARCH BOX. Category (the all/kinds chips, with their
-   counts and hue dots, collapsed into one), status, zone and month are each a
-   .mchip-style trigger opening a floating .i-ddmenu — one open at a time, closed
-   on an outside click or Escape by the incident-filters controller. Unlike the
-   design's visual mock, EVERY option is a real link driving the one IncidentFilter
-   query (?category / ?status / ?zone / ?month), so the register and map re-query
-   together; the trigger shows the active choice. The search box is a free-text
-   query, and its form carries the current choices in hidden fields so typing a
-   query never drops them.
+   counts and hue dots, collapsed into one), status, zone and month are each the
+   shell's grouped dropdown: a `<details class="i-dd">` whose `<summary>` is the
+   chip and whose panel is the shell's .i-ddmenu. It opens, chooses and clears
+   with NO SCRIPT OF THIS MODULE'S — the browser opens the details, and EVERY
+   option is a real link driving the one IncidentFilter query (?category /
+   ?status / ?zone / ?month), so the register and map re-query together, a
+   filtered page is a link somebody can send, and the trigger shows the active
+   choice. The search box is a free-text query, and its form carries the current
+   choices in hidden fields so typing a query never drops them.
 
    THE LENS IS ONE OF THE CHIPS, after the month. It used to be a row of its own
    above the page, which made an ordering control read as a second navigation;
    it orders and pre-selects exactly as it did, and it now sits where every other
    choice about what is on screen sits.
 
-   THE ROW IS THE SHELL'S `.lfilt`, and the search is the shell's `.lsearch` —
-   the same row the full list wears, so the dashboard and the list cannot drift
-   into two different filter rows. This module defines neither class.
+   THE ROW IS THE SHELL'S `.lfilt`, the search is the shell's `.lsearch` and the
+   dropdowns are the shell's `.i-dd` — the same row and the same control the rest
+   of the product wears, so no two filter bars can drift apart. This module
+   defines none of those classes.
 
    → GET /areas/{uuid}/modules/incidents?category=&status=&zone=&month=&q=&lens=
    ========================================================================== #}
 {# The page this row re-queries: the dashboard, or the full list. #}
 {% set here = here|default('incident_dashboard') %}
-<form class="lfilt" method="get"
-      action="{{ path(here, {uuid: area.uuid}) }}"
-      {{ stimulus_controller('@uhifadhi/incident-module/incident-filters') }}>
+<form class="lfilt" method="get" action="{{ path(here, {uuid: area.uuid}) }}">
     {# The current choices ride along in the search form, so pressing Enter on a
        query keeps the category, status, zone, lens and month already chosen. #}
     {% if filter.kindCodes is not empty %}<input type="hidden" name="category" value="{{ filter.kindCodes|join(',') }}">{% endif %}
@@ -48,81 +48,77 @@
     {% elseif filter.kindCodes|length > 1 %}
         {% set catLabel = filter.kindCodes|length ~ ' categories' %}
     {% endif %}
-    <span class="i-dd" data-dd>
-        <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
-                {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'toggle') }}>
-            <span>{{ catLabel }}</span><span class="i-ddcaret">&#9662;</span>
-        </button>
-        <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by category">
+    <details class="i-dd">
+        <summary class="mchip i-ddt">
+            <span class="i-ddval">{{ catLabel }}</span><span class="i-ddcaret">&#9662;</span>
+        </summary>
+        <div class="i-ddmenu" aria-label="Filter by category">
             <span class="i-ddhead">category</span>
-            <a class="i-ddopt{{ filter.kindCodes is empty ? ' on' }}" role="option" data-dd-opt
+            <a class="i-ddopt{{ filter.kindCodes is empty ? ' on' }}"
                href="{{ path(here, {uuid: area.uuid}|merge(filter.withoutKinds.toQuery)) }}"><span class="i-dot"></span><span class="i-ddopt-l">All categories</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
             <span class="i-ddsep"></span>
             {% for kind in dashboard.kinds %}
-                <a class="i-ddopt{{ kind.code in filter.kindCodes ? ' on' }}" role="option" data-dd-opt
+                <a class="i-ddopt{{ kind.code in filter.kindCodes ? ' on' }}"
                    href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyKind(kind.code).toQuery)) }}"><span class="i-dot {{ kind.colourKey }}"></span><span class="i-ddopt-l">{{ kind.label|lower }}</span><span class="i-ddopt-n">{{ dashboard.kindCount(kind) }}</span></a>
             {% endfor %}
         </div>
-    </span>
+    </details>
 
     <span class="sep"></span>
 
     {# STATUS — real ?status=, one place at a time or all. #}
-    <span class="i-dd" data-dd>
-        <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
-                {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'toggle') }}>
-            <span>{{ filter.statuses is empty ? 'status' : filter.statuses|map(s => s.label)|join(', ') }}</span><span class="i-ddcaret">&#9662;</span>
-        </button>
-        <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by status">
+    <details class="i-dd">
+        <summary class="mchip i-ddt">
+            <span class="i-ddval">{{ filter.statuses is empty ? 'status' : filter.statuses|map(s => s.label)|join(', ') }}</span><span class="i-ddcaret">&#9662;</span>
+        </summary>
+        <div class="i-ddmenu" aria-label="Filter by status">
             <span class="i-ddhead">status</span>
-            <a class="i-ddopt{{ filter.statuses is empty ? ' on' }}" role="option" data-dd-opt
+            <a class="i-ddopt{{ filter.statuses is empty ? ' on' }}"
                href="{{ path(here, {uuid: area.uuid}|merge(filter.withoutStatuses.toQuery)) }}"><span class="i-ddopt-l">All statuses</span></a>
             <span class="i-ddsep"></span>
             {% for place in dashboard.places %}
-                <a class="i-ddopt{{ place in filter.statuses ? ' on' }}" role="option" data-dd-opt
+                <a class="i-ddopt{{ place in filter.statuses ? ' on' }}"
                    href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyStatus(place).toQuery)) }}"><span class="i-ddopt-l">{{ place.label }}</span><span class="i-ddopt-n">{{ dashboard.statusCount(place) }}</span></a>
             {% endfor %}
         </div>
-    </span>
+    </details>
 
     {# ZONE — real ?zone=, the zones that have incidents in this window, plus all. #}
-    <span class="i-dd" data-dd>
-        <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
-                {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'toggle') }}>
-            <span>{{ filter.zoneName ?: 'zone' }}</span><span class="i-ddcaret">&#9662;</span>
-        </button>
-        <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by zone">
+    <details class="i-dd">
+        <summary class="mchip i-ddt">
+            <span class="i-ddval">{{ filter.zoneName ?: 'zone' }}</span><span class="i-ddcaret">&#9662;</span>
+        </summary>
+        <div class="i-ddmenu" aria-label="Filter by zone">
             <span class="i-ddhead">zone</span>
-            <a class="i-ddopt{{ filter.zoneName is null ? ' on' }}" role="option" data-dd-opt
+            <a class="i-ddopt{{ filter.zoneName is null ? ' on' }}"
                href="{{ path(here, {uuid: area.uuid}|merge(filter.withoutZone.toQuery)) }}"><span class="i-ddopt-l">All zones</span></a>
             {% set zones = dashboard.zoneCounts|filter((count, zone) => zone is not empty) %}
             {% if zones is not empty %}<span class="i-ddsep"></span>{% endif %}
             {% for zone, count in zones %}
-                <a class="i-ddopt{{ zone == filter.zoneName ? ' on' }}" role="option" data-dd-opt
+                <a class="i-ddopt{{ zone == filter.zoneName ? ' on' }}"
                    href="{{ path(here, {uuid: area.uuid}|merge(filter.onlyZone(zone).toQuery)) }}"><span class="i-ddopt-l">{{ zone }}</span><span class="i-ddopt-n">{{ count }}</span></a>
             {% endfor %}
         </div>
-    </span>
+    </details>
 
     {# MONTH — real ?month=YYYY-MM, this month and the five before it. The days are
        anchored to the first of the month before subtracting, so a month is never
        skipped by an overflowing day-of-month. #}
-    <span class="i-dd" data-dd>
-        <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
-                {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'toggle') }}>
-            <span>{{ filter.from ? filter.from|date('F Y')|lower : 'month' }}</span><span class="i-ddcaret">&#9662;</span>
-        </button>
-        <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Filter by month">
+    <details class="i-dd">
+        <summary class="mchip i-ddt">
+            <span class="i-ddval">{{ filter.from ? filter.from|date('F Y')|lower : 'month' }}</span><span class="i-ddcaret">&#9662;</span>
+        </summary>
+        <div class="i-ddmenu" aria-label="Filter by month">
             <span class="i-ddhead">month</span>
             {% set anchor = now|date_modify('first day of this month') %}
             {% for i in 0..5 %}
                 {% set m = anchor|date_modify('-' ~ i ~ ' months') %}
                 {% set mKey = m|date('Y-m') %}
-                <a class="i-ddopt{{ filter.from and filter.from|date('Y-m') == mKey ? ' on' }}" role="option" data-dd-opt
+                <a class="i-ddopt{{ filter.from and filter.from|date('Y-m') == mKey ? ' on' }}"
                    href="{{ path(here, {uuid: area.uuid}|merge(filter.toQuery|merge({month: mKey}))) }}"><span class="i-ddopt-l">{{ m|date('F Y')|lower }}</span></a>
             {% endfor %}
         </div>
-    </span>
+    </details>
 
     {# LENS — which department's categories come first. It ORDERS and PRE-SELECTS;
        it never fences, and "Every category" is always here, so nothing is out of
@@ -133,22 +129,21 @@
             {% set lenses = lenses|merge({(lead|lower|split(' ')|first): lead}) %}
         {% endfor %}
     {% endfor %}
-    <span class="i-dd" data-dd>
-        <button type="button" class="mchip i-ddt" data-dd-trigger aria-haspopup="listbox" aria-expanded="false"
-                {{ stimulus_action('@uhifadhi/incident-module/incident-filters', 'toggle') }}>
-            <span>lens · {{ filter.lens == 'all' ? 'every category' : (lenses[filter.lens]|default(filter.lens))|lower }}</span><span class="i-ddcaret">&#9662;</span>
-        </button>
-        <div class="i-ddmenu" data-dd-menu role="listbox" aria-label="Order by department lens">
+    <details class="i-dd">
+        <summary class="mchip i-ddt">
+            <span class="i-ddval">lens · {{ filter.lens == 'all' ? 'every category' : (lenses[filter.lens]|default(filter.lens))|lower }}</span><span class="i-ddcaret">&#9662;</span>
+        </summary>
+        <div class="i-ddmenu" aria-label="Order by department lens">
             <span class="i-ddhead">lens</span>
-            <a class="i-ddopt{{ filter.lens == 'all' ? ' on' }}" role="option" data-dd-opt data-lens="all"
+            <a class="i-ddopt{{ filter.lens == 'all' ? ' on' }}" data-lens="all"
                href="{{ path(here, {uuid: area.uuid}|merge(filter.toQuery|merge({lens: 'all'}))) }}"><span class="i-dot"></span><span class="i-ddopt-l">Every category</span><span class="i-ddopt-n">{{ dashboard.filedCount }}</span></a>
             <span class="i-ddsep"></span>
             {% for key, label in lenses %}
-                <a class="i-ddopt{{ filter.lens == key ? ' on' }}" role="option" data-dd-opt data-lens="{{ key }}"
+                <a class="i-ddopt{{ filter.lens == key ? ' on' }}" data-lens="{{ key }}"
                    href="{{ path(here, {uuid: area.uuid}|merge(filter.toQuery|merge({lens: key}))) }}"><span class="i-dot"></span><span class="i-ddopt-l">{{ label }}</span></a>
             {% endfor %}
         </div>
-    </span>
+    </details>
 
     {# SEARCH — the reference, what happened or the zone; Enter submits, carrying
        the hidden fields above so a query never drops the chips. #}
