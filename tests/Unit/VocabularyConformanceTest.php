@@ -33,6 +33,26 @@ use Uhifadhi\Bundle\ShellBundle\Test\VocabularyConformanceTestCase;
  */
 final class VocabularyConformanceTest extends VocabularyConformanceTestCase
 {
+    /**
+     * HOST VOCABULARY THE CORE HAS NOT SHIPPED YET, named here rather than
+     * silently absent from the markup — because leaving the wrapper out is
+     * exactly the defect this whole file exists to catch, and a cell that omits
+     * one renders as browser defaults.
+     *
+     * @var list<string>
+     */
+    private const array AWAITING_THE_CORE = [
+        // THE MODULE-COLUMN HEADING, which `_w_in_column.html.twig` writes and
+        // no sheet in the chain defines: the area's own sheet carries `.ao-by`,
+        // `.ao-live`, `.ao-att` and `.ao-flow` but not `.ao-col`, and this
+        // module may not answer that by writing the rule itself. Its stack
+        // wrapper `.ao-colstack` is missing from the markup for the same
+        // reason and goes in the moment the core ships both. Delete this list
+        // then; it is the only thing keeping the check quiet about a heading
+        // that renders as browser defaults today.
+        'ao-col',
+    ];
+
     protected static function bundlePath(): string
     {
         return \dirname(__DIR__, 2);
@@ -143,6 +163,164 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
         }
 
         self::assertSame([], $offenders, 'These selects render as raw browser controls: a select is a .fld.');
+    }
+
+    /**
+     * A CONTRIBUTED CELL IS DRAWN ON SOMEBODY ELSE'S PAGE, so the names it
+     * writes are either this module's own or the area overview's.
+     *
+     * The base check asks only whether SOMETHING in the chain ships a class, and
+     * that is too generous here for one reason: this module's own sheet paints
+     * its colour into the surface's slots — `.ao-by.incidents i`, `.ao-col
+     * i.incidents` — and a decoration like that mentions the host's class
+     * without defining it. So `.ao-flow` reads as shipped the moment anybody
+     * qualifies it, and the cell that forgot the wrapper renders five browser
+     * links with the suite green. Which is what happened.
+     *
+     * SO OWNERSHIP IS READ FROM THE SUBJECT OF A SELECTOR, not from anywhere in
+     * it. `.ao-col i.incidents` defines `i.incidents`; `.ao-col` is the ground it
+     * stands on, and the sheet that must carry it is the AREA's. A class an
+     * overview cell writes therefore passes only when the core's own sheets
+     * define it, or when this module's sheet is the subject-side author of it.
+     *
+     * The core publishes the list as `AreaBundle\Overview\OverviewVocabulary`
+     * and will print it in the contracts' module-development.md §7 ("Contributing
+     * to the overview"); until that release is tagged, the core's shipped sheets
+     * ARE the list, which is what this reads.
+     */
+    public function testEveryClassTheOverviewCellsWriteIsThisModulesOwnOrTheSurfacesOwn(): void
+    {
+        $surface = self::classesAnywhereIn(array_map(self::readSheet(...), self::linkedStylesheets()));
+        $own = self::classesSubjectedIn(array_map(
+            static fn (string $name): string => self::readSheet(self::bundlePath().'/public/'.$name),
+            self::ownStylesheets(),
+        ));
+
+        $offenders = [];
+        foreach (self::templateFiles() as $file) {
+            if (!str_contains($file, '/templates/overview/')) {
+                continue;
+            }
+
+            foreach (self::literalClassesIn((string) file_get_contents($file)) as $class) {
+                if (\in_array($class, self::AWAITING_THE_CORE, true)) {
+                    continue;
+                }
+
+                if (!\in_array($class, $surface, true) && !\in_array($class, $own, true)) {
+                    $offenders[] = basename($file).': .'.$class;
+                }
+            }
+        }
+
+        $offenders = array_values(array_unique($offenders));
+        sort($offenders);
+
+        self::assertSame([], $offenders, \sprintf(
+            "These overview cells write a class neither the area overview defines nor this module owns:\n  %s\n"
+            .'A cell drawn on the area\'s page wears the surface\'s vocabulary or its own; it may not assume a rule '
+            ."nobody wrote, and it may not answer the gap by writing that rule into this module's sheet.",
+            implode("\n  ", $offenders),
+        ));
+    }
+
+    /**
+     * EVERY CLASS ANYWHERE IN A SELECTOR. For the core's sheets that is the
+     * right reading: whoever authored the file authored every name in it.
+     *
+     * @param list<string> $sheets
+     *
+     * @return list<string>
+     */
+    private static function classesAnywhereIn(array $sheets): array
+    {
+        $classes = [];
+        foreach ($sheets as $css) {
+            foreach (self::selectorsIn($css) as $selector) {
+                preg_match_all('/\.([a-zA-Z][a-zA-Z0-9_-]*)/', $selector, $matches);
+                $classes = [...$classes, ...$matches[1]];
+            }
+        }
+
+        return array_values(array_unique($classes));
+    }
+
+    /**
+     * THE CLASSES A SHEET IS THE AUTHOR OF — the ones in the SUBJECT of each of
+     * its selectors, which is the last compound. Everything to the left of the
+     * subject is ground somebody else laid.
+     *
+     * @param list<string> $sheets
+     *
+     * @return list<string>
+     */
+    private static function classesSubjectedIn(array $sheets): array
+    {
+        $classes = [];
+        foreach ($sheets as $css) {
+            foreach (self::selectorsIn($css) as $selector) {
+                $compounds = preg_split('/\s*[>+~]\s*|\s+/', trim($selector)) ?: [];
+                $subject = (string) end($compounds);
+                preg_match_all('/\.([a-zA-Z][a-zA-Z0-9_-]*)/', $subject, $matches);
+                $classes = [...$classes, ...$matches[1]];
+            }
+        }
+
+        return array_values(array_unique($classes));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function selectorsIn(string $css): array
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+        preg_match_all('/(^|\})([^{}@]+)\{/m', $css, $matches);
+
+        $selectors = [];
+        foreach ($matches[2] as $group) {
+            foreach (explode(',', $group) as $selector) {
+                $selector = (string) preg_replace('/\s+/', ' ', trim($selector));
+                if ('' !== $selector) {
+                    $selectors[] = $selector;
+                }
+            }
+        }
+
+        return array_values(array_unique($selectors));
+    }
+
+    /**
+     * Every class LITERAL a template writes. An interpolated name is somebody
+     * else's to check — `class="s{{ loop.index }}"` is five names this file
+     * cannot see — so it is dropped rather than guessed at.
+     *
+     * @return list<string>
+     */
+    private static function literalClassesIn(string $twig): array
+    {
+        $twig = (string) preg_replace('/\{#.*?#\}/s', '', $twig);
+
+        $classes = [];
+        preg_match_all('/class="([^"]*)"/', $twig, $attributes);
+        foreach ($attributes[1] as $attribute) {
+            $literal = (string) preg_replace('/\{[{%].*?[}%]\}/s', ' ', $attribute);
+            foreach (preg_split('/\s+/', trim($literal)) ?: [] as $class) {
+                if (1 === preg_match('/^[a-zA-Z][a-zA-Z0-9_-]*[a-zA-Z0-9_]$/', $class)) {
+                    $classes[] = $class;
+                }
+            }
+        }
+
+        return array_values(array_unique($classes));
+    }
+
+    private static function readSheet(string $path): string
+    {
+        $css = file_get_contents($path);
+        self::assertIsString($css, $path.' must ship.');
+
+        return $css;
     }
 
     /**

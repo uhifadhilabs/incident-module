@@ -43,6 +43,12 @@ final class OverviewPartialsTest extends OverviewTestCase
         self::assertStringNotContainsString("IN\u{00B7}A1", $html);
         self::assertStringContainsString('<span class="ao-by incidents"><i></i>incidents</span>', $html);
 
+        // AND THE BAR IS THE SURFACE'S `.ao-flow`, not a bare div: every rule
+        // in that family is written against the wrapper, so a cell that omits
+        // it draws five browser-default blue underlined links and nothing on
+        // the server says so.
+        self::assertStringContainsString('<div class="ao-flow">', $html);
+
         // FIVE SEGMENTS, in workflow order, each numbered by its position — so
         // adding a place to the state machine adds a segment and nothing else.
         foreach (IncidentStatusEnum::ordered() as $index => $place) {

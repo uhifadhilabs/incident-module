@@ -16,7 +16,14 @@
     {# THE CONTRIBUTOR TAG. Provenance has to survive a screenshot: this card came
        from the incidents module and leaves with it. #}
     <span class="ao-by incidents"><i></i>incidents</span>
-    <div>
+    {# THE BAR IS `.ao-flow`, WHICH IS THE AREA OVERVIEW'S AND NOT THIS MODULE'S.
+       Records-by-where-they-have-got-to is a shape the surface decides, so that
+       every module's flow reads the same; the states in it are this module's.
+       Without the wrapper every rule in that family — the row, the segment box,
+       the figure, the label, the weighted bar — misses, and the five segments
+       render as the browser's own blue underlined links.
+       → Uhifadhi\Bundle\AreaBundle\Overview\OverviewVocabulary::HOST_CLASSES #}
+    <div class="ao-flow">
         {% for place in o.places %}
             <a class="s{{ loop.index }}" href="{{ o.statusUrl(place) }}"><span class="n">{{ o.count(place) }}</span><span class="s">{{ place.label }}</span><span class="b"></span></a>
         {% endfor %}
