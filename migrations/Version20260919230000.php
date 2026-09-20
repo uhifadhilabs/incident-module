@@ -29,12 +29,11 @@ use Doctrine\Migrations\AbstractMigration;
  * column loses its NOT NULL, because the mapping no longer carries it and a new
  * kind is inserted without one. The rows keep every value they had.
  *
- * THE DROP RIDES A LATER RELEASE, as the rule says: for one release the values
- * are still there to read, so an installation can see what each kind used to be
- * set to and can roll the code back. Until that version ships,
- * `doctrine:migrations:diff` proposes dropping the column — that proposal is
- * the deferral working, and the drift lock names `colour_key` as the whole of
- * what it may propose ({@see \Uhifadhi\Incident\Tests\Integration\Migrations\MigrationsCoverSchemaTest}).
+ * THE DROP RODE A LATER VERSION, as the rule says: for one release the values
+ * were to stay readable, so an installation could see what each kind used to
+ * be set to and could roll the code back. {@see Version20260921000000} is
+ * that version, and it came immediately — this one never reached a tag, so
+ * there was no installation holding a value for the deferral to protect.
  *
  * @see Version20260919220000 — the places the hue is read off
  */

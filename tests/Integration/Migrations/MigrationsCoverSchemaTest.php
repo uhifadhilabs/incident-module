@@ -61,12 +61,11 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
      * @var array<string, string>
      */
     private const array RETIRED_UNTIL_DROPPED = [
-        // The colour an administrator used to pick. A kind wears the house hue
-        // its place in the area's list points at from 0.4, so the mapping has
-        // let the column go; Version20260919230000 made it nullable and a later
-        // @destructive version drops it, one release on, so an installation can
-        // still read what each kind used to be set to.
-        'colour_key' => '0.5',
+        // EMPTY, AND THAT IS THE POINT. A column whose mapping has gone but
+        // whose DROP is waiting for a later release belongs here, named, so
+        // the diff it provokes is declared rather than discovered. Nothing is
+        // waiting today: `colour_key` was the one entry and
+        // Version20260921000000 dropped it.
     ];
 
     public function testAFreshDatabaseMigratedLeavesNothingButRetiredSchemaToDiff(): void
