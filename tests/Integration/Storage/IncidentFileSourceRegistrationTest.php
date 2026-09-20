@@ -17,9 +17,12 @@ use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Entity\IncidentEvidence;
 use Uhifadhi\Incident\Enum\EvidenceKindEnum;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
+use Uhifadhi\Incident\Storage\IncidentFileSource;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedFileSources;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 use Uhifadhi\Storage\Enum\GuardStateEnum;
 use Uhifadhi\Storage\Registry\FileRegistry;
+use Uhifadhi\Storage\Registry\FileSourceInterface;
 
 /**
  * INCIDENTS REACHES THE FILES HUB — through the tag, not through a template.
@@ -37,6 +40,28 @@ final class IncidentFileSourceRegistrationTest extends IntegrationTestCase
         $slugs = array_column($this->registry()->modules(), 'slug');
 
         self::assertContains('incidents', $slugs);
+    }
+
+    /**
+     * AND UNDER THE TAG THE CORE PUBLISHES, which is not the one the hub used
+     * to own. A module declaring that it stores files is a fact the whole
+     * platform reads, so the declaration and the files arrive on ONE tag —
+     * `uhifadhi.file_source` — and a second would let the two disagree.
+     *
+     * The collector this asks is wired on the tag's literal spelling rather
+     * than on the interface constant, because a constant follows its own
+     * definition and would keep this passing through a rename it is here to
+     * catch.
+     */
+    public function testTheSourceIsCollectedUnderThePlatformsOwnTag(): void
+    {
+        /** @var CollectedFileSources $collected */
+        $collected = self::getContainer()->get(CollectedFileSources::class);
+        $words = $collected->wordBySlug();
+
+        self::assertArrayHasKey('incidents', $words);
+        self::assertSame(IncidentFileSource::FILE_WORD, $words['incidents']);
+        self::assertSame('uhifadhi.file_source', FileSourceInterface::TAG);
     }
 
     /**

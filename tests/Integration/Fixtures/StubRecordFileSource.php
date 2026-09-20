@@ -54,6 +54,11 @@ final class StubRecordFileSource implements FileSourceInterface
         return 'Fieldwork';
     }
 
+    public function fileWord(): string
+    {
+        return 'a record’s photographs';
+    }
+
     public function attachesTo(): string
     {
         return 'a record’s photographs';

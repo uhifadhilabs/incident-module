@@ -47,6 +47,7 @@ use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Repository\TaxonomySubcategoryRepository;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\AreaVocabulary;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedContentProviders;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedFileSources;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedGeoProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
@@ -275,6 +276,14 @@ final class TestKernel extends Kernel
             ->args([tagged_iterator(DepartmentKpiProviderInterface::TAG)])->public();
         $services->set(CollectedZoneFigureProviders::class)
             ->args([tagged_iterator(ZoneFigureProviderInterface::TAG)])->public();
+        // THE LITERAL TAG NAME, DELIBERATELY. The module tags with the
+        // interface's constant, which is right — but a constant follows its
+        // own definition wherever it goes, so an assertion built on it would
+        // pass on both sides of a tag rename and prove nothing. This is spelt
+        // out so that the day the platform moves the tag again, a test in the
+        // repository where the fix belongs is the thing that says so.
+        $services->set(CollectedFileSources::class)
+            ->args([tagged_iterator('uhifadhi.file_source')])->public();
         $services->set(CollectedStationFigureProviders::class)
             ->args([tagged_iterator(StationFigureProviderInterface::TAG)])->public();
         $services->set(CollectedTopicProviders::class)

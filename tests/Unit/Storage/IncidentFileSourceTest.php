@@ -36,6 +36,31 @@ use Uhifadhi\Storage\Enum\ThumbStateEnum;
  */
 final class IncidentFileSourceTest extends TestCase
 {
+    /**
+     * WHAT THIS MODULE CALLS A FILE, in the Sources register's own column.
+     *
+     * The hub has no word of its own for somebody else's files and must not
+     * invent one, so the phrase is printed verbatim and is the design's:
+     * `files/sources.html` gives the Incidents row "evidence — photographs and
+     * documents". A noun alone would not say WHOSE the files are, and whose is
+     * the half of the answer that tells a reader where to go and change one.
+     *
+     * It is not {@see IncidentFileSource::attachesTo()}, which is a different
+     * sentence on a different surface — the "Modules holding files" widget.
+     */
+    public function testTheHubIsToldWhatThisModuleCallsAFile(): void
+    {
+        self::assertSame('evidence — photographs and documents', IncidentFileSource::FILE_WORD);
+
+        // AND THE SEAM ANSWERS WITH IT. The hub reads the method, not the
+        // constant, so a constant nothing returns would satisfy a test and
+        // leave the Sources row empty. Built without the constructor because
+        // the answer needs neither of this source's collaborators.
+        $source = new \ReflectionClass(IncidentFileSource::class)->newInstanceWithoutConstructor();
+
+        self::assertSame(IncidentFileSource::FILE_WORD, $source->fileWord());
+    }
+
     public function testAPhotographIsHandedOverWithTheCaseFileItBelongsTo(): void
     {
         $evidence = $this->photo();
