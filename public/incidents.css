@@ -69,20 +69,14 @@
    The chart vocabulary the map-first widgets draw in — the line, the donut and
    the bars — ported byte-faithfully from the design's uhifadhi.css.
 
-   THIS IS SHARED VOCABULARY THE CHAIN DOES NOT YET SHIP, kept here the same way
-   and for the same reason as the map plate at the foot of this file: a widget
-   cannot render unstyled while the question of where these rules belong is open,
-   and it is marked rather than accidental. There is a standing ruling that the
-   incident charts move whole into the atlas; when that lands, this block and the
-   chart macros go with it. The ONLY module-specific rules are the four arc/legend hues
-   at the end, which name this taxonomy's colours — everything above is generic.  */
-.ch{width:100%;height:auto;display:block}
-.ch text{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:7.5px;fill:var(--fog)}
+   THE FURNITURE IS THE SHELL'S NOW. The frame, the tick labels, the gridlines
+   and the axis were restated here while the chain did not ship them, marked as
+   a loan rather than left accidental; core f77b375 collected them, so the four
+   rules that said the same thing are gone. What is left below is this module's
+   own: the marks a line, an arc and an annotation are drawn with.  */
 .ch text.anno{fill:var(--tx);font-size:7.5px}
 .ch text.annoS{fill:var(--fog);font-size:6.9px}
 .ch text.big{font-size:20px;fill:var(--tx);font-weight:700}
-.ch line.grid{stroke:color-mix(in srgb,var(--fog) 22%,transparent);stroke-width:.6}
-.ch line.ax{stroke:color-mix(in srgb,var(--fog) 55%,transparent);stroke-width:.8}
 .ch .ln{fill:none;stroke:var(--acc);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
 .ch .lnfill{fill:color-mix(in srgb,var(--acc) 14%,transparent);stroke:none}
 .ch .dot{fill:var(--acc)}
