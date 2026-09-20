@@ -49,4 +49,25 @@ final class IncidentAge
 
         return \sprintf('%d %s', $days, 1 === $days ? 'day' : 'days');
     }
+
+    /**
+     * HOW LONG A PROMISE HAS LEFT, which is counted down sooner than an age is
+     * counted up: a whole day remaining is written as a day.
+     *
+     * The boundary is deliberately not {@see HOURS_BEFORE_DAYS}. An age is read
+     * backwards — "how long has this been sitting" — and two days is where the
+     * hours stop being a number anybody holds in their head. A term is read
+     * forwards, as the answer to "have I got time", and there the unit a person
+     * plans in is the day from the first whole one.
+     */
+    public static function remainingWords(int $hours): string
+    {
+        if ($hours < 24) {
+            return \sprintf('%d %s', $hours, 1 === $hours ? 'hour' : 'hours');
+        }
+
+        $days = intdiv($hours, 24);
+
+        return \sprintf('%d %s', $days, 1 === $days ? 'day' : 'days');
+    }
 }

@@ -21,6 +21,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Uhifadhi\Bundle\AreaBundle\Overview\AttentionProviderInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayerProviderInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\NowTileProviderInterface;
+use Uhifadhi\Bundle\AreaBundle\Overview\OrgOverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewCopyProviderInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\PulseProviderInterface;
@@ -54,6 +55,7 @@ use Uhifadhi\Incident\Module\IncidentZoneFigureProvider;
 use Uhifadhi\Incident\Overview\IncidentAttention;
 use Uhifadhi\Incident\Overview\IncidentMapLayers;
 use Uhifadhi\Incident\Overview\IncidentNowTiles;
+use Uhifadhi\Incident\Overview\IncidentOrgWidgets;
 use Uhifadhi\Incident\Overview\IncidentOverviewContributor;
 use Uhifadhi\Incident\Overview\IncidentOverviewCopy;
 use Uhifadhi\Incident\Overview\IncidentPulse;
@@ -556,6 +558,21 @@ final class UhifadhiIncidentBundle extends AbstractBundle
         $services->set('incident.overview.contributor', IncidentOverviewContributor::class)
             ->args([service('incident.overview.figures')])
             ->tag(OverviewContributorInterface::TAG);
+
+        /*
+         * THE ORGANISATION DASHBOARD'S SEAM — a SECOND contract beside the
+         * area's, opted into deliberately. The area contributor is asked
+         * against an area entity by every installed module; this is asked
+         * once, against a scope, by the page at `/`. A module with nothing to
+         * say across areas implements only the first and loses no cells.
+         *
+         * Without this tag the dashboard simply has no incidents figure and
+         * no incidents cell — which looks exactly like a module nobody
+         * installed, so it is covered by IncidentOrgContributionTest.
+         */
+        $services->set('incident.org.widgets', IncidentOrgWidgets::class)
+            ->args([service('incident.org.figures')])
+            ->tag(OrgOverviewContributorInterface::TAG);
 
         $services->set('incident.overview.now_tiles', IncidentNowTiles::class)
             ->args([service('incident.overview.figures')])

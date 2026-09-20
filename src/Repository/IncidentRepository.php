@@ -703,6 +703,27 @@ final class IncidentRepository extends ServiceEntityRepository
     }
 
     /**
+     * HOW MANY INCIDENTS A SCOPE HAS EVER HELD — one area's, or every area's.
+     *
+     * The denominator that tells a QUIET MORNING from NO REGISTER. An
+     * organisation with a register and nothing open has measured and found
+     * nought; one that has never filed anything has measured nothing at all,
+     * and the two are drawn differently wherever this module publishes a
+     * figure.
+     *
+     * A count in SQL rather than rows in PHP, for the reason
+     * {@see statusTallyFor()} is: the set is the whole register, and an
+     * installation with ten years of filings would otherwise load ten years
+     * to decide whether to draw a card.
+     */
+    public function countByScope(?string $areaUuid): int
+    {
+        $qb = self::narrowedTo($this->createQueryBuilder('i'), $areaUuid)->select('COUNT(i.id)');
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
      * The rows with the taxonomy and the money already loaded — the shape
      * every performance figure is read off, because the plates of a period
      * are readings of the same rows and asking once per plate is how two

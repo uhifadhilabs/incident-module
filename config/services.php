@@ -43,6 +43,7 @@ use Uhifadhi\Incident\Service\IncidentKindsOverviewService;
 use Uhifadhi\Incident\Service\IncidentListService;
 use Uhifadhi\Incident\Service\IncidentMapService;
 use Uhifadhi\Incident\Service\IncidentMoneyService;
+use Uhifadhi\Incident\Service\IncidentOrgFigures;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
 use Uhifadhi\Incident\Service\IncidentReportService;
 use Uhifadhi\Incident\Service\IncidentSettingsService;
@@ -126,6 +127,23 @@ return static function (ContainerConfigurator $container): void {
             service(TaxonomyKindRepository::class),
             service('router'),
             param('incident.currency'),
+        ]);
+
+    /*
+     * THE MODULE'S READING OF A WHOLE ORGANISATION — what it contributes to
+     * the ORGANISATION DASHBOARD at `/`: the "Open incidents" figure in the
+     * four-to-a-row strip and the cell under it. Both ask this one service,
+     * and it memoises per (scope, instant), so the two halves of one
+     * contribution can never be measured a second apart.
+     *
+     * IT IS THE AREA READING ONE SCOPE WIDER, not a second aggregate: the
+     * rows come from the repository's own scope-aware open-work query with
+     * the area left out.
+     */
+    $services->set('incident.org.figures', IncidentOrgFigures::class)
+        ->args([
+            service(IncidentRepository::class),
+            service('router'),
         ]);
 
     /*

@@ -1,0 +1,62 @@
+{# LATEST INCIDENTS, ACROSS EVERY AREA — this module's cell on `/`.
+
+   Design: org.widgets.js, the `incidents` cell of the org-overview surface.
+
+   THE CONTRACT, AND NOTHING ELSE. Rendered with `with_context: false` and
+   handed ONE map, so everything it reads is under `by.incidents` — the same
+   shape this module's partials already read on the area overview.
+
+   ONE READING BEHIND THE TAB AND THE TABLE. The two counts in the tab and the
+   rows under them come off the same set, measured once: a card saying seven
+   open over rows drawn from a set of eight is the failure that shape exists
+   to prevent.
+
+   BOUNDED. Five rows however long the backlog is — the tab says how many
+   there are and the door leads to all of them. A dashboard card's height is
+   never a function of its data.
+
+   NO WIDGET INDEX. The design prints `IN·G2` in the tab; that is the
+   workspace's referencing system and not product. What a reader needs — whose
+   figure this is — is the contributor tag.
+
+   → Uhifadhi\Incident\Overview\IncidentOrgWidgets #}
+{% set o = by.incidents.org %}
+<div class="c" data-w="incidents">
+    <span class="tab">Latest incidents<span class="src">&middot; {{ o.cardSubline }}</span></span>
+    {% if o.doorUrl %}<a class="more" href="{{ o.doorUrl }}">{{ o.doorLabel }} &rarr;</a>{% endif %}
+    <span class="ao-by incidents"><i></i>incidents</span>
+
+    {% if o.latest is empty %}
+        <div class="use">{{ o.hasRegister
+            ? 'Nothing is open anywhere. Every incident this organisation has filed has been seen through.'
+            : 'Nothing has been filed anywhere yet. The first incident an area records appears here.' }}</div>
+    {% else %}
+        <table class="tbl">
+            <tr>
+                <th>incident</th>
+                <th>area</th>
+                <th>kind</th>
+                <th>filed</th>
+                <th>state</th>
+            </tr>
+            {% for incident in o.latest %}
+                <tr>
+                    <td><b>{{ incident.reference }}</b></td>
+                    <td>{{ incident.area.name }}</td>
+                    <td>{{ incident.subcategory.label }}</td>
+                    {# The instant carries its own machine value, so the frame
+                       prints it in the reader's timezone rather than the
+                       server's. #}
+                    <td><time datetime="{{ incident.reportedAt|date('c') }}"
+                              data-localtime-format="daytime">{{ incident.reportedAt|date('j M H:i') }}</time></td>
+                    {# THE RULED CHIP STATES, and no fourth tone of this
+                       module's own: past the term it was filed under, inside
+                       it but close, or comfortably inside. The term is the
+                       sub-category's — one global SLA would be a lie about
+                       every category at once. #}
+                    <td><span class="chip {{ o.termChip(incident) }}">{{ o.termWords(incident) }}</span></td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</div>

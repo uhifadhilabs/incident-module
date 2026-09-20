@@ -41,11 +41,24 @@ final class FixedPermissionVoter extends Voter
     /** May file AND move — the supervisor. */
     public const string MANAGER_EMAIL = 'manager@example.test';
 
+    /**
+     * THE CORE'S OWN PERMISSION FOR READING AN AREA, and the organisation
+     * dashboard this module contributes to is gated on it.
+     *
+     * A LITERAL, DELIBERATELY. AreaBundle publishes no constant for it — it is
+     * written out in the `#[IsGranted]` on every screen that reads an area —
+     * so a constant borrowed from somewhere else would only pretend to be the
+     * same string. It is signed in here for anybody with an account, which is
+     * the installation's decision and not this module's to make.
+     */
+    private const string AREA_VIEW = 'area.view';
+
     protected function supports(string $attribute, mixed $subject): bool
     {
         return \in_array($attribute, [
             IncidentReportController::RECORD_PERMISSION,
             IncidentDetailController::MANAGE_PERMISSION,
+            self::AREA_VIEW,
         ], true);
     }
 
@@ -59,6 +72,7 @@ final class FixedPermissionVoter extends Voter
         return match ($attribute) {
             IncidentReportController::RECORD_PERMISSION => \in_array($user->getEmail(), [self::REPORTER_EMAIL, self::MANAGER_EMAIL], true),
             IncidentDetailController::MANAGE_PERMISSION => self::MANAGER_EMAIL === $user->getEmail(),
+            self::AREA_VIEW => true,
             default => false,
         };
     }
