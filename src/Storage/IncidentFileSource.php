@@ -84,9 +84,12 @@ final class IncidentFileSource implements FileSourceInterface
      *
      * A phrase and not a noun, because a noun cannot say WHOSE the files are,
      * and whose is the half of the answer that tells a reader where to go and
-     * change one. It is not {@see attachesTo()}, which is the line the
-     * "Modules holding files" widget prints — a different sentence on a
-     * different surface.
+     * change one.
+     *
+     * TWO SURFACES, ONE ANSWER. The Sources register's column and the "Modules
+     * holding files" widget's line are different sentences on different pages,
+     * and this module's answer to both is the same words — so a reader who has
+     * seen one recognises the other. {@see attachesTo()} returns this.
      */
     public const string FILE_WORD = 'evidence — photographs and documents';
 
@@ -113,7 +116,7 @@ final class IncidentFileSource implements FileSourceInterface
 
     public function attachesTo(): string
     {
-        return 'evidence — photographs and signed documents';
+        return self::FILE_WORD;
     }
 
     public function claimsKey(string $key): bool

@@ -45,8 +45,11 @@ final class IncidentFileSourceTest extends TestCase
      * documents". A noun alone would not say WHOSE the files are, and whose is
      * the half of the answer that tells a reader where to go and change one.
      *
-     * It is not {@see IncidentFileSource::attachesTo()}, which is a different
-     * sentence on a different surface — the "Modules holding files" widget.
+     * AND THE WIDGET SAYS IT TOO. {@see IncidentFileSource::attachesTo()} is a
+     * different surface — the "Modules holding files" line — and this module
+     * answers both with the same words, so a reader who has seen one
+     * recognises the other. Two spellings of one fact is how a product ends up
+     * calling the same thing two names on two pages.
      */
     public function testTheHubIsToldWhatThisModuleCallsAFile(): void
     {
@@ -59,6 +62,7 @@ final class IncidentFileSourceTest extends TestCase
         $source = new \ReflectionClass(IncidentFileSource::class)->newInstanceWithoutConstructor();
 
         self::assertSame(IncidentFileSource::FILE_WORD, $source->fileWord());
+        self::assertSame($source->fileWord(), $source->attachesTo());
     }
 
     public function testAPhotographIsHandedOverWithTheCaseFileItBelongsTo(): void
