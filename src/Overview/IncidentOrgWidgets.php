@@ -55,11 +55,16 @@ final readonly class IncidentOrgWidgets implements ContributesStylesheetInterfac
     public const string CELL = 'incidents';
 
     /**
-     * Where the figure sits in the strip: after who is on duty and who is out,
-     * before what is being kept. The strip reads left to right as who is
-     * working, where they are, what is open and what was filed.
+     * WHERE THE FIGURE SITS IN THE STRIP — third, and the strip reads left to
+     * right as who is on duty, who is out, what is open and what is kept.
+     *
+     * THE NUMBER IS ONLY MEANINGFUL AGAINST ITS NEIGHBOURS' — the core sorts
+     * the contributed tiles on it and nothing normalises the scale. The
+     * roster publishes 10 and patrols 30, so this must be above 30; storage
+     * publishes 40, so it must be below that. Halfway between the two leaves
+     * room on either side for a module that has to come between.
      */
-    private const int PRIORITY = 300;
+    private const int PRIORITY = 35;
 
     public function __construct(
         private IncidentOrgFigures $figures,

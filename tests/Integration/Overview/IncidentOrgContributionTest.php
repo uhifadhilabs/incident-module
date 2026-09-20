@@ -106,6 +106,26 @@ final class IncidentOrgContributionTest extends IntegrationTestCase
     }
 
     /**
+     * THE FIGURE IS THIRD ON THE STRIP, which is the design's order: on duty,
+     * patrols out, open incidents, files kept.
+     *
+     * The neighbours' published priorities are spelt out rather than imported
+     * — neither module is a dependency of this one, and a constant borrowed
+     * from a package that may not be installed would only pretend to be the
+     * same number. The bound is what matters, so the bound is what is pinned:
+     * after patrols, before files.
+     */
+    public function testTheFigureSitsBetweenPatrolsAndFilesOnTheStrip(): void
+    {
+        $this->twoAreasWithOpenWork();
+
+        $priority = $this->tile(Scope::organisation())->priority;
+
+        self::assertGreaterThan(30, $priority, 'patrol-module publishes 30 and comes first.');
+        self::assertLessThan(40, $priority, 'storage-module publishes 40 and comes last.');
+    }
+
+    /**
      * ABSENT IS NOT ZERO. An installation where nothing has ever been filed
      * publishes no figure — the strip draws its own "nothing measured" slot
      * rather than this module claiming it looked.
