@@ -34,14 +34,6 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# THE MAP STYLESHEET — the atlas's ONE map.css: the plate column, the
-       imagery frame, the control stack, the floating legend and the fullscreen
-       rules. It is the atlas's own asset, not a copy, and linking it here is the
-       self-sufficiency this base already applies to the widget grid: an incident
-       map renders its full chrome without the application having wired map.css.
-       Loaded BEFORE incidents.css, which decorates and never restates it. The
-       map's own stylesheet arrives with the map: the UX Map bridge imports it. #}
-    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
     {# The dashboard grid's own vocabulary, from the bundle that owns it. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\ShellBundle\\ShellBundle::WIDGET_STYLESHEET')) }}">
     {# The path is the bundle's own constant, not a literal: the area overview is
