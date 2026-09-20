@@ -128,20 +128,23 @@
   border:1px solid;white-space:nowrap;line-height:1;display:inline-block}
 .i-st.rep{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 42%,transparent);
   background:color-mix(in srgb,var(--warn) 9%,transparent)}
-.i-st.ver{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 45%,transparent);
-  background:color-mix(in srgb,var(--acc) 9%,transparent)}
+/* RULED 2026-09-21: ONE state per set wears the accent, and it is the running
+   one. Verified is the neutral pill — ink, a border, no tint — because
+   "confirmed" is a fact, not a signal. */
+.i-st.ver{color:var(--tx);border-color:var(--ln2);background:none}
 /* NOTE the class is `wip`, not `prog`: uhifadhi.css already owns a bare `.prog`
    (the 7px progress bar), and `.i-st.prog` inherited its height and overflow,
    which clipped the label to a sliver. A module must not reuse a bare host
    class name even in a compound selector. */
-/* AND NOTE THE COLOUR: the other four states each have a semantic token that
-   means what they mean — reported needs a look, verified is live, resolved
-   went well, closed is spent. "In progress" has no fifth meaning, so it is
-   told apart rather than judged, and a told-apart thing takes the categorical
-   set. FLAGGED: the one place a status borrows a category token, and a ruling
-   on it is pending. */
-.i-st.wip{color:var(--cat-3);border-color:color-mix(in srgb,var(--cat-3) 45%,transparent);
-  background:color-mix(in srgb,var(--cat-3) 9%,transparent)}
+/* AND NOTE THE COLOUR — RULED 2026-09-21: a running state wears the accent,
+   which is reserved for live. In progress is the one state that is HAPPENING,
+   so it takes --acc and stops borrowing a category token: a status is judged,
+   and the categorical set says only that one thing is not another.
+
+   It is the FILLED accent, and it is the only accented state in the set —
+   verified went neutral in the same ruling, so the accent points at one row
+   and no other. */
+.i-st.wip{color:var(--accT);background:var(--acc);border-color:var(--acc)}
 .i-st.res{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 42%,transparent);
   background:color-mix(in srgb,var(--ok) 9%,transparent)}
 .i-st.cls{color:var(--dim);border:1px dashed color-mix(in srgb,var(--fog) 45%,transparent);font-weight:600}
@@ -961,10 +964,15 @@
    prints a move inside a neutral .ao-move and adds whatever stateClass the
    module's PulseEvent returned — so these are the SAME five keys .i-st wears,
    and a status cannot read one colour on a case file and another in the area's
-   stream. See IncidentPulse and IncidentStatusEnum::cssClass().             */
+   stream. See IncidentPulse and IncidentStatusEnum::cssClass().
+
+   THEY TURNED OVER WITH THE PILLS, RULED 2026-09-21: the running state took
+   the accent and verified went neutral. A row is ink on a stream rather than
+   a filled pill, so it wears the colour and not the fill — the MEANING is the
+   same, which is the whole point of the paragraph above.                    */
 .ao-move.rep{color:var(--warn)}
-.ao-move.ver{color:var(--acc)}
-.ao-move.wip{color:var(--cat-3)}
+.ao-move.ver{color:var(--tx)}
+.ao-move.wip{color:var(--acc)}
 .ao-move.res{color:var(--ok)}
 .ao-move.cls{color:var(--dim)}
 
