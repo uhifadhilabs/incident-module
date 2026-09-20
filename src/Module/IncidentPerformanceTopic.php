@@ -184,8 +184,16 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     }
 
     /**
-     * FIVE, AND ALWAYS FIVE — filed, open past target, the median time to
-     * close, compensation claims still open, and what was finished.
+     * FOUR, AND ALWAYS FOUR — filed, open past target, the median time to
+     * close, and what was finished.
+     *
+     * RULED 2026-09-21: a figure row is four to a row everywhere in the
+     * product, so `Claims open` went. It is the one of the five a reader
+     * acts on least like the others — the other four are the flow of work
+     * through the module, and a compensation claim is a different
+     * conversation with a different person. It is still on the matrix, where
+     * a department is compared with a department, and still on the module's
+     * own pages.
      *
      * @return list<TopicKpi>
      */
@@ -211,10 +219,6 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
                 static fn (array $p): ?float => $p['resolved']->medianDaysToClose(),
                 caption: self::targetsCaption($run[self::PERIODS - 1]['resolved']),
                 unit: 'd',
-            ),
-            self::figure($run, self::CLAIMS_OPEN, 'Claims open', ColumnPolarity::Down,
-                static fn (array $p): float => (float) $p['filed']->claimsOpen(),
-                caption: 'compensation neither settled nor waived',
             ),
             self::figure($run, self::RESOLVED, 'Resolved', ColumnPolarity::Up,
                 static fn (array $p): float => (float) $p['resolved']->filed(),
@@ -475,7 +479,6 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
             new TopicKpi(self::FILED, 'Filed', null, caption: $why, polarity: ColumnPolarity::None),
             new TopicKpi(self::OPEN_PAST_TARGET, 'Open', null, caption: $why, polarity: ColumnPolarity::Down),
             new TopicKpi(self::MEDIAN_DAYS_TO_CLOSE, 'Median days to close', null, 'd', caption: $why, polarity: ColumnPolarity::Down),
-            new TopicKpi(self::CLAIMS_OPEN, 'Claims open', null, caption: $why, polarity: ColumnPolarity::Down),
             new TopicKpi(self::RESOLVED, 'Resolved', null, caption: $why, polarity: ColumnPolarity::Up),
         ];
     }

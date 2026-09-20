@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\ChartKind;
+use Uhifadhi\Contracts\Performance\MatrixColumn;
 use Uhifadhi\Contracts\Performance\MatrixRow;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\TopicKpi;
@@ -157,25 +158,57 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
         self::assertInstanceOf(IncidentPerformanceTopic::class, $collected->byKey()['incidents']);
     }
 
-    /** FIVE, AND ALWAYS FIVE — including where no area runs the module at all. */
-    public function testFiveHeadlineFiguresAreAlwaysPublished(): void
+    /**
+     * FOUR, AND ALWAYS FOUR — including where no area runs the module at all.
+     *
+     * RULED 2026-09-21 and pinned here by KEY and by LABEL, in the design's
+     * order. The count alone would pass on a row of four different figures,
+     * and the labels are what a reader recognises the topic by.
+     */
+    public function testFourHeadlineFiguresAreAlwaysPublished(): void
     {
         $this->world();
+
+        $kpis = $this->kpis(PerformanceScope::organisation());
 
         self::assertSame([
             IncidentPerformanceTopic::FILED,
             IncidentPerformanceTopic::OPEN_PAST_TARGET,
             IncidentPerformanceTopic::MEDIAN_DAYS_TO_CLOSE,
-            IncidentPerformanceTopic::CLAIMS_OPEN,
             IncidentPerformanceTopic::RESOLVED,
-        ], array_keys($this->kpis(PerformanceScope::organisation())));
+        ], array_keys($kpis));
+
+        self::assertSame(
+            ['Filed', 'Open', 'Median days to close', 'Resolved'],
+            array_values(array_map(static fn (TopicKpi $kpi): string => $kpi->label, $kpis)),
+        );
     }
 
     /**
-     * A SCOPE WHERE NOBODY CAN BE ASKED STILL PUBLISHES FIVE, and every one of
-     * them is null rather than nought.
+     * AND `Claims open` IS NOT ONE OF THEM. It is the figure a reader acts on
+     * least like the other four — they are the flow of work through the
+     * module and a compensation claim is a different conversation — so it is
+     * the one the four-to-a-row ruling dropped. It is still on the matrix and
+     * still on the module's own pages.
      */
-    public function testAScopeWhereNobodyCanBeAskedStillPublishesFiveUnknowns(): void
+    public function testClaimsOpenIsNoLongerAHeadlineFigure(): void
+    {
+        $this->world();
+
+        self::assertArrayNotHasKey(IncidentPerformanceTopic::CLAIMS_OPEN, $this->kpis(PerformanceScope::organisation()));
+        self::assertContains(
+            IncidentPerformanceTopic::COMPENSATION_CLAIMS,
+            array_map(static fn (MatrixColumn $column): string => $column->key, IncidentPerformanceTopic::columns()),
+            'the claim figure keeps its column, where a department is compared with a department',
+        );
+    }
+
+    /**
+     * A SCOPE WHERE NOBODY CAN BE ASKED STILL PUBLISHES FOUR, and every one of
+     * them is null rather than nought — a short row and a quiet month must
+     * not look alike.
+     */
+    public function testAScopeWhereNobodyCanBeAskedStillPublishesFourUnknowns(): void
     {
         $this->world();
         $elsewhere = $this->anArea('Unserved Reserve');
@@ -183,7 +216,7 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
 
         $kpis = $this->kpis(PerformanceScope::area((string) $elsewhere->getUuidString(), 'Unserved Reserve'));
 
-        self::assertCount(5, $kpis);
+        self::assertCount(4, $kpis);
         foreach ($kpis as $kpi) {
             self::assertNull($kpi->value, $kpi->key.' is not a nought where nobody can be asked.');
             self::assertStringContainsString('asked about the Incidents module', $kpi->caption);
@@ -367,7 +400,8 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
             1.0,
             $this->rows(PerformanceScope::organisation())['Ecology']->cells[IncidentPerformanceTopic::COMPENSATION_CLAIMS]->value,
         );
-        self::assertSame(1.0, $this->kpis(PerformanceScope::organisation())[IncidentPerformanceTopic::CLAIMS_OPEN]->value);
+        // The headline dropped the claim figure; the COLUMN is where it is
+        // read now, which is what the assertion above checks.
     }
 
     /**
