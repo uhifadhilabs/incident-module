@@ -38,7 +38,7 @@ something here actually enforces, through
 
 | Concern | Verbs |
 |---|---|
-| `incidents` | read · record · manage · delete · export |
+| `incidents` | read · record · manage · export |
 | `incident-vocabulary` | read · configure |
 | `case-files` **(sensitive)** | read · manage · delete |
 | `case-money` **(sensitive)** | read · manage |
@@ -106,12 +106,49 @@ act, because a file leaves the building.
   it.** An organization may let a clerk attach photographs without letting the
   same clerk take one off.
 
-### One row is declared and enforced by nothing
+### There is no `incidents.delete`
 
-`incidents.delete` is in the matrix and nothing in this module gates on it:
-a case is resolved and filed, never destroyed. It is declared so an
-organization can withhold the power before the product grows it, and the first
-thing that deletes a record will gate on it rather than invent a word.
+Nothing in this module destroys an incident — a case is resolved and filed, and
+a correction is a new event rather than an erasure. A verb is declared where
+something enforces it, so a row nothing gates on is a box an administrator can
+tick that changes nothing, and it is not declared. It arrives with the first
+thing that deletes a record.
+
+### Every AGGREGATE of a withheld fact is withheld too
+
+This is the second half of the change and the half an installation will notice
+on screens nobody edited. A register-wide total is the cases' figures added up,
+so a figure drawn for somebody the cases are withheld from hands back exactly
+what the case files hold back. Seven surfaces now ask the same door the record
+asks — `docs/permissions.md` has the table:
+
+- the dashboard's `Fines & compensation` board, its KPI strip's `Money
+  outstanding` slot, and the money column of its register — `case-money.read`;
+- the dashboard's `Latest evidence` board — `case-files.read`;
+- the area overview's `Money outstanding` cell — `case-money.read`;
+- a department's `Fines assessed` and `Compensation approved` plates —
+  `case-money.read`;
+- the performance topic's `Compensation claims` column — `case-money.read`.
+
+**Withheld is a word on the page, never a nought.** A zero is a measurement and
+a dash means "we could not measure". The one exception is the performance
+matrix: `MatrixCell` has no withheld state, so the column is dropped rather
+than borrowing a word that would print a different sentence from the true one.
+
+**AN ORGANIZATION-WIDE FIGURE NEEDS EVERY AREA**, because a wide reading is the
+narrow readings added up and one refused area would be smuggled into the total.
+
+**What this means for a host or a module.** `IncidentOverviewContributor`
+takes a second argument, `IncidentDoors` (service `incident.access.doors`), and
+its `context()` publishes `by.incidents.seesMoney` beside the reading — a
+contributed cell is rendered with `with_context: false` and has no area to ask
+a door with, so the answer is handed over with the figures.
+`IncidentDepartmentKpiProvider` and `IncidentPerformanceTopic` take the same
+service (second argument, after the repository/directory), and
+`IncidentPerformanceTopic::columns()` takes an optional `bool $withMoney`
+defaulting to true. The doors fail closed three ways — no SecurityBundle, no
+token, no answer — so a reading taken off a request (a warm-up, a console
+command) publishes no money at all.
 
 ## 0.3.0 — the filter dropdowns became the shell's
 

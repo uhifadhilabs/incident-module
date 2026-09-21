@@ -5,6 +5,7 @@
 - [The four concerns this module declares](#the-four-concerns-this-module-declares)
 - [The pairs, site by site](#the-pairs-site-by-site)
 - [Why the case file and the money are their own concerns](#why-the-case-file-and-the-money-are-their-own-concerns)
+- [An aggregate is withheld with the fact it aggregates](#an-aggregate-is-withheld-with-the-fact-it-aggregates)
 - [Why filing and managing are split](#why-filing-and-managing-are-split)
 - [Doors](#doors)
 
@@ -22,7 +23,7 @@ not department: an incident happens on ground.
 
 | Concern | Verbs | What it is about |
 |---|---|---|
-| `incidents` | read · record · manage · delete · export | The register, filing a report, moving a case through verification, response and closure, and taking the month away as a file. |
+| `incidents` | read · record · manage · export | The register, filing a report, moving a case through verification, response and closure, and taking the month away as a file. |
 | `incident-vocabulary` | read · configure | How an area is set up to file: its kinds and sub-categories, the words its questions offer, and what it counts money in. |
 | `case-files` **(sensitive)** | read · manage · delete | The narrative as it was taken, the suspects, claimants, informants and witnesses named on the record, and the evidence attached to it. |
 | `case-money` **(sensitive)** | read · manage | The fine or the claim, what was assessed and approved, what has been paid, and waiving the rest with a reason. |
@@ -39,14 +40,19 @@ subset of a register another reader sees in full.
 | `incidents.record` | `incident_new`, `incident_create` |
 | `incidents.manage` | `incident_transition` — and the transition token, which is not minted for somebody the endpoint would refuse |
 | `incidents.export` | `incident_export` |
-| `incidents.delete` | **declared, enforced by nothing yet.** Nothing in this module destroys an incident; a case is resolved and filed, never deleted. The row is here so an organization can already withhold a power the product may grow, and the first thing that deletes a record gates on it. |
 | `incident-vocabulary.read` | the kinds editor and the lists editor, as screens |
 | `incident-vocabulary.configure` | every write on either editor, and the Settings section's one POST |
 | `case-files.read` | the Evidence, Involved parties and Narrative cards, the parties block's answers, the evidence and money lines of the timeline, and the bytes of a stored file on the Files hub |
 | `case-files.manage` | attaching a file to a case |
 | `case-files.delete` | taking one back off |
-| `case-money.read` | the Money card, the money figures in the record's subline, the money block's answer, and money events on the timeline |
+| `case-money.read` | the Money card, the money figures in the record's subline, the money block's answer, money events on the timeline, and every AGGREGATE of them (below) |
 | `case-money.manage` | `incident_money`, `incident_money_waive` |
+
+**There is no `incidents.delete`.** A verb is declared where something
+enforces it, and nothing here destroys an incident: a case is resolved and
+filed, and a correction is a new event rather than an erasure. A declared power
+nothing enforces is a box an administrator can tick that changes nothing. It
+arrives with the first thing that deletes a record.
 
 Every per-area route passes its area — `#[IsGranted('incidents.read', subject:
 'area')]` — because a gate asked without the ground is a gate any placement
@@ -70,6 +76,43 @@ informant named on a poaching case is endangered by the *reading*, not by the
 filing; money attracts a different kind of interest again, and is routinely
 held by the few who settle it while the case stays readable by everybody
 working it.
+
+## An aggregate is withheld with the fact it aggregates
+
+A register-wide total is the cases' figures added up, so a figure drawn for
+somebody the cases are withheld from hands back exactly what the case files
+hold back. Every one of these asks the same door the record asks:
+
+| Surface | Asks | What a refused reader gets |
+|---|---|---|
+| dashboard · `Fines & compensation` board | `case-money.read` | the card, saying withheld |
+| dashboard · the KPI strip's `Money outstanding` | `case-money.read` | the slot, an em dash and the word (the strip stays four to a row) |
+| dashboard · the register's `money` column | `case-money.read` | the table, one column short |
+| dashboard · `Latest evidence` | `case-files.read` | the card, saying withheld |
+| area overview · `Money outstanding` | `case-money.read` | the cell, saying withheld |
+| a department's KPI strip · `Fines assessed`, `Compensation approved` | `case-money.read` | the three non-money plates, and no money plate at all |
+| performance topic · the `Compensation claims` column | `case-money.read` | a matrix without that column |
+
+**Withheld is not a nought, and not a dash.** A nought is a measurement and a
+dash means "we could not measure"; this figure was measured and is not this
+reader's. Where a cell can say so it says "withheld"; where the platform's own
+value object cannot — a `MatrixCell` offers a value, a dash and "not this
+department's to answer" and nothing else — the column is dropped instead of
+borrowing a word that would print a different sentence from the true one.
+
+**AN ORGANIZATION-WIDE FIGURE NEEDS EVERY AREA.** A reading across areas is the
+areas' readings added up, so one area the reader is refused would be smuggled
+into the total. A scope naming no area asks about all of them and one refusal
+withholds the figure. `Uhifadhi\Incident\Access\IncidentDoors` is where that
+rule lives, and it is also where a contributed cell asks its door at all: the
+area overview, the organization dashboard, a department's KPI strip and a
+performance topic are rendered by somebody else from a context this module
+hands over, so the question is answered before the handover rather than in the
+markup. It fails closed three ways — no door, no token, no answer.
+
+**The organization dashboard's own cell publishes neither.** `Latest
+incidents` is references, areas, kinds, filing times and term chips; there is
+nothing on it to withhold, and it is drawn whole for everybody who reaches `/`.
 
 ## Why filing and managing are split
 
