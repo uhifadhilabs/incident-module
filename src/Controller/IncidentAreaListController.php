@@ -22,10 +22,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
@@ -67,7 +67,7 @@ use Uhifadhi\Incident\Service\AreaListService;
  * A plain class, not AbstractController — a reusable bundle defines its services
  * explicitly, patterned on FrameworkBundle's TemplateController. Registered only
  * under the SecurityBundle guard (see UhifadhiIncidentBundle), because every
- * write rides on the same `incidents.manage` the kinds editor rides on and there
+ * write rides on the same `incident-vocabulary.configure` the kinds editor rides on and there
  * is nobody to grant it without a firewall.
  *
  * WHICH MODULE THESE ROUTES BELONG TO, said once for the class. RegistryBundle
@@ -78,9 +78,6 @@ use Uhifadhi\Incident\Service\AreaListService;
 #[Route(defaults: [RegistryBundle::MODULE_ROUTE_DEFAULT => IncidentModuleProvider::SLUG])]
 final class IncidentAreaListController
 {
-    /** Naming the words everybody picks from is the same authority as naming the kinds. */
-    public const string MANAGE_PERMISSION = IncidentTaxonomyController::MANAGE_PERMISSION;
-
     /** The token id every write on this screen carries. */
     public const string CSRF_TOKEN_ID = 'incident_area_lists';
 
@@ -93,8 +90,13 @@ final class IncidentAreaListController
         private readonly AreaListService $lists,
         private readonly AreaListBoardService $board,
         private readonly AreaListEntryRepository $entries,
-        private readonly AuthorizationCheckerInterface $authorization,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
+        /**
+         * Whether the writing screens EXIST in this installation — they need
+         * SecurityBundle. Whether THIS person may file is the other half, asked
+         * in the template with `door('incidents.record', area)`.
+         */
+        private readonly bool $recordScreens = false,
     ) {
     }
 
@@ -105,12 +107,11 @@ final class IncidentAreaListController
         methods: ['GET'],
         priority: 2,
     )]
+    #[IsGranted('incident-vocabulary.read', subject: 'area')]
     public function show(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
-        $this->denyUnlessGranted();
-
         return new Response($this->twig->render('@UhifadhiIncident/lists/show.html.twig', [
             'area' => $area,
             'panels' => $this->board->forArea($area, $request->query->getString('list')),
@@ -119,7 +120,7 @@ final class IncidentAreaListController
             'editing' => $this->editingUuid($area, $request->query->getString('rename')),
             // The one page action this screen draws. The way back is the strip,
             // the lit Configure and the crumb — never a button of its own.
-            'recordScreens' => $this->authorization->isGranted(IncidentReportController::RECORD_PERMISSION),
+            'recordScreens' => $this->recordScreens,
             'csrfToken' => $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue(),
         ]));
     }
@@ -130,6 +131,7 @@ final class IncidentAreaListController
         requirements: ['uuid' => Requirement::UUID, 'list' => self::LIST_PATTERN],
         methods: ['POST'],
     )]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function add(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $list): Response
     {
         $this->guardWrite($request);
@@ -150,6 +152,7 @@ final class IncidentAreaListController
         requirements: ['uuid' => Requirement::UUID, 'entry' => Requirement::UUID],
         methods: ['POST'],
     )]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function rename(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $entry): Response
     {
         $this->guardWrite($request);
@@ -170,6 +173,7 @@ final class IncidentAreaListController
         requirements: ['uuid' => Requirement::UUID, 'entry' => Requirement::UUID],
         methods: ['POST'],
     )]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function retire(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $entry): Response
     {
         $this->guardWrite($request);
@@ -185,6 +189,7 @@ final class IncidentAreaListController
         requirements: ['uuid' => Requirement::UUID, 'entry' => Requirement::UUID],
         methods: ['POST'],
     )]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function reactivate(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $entry): Response
     {
         $this->guardWrite($request);
@@ -251,16 +256,8 @@ final class IncidentAreaListController
 
     private function guardWrite(Request $request): void
     {
-        $this->denyUnlessGranted();
         if (!$this->csrfTokenManager->isTokenValid(new CsrfToken(self::CSRF_TOKEN_ID, $request->request->getString('_token')))) {
             throw new AccessDeniedException('Invalid CSRF token for the lists editor.');
-        }
-    }
-
-    private function denyUnlessGranted(): void
-    {
-        if (!$this->authorization->isGranted(self::MANAGE_PERMISSION)) {
-            throw new AccessDeniedException('Editing this area\'s lists needs "'.self::MANAGE_PERMISSION.'".');
         }
     }
 }

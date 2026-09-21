@@ -23,10 +23,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
@@ -83,9 +83,6 @@ use Uhifadhi\Incident\Storage\IncidentFileSource;
 #[Route(defaults: [RegistryBundle::MODULE_ROUTE_DEFAULT => IncidentModuleProvider::SLUG])]
 final class IncidentDetailController
 {
-    /** Moving an incident on is the expensive half of the workflow — see `docs/permissions.md`. */
-    public const string MANAGE_PERMISSION = 'incidents.manage';
-
     public function __construct(
         private readonly Environment $twig,
         private readonly UrlGeneratorInterface $router,
@@ -113,7 +110,6 @@ final class IncidentDetailController
          * registered.
          */
         private readonly bool $filePages = false,
-        private readonly ?AuthorizationCheckerInterface $authorization = null,
         private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
         private readonly ?TokenStorageInterface $tokenStorage = null,
     ) {
@@ -125,6 +121,7 @@ final class IncidentDetailController
         requirements: ['uuid' => Requirement::UUID, 'reference' => '[A-Z]{2,6}-\d{2,8}'],
         methods: ['GET'],
     )]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function show(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
         string $reference,
@@ -146,7 +143,6 @@ final class IncidentDetailController
             // wherever it is drawn. The legend states this incident's category
             // alone, because that is the only kind on the plate.
             'map' => $this->map->forArea($area, [$incident], [$incident->getKind()]),
-            'canManage' => $this->canManage(),
             // WHAT THIS WORD ASKED, so the page can print the answers under the
             // block that asked them and in the order the questions were put. The
             // record keeps the answers; the catalogue keeps the questions, which is
@@ -178,6 +174,7 @@ final class IncidentDetailController
         requirements: ['uuid' => Requirement::UUID, 'reference' => '[A-Z]{2,6}-\d{2,8}', 'transition' => '[a-z_]+'],
         methods: ['POST'],
     )]
+    #[IsGranted('incidents.manage', subject: 'area')]
     public function transition(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -185,7 +182,6 @@ final class IncidentDetailController
         string $transition,
     ): Response {
         $incident = $this->incidentIn($area, $reference);
-        $this->denyUnlessGranted();
         $this->denyUnlessCsrfValid($request, $area);
 
         $move = IncidentTransitionEnum::tryFrom($transition);
@@ -245,18 +241,6 @@ final class IncidentDetailController
         }
 
         return $incident;
-    }
-
-    private function canManage(): bool
-    {
-        return $this->authorization?->isGranted(self::MANAGE_PERMISSION) ?? false;
-    }
-
-    private function denyUnlessGranted(): void
-    {
-        if (!$this->canManage()) {
-            throw new AccessDeniedException('Moving an incident through its workflow needs "'.self::MANAGE_PERMISSION.'".');
-        }
     }
 
     private function denyUnlessCsrfValid(Request $request, AreaOfInterest $area): void

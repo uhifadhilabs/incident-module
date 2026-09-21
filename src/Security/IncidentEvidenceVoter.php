@@ -14,6 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Security;
 
 use Symfony\Component\Security\Core\User\UserInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
+use Uhifadhi\Contracts\Access\Verb;
+use Uhifadhi\Incident\Access\IncidentConcerns;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 use Uhifadhi\Incident\Service\IncidentEvidenceKey;
 use Uhifadhi\Storage\Security\EvidenceAccessVoterInterface;
@@ -29,19 +32,14 @@ use Uhifadhi\Storage\Security\EvidenceAccessVoterInterface;
  * deny-by-default rule) invisible on the Files hub, even where the case was
  * freely readable. It claims those keys and answers for them.
  *
- * THE RULE IS THE CASE-FILE PAGE'S RULE, deliberately: evidence is shown on the
- * incident detail screen, reached by any signed-in member of the authority (the
- * host's access_control puts every non-API path behind ROLE_USER). So the answer
- * is a signed-in user and a key this module actually holds; a stricter rule for
- * the bytes than for the page they appear on would only be a broken image on a
- * page the reader is entitled to. The OPEN-vs-resolved question is about removing
- * evidence, not reading it, and lives in
- * {@see \Uhifadhi\Incident\Storage\IncidentFileSource::guardFor}.
- *
- * REVISIT WHEN the host grows per-area permissions: this becomes "may the user
- * view the incident's area", resolved through the evidence → incident → area
- * chain the lookup below already reaches; the contract does not change, only the
- * question asked at the end of it.
+ * THE RULE IS THE CASE-FILE CARD'S RULE, deliberately: the bytes answer exactly
+ * the question the card that shows them answers, `case-files.read` ON THE AREA
+ * THE INCIDENT LIES IN — resolved through the evidence → incident → area chain
+ * the lookup below already reaches. Anything looser would put a photograph of a
+ * suspect on the Files hub for somebody the case file itself withholds it from;
+ * anything stricter would be a broken image on a page the reader is entitled
+ * to. The OPEN-vs-resolved question is about REMOVING evidence, not reading it,
+ * and lives in {@see \Uhifadhi\Incident\Storage\IncidentFileSource::guardFor}.
  *
  * PREVIEWS need no handling here: the access decider resolves a `.thumb.jpg` to
  * the original it previews BEFORE polling voters, so this only ever sees a
@@ -52,6 +50,8 @@ final class IncidentEvidenceVoter implements EvidenceAccessVoterInterface
 {
     public function __construct(
         private readonly IncidentEvidenceRepository $evidence,
+        /** Null where the installation runs no security; evidence is then refused. */
+        private readonly ?Door $door = null,
     ) {
     }
 
@@ -70,6 +70,9 @@ final class IncidentEvidenceVoter implements EvidenceAccessVoterInterface
             return false;
         }
 
-        return null !== $this->evidence->findOneByPath($key);
+        $evidence = $this->evidence->findOneByPath($key);
+
+        return null !== $evidence
+            && (true === $this->door?->opensFor(IncidentConcerns::CASE_FILES, Verb::Read, $evidence->getIncident()->getArea()));
     }
 }

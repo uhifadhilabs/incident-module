@@ -22,10 +22,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
@@ -107,9 +107,6 @@ use Uhifadhi\Incident\Service\IncidentReportService;
 #[Route(defaults: [RegistryBundle::MODULE_ROUTE_DEFAULT => IncidentModuleProvider::SLUG])]
 final class IncidentReportController
 {
-    /** Filing an incident. Cheap by design — see the class docblock. */
-    public const string RECORD_PERMISSION = 'incidents.record';
-
     /** The token id the report form carries. */
     public const string CSRF_TOKEN_ID = 'incident_report';
 
@@ -129,7 +126,6 @@ final class IncidentReportController
         private readonly AreaListService $areaLists,
         private readonly TaxonomyKindRepository $kinds,
         private readonly TaxonomySubcategoryRepository $subcategories,
-        private readonly AuthorizationCheckerInterface $authorization,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly TokenStorageInterface $tokenStorage,
     ) {
@@ -142,11 +138,11 @@ final class IncidentReportController
         methods: ['GET'],
         priority: 2,
     )]
+    #[IsGranted('incidents.record', subject: 'area')]
     public function new(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
-        $this->denyUnlessGranted();
         $prefill = IncidentPrefill::fromRequest($request);
 
         return new Response($this->render(
@@ -169,11 +165,11 @@ final class IncidentReportController
         requirements: ['uuid' => Requirement::UUID],
         methods: ['POST'],
     )]
+    #[IsGranted('incidents.record', subject: 'area')]
     public function create(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
-        $this->denyUnlessGranted();
         $this->denyUnlessCsrfValid($request);
 
         $prefill = IncidentPrefill::fromRequest($request);
@@ -428,13 +424,6 @@ final class IncidentReportController
         }
 
         return $checklists;
-    }
-
-    private function denyUnlessGranted(): void
-    {
-        if (!$this->authorization->isGranted(self::RECORD_PERMISSION)) {
-            throw new AccessDeniedException('Filing an incident needs "'.self::RECORD_PERMISSION.'".');
-        }
     }
 
     private function denyUnlessCsrfValid(Request $request): void

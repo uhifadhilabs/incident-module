@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Service;
 
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
+use Uhifadhi\Contracts\Access\Verb;
+use Uhifadhi\Incident\Access\IncidentConcerns;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
 
 /**
@@ -40,14 +42,20 @@ final readonly class IncidentTransitionToken
 {
     public function __construct(
         /** Null in a host without security; the board is then a board of links. */
-        private ?AuthorizationCheckerInterface $authorization = null,
+        private ?Door $door = null,
         private ?CsrfTokenManagerInterface $csrfTokenManager = null,
     ) {
     }
 
+    /**
+     * IT ASKS THE DOOR, WITH THE AREA. The token is the board's door to the
+     * transition endpoint, and that endpoint gates `incidents.manage` on the
+     * area the board is drawn for; asking without the ground would mint a
+     * token for somebody the endpoint then refuses.
+     */
     public function forArea(AreaOfInterest $area): ?string
     {
-        if (true !== $this->authorization?->isGranted(IncidentDetailController::MANAGE_PERMISSION)) {
+        if (true !== $this->door?->opensFor(IncidentConcerns::INCIDENTS, Verb::Manage, $area)) {
             return null;
         }
 

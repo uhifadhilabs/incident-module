@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
@@ -175,7 +175,8 @@ final class IncidentController
         /**
          * Whether the writing screens EXIST in this installation — they need
          * SecurityBundle. A question about the installation, never about the
-         * viewer; {@see self::mayRecord()} asks the other one.
+         * viewer: whether THIS person may file is `door('incidents.record',
+         * area)`, asked where the door is drawn.
          */
         private readonly bool $recordScreens = false,
         /** Whether the widget library exists in this host — it edits ONE person's layout. */
@@ -183,8 +184,6 @@ final class IncidentController
         private readonly ?TokenStorageInterface $tokenStorage = null,
         /** Minted in one place — see the service's own docblock for why. */
         private readonly ?IncidentTransitionToken $transitionToken = null,
-        /** Null without security — see {@see self::mayRecord()}. */
-        private readonly ?AuthorizationCheckerInterface $authorization = null,
     ) {
     }
 
@@ -194,6 +193,7 @@ final class IncidentController
         requirements: ['uuid' => Requirement::UUID],
         methods: ['GET'],
     )]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function dashboard(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -209,8 +209,11 @@ final class IncidentController
             'now' => $now,
             'dashboard' => $this->dashboard->build($filter, $now, $viewer),
             'filter' => $filter,
-            'recordScreens' => $this->mayRecord(),
-            'manageScreens' => $this->mayManage(),
+            // THE INSTALLATION'S HALF of the filing door: whether the
+            // writing screens were registered at all. The VIEWER's half is
+            // asked in the template with `door('incidents.record', area)`,
+            // because a door is drawn where it is drawn.
+            'recordScreens' => $this->recordScreens,
             'widgetScreens' => $this->widgetScreens,
             // Which widgets this person keeps, how wide, in what order — the
             // module's shipped composition until they adopt one of the five.
@@ -229,13 +232,13 @@ final class IncidentController
      * register they were looking at, never a wider or a different set. Change a
      * chip and the export changes with it, because both ask the one query.
      *
-     * NO PERMISSION OF ITS OWN, and deliberately so. Reading incidents is reading
-     * the module — the module declares no "view" permission, because a view gate is
-     * exactly the tool one department would use to hide a row from another (see
-     * {@see IncidentModuleProvider::permissions()}). A CSV
-     * of the register is the same read as the register on screen, so it is offered
-     * on the same terms: whoever can reach the dashboard can download it, and the
-     * host's firewall is what stands between the wider world and either one.
+     * ITS OWN VERB, AND NOT ITS OWN CONCERN. Taking the register away as a file
+     * is the same READING as the register on screen — the module's charter
+     * forbids anything that lets one department hide a row from another — but it
+     * is a different ACT: a file leaves the building, and an organization may
+     * reasonably let somebody work the register all day without letting them
+     * carry the month out of it. So it is `incidents.export`, one verb on the
+     * concern the dashboard already reads, never a second reading of the rows.
      */
     #[Route(
         '/areas/{uuid}/modules/incidents/export.csv',
@@ -247,6 +250,7 @@ final class IncidentController
         // reference pattern would not match it anyway.
         priority: 2,
     )]
+    #[IsGranted('incidents.export', subject: 'area')]
     public function export(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -280,53 +284,6 @@ final class IncidentController
         );
 
         return $response;
-    }
-
-    /**
-     * WHETHER TO OFFER THE FILING SCREEN — and it is TWO questions, not one,
-     * which is the bug this method exists to fix.
-     *
-     * The first is about the INSTALLATION: the screen that creates an incident is
-     * registered only where SecurityBundle is, so where it is absent there is no
-     * route to link at. That is `$this->recordScreens`, decided at compile time.
-     *
-     * The second is about THE VIEWER: that screen enforces `incidents.record` in
-     * code, so somebody without it who follows the link gets a 403. Asking only
-     * the first question meant every signed-in person was handed the door, and
-     * the ones who could not open it found out by being refused.
-     *
-     * A CONTROL THE VIEWER MAY NOT HAVE IS ABSENT, never greyed out — the fleet's
-     * rule, and the stronger reading here: a disabled button tells somebody a
-     * screen exists and they are not trusted with it, and a live link that fails
-     * tells them nothing until they have lost the click.
-     *
-     * Null checker means no door, which is correct rather than defensive: an
-     * installation with no authorization checker has no filing route either,
-     * because the bundle registers none without SecurityBundle.
-     */
-    private function mayRecord(): bool
-    {
-        return $this->recordScreens
-            && null !== $this->authorization
-            && $this->authorization->isGranted(IncidentReportController::RECORD_PERMISSION);
-    }
-
-    /**
-     * WHETHER TO OFFER THE TAXONOMY ADMIN — the same two questions as {@see
-     * self::mayRecord()}, asked of the other tier.
-     *
-     * The taxonomy screen is a WRITING screen: it exists only where SecurityBundle
-     * does (so `$this->recordScreens`, which is that compile-time fact for every
-     * writing screen this bundle ships), and it enforces `incidents.manage` in
-     * code. Handing somebody the link who cannot open it would fail them at the
-     * click, so the header asks both questions before drawing the door — the
-     * fleet's rule that a control the viewer may not use is ABSENT, never greyed.
-     */
-    private function mayManage(): bool
-    {
-        return $this->recordScreens
-            && null !== $this->authorization
-            && $this->authorization->isGranted(IncidentTaxonomyController::MANAGE_PERMISSION);
     }
 
     /** Null where the installation runs no security, or nobody is signed in: the shipped composition. */

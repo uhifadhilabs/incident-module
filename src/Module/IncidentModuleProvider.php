@@ -13,11 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Module;
 
-use Uhifadhi\Contracts\ModulePermission;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 use Uhifadhi\Contracts\ModuleProviderTrait;
-use Uhifadhi\Incident\Controller\IncidentDetailController;
-use Uhifadhi\Incident\Controller\IncidentReportController;
 
 /**
  * Declares the one module this bundle contributes — "Incidents": what happened
@@ -75,47 +72,16 @@ final class IncidentModuleProvider implements ModuleProviderInterface
         return 'incident_dashboard';
     }
 
-    /**
-     * DECLARED, NEVER GRANTED: the host folds these into its permission catalogue
-     * for admins to assign, and they vanish with the module on uninstall. Each
-     * value is the exact attribute a route checks.
+    /*
+     * IT DECLARES NO PERMISSIONS HERE, AND THAT IS THE CHANGE, NOT AN OMISSION.
+     * What there is to have a permission about in this module is declared
+     * through the access seam instead — one source, four concerns, each with
+     * the verbs something here actually enforces:
+     * {@see \Uhifadhi\Incident\Access\IncidentConcerns}.
      *
-     * TWO TIERS, and the split is the design's own economics — "a report is cheap
-     * and a verification is expensive":
-     *
-     *  - **Record** files an incident. The design's IN·R1 card says filing should
-     *    need no permission of its own, so a deployment that agrees grants this to
-     *    everyone who can reach the module; it exists because a POST that creates
-     *    a record must be guarded by SOMETHING a host can see and assign.
-     *  - **Manage** moves an incident through the workflow and settles its money.
-     *    This is the expensive half, and it is the one worth withholding.
-     *
-     * There is deliberately NO "view" permission. Reading incidents is reading the
-     * module, and the module's charter forbids anything that lets one department
-     * hide a row from another — a view permission is exactly the tool somebody
-     * would eventually use to do it.
-     *
-     * EACH TIER CARRIES A SENTENCE, printed under the name in the host's matrix.
-     * The two names differ by one word, and the words alone do not tell an
-     * administrator that the second one settles money; the sentences do.
-     *
-     * @return list<ModulePermission>
+     * The trait's empty default stands rather than the two deprecated
+     * `ModulePermission` rows this used to return, because keeping both would
+     * print the module twice in one matrix — once as two flat values nothing
+     * enforces any more, and once as the four concerns everything now gates on.
      */
-    public function permissions(): array
-    {
-        return [
-            new ModulePermission(
-                IncidentReportController::RECORD_PERMISSION,
-                'Incidents',
-                'Record',
-                'File an incident: what happened, where, and the evidence for it.',
-            ),
-            new ModulePermission(
-                IncidentDetailController::MANAGE_PERMISSION,
-                'Incidents',
-                'Manage',
-                'Move an incident through verification, response and closure, and settle the fines and compensation on it.',
-            ),
-        ];
-    }
 }

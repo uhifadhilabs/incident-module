@@ -22,10 +22,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
@@ -55,7 +55,7 @@ use Uhifadhi\Incident\Service\TaxonomyAdminService;
  * A plain class, not AbstractController — a reusable bundle defines its services
  * explicitly, patterned on FrameworkBundle's TemplateController. Registered only
  * under the SecurityBundle guard (see UhifadhiIncidentBundle), because every
- * write here rides on `incidents.manage` and there is nobody to grant it without
+ * write here rides on `incident-vocabulary.configure` and there is nobody to grant it without
  * a firewall.
  *
  * THE COPY-FROM-ANOTHER-AREA PICKER IS DEFERRED, and the socket is marked in the
@@ -81,9 +81,6 @@ use Uhifadhi\Incident\Service\TaxonomyAdminService;
 #[Route(defaults: [RegistryBundle::MODULE_ROUTE_DEFAULT => IncidentModuleProvider::SLUG])]
 final class IncidentTaxonomyController
 {
-    /** Managing the taxonomy rides on the same authority as moving a case. */
-    public const string MANAGE_PERMISSION = 'incidents.manage';
-
     /** The token id every taxonomy write carries. */
     public const string CSRF_TOKEN_ID = 'incident_taxonomy';
 
@@ -93,8 +90,13 @@ final class IncidentTaxonomyController
         private readonly TaxonomyAdminService $admin,
         private readonly TaxonomyKindRepository $kinds,
         private readonly TaxonomySubcategoryRepository $subcategories,
-        private readonly AuthorizationCheckerInterface $authorization,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
+        /**
+         * Whether the writing screens EXIST in this installation — they need
+         * SecurityBundle. Whether THIS person may file is the other half, asked
+         * in the template with `door('incidents.record', area)`.
+         */
+        private readonly bool $recordScreens = false,
     ) {
     }
 
@@ -105,12 +107,11 @@ final class IncidentTaxonomyController
         methods: ['GET'],
         priority: 2,
     )]
+    #[IsGranted('incident-vocabulary.read', subject: 'area')]
     public function show(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
-        $this->denyUnlessGranted();
-
         $kinds = $this->kinds->forArea($area);
         $selected = $this->selectedKind($kinds, $request->query->getString('kind'));
 
@@ -124,7 +125,7 @@ final class IncidentTaxonomyController
             'moneyDirections' => MoneyDirectionEnum::cases(),
             // The one page action this screen draws. The way back is the strip,
             // the lit Configure and the crumb — never a button of its own.
-            'recordScreens' => $this->authorization->isGranted(IncidentReportController::RECORD_PERMISSION),
+            'recordScreens' => $this->recordScreens,
             'csrfToken' => $this->csrfTokenManager->getToken(self::CSRF_TOKEN_ID)->getValue(),
         ]));
     }
@@ -141,6 +142,7 @@ final class IncidentTaxonomyController
         methods: ['GET'],
         priority: 2,
     )]
+    #[IsGranted('incident-vocabulary.read', subject: 'area')]
     public function legacyTaxonomyAddress(#[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area): RedirectResponse
     {
         return new RedirectResponse(
@@ -152,6 +154,7 @@ final class IncidentTaxonomyController
     // ── kinds ────────────────────────────────────────────────────────────────
 
     #[Route('/areas/{uuid}/modules/incidents/kinds', name: 'incident_kinds_kind_create', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function createKind(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area): Response
     {
         $this->guardWrite($request);
@@ -166,6 +169,7 @@ final class IncidentTaxonomyController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/kinds/{kind}/rename', name: 'incident_kinds_kind_rename', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function renameKind(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $kind): Response
     {
         $this->guardWrite($request);
@@ -181,6 +185,7 @@ final class IncidentTaxonomyController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/kinds/{kind}/deactivate', name: 'incident_kinds_kind_deactivate', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function deactivateKind(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $kind): Response
     {
         $this->guardWrite($request);
@@ -191,6 +196,7 @@ final class IncidentTaxonomyController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/kinds/{kind}/reactivate', name: 'incident_kinds_kind_reactivate', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function reactivateKind(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $kind): Response
     {
         $this->guardWrite($request);
@@ -203,6 +209,7 @@ final class IncidentTaxonomyController
     // ── sub-categories ─────────────────────────────────────────────────────────
 
     #[Route('/areas/{uuid}/modules/incidents/kinds/{kind}/subcategories', name: 'incident_kinds_sub_create', requirements: ['uuid' => Requirement::UUID, 'kind' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function createSubcategory(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $kind): Response
     {
         $this->guardWrite($request);
@@ -218,6 +225,7 @@ final class IncidentTaxonomyController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/rename', name: 'incident_kinds_sub_rename', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function renameSubcategory(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
     {
         $this->guardWrite($request);
@@ -242,6 +250,7 @@ final class IncidentTaxonomyController
      * questions of the blocks ticked here, and nothing on this page can add one.
      */
     #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/behaviour', name: 'incident_kinds_sub_behaviour', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function setBehaviour(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
     {
         $this->guardWrite($request);
@@ -269,6 +278,7 @@ final class IncidentTaxonomyController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/deactivate', name: 'incident_kinds_sub_deactivate', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function deactivateSubcategory(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
     {
         $this->guardWrite($request);
@@ -279,6 +289,7 @@ final class IncidentTaxonomyController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/kinds/subcategories/{sub}/reactivate', name: 'incident_kinds_sub_reactivate', requirements: ['uuid' => Requirement::UUID, 'sub' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('incident-vocabulary.configure', subject: 'area')]
     public function reactivateSubcategory(Request $request, #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area, string $sub): Response
     {
         $this->guardWrite($request);
@@ -379,16 +390,8 @@ final class IncidentTaxonomyController
 
     private function guardWrite(Request $request): void
     {
-        $this->denyUnlessGranted();
         if (!$this->csrfTokenManager->isTokenValid(new CsrfToken(self::CSRF_TOKEN_ID, $request->request->getString('_token')))) {
             throw new AccessDeniedException('Invalid CSRF token for the taxonomy admin.');
-        }
-    }
-
-    private function denyUnlessGranted(): void
-    {
-        if (!$this->authorization->isGranted(self::MANAGE_PERMISSION)) {
-            throw new AccessDeniedException('Managing the taxonomy needs "'.self::MANAGE_PERMISSION.'".');
         }
     }
 }

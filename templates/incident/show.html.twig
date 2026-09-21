@@ -30,8 +30,12 @@
 
 {% block shell_page_subtitle %}{% set money = incident.money %}{{ incident.kind.label }} · {{ incident.subcategory.label }} · <b>{{ incident.status.label }}</b>
     · {{ incident.zoneLabel }} · filed <time datetime="{{ incident.reportedAt|date('c') }}" data-localtime-format="daystamp">{{ incident.reportedAt|date('D j M H:i')|lower }}</time>{% if incident.events|first and incident.events|first.actorName %} by {{ incident.events|first.actorName }}{% endif %}
-    {%- if money and money.isAssessed %} · {{ incident.money.currency }} {{ money.payable|number_format(0, '.', ',') }} {{ money.direction.assessedWord }}, {{ money.settled|number_format(0, '.', ',') }} {{ money.direction.settledWord }}{% endif %}
-    · {{ incident.evidence|length }} pieces of evidence · {{ incident.parties|length }} parties.{% endblock %}
+    {#- THE SUBLINE OBEYS THE SAME TWO DOORS THE CARDS DO. A figure withheld
+        below and printed here would be withheld nowhere: how much was assessed,
+        and how many people are named on the record, are the sensitive facts
+        themselves and not a summary of them. #}
+    {%- if money and money.isAssessed and door('case-money.read', area) %} · {{ incident.money.currency }} {{ money.payable|number_format(0, '.', ',') }} {{ money.direction.assessedWord }}, {{ money.settled|number_format(0, '.', ',') }} {{ money.direction.settledWord }}{% endif %}
+    {%- if door('case-files.read', area) %} · {{ incident.evidence|length }} pieces of evidence · {{ incident.parties|length }} parties{% endif %}.{% endblock %}
 
 {% block incident_page %}
     {% set money = incident.money %}
@@ -69,7 +73,7 @@
     {{ include('@UhifadhiIncident/dashboard/_rail.html.twig', {
         area: area,
         rail: rail,
-        canManage: canManage,
+        canManage: door('incidents.manage', area),
         csrfToken: csrfToken,
     }, with_context: false) }}
 
@@ -82,7 +86,20 @@
 
        A CARD WITH NOTHING IN IT IS NOT DRAWN. The money card exists where there
        is money; where there is none the parties lead the column instead. #}
-    {% set canRecordMoney = canManage and incident.subcategory.carriesMoney
+    {# WHAT THE VIEWER MAY SEE OF THIS RECORD, asked once at the top so the two
+       columns below read the same answer. Two of the four concerns this module
+       declares are SENSITIVE and are asked here rather than at the page:
+       withholding a fact must never mean withholding the screen.
+
+         · case-files — the narrative as it was taken, the people named on it
+           and the evidence attached. An informant named on a poaching case is
+           endangered by the reading, not by the filing.
+         · case-money — the fine or the claim and what has been paid.
+
+       → Uhifadhi\Incident\Access\IncidentConcerns #}
+    {% set seesCaseFile = door('case-files.read', area) %}
+    {% set seesMoney = door('case-money.read', area) %}
+    {% set canRecordMoney = seesMoney and door('case-money.manage', area) and incident.subcategory.carriesMoney
         and incident.status.hasReached(incident.subcategory.moneyDirection.recordableFrom) %}
     <div class="recgrid i-caselead">
         <div class="col">
@@ -97,8 +114,13 @@
 
             <div class="c">
                 <span class="tab">Timeline<span class="src">· {{ incident.events|length }} events · append-only</span></span>
+                {# THE TIMELINE OBEYS THE TWO DOORS TOO. A money event says what
+                   was claimed and what was paid, and an evidence event names a
+                   file that was attached — the same facts the cards above are
+                   withheld for. A trail that repeated them would make the
+                   withholding cosmetic. #}
                 <div class="i-tl">
-                    {% for event in incident.events %}
+                    {% for event in incident.events|filter(e => (e.kind.value != 'money' or seesMoney) and (e.kind.value != 'evidence' or seesCaseFile)) %}
                         <div class="i-tl-item {{ event.kind.cssClass }}">
                             <span class="i-tl-t"><time datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="stamp">{{ event.occurredAt|date('D j M · H:i')|lower }}</time> · {{ event.toStatus ? event.toStatus.label : event.kind.value }}</span>
                             <span class="i-tl-b">{% if event.actorName %}<span class="who">{{ event.actorName }}</span> {% endif %}{{ event.body }}{% if event.detail %}<em>{{ event.detail }}</em>{% endif %}</span>
@@ -109,6 +131,7 @@
                     was corrected — which is what makes the record worth anything in a hearing.</div>
             </div>
 
+            {% if seesCaseFile %}
             <div class="c">
                 <span class="tab">Evidence<span class="src">· {{ incident.evidence|length }} attached</span></span>
                 {# ONE GRID, ONE TILE. A file already attached and a file that arrived
@@ -132,13 +155,14 @@
                 <div class="use">Each photograph keeps the position and the time the handset recorded, not the time it was
                     uploaded — so the map above places them where they were taken.</div>
             </div>
+            {% endif %}
         </div>
 
         <div class="col">
             {# THE MONEY CARD EXISTS ONLY WHERE THE CATEGORY CARRIES MONEY. On a
                natural mortality there is no card at all — absent, not empty. #}
             {% set direction = money ? money.direction : incident.subcategory.moneyDirection %}
-            {% if money or incident.claimedAtFiling is not null %}
+            {% if seesMoney and (money or incident.claimedAtFiling is not null) %}
                 <div class="c">
                     <span class="tab">Money<span class="src">· this category carries {{ direction.value }}</span></span>
                     <div class="i-moneyblock">
@@ -175,7 +199,7 @@
                the sub-category carries money, and the direction is FIXED (inherited
                from the category), never a choice made here. The row is born on the
                first amount, which is when the read-only card above appears. → POST
-               incident_money / incident_money/waive, guarded by "incidents.manage". #}
+               incident_money / incident_money/waive, guarded by `case-money.manage`. #}
             {% if canRecordMoney %}
                 {% set dir = incident.subcategory.moneyDirection %}
                 <div class="c i-moneyedit">
@@ -204,6 +228,7 @@
                 </div>
             {% endif %}
 
+            {% if seesCaseFile %}
             <div class="c">
                 <span class="tab">Involved parties<span class="src">· {{ incident.parties|length }}</span></span>
                 {% for party in incident.parties %}
@@ -219,6 +244,7 @@
                     record wearing different roles — the design refuses to build four tables. The animal is a party too, so a
                     repeat offender can be recognised across incidents.</div>
             </div>
+            {% endif %}
 
             <div class="c">
                 <span class="tab">Provenance &amp; links</span>
@@ -242,6 +268,7 @@
                     that parentage forever — that is the hand-off the patrols module's <b>File as incident</b> button writes.</div>
             </div>
 
+            {% if seesCaseFile %}
             <div class="c">
                 <span class="tab">Narrative<span class="src">· as taken · verbatim</span></span>
                 {% if incident.narrative %}
@@ -255,6 +282,7 @@
                 <div class="use">The report as it was given, kept apart from the officer's assessment. Two voices, two fields —
                     one of them is evidence and the other is judgement.</div>
             </div>
+            {% endif %}
         </div>
     </div>
 
@@ -299,7 +327,11 @@
     <p class="pgsub">A sub-category's questions are the questions of the <b>behaviour blocks</b> it switches on, and of
         nothing else. On a word that carries no money there is no money question — absent, not greyed out.</p>
 
-    {% for set in blockSets %}
+    {# THE PARTIES BLOCK IS THE CASE FILE, wherever it is drawn. The block a
+       word switched on asks for a suspect's name and a claimant's household,
+       and printing those answers here would hand back exactly what the
+       Involved parties card is withheld for. #}
+    {% for set in blockSets|filter(s => s.block.value != 'parties' or seesCaseFile) %}
         {% set answers = incident.blockAnswers[set.block.value]|default({}) %}
         <div class="i-fieldset">
             <div class="hd">{{ set.title }}<span class="src">· {{ set.caption }}</span></div>
@@ -321,7 +353,7 @@
                     {# AN ANSWER FROM ONE OF THE AREA'S LISTS IS PRINTED AS THE WORD,
                        not as the stable key the record keeps — and a retired word still
                        resolves, because that is what retiring promises. #}
-                    <span>{% if set.block.isMoney %}{{ incident.claimedAtFiling is null ? '—' : ui.amount(money ? money.currency : 'TZS', incident.claimedAtFiling, 'claimed at filing') }}{% elseif question.areaList and answers[question.key] is defined %}{{ areaWords.label(question.areaList, answers[question.key]) }}{% else %}{{ answers[question.key]|default('—') }}{% endif %}</span></div>
+                    <span>{% if set.block.isMoney %}{{ not seesMoney ? 'withheld' : (incident.claimedAtFiling is null ? '—' : ui.amount(money ? money.currency : 'TZS', incident.claimedAtFiling, 'claimed at filing')) }}{% elseif question.areaList and answers[question.key] is defined %}{{ areaWords.label(question.areaList, answers[question.key]) }}{% else %}{{ answers[question.key]|default('—') }}{% endif %}</span></div>
             {% endfor %}
         </div>
     {% else %}

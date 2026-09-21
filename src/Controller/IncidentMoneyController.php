@@ -23,10 +23,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Contracts\Entity\UserInterface;
@@ -48,7 +48,7 @@ use Uhifadhi\Incident\Service\IncidentMoneyService;
  * and hands over; a refusal comes back as the service's own sentence, answered 422
  * exactly as {@see IncidentDetailController::transition()} answers the workflow's.
  *
- * IT RIDES ON `incidents.manage`, and deliberately so: the permission catalogue's
+ * IT RIDES ON `case-money.manage`, and deliberately so: the money is a concern of its own and the declaration's
  * own words for that permission are "settle the fines and compensation on it". The
  * money is part of moving an incident on, so there is no separate permission to
  * assess, approve or settle — a host that trusts somebody to manage incidents
@@ -75,14 +75,10 @@ use Uhifadhi\Incident\Service\IncidentMoneyService;
 #[Route(defaults: [RegistryBundle::MODULE_ROUTE_DEFAULT => IncidentModuleProvider::SLUG])]
 final class IncidentMoneyController
 {
-    /** Recording money is part of managing an incident — see the class docblock and `docs/permissions.md`. */
-    public const string MANAGE_PERMISSION = 'incidents.manage';
-
     public function __construct(
         private readonly UrlGeneratorInterface $router,
         private readonly IncidentRepository $incidents,
         private readonly IncidentMoneyService $money,
-        private readonly ?AuthorizationCheckerInterface $authorization = null,
         private readonly ?CsrfTokenManagerInterface $csrfTokenManager = null,
         private readonly ?TokenStorageInterface $tokenStorage = null,
     ) {
@@ -100,13 +96,13 @@ final class IncidentMoneyController
         requirements: ['uuid' => Requirement::UUID, 'reference' => '[A-Z]{2,6}-\d{2,8}'],
         methods: ['POST'],
     )]
+    #[IsGranted('case-money.manage', subject: 'area')]
     public function record(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
         string $reference,
     ): Response {
         $incident = $this->incidentIn($area, $reference);
-        $this->denyUnlessGranted();
         $this->denyUnlessCsrfValid($request, $area);
 
         try {
@@ -134,13 +130,13 @@ final class IncidentMoneyController
         requirements: ['uuid' => Requirement::UUID, 'reference' => '[A-Z]{2,6}-\d{2,8}'],
         methods: ['POST'],
     )]
+    #[IsGranted('case-money.manage', subject: 'area')]
     public function waive(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
         string $reference,
     ): Response {
         $incident = $this->incidentIn($area, $reference);
-        $this->denyUnlessGranted();
         $this->denyUnlessCsrfValid($request, $area);
 
         try {
@@ -192,13 +188,6 @@ final class IncidentMoneyController
         }
 
         return $incident;
-    }
-
-    private function denyUnlessGranted(): void
-    {
-        if (!($this->authorization?->isGranted(self::MANAGE_PERMISSION) ?? false)) {
-            throw new AccessDeniedException('Recording money on an incident needs "'.self::MANAGE_PERMISSION.'".');
-        }
     }
 
     private function denyUnlessCsrfValid(Request $request, AreaOfInterest $area): void

@@ -13,11 +13,12 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Upload;
 
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
+use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Entity\UserInterface as PersonInterface;
-use Uhifadhi\Incident\Controller\IncidentDetailController;
+use Uhifadhi\Incident\Access\IncidentConcerns;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Repository\IncidentEvidenceRepository;
 use Uhifadhi\Incident\Repository\IncidentRepository;
@@ -44,8 +45,8 @@ use Uhifadhi\Storage\Upload\UploadTargetInterface;
  *   evidence that moved when the label did. It is the same choice
  *   {@see IncidentEvidenceKey::prefixFor()} already made for the key.
  *
- *   WHO MAY — `incidents.manage`, the same permission as moving a case through
- *   its workflow, and NOT the cheaper `incidents.record`. Evidence is what a
+ *   WHO MAY — `case-files.manage`, the case file's own sensitive concern and
+ *   NOT the record's `incidents.manage`. Evidence is what a
  *   claim rests on: filing a report is a cheap act and putting a photograph onto
  *   somebody else's case file is not.
  *
@@ -83,7 +84,7 @@ final readonly class IncidentEvidenceTarget implements UploadTargetInterface
         private IncidentRepository $incidents,
         private IncidentEvidenceRepository $evidenceRows,
         private IncidentEvidenceService $evidence,
-        private AuthorizationCheckerInterface $authorization,
+        private Door $door,
         private EvidenceConstraints $deployment,
     ) {
     }
@@ -100,10 +101,20 @@ final readonly class IncidentEvidenceTarget implements UploadTargetInterface
         return Uuid::isValid($targetId) ? $this->incidents->findOneBy(['uuid' => Uuid::fromString($targetId)]) : null;
     }
 
+    /**
+     * PUTTING A FILE ON A CASE FILE IS THE CASE FILE'S OWN CONCERN, not the
+     * record's. Evidence names people — a photograph of a suspect, a signed
+     * statement from an informant — so an organization may withhold it from
+     * somebody who reads and moves the case perfectly well.
+     *
+     * ASKED WITH THE INCIDENT'S AREA, because the endpoint behind this is the
+     * platform's and carries no area in its path: without the ground, anybody
+     * placed anywhere would pass, and a file would land on another area's case.
+     */
     public function mayUpload(object $record, UserInterface $user): bool
     {
         return $record instanceof Incident
-            && $this->authorization->isGranted(IncidentDetailController::MANAGE_PERMISSION);
+            && $this->door->opensFor(IncidentConcerns::CASE_FILES, Verb::Manage, $record->getArea());
     }
 
     /**
@@ -173,9 +184,10 @@ final readonly class IncidentEvidenceTarget implements UploadTargetInterface
     }
 
     /**
-     * A DIFFERENT QUESTION FROM mayUpload(), even though today it has the same
-     * answer. Taking evidence off a case is at least as serious as putting it
-     * on, so it is asked separately and can tighten without touching the other.
+     * A DIFFERENT QUESTION FROM mayUpload(), AND A DIFFERENT VERB. Taking
+     * evidence off a case is at least as serious as putting it on, so it is
+     * `case-files.delete` — an organization may let a clerk attach photographs
+     * without letting the same clerk remove one.
      *
      * A key under this module's prefix that no row holds answers false — the
      * same reading the hub's guard gives an unclaimed key. Nothing here can
@@ -183,8 +195,10 @@ final readonly class IncidentEvidenceTarget implements UploadTargetInterface
      */
     public function mayRemove(string $key, UserInterface $user): bool
     {
-        return null !== $this->evidenceRows->findOneByPath($key)
-            && $this->authorization->isGranted(IncidentDetailController::MANAGE_PERMISSION);
+        $evidence = $this->evidenceRows->findOneByPath($key);
+
+        return null !== $evidence
+            && $this->door->opensFor(IncidentConcerns::CASE_FILES, Verb::Delete, $evidence->getIncident()->getArea());
     }
 
     public function removed(string $key, UserInterface $user): void

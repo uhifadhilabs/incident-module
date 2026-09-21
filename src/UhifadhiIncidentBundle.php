@@ -30,12 +30,15 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
+use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceGeoProviderInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
+use Uhifadhi\Incident\Access\IncidentConcerns;
 use Uhifadhi\Incident\Command\CloseDueCommand;
 use Uhifadhi\Incident\Controller\IncidentAreaListController;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
@@ -234,6 +237,23 @@ final class UhifadhiIncidentBundle extends AbstractBundle
             ->args([$category])
             ->tag('uhifadhi.module');
 
+        /*
+         * WHAT THERE IS TO HAVE A PERMISSION ABOUT HERE. Declared through the
+         * same seam the core's own bundles use, so this module's four concerns
+         * appear in the grants matrix beside the ground's and the directory's,
+         * and vanish with the module on uninstall.
+         *
+         * DECLARED, NEVER GRANTED: the rows arrive, the ticks do not. Installing
+         * a module must never hand an existing person a new power.
+         *
+         * Tagged by hand with the contract's own constant, for the same reason
+         * every other tag in this file is: a reusable bundle is not
+         * autoconfigured, and a module that forgot this tag would have every
+         * gate refuse because the catalogue knows none of its pairs.
+         */
+        $services->set('incident.access.concerns', IncidentConcerns::class)
+            ->tag(ConcernSourceInterface::TAG);
+
         // The deployment's own vocabulary and money unit.
         $currency = \is_string($config['currency'] ?? null) ? $config['currency'] : 'TZS';
         $builder->setParameter('incident.currency', $currency);
@@ -245,7 +265,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
          * The report flow and the transition endpoint are the only routes that
          * CREATE or MOVE incidents, so they must never exist unprotected: without
          * symfony/security there is no authorization checker to enforce
-         * "incidents.record" / "incidents.manage", and a host in that state gets no
+         * `incidents.record` / `incidents.manage`, and a host in that state gets no
          * writing controller at all (the routes fail loudly) rather than an open
          * write endpoint. The widget library edits ONE PERSON's layout and needs a
          * signed-in user for the same reason.
@@ -295,7 +315,11 @@ final class UhifadhiIncidentBundle extends AbstractBundle
         // storage-module denies them by default and every photograph, document
         // and preview 404s on the hub.
         $services->set('incident.evidence_voter', IncidentEvidenceVoter::class)
-            ->args([service(IncidentEvidenceRepository::class)])
+            // OUTSIDE THE SECURITY GUARD, so the door is asked for nullably:
+            // an installation with no SecurityBundle has no checker to ask, and
+            // the voter then refuses — which is the contract's own
+            // deny-by-default and the only safe answer about evidence.
+            ->args([service(IncidentEvidenceRepository::class), service(Door::class)->nullOnInvalid()])
             ->tag('uhifadhi.evidence_access_voter');
 
         /*
@@ -339,7 +363,9 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service(IncidentRepository::class),
                     service(IncidentEvidenceRepository::class),
                     service('incident.evidence'),
-                    service('security.authorization_checker'),
+                    // THE ONE HELPER EVERY DRAWN CONTROL ASKS, and the one the
+                    // platform's upload endpoint asks on this module's behalf.
+                    service(Door::class),
                     service(EvidenceConstraints::class),
                 ])
                 ->tag(UploadTargetInterface::TAG);
@@ -349,7 +375,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
             // there is nobody to grant the permission it checks.
             $services->set('incident.transition_token', IncidentTransitionToken::class)
                 ->args([
-                    service('security.authorization_checker'),
+                    service(Door::class),
                     service('security.csrf.token_manager'),
                 ]);
 
@@ -383,7 +409,6 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     // The storage's own answer to "is there a page for a file",
                     // read from the parameter it sets for exactly that question.
                     param('storage.files.screens'),
-                    service('security.authorization_checker'),
                     // FrameworkBundle defines this id whenever symfony/security-csrf
                     // is installed, which a host running SecurityBundle already has.
                     service('security.csrf.token_manager'),
@@ -394,14 +419,13 @@ final class UhifadhiIncidentBundle extends AbstractBundle
 
             // The money write surface's door. Registered under the same guard as
             // the transition endpoint and for the same reason: recording money
-            // rides on "incidents.manage", so without SecurityBundle there is
+            // rides on `case-money.manage`, so without SecurityBundle there is
             // nobody to grant it and the route must not exist.
             $services->set('incident.controller.money', IncidentMoneyController::class)
                 ->args([
                     service('router'),
                     service(IncidentRepository::class),
                     service('incident.money'),
-                    service('security.authorization_checker'),
                     service('security.csrf.token_manager'),
                     service('security.token_storage'),
                 ])
@@ -417,7 +441,6 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('incident.area_lists'),
                     service(TaxonomyKindRepository::class),
                     service(TaxonomySubcategoryRepository::class),
-                    service('security.authorization_checker'),
                     service('security.csrf.token_manager'),
                     service('security.token_storage'),
                 ])
@@ -426,7 +449,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
 
             /*
              * THE AREA-SCOPED TAXONOMY ADMIN. A writing screen: every route on it
-             * rides on "incidents.manage", so like the report flow it exists only
+             * rides on `incident-vocabulary.configure`, so like the report flow it exists only
              * where SecurityBundle can enforce that. Its logic
              * (incident.taxonomy_admin) is unconditional; only this door is guarded.
              */
@@ -437,8 +460,8 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('incident.taxonomy_admin'),
                     service(TaxonomyKindRepository::class),
                     service(TaxonomySubcategoryRepository::class),
-                    service('security.authorization_checker'),
                     service('security.csrf.token_manager'),
+                    param('incident.record_screens'),
                 ])
                 ->public();
             $services->alias(IncidentTaxonomyController::class, 'incident.controller.taxonomy')->public();
@@ -447,7 +470,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
              * THE LISTS EDITOR — the words this area's four gating questions
              * offer. The sibling of the kinds editor next door and guarded the
              * same way, for the same reason: every route on it rides on
-             * "incidents.manage", and naming the words everybody else must pick
+             * `incident-vocabulary.configure`, and naming the words everybody else must pick
              * from is not something filing an incident earns. Its two services
              * are unconditional; only this door is guarded.
              */
@@ -458,15 +481,15 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                     service('incident.area_lists'),
                     service('incident.area_list_board'),
                     service(AreaListEntryRepository::class),
-                    service('security.authorization_checker'),
                     service('security.csrf.token_manager'),
+                    param('incident.record_screens'),
                 ])
                 ->public();
             $services->alias(IncidentAreaListController::class, 'incident.controller.area_lists')->public();
 
             /*
              * THE SETTINGS SECTION'S ONE POST. It changes what the area runs
-             * incidents on, so it rides on "incidents.manage" and exists only
+             * incidents on, so it rides on `incident-vocabulary.configure` and exists only
              * where SecurityBundle can enforce it. The SERVICE behind it is
              * unconditional — reading what an area runs on is not a privilege —
              * and only this door is guarded.
@@ -475,7 +498,6 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 ->args([
                     service('router'),
                     service('incident.settings'),
-                    service('security.authorization_checker'),
                     service('security.csrf.token_manager'),
                 ])
                 ->public();

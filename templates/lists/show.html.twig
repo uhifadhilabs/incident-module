@@ -40,7 +40,7 @@
 {% block shell_page_subtitle %}Everything this module is set up with in <b>this area</b>, in one place: how its dashboard is composed, the kinds of incident this area files, the words its questions offer, and how money and terms behave under them.{% endblock %}
 
 {% block shell_page_actions %}
-    {% if recordScreens %}
+    {% if recordScreens and door('incidents.record', area) %}
         <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('incident:pencil') }} Report incident</a>
     {% endif %}
 {% endblock %}
@@ -53,7 +53,7 @@
     <div class="tx-say">{{ ux_icon('incident:shield', {width: 17, height: 17}) }}<div><b>These lists are {{ area.name }}&rsquo;s own.</b>
         A list is not a kind of incident &mdash; it is the <b>words one question offers</b>, and they are this area&rsquo;s words.
         Two records about the same water body are countable as one place, and two about the same animal as one species, which a
-        typed name can never promise. Editing rides on <span class="mono">incidents.manage</span> &mdash; the same authority that
+        typed name can never promise. Editing rides on <span class="mono">incident-vocabulary.configure</span> &mdash; the same authority that
         names the kinds. Filing an incident is not enough to name the words everybody else must pick from.</div></div>
 
     <div class="use"><b>There are exactly four lists, and an area cannot add a fifth.</b> Each one belongs to a question a

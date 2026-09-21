@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
@@ -58,9 +58,13 @@ final readonly class IncidentListController
         private IncidentDashboardService $dashboard,
         private TaxonomyKindRepository $kinds,
         private IncidentListService $list,
+        /**
+         * Whether the writing screens EXIST in this installation — they need
+         * SecurityBundle. Whether THIS person may file is the other half, asked
+         * in the template with `door('incidents.record', area)`.
+         */
         private bool $recordScreens = false,
         private ?TokenStorageInterface $tokenStorage = null,
-        private ?AuthorizationCheckerInterface $authorization = null,
     ) {
     }
 
@@ -76,6 +80,7 @@ final readonly class IncidentListController
         methods: ['GET'],
         priority: 2,
     )]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function list(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -93,18 +98,11 @@ final readonly class IncidentListController
             // The filter row's chips read their counts off the dashboard, which
             // is the one place they are worked out.
             'dashboard' => $dashboard,
-            'recordScreens' => $this->mayRecord(),
+            'recordScreens' => $this->recordScreens,
             // Untrusted like every query field: an unreadable page is the first
             // one, and the service clamps a page past the end.
             'list' => $this->list->page($dashboard->recent, max(1, $request->query->getInt('page', 1))),
         ]));
-    }
-
-    private function mayRecord(): bool
-    {
-        return $this->recordScreens
-            && null !== $this->authorization
-            && $this->authorization->isGranted(IncidentReportController::RECORD_PERMISSION);
     }
 
     private function viewer(): ?UserInterface

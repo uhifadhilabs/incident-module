@@ -22,6 +22,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
@@ -97,6 +98,7 @@ final class IncidentWidgetsController
         methods: ['GET'],
         priority: 2,
     )]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function library(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -135,6 +137,7 @@ final class IncidentWidgetsController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/widgets/save', name: 'incident_widgets_save', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 2)]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function save(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -143,6 +146,7 @@ final class IncidentWidgetsController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/widgets/reset', name: 'incident_widgets_reset', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 2)]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function reset(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -156,6 +160,7 @@ final class IncidentWidgetsController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/widgets/preset/{presetId}', name: 'incident_widgets_preset', requirements: ['uuid' => Requirement::UUID, 'presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 2)]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function applyPreset(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -175,6 +180,7 @@ final class IncidentWidgetsController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/widgets/preset/{presetId}/copy', name: 'incident_widgets_preset_copy', requirements: ['uuid' => Requirement::UUID, 'presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 3)]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function copyPreset(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -189,6 +195,7 @@ final class IncidentWidgetsController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/widgets/presets', name: 'incident_widgets_preset_create', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 2)]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function createPreset(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -202,6 +209,7 @@ final class IncidentWidgetsController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/widgets/presets/{presetUuid}/apply', name: 'incident_widgets_preset_apply', requirements: ['uuid' => Requirement::UUID, 'presetUuid' => Requirement::UUID], methods: ['POST'], priority: 2)]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function applyCustomPreset(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -216,6 +224,7 @@ final class IncidentWidgetsController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/widgets/presets/{presetUuid}/rename', name: 'incident_widgets_preset_rename', requirements: ['uuid' => Requirement::UUID, 'presetUuid' => Requirement::UUID], methods: ['POST'], priority: 2)]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function renameCustomPreset(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -230,6 +239,7 @@ final class IncidentWidgetsController
     }
 
     #[Route('/areas/{uuid}/modules/incidents/widgets/presets/{presetUuid}/delete', name: 'incident_widgets_preset_delete', requirements: ['uuid' => Requirement::UUID, 'presetUuid' => Requirement::UUID], methods: ['POST'], priority: 2)]
+    #[IsGranted('incidents.read', subject: 'area')]
     public function deleteCustomPreset(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

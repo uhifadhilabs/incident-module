@@ -179,7 +179,7 @@ return static function (ContainerConfigurator $container): void {
      * lazily on the first save. Unconditional like the report service: it is pure
      * domain logic (create the row, apply the amounts, leave a timeline event) and
      * the CONTROLLER that fronts it is what the security guard registers, because
-     * recording money rides on "incidents.manage".
+     * recording money rides on `case-money.manage`.
      */
     $services->set('incident.money', IncidentMoneyService::class)
         ->args([service('doctrine.orm.entity_manager')]);
@@ -307,13 +307,6 @@ return static function (ContainerConfigurator $container): void {
             // genuinely absent in an installation without security — and the
             // board then renders as a board of links.
             service('incident.transition_token')->nullOnInvalid(),
-            // Whether THIS VIEWER may file — a different question from whether
-            // the filing screen exists, and the dashboard has to ask both before
-            // it offers a door. Null under the same condition as the token
-            // storage, and the answer is then "no door", which is right: an
-            // installation with no authorization checker cannot enforce
-            // incidents.record either, so the filing route does not exist.
-            service('security.authorization_checker')->nullOnInvalid(),
         ])
         ->public();
 
@@ -334,7 +327,6 @@ return static function (ContainerConfigurator $container): void {
             service('incident.list'),
             param('incident.record_screens'),
             service('security.token_storage')->nullOnInvalid(),
-            service('security.authorization_checker')->nullOnInvalid(),
         ])
         ->public();
 

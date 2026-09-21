@@ -22,9 +22,11 @@
 
 {% block shell_page_actions %}
     {# The file carries the filter on screen, so it matches what is being read.
-       No gate of its own: reading the list is reading the module. #}
-    <a class="tgl w-act" href="{{ path('incident_export', {uuid: area.uuid}) ~ (filter.toQuery ? '?' ~ filter.toQuery|url_encode : '') }}">{{ ux_icon('incident:download') }} Export</a>
-    {% if recordScreens %}
+       Its own verb, `incidents.export`: the same reading, a different act. #}
+    {% if door('incidents.export', area) %}
+        <a class="tgl w-act" href="{{ path('incident_export', {uuid: area.uuid}) ~ (filter.toQuery ? '?' ~ filter.toQuery|url_encode : '') }}">{{ ux_icon('incident:download') }} Export</a>
+    {% endif %}
+    {% if recordScreens and door('incidents.record', area) %}
         <a class="cta" href="{{ path('incident_new', {uuid: area.uuid}) }}">{{ ux_icon('incident:pencil') }} Report incident</a>
     {% endif %}
 {% endblock %}
