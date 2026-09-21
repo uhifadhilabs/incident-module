@@ -7,6 +7,7 @@ hand is a release with a note under it.
 ## Contents
 
 - [The rule for anything this module ships to a host](#the-rule-for-anything-this-module-ships-to-a-host)
+- [0.5.0 — four concerns, and two of them are sensitive (BREAKING)](#050--four-concerns-and-two-of-them-are-sensitive-breaking)
 - [0.3.0 — the filter dropdowns became the shell's](#030--the-filter-dropdowns-became-the-shells)
 - [0.4.0 — the shared taxonomy is dropped](#040--the-shared-taxonomy-is-dropped)
 - [0.4.0 — the PostGIS bundle is `utafitilabs/postgis-bundle` (BREAKING)](#040--the-postgis-bundle-is-utafitilabspostgis-bundle-breaking)
@@ -22,6 +23,95 @@ AFTER that deletes it. The reason is mechanical rather than polite — Flex keep
 a host's own `assets/controllers.json` entry when a package it already has is
 updated, so anything this package deletes in one step stays switched on over
 there with nothing behind it.
+
+## 0.5.0 — four concerns, and two of them are sensitive (BREAKING)
+
+**What changed.** The core replaced flat permission values with **(concern,
+verb) pairs**, and this module moved with it. The two values it used to
+declare — `incidents.record` and `incidents.manage` — are gone as
+*declarations*; what it declares now is four **concerns**, each with the verbs
+something here actually enforces, through
+`Uhifadhi\Contracts\Access\ConcernSourceInterface` (service
+`incident.access.concerns`, tagged `uhifadhi.access.concerns`).
+
+`docs/permissions.md` is the full table. The short version:
+
+| Concern | Verbs |
+|---|---|
+| `incidents` | read · record · manage · delete · export |
+| `incident-vocabulary` | read · configure |
+| `case-files` **(sensitive)** | read · manage · delete |
+| `case-money` **(sensitive)** | read · manage |
+
+### What an installation must do
+
+**RE-READ THE POSITIONS THAT HELD THE OLD TWO VALUES.** The core's
+`Version20260921002000` backfills each position's old `permissions` into the
+new `grants` column pair for pair, and the two strings this module used
+(`incidents.record`, `incidents.manage`) happen to be legal pairs already — so
+they carry across unchanged and nobody is locked out of filing or of moving a
+case. **Three things are new and are granted to nobody by the backfill:**
+
+- **`incidents.read`.** Reading the register used to need no permission at all;
+  it is a declared power now. **Until somebody is granted it they get a 403 on
+  the dashboard, the register and every case file.** Grant it wherever you
+  granted reach to the module, which for most organizations is everybody.
+- **`incident-vocabulary.read` / `.configure`.** The kinds and lists editors and
+  the Settings section used to ride on `incidents.manage`. Grant the pair to
+  whoever administers an area's words; it is no longer implied by managing a
+  case.
+- **`case-files.*` and `case-money.*`.** Reading a case file whole used to be
+  implied by reaching the page. Grant `case-files.read` and `case-money.read`
+  to restore that, and **withhold either one from the people who should not
+  have it** — which is the entire point of the change.
+
+`incidents.export` likewise: the CSV used to be offered to anybody who could
+reach the dashboard, and is now its own verb — the same reading, a different
+act, because a file leaves the building.
+
+### What a module or a host that integrates must do
+
+- **`IncidentReportController::RECORD_PERMISSION` and
+  `IncidentDetailController::MANAGE_PERMISSION` are removed**, along with
+  `IncidentTaxonomyController::MANAGE_PERMISSION`,
+  `IncidentAreaListController::MANAGE_PERMISSION`,
+  `IncidentMoneyController::MANAGE_PERMISSION` and
+  `IncidentSettingsController::MANAGE_PERMISSION`. The keys are on
+  `Uhifadhi\Incident\Access\IncidentConcerns` and a pair is built with
+  `Grant::of(IncidentConcerns::INCIDENTS, Verb::Manage)`.
+- **`IncidentModuleProvider::permissions()` returns `[]`.** Keeping the two
+  deprecated `ModulePermission` rows beside the four concerns would print this
+  module twice in one matrix, once as values nothing enforces.
+- **Four services take a different collaborator.**
+  `IncidentEvidenceTarget`, `IncidentTransitionToken` and
+  `IncidentEvidenceVoter` take `Uhifadhi\Bundle\TeamBundle\Access\Door` in
+  place of an `AuthorizationCheckerInterface`; `IncidentDetailController`,
+  `IncidentMoneyController`, `IncidentReportController`,
+  `IncidentSettingsController`, `IncidentController` and
+  `IncidentListController` take none at all, because their gates are
+  attributes now. `IncidentTaxonomyController` and
+  `IncidentAreaListController` take `%incident.record_screens%` last.
+- **A template that overrode the case file or the dashboard.** The record's
+  cards are wrapped in `door('case-files.read', area)` and
+  `door('case-money.read', area)`, and the filing control now asks
+  `recordScreens and door('incidents.record', area)` — the flag alone is the
+  installation's half and no longer the whole question.
+
+### Two behaviours tightened, deliberately
+
+- **Evidence bytes on the Files hub answer `case-files.read` on the incident's
+  own area.** They used to be readable by anybody signed in. A photograph of a
+  suspect on a page the case file itself withholds was the hole this closes.
+- **Removing evidence is `case-files.delete`, not the same pair as attaching
+  it.** An organization may let a clerk attach photographs without letting the
+  same clerk take one off.
+
+### One row is declared and enforced by nothing
+
+`incidents.delete` is in the matrix and nothing in this module gates on it:
+a case is resolved and filed, never destroyed. It is declared so an
+organization can withhold the power before the product grows it, and the first
+thing that deletes a record will gate on it rather than invent a word.
 
 ## 0.3.0 — the filter dropdowns became the shell's
 

@@ -20,7 +20,7 @@ only this module can:
 | Question | This module's answer |
 |---|---|
 | which case | by **uuid**, never by reference — evidence filed under a label would move when the label did, the same choice `IncidentEvidenceKey::prefixFor()` already made |
-| who may | `incidents.manage` — the same tier as moving a case through its workflow, and NOT the cheaper `incidents.record`. Filing a report is cheap; putting a photograph onto somebody else's case file is not |
+| who may | `case-files.manage` to attach and `case-files.delete` to take one back off — the case file's own sensitive concern, not the record's `incidents.manage`. Filing a report is cheap; putting a photograph onto somebody else's case file is not, and removing one is a third decision again |
 | what and how big | the deployment's own, unnarrowed. A case file takes whatever this installation accepts as evidence |
 | what it became | evidence, and the chip on the finished tile says so |
 

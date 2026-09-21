@@ -22,7 +22,8 @@ rather than being ignored.
 
 Kinds of incident and their sub-categories are **each area's own**, stored per
 area and written in the **Incident kinds** editor
-(`/areas/{uuid}/modules/incidents/kinds`, permission `incidents.manage`). The
+(`/areas/{uuid}/modules/incidents/kinds`, read on `incident-vocabulary.read` and
+written on `incident-vocabulary.configure`). The
 module ships none, seeds none and suggests none: a new area starts empty and
 names its own words before the first incident is filed there.
 

@@ -102,7 +102,7 @@ Then, in the host:
    no host table, and the foreign keys into `area_of_interest`, `zone` and
    `team_user` are declared here rather than in the core.
 3. **Write the area's kinds.** Open *Incidents → Incident kinds* in each area
-   (permission `incidents.manage`) and name what that area files. Nothing is
+   (permission `incident-vocabulary.configure`) and name what that area files. Nothing is
    seeded, so this is the step between installing the module and filing the first
    incident; a bundle that wrote somebody's classification scheme into their
    database on boot would be making that decision for them. In a development
