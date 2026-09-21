@@ -124,7 +124,7 @@ final class ExportPageTest extends FunctionalTestCase
     {
         $area = $this->anAreaWithKinds();
         $this->anIncident($area);
-        // A signed-in person holding neither incidents.record nor incidents.manage.
+        // A signed-in person who reads and writes nothing: no record, no manage.
         $this->client->loginUser($this->aUser('bystander@example.test', 'Neema', 'Kimaro'));
 
         $csv = $this->fetchCsv(\sprintf('/areas/%s/modules/incidents/export.csv', $this->uuidOf($area)));

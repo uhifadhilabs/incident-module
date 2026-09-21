@@ -26,7 +26,7 @@ use Uhifadhi\Incident\Service\TaxonomyAdminService;
  * THE AREA-SCOPED TAXONOMY ADMIN, over HTTP. One route, two data conditions —
  * the empty first-run start and the populated two-pane manager — plus the ruled
  * invariants: area scope, deactivate-never-delete, per-area uniqueness, and the
- * "incidents.manage" gate on every write.
+ * `incident-vocabulary.configure` gate on every write.
  */
 final class TaxonomyAdminPageTest extends FunctionalTestCase
 {

@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Incident\Entity\Incident;
@@ -151,10 +152,23 @@ abstract class IntegrationTestCase extends KernelTestCase
         $user->setPassword('not-used-by-these-tests');
 
         if (null !== $department) {
+            /*
+             * A DEPARTMENT IS A PLACEMENT, NOT AN OWNER. A position carries no
+             * department any more and its name is unique across the whole
+             * organization, so the department the caller means is written on
+             * the PERSON — across the organization's ground, in that one
+             * department — which is what the core's own migration does to
+             * everybody who used to hold an area-level department's position.
+             */
             $position = new Position();
-            $position->setName('Ranger')->setDepartment($department);
+            $position->setName('Ranger, '.$department->getName());
             $this->em->persist($position);
             $user->setPosition($position);
+
+            $placement = new Placement();
+            $placement->acrossTheOrganization()->inDepartments([$department]);
+            $this->em->persist($placement);
+            $user->setPlacement($placement);
         }
 
         $this->em->persist($user);

@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Integration\Module;
 
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Uhifadhi\Contracts\ModulePermission;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Contracts\Access\Grant;
+use Uhifadhi\Incident\Access\IncidentConcerns;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedKpiProviders;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedModules;
@@ -45,23 +47,49 @@ final class ModuleRegistrationTest extends KernelTestCase
     }
 
     /**
-     * The permissions an admin can assign. Declared by the module, granted by
-     * nobody here — and they vanish with the module on uninstall.
+     * THE ACCESS SEAM. The tag is applied BY HAND in the extension (a reusable
+     * bundle is not autoconfigured), and a module that forgot it would have
+     * every one of its gates refuse — the voter only recognises a pair the
+     * catalogue knows — which reads exactly like a permission nobody granted.
+     *
+     * Asked of the CORE's own catalogue rather than of the declaration, so
+     * what is proved is that the tagged source reached it.
      */
-    public function testItHandsTheHostItsTwoPermissionTiers(): void
+    public function testItsConcernsReachTheCoresGrantsMatrix(): void
     {
         self::bootKernel();
 
-        /** @var CollectedModules $catalogue */
-        $catalogue = self::getContainer()->get(CollectedModules::class);
+        /** @var ConcernCatalogue $catalogue */
+        $catalogue = self::getContainer()->get('test_public.team.access.catalogue');
 
-        self::assertSame(
-            ['incidents.record', 'incidents.manage'],
-            array_map(
-                static fn (ModulePermission $permission) => $permission->value,
-                $catalogue->bySlug()['incidents']->permissions(),
-            ),
-        );
+        $mine = [];
+        foreach ($catalogue->pairs() as $pair) {
+            $concern = Grant::parse((string) $pair)->concern;
+            if (IncidentModuleProvider::SLUG === $catalogue->moduleOf($concern)) {
+                $mine[] = (string) $pair;
+            }
+        }
+
+        self::assertSame([
+            'incidents.read',
+            'incidents.record',
+            'incidents.manage',
+            'incidents.delete',
+            'incidents.export',
+            'incident-vocabulary.read',
+            'incident-vocabulary.configure',
+            'case-files.read',
+            'case-files.manage',
+            'case-files.delete',
+            'case-money.read',
+            'case-money.manage',
+        ], $mine);
+
+        // A FACT ABOUT A PERSON OR A CASE IS DECLARED SENSITIVE, so an
+        // organization can withhold it without withholding the page it sits on.
+        self::assertTrue($catalogue->isSensitive(IncidentConcerns::CASE_FILES));
+        self::assertTrue($catalogue->isSensitive(IncidentConcerns::CASE_MONEY));
+        self::assertFalse($catalogue->isSensitive(IncidentConcerns::INCIDENTS));
     }
 
     /**

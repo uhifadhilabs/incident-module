@@ -20,7 +20,7 @@ use Uhifadhi\Incident\Service\AreaListService;
 
 /**
  * THE LISTS SECTION, OVER HTTP — the four folds, the rows, the add panel, the
- * three row states, and the `incidents.manage` gate on every write.
+ * three row states, and the `incident-vocabulary.configure` gate on every write.
  */
 final class AreaListsPageTest extends FunctionalTestCase
 {

@@ -211,7 +211,7 @@ final class TestKernel extends Kernel
             ->args([service('doctrine.orm.entity_manager')]);
 
         // The INSTALLATION's permission voter, played by a fixture: this bundle
-        // declares "incidents.record" and "incidents.manage" and grants them to
+        // declares four concerns and grants their pairs to
         // nobody, so something has to decide who holds them. Tagged by hand — a
         // reusable-bundle test kernel does not autoconfigure.
         $container->services()->set(FixedPermissionVoter::class)->tag('security.voter');
@@ -365,6 +365,9 @@ final class TestKernel extends Kernel
             'incident.evidence',
             'storage.file_registry',
             'storage.evidence_storage',
+            // The core's grants matrix, so a test can prove this module's
+            // tagged concern source actually reached it.
+            'team.access.catalogue',
         ] as $id) {
             $services->alias('test_public.'.$id, $id)->public();
         }

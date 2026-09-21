@@ -471,7 +471,7 @@ final class DashboardPageTest extends FunctionalTestCase
      * A DOOR THE VIEWER CANNOT OPEN IS NOT DRAWN.
      *
      * "Report incident" opens the screen that CREATES an incident, and that
-     * screen enforces incidents.record in code. The dashboard was deciding
+     * screen enforces `incidents.record`. The dashboard was deciding
      * whether to draw the control from `incident.record_screens` — a
      * compile-time parameter answering a different question: whether the route
      * EXISTS in this installation, which it does wherever SecurityBundle is

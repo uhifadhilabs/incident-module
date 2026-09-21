@@ -248,7 +248,7 @@ final class CaseFilePageTest extends FunctionalTestCase
         self::assertStringContainsString('closing is automatic', $rail);
     }
 
-    /** Somebody without "incidents.manage" sees the rail and is offered no move at all. */
+    /** Somebody without `incidents.manage` sees the rail and is offered no move at all. */
     public function testAReporterSeesTheRailAndIsOfferedNoMoves(): void
     {
         $area = $this->anAreaWithKinds();

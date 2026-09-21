@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Incident\Tests\Unit\Module;
 
 use PHPUnit\Framework\TestCase;
-use Uhifadhi\Contracts\ModulePermission;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 
@@ -47,42 +46,15 @@ final class IncidentModuleProviderTest extends TestCase
     }
 
     /**
-     * TWO TIERS, and each value is the exact attribute a route checks: filing an
-     * incident, and moving one through its workflow.
-     *
-     * There is deliberately NO "view" permission — reading incidents is reading
-     * the module, and a view permission is exactly the tool somebody would
-     * eventually use to hide one department's rows from another, which this
-     * module's charter forbids.
+     * IT DECLARES NO PERMISSIONS OF ITS OWN ANY MORE, and the empty list is
+     * the assertion rather than an absence. What there is to have a permission
+     * about in this module is declared through the access seam
+     * ({@see \Uhifadhi\Incident\Access\IncidentConcerns}); a row returned
+     * here as well would print the module twice in one matrix — once as flat
+     * values nothing enforces, once as the concerns everything gates on.
      */
-    public function testDeclaresTheRecordAndManageTiersAndNothingElse(): void
+    public function testItDeclaresItsPowersThroughTheAccessSeamAndNotHere(): void
     {
-        $permissions = new IncidentModuleProvider('operations')->permissions();
-
-        self::assertSame(
-            ['incidents.record', 'incidents.manage'],
-            array_map(static fn (ModulePermission $p) => $p->value, $permissions),
-        );
-        self::assertSame(['Incidents', 'Incidents'], array_map(static fn (ModulePermission $p) => $p->umbrella, $permissions));
-        self::assertSame(['Record', 'Manage'], array_map(static fn (ModulePermission $p) => $p->action, $permissions));
-    }
-
-    /**
-     * The sentences the host's permission matrix prints under the two names.
-     * "Incidents · Manage" says which words this module chose; the sentence says
-     * what ticking the box hands over — and with these two the difference is the
-     * whole design, because one of them is cheap and the other settles money.
-     */
-    public function testEachTierCarriesTheSentenceTheMatrixPrints(): void
-    {
-        $permissions = new IncidentModuleProvider('operations')->permissions();
-
-        self::assertSame(
-            [
-                'File an incident: what happened, where, and the evidence for it.',
-                'Move an incident through verification, response and closure, and settle the fines and compensation on it.',
-            ],
-            array_map(static fn (ModulePermission $p) => $p->description, $permissions),
-        );
+        self::assertSame([], new IncidentModuleProvider('operations')->permissions());
     }
 }

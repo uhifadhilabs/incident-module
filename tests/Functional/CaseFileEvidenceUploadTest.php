@@ -145,7 +145,7 @@ final class CaseFileEvidenceUploadTest extends FunctionalTestCase
     }
 
     /**
-     * A VIEWER WITHOUT "incidents.manage" MAY NOT. Evidence is what a claim rests
+     * A VIEWER WITHOUT `case-files.manage` MAY NOT. Evidence is what a claim rests
      * on, so putting something onto a case file is the same tier of decision as
      * moving it through its workflow — and the reporter, who may file, may not.
      */

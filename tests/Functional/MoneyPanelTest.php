@@ -23,7 +23,7 @@ use Uhifadhi\Incident\Service\IncidentTransitionService;
  * THE MONEY WRITE SURFACE, over HTTP — the panel the read-only card was always
  * waiting for, and the two contracts it shares with every other panel on the case
  * file: it is GATED (absent until `in progress`, absent where the category carries
- * no money) and it is GUARDED ("incidents.manage", CSRF, area-scoped).
+ * no money) and it is GUARDED (`case-money.manage`, CSRF, area-scoped).
  *
  * The story runs end to end: the panel appears, the first save creates the row and
  * lights the card, settling the money unlocks the Resolve move the guard was
@@ -257,7 +257,7 @@ final class MoneyPanelTest extends FunctionalTestCase
         );
     }
 
-    /** Recording money needs "incidents.manage" — a reporter is refused. */
+    /** Recording money needs `case-money.manage` — a reporter is refused. */
     public function testAReporterCannotRecordMoney(): void
     {
         $area = $this->anAreaWithKinds();

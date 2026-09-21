@@ -141,7 +141,7 @@ final class ConfigurePageTest extends FunctionalTestCase
         self::assertNotSame('XXX', $crawler->filter('select[name="currency"] option[selected]')->attr('value'));
     }
 
-    /** Changing what an area runs on rides on `incidents.manage`. */
+    /** Changing what an area runs on rides on `incident-vocabulary.configure`. */
     public function testSomebodyWhoMayNotManageCannotSaveTheSettings(): void
     {
         $area = $this->anArea();
