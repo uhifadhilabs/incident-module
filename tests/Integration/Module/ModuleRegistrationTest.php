@@ -74,7 +74,6 @@ final class ModuleRegistrationTest extends KernelTestCase
             'incidents.read',
             'incidents.record',
             'incidents.manage',
-            'incidents.delete',
             'incidents.export',
             'incident-vocabulary.read',
             'incident-vocabulary.configure',

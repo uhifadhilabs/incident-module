@@ -89,7 +89,13 @@ final readonly class IncidentConcerns implements ConcernSourceInterface
             key: self::INCIDENTS,
             label: 'Incidents',
             description: 'What happened in an area: the register, filing a report, moving a case through verification, response and closure, and taking the month away as a file.',
-            verbs: [Verb::Read, Verb::Record, Verb::Manage, Verb::Delete, Verb::Export],
+            // NO DELETE. A VERB IS DECLARED WHERE SOMETHING ENFORCES IT, and
+            // nothing here destroys an incident: a case is resolved and filed,
+            // and a correction is a new event rather than an erasure. A
+            // declared power nothing enforces is a box an administrator can
+            // tick that changes nothing, which is worse than a missing one.
+            // It arrives with the first thing that deletes a record.
+            verbs: [Verb::Read, Verb::Record, Verb::Manage, Verb::Export],
             scopeKinds: $ground,
             moduleSlug: IncidentModuleProvider::SLUG,
         );
