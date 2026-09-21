@@ -17,6 +17,7 @@ use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Incident\Enum\IncidentStatusEnum;
 use Uhifadhi\Incident\Overview\IncidentOverviewContributor;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 use Uhifadhi\Incident\Tests\Integration\OverviewTestCase;
 
 /**
@@ -140,6 +141,34 @@ final class OverviewPartialsTest extends OverviewTestCase
         self::assertStringContainsString('1 claim · 1 zone', $html);
     }
 
+    /**
+     * WITHHELD, AND THE CARD STAYS. The area overview's money card is this
+     * area's cases added up, so a reader who may not read one may not read the
+     * total — and what they get is the word rather than a nought.
+     */
+    public function testTheMoneyCardIsWithheldFromAReaderWhoMayNotReadMoney(): void
+    {
+        $area = $this->aRegister();
+        $this->signIn($this->aUser(FixedPermissionVoter::CLERK_EMAIL, 'Sara', 'Mushi'));
+
+        $twig = static::getContainer()->get('twig');
+        self::assertInstanceOf(Environment::class, $twig);
+        $contributor = $this->service('incident.overview.contributor');
+        self::assertInstanceOf(IncidentOverviewContributor::class, $contributor);
+
+        $now = self::now();
+        $html = $twig->render(
+            \sprintf($contributor->partialPattern(), 'in_money'),
+            ['area' => $area, 'now' => $now, 'by' => ['incidents' => $contributor->context($area, $now)]],
+        );
+
+        self::assertStringContainsString('withheld', $html);
+        self::assertStringNotContainsString('2.55', $html);
+        self::assertStringNotContainsString('4.5', $html);
+        // Not a nought dressed as a measurement, either.
+        self::assertStringNotContainsString('0.00', $html);
+    }
+
     public function testTheMoneyCardDrawsAnEmDashWhereNothingIsOwed(): void
     {
         $area = $this->anAreaWithKinds('Quiet Area');
@@ -172,8 +201,17 @@ final class OverviewPartialsTest extends OverviewTestCase
     }
 
     /** The one map the host hands a partial — this module's figures, plus the shared keys. */
+    /**
+     * THE CELL AS A READER SEES IT, and a reader has to be signed in: the
+     * money card asks the door through the contributor, and the doors fail
+     * closed on nobody at all. The manager holds `case-money.read`, which is
+     * the reading every assertion below is about; the withholding has its own
+     * test.
+     */
     private function render(string $widget, AreaOfInterest $area): string
     {
+        $this->signIn($this->aUser(FixedPermissionVoter::MANAGER_EMAIL, 'Sara', 'Laizer'));
+
         $twig = static::getContainer()->get('twig');
         self::assertInstanceOf(Environment::class, $twig);
 

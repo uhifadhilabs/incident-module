@@ -25,6 +25,7 @@ use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\TopicKpi;
 use Uhifadhi\Incident\Module\IncidentPerformanceTopic;
 use Uhifadhi\Incident\Tests\Integration\Fixtures\CollectedTopicProviders;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
@@ -130,9 +131,18 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
         return $byKey;
     }
 
-    /** @return array<string, MatrixRow> */
+    /**
+     * THE MATRIX AS A READER SEES IT, and a reader has to be signed in: the
+     * `Compensation claims` column is money and asks the door, which fails
+     * closed on nobody at all. The manager holds `case-money.read` across the
+     * organization; the withholding has its own test below.
+     *
+     * @return array<string, MatrixRow>
+     */
     private function rows(PerformanceScope $scope, ?FigurePeriod $period = null): array
     {
+        $this->signIn($this->aUser(FixedPermissionVoter::MANAGER_EMAIL, 'Sara', 'Laizer'));
+
         $byName = [];
         foreach ($this->topic()->matrix($scope, $period ?? self::period())->rows as $row) {
             $byName[$row->departmentName] = $row;
@@ -455,5 +465,37 @@ final class IncidentPerformanceTopicTest extends IntegrationTestCase
         $charts = $this->topic()->charts(PerformanceScope::organisation(), self::period());
 
         self::assertTrue($charts[1]->isEmpty());
+    }
+
+    /**
+     * THE MONEY COLUMN IS NOT THERE FOR SOMEBODY WHO MAY NOT READ MONEY.
+     *
+     * A claim is what a person asked for, and that is a money fact. The
+     * column goes rather than filling with noughts (a nought is a
+     * measurement) or with dashes ({@see MatrixCell::notMine()} says "never
+     * asked", which would be a lie about a figure that was measured and
+     * withheld). The other three columns are untouched: a withheld fact never
+     * withholds the table it sits in.
+     */
+    public function testTheCompensationColumnIsWithheldFromAReaderWhoMayNotReadMoney(): void
+    {
+        $this->world();
+        $this->signIn($this->aUser(FixedPermissionVoter::CLERK_EMAIL, 'Sara', 'Mushi'));
+
+        $matrix = $this->topic()->matrix(PerformanceScope::organisation(), self::period());
+
+        self::assertSame(
+            [
+                IncidentPerformanceTopic::FILED,
+                IncidentPerformanceTopic::OPEN_PAST_TARGET,
+                IncidentPerformanceTopic::MEDIAN_DAYS_TO_CLOSE,
+            ],
+            array_map(static fn (MatrixColumn $column): string => $column->key, $matrix->columns),
+        );
+
+        foreach ($matrix->rows as $row) {
+            self::assertArrayNotHasKey(IncidentPerformanceTopic::COMPENSATION_CLAIMS, $row->cells);
+            self::assertArrayHasKey(IncidentPerformanceTopic::FILED, $row->cells);
+        }
     }
 }

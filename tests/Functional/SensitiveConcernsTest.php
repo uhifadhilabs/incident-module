@@ -103,4 +103,61 @@ final class SensitiveConcernsTest extends FunctionalTestCase
 
         self::assertResponseStatusCodeSame(403);
     }
+
+    /**
+     * THE AGGREGATES OBEY THE SAME DOOR AS THE RECORD.
+     *
+     * A register-wide total is the cases' figures added up, so drawing one
+     * for somebody the cases are withheld from would hand back exactly what
+     * the case files hold back. The KPI strip, the money board and the
+     * register's money column all ask `case-money.read`; the evidence board
+     * asks `case-files.read`.
+     *
+     * WITHHELD IS THE WORD, NOT A NOUGHT. A zero is a measurement, and this
+     * is the absence of permission to take one.
+     */
+    public function testTheMoneyAggregatesOnTheAreaDashboardAreWithheld(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->withMoney($area);
+        $url = \sprintf('/areas/%s/modules/incidents', $this->uuidOf($area));
+
+        // A reader who holds the money: the board and the strip carry it.
+        $this->client->loginUser($this->aUser('reader@example.test', 'Neema', 'Kimaro'));
+        $seen = $this->client->request('GET', $url)->html();
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Fines &amp; compensation', $seen);
+        self::assertStringContainsString('M TZS', $seen, 'the KPI strip carries the money headline for somebody who may read it.');
+
+        // The clerk: the same dashboard, the money said to be withheld.
+        $this->client->loginUser($this->aUser(FixedPermissionVoter::CLERK_EMAIL, 'Sara', 'Mushi'));
+        $withheld = $this->client->request('GET', $url)->html();
+
+        self::assertResponseIsSuccessful('a withheld figure must never withhold the dashboard it sits on.');
+        self::assertStringNotContainsString('M TZS', $withheld, 'the money headline reached somebody who may not read the money.');
+        self::assertStringNotContainsString('fines due', $withheld);
+        self::assertStringContainsString('withheld', $withheld, 'a withheld figure says so; it is not a silent gap.');
+        // The register is still there, one column short.
+        self::assertStringContainsString('Open incidents', $withheld);
+    }
+
+    /**
+     * THE ORGANIZATION DASHBOARD. This module's cell there publishes no money
+     * and no case-file fact — it is references, areas, kinds and states — so
+     * there is nothing on it to withhold, and the assertion is that the clerk
+     * gets the cell whole rather than a hole where a figure was.
+     */
+    public function testTheOrganisationDashboardCarriesNoMoneyFigureToWithhold(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $this->withMoney($area);
+
+        $this->client->loginUser($this->aUser(FixedPermissionVoter::CLERK_EMAIL, 'Sara', 'Mushi'));
+        $html = $this->client->request('GET', '/')->html();
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Latest incidents', $html);
+        self::assertStringNotContainsString('M TZS', $html);
+        self::assertStringNotContainsString('fines due', $html);
+    }
 }

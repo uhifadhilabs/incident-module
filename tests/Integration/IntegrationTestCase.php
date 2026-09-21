@@ -16,6 +16,8 @@ namespace Uhifadhi\Incident\Tests\Integration;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
@@ -144,6 +146,15 @@ abstract class IntegrationTestCase extends KernelTestCase
 
     protected function aUser(string $email, string $first = 'J', string $last = 'Mollel', ?Department $department = null): User
     {
+        // ONE ROW PER EMAIL. A test that signs the same person in twice — once
+        // to take a reading and once to check it — must not try to write them
+        // twice; the address is unique in team_user and it is the identity
+        // here too.
+        $existing = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+        if (null !== $existing) {
+            return $existing;
+        }
+
         $user = new User();
         $user->setEmail($email)->setFirstName($first)->setLastName($last);
         // NOT NULL in TeamBundle. Nothing here signs in with a
@@ -175,6 +186,25 @@ abstract class IntegrationTestCase extends KernelTestCase
         $this->em->flush();
 
         return $user;
+    }
+
+    /**
+     * SIGN SOMEBODY IN, FOR THE DOORS' SAKE.
+     *
+     * A contributed figure asks `IncidentDoors`, which asks the token storage
+     * before it asks the checker — a warm-up, a console command or a reading
+     * taken off a request has nobody to ask about and withholds. There is no
+     * HTTP client here, so the token goes straight into the storage the way a
+     * firewall would have put it there.
+     *
+     * The account decides what the reading shows: {@see FixedPermissionVoter}
+     * gives the manager the money and takes it off the clerk.
+     */
+    protected function signIn(User $user): void
+    {
+        /** @var TokenStorageInterface $tokens */
+        $tokens = static::getContainer()->get('test_public.security.token_storage');
+        $tokens->setToken(new UsernamePasswordToken($user, 'main', $user->getRoles()));
     }
 
     protected function aDepartment(string $name = 'Protection Service'): Department

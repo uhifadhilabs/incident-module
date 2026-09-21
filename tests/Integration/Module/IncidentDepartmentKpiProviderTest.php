@@ -17,12 +17,14 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Contracts\Kpi\DepartmentKpi;
 use Uhifadhi\Contracts\Kpi\DepartmentRef;
+use Uhifadhi\Incident\Access\IncidentDoors;
 use Uhifadhi\Incident\Entity\IncidentMoney;
 use Uhifadhi\Incident\Enum\IncidentTransitionEnum;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Module\IncidentDepartmentKpiProvider;
 use Uhifadhi\Incident\Repository\IncidentRepository;
 use Uhifadhi\Incident\Service\IncidentTransitionService;
+use Uhifadhi\Incident\Tests\Integration\Fixtures\FixedPermissionVoter;
 use Uhifadhi\Incident\Tests\Integration\IntegrationTestCase;
 
 /**
@@ -39,8 +41,21 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     {
         /** @var IncidentRepository $incidents */
         $incidents = static::getContainer()->get(IncidentRepository::class);
+        /** @var IncidentDoors $doors */
+        $doors = static::getContainer()->get('test_public.incident.access.doors');
 
-        return new IncidentDepartmentKpiProvider($incidents, 'incidents', 'Incidents', 'TZS');
+        return new IncidentDepartmentKpiProvider($incidents, $doors, 'incidents', 'Incidents', 'TZS');
+    }
+
+    /**
+     * THE MONEY PLATES NEED A READER WHO MAY READ MONEY, and the doors fail
+     * closed on nobody at all — so every test below that expects them signs
+     * somebody in who holds `case-money.read` across the organization. The
+     * one that expects them WITHHELD signs in the clerk instead.
+     */
+    private function signInAReaderOfMoney(): void
+    {
+        $this->signIn($this->aUser(FixedPermissionVoter::MANAGER_EMAIL, 'Sara', 'Laizer'));
     }
 
     private function transitions(): IncidentTransitionService
@@ -152,6 +167,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
     /** Two departments scoped to the same area read the same figures. */
     public function testTwoDepartmentsInTheSameAreaGetIdenticalFigures(): void
     {
+        $this->signInAReaderOfMoney();
         $area = $this->anAreaWithKinds();
         $protection = $this->aDepartment('Protection Service');
         $ecology = $this->aDepartment('Ecology');
@@ -214,6 +230,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
      */
     public function testFinesAndCompensationAreTwoPlatesAndAreNeverSummed(): void
     {
+        $this->signInAReaderOfMoney();
         $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
@@ -236,6 +253,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
      */
     public function testAScopeWithNoMoneyGetsNoMoneyPlates(): void
     {
+        $this->signInAReaderOfMoney();
         $area = $this->anAreaWithKinds();
         $department = $this->aDepartment();
         $now = new \DateTimeImmutable('2026-08-22 09:00:00');
@@ -303,6 +321,7 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
      */
     public function testAnOrganisationWideRefSumsEveryAreaMoneyIncluded(): void
     {
+        $this->signInAReaderOfMoney();
         $north = $this->anAreaWithKinds('North Sector');
         $south = $this->anAreaWithKinds('South Sector');
         $department = $this->aDepartment();
@@ -322,6 +341,52 @@ final class IncidentDepartmentKpiProviderTest extends IntegrationTestCase
         self::assertSame(500_000.0, $kpis['incidents_fine']->value);
         self::assertSame(1_200_000.0, $kpis['incidents_compensation']->value);
         self::assertSame(450_000.0, $this->kpisFor($department, $now, $north)['incidents_fine']->value);
+    }
+
+    /**
+     * THE MONEY PLATES ARE WITHHELD FROM SOMEBODY WHO MAY NOT READ MONEY, and
+     * the other three are not. Absent, never a nought and never a dash: a
+     * nought is a measurement and a dash means "we could not measure", and
+     * this figure was measured and is not theirs.
+     */
+    public function testTheMoneyPlatesAreWithheldFromAReaderWhoMayNotReadMoney(): void
+    {
+        $area = $this->anAreaWithKinds();
+        $department = $this->aDepartment();
+        $now = new \DateTimeImmutable('2026-08-22 09:00:00');
+
+        $fine = $this->anIncident($area, 'snaring', 'Snare line lifted', $now->modify('-1 day'));
+        new IncidentMoney($fine, MoneyDirectionEnum::Fine)->setAssessed(450_000);
+        $this->em->flush();
+
+        $this->signIn($this->aUser(FixedPermissionVoter::CLERK_EMAIL, 'Sara', 'Mushi'));
+        $kpis = $this->kpisFor($department, $now, $area);
+
+        self::assertArrayNotHasKey('incidents_fine', $kpis);
+        self::assertArrayNotHasKey('incidents_compensation', $kpis);
+        // The work itself is still reported — a withheld fact never withholds
+        // the strip it sits on.
+        self::assertSame(1.0, $kpis['incidents']->value);
+    }
+
+    /**
+     * AN ORGANIZATION-WIDE READING NEEDS EVERY AREA. A total across areas is
+     * the areas added up, so one area the reader is refused would be smuggled
+     * into the figure — and the whole plate goes rather than a quieter total.
+     */
+    public function testAnOrganisationWideMoneyPlateNeedsEveryAreaInIt(): void
+    {
+        $north = $this->anAreaWithKinds('North Sector');
+        $this->anAreaWithKinds('South Sector');
+        $department = $this->aDepartment();
+        $now = new \DateTimeImmutable('2026-08-22 09:00:00');
+
+        $fine = $this->anIncident($north, 'snaring', 'Snare line lifted', $now->modify('-1 day'));
+        new IncidentMoney($fine, MoneyDirectionEnum::Fine)->setAssessed(450_000);
+        $this->em->flush();
+
+        $this->signIn($this->aUser(FixedPermissionVoter::CLERK_EMAIL, 'Sara', 'Mushi'));
+        self::assertArrayNotHasKey('incidents_fine', $this->kpisFor($department, $now));
     }
 
     /**

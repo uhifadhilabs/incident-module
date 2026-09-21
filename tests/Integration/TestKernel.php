@@ -368,6 +368,10 @@ final class TestKernel extends Kernel
             // The core's grants matrix, so a test can prove this module's
             // tagged concern source actually reached it.
             'team.access.catalogue',
+            // The doors a contributed figure asks, and the storage a test puts
+            // a token into so they have somebody to ask about.
+            'incident.access.doors',
+            'security.token_storage',
         ] as $id) {
             $services->alias('test_public.'.$id, $id)->public();
         }
