@@ -39,6 +39,7 @@ use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceGeoProviderInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Incident\Access\IncidentConcerns;
+use Uhifadhi\Incident\Access\IncidentDoors;
 use Uhifadhi\Incident\Command\CloseDueCommand;
 use Uhifadhi\Incident\Controller\IncidentAreaListController;
 use Uhifadhi\Incident\Controller\IncidentDetailController;
@@ -253,6 +254,21 @@ final class UhifadhiIncidentBundle extends AbstractBundle
          */
         $services->set('incident.access.concerns', IncidentConcerns::class)
             ->tag(ConcernSourceInterface::TAG);
+
+        /*
+         * THE DOOR, ASKED FROM WHERE A TEMPLATE CANNOT ASK IT. This module's
+         * own screens call `door(...)` in their own markup; a cell contributed
+         * to the area overview, the organization dashboard, a department's KPI
+         * strip or a performance topic is rendered by somebody else from a
+         * context handed over before the render, so the question is answered
+         * here instead. See the class for why it fails closed three ways.
+         */
+        $services->set('incident.access.doors', IncidentDoors::class)
+            ->args([
+                service(AreaOfInterestRepository::class),
+                service(Door::class)->nullOnInvalid(),
+                service('security.token_storage')->nullOnInvalid(),
+            ]);
 
         // The deployment's own vocabulary and money unit.
         $currency = \is_string($config['currency'] ?? null) ? $config['currency'] : 'TZS';
@@ -578,7 +594,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
          * Every one of them is covered by IncidentOverviewContributionTest.
          */
         $services->set('incident.overview.contributor', IncidentOverviewContributor::class)
-            ->args([service('incident.overview.figures')])
+            ->args([service('incident.overview.figures'), service('incident.access.doors')])
             ->tag(OverviewContributorInterface::TAG);
 
         /*
@@ -622,6 +638,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
         $services->set('incident.department_kpi_provider', IncidentDepartmentKpiProvider::class)
             ->args([
                 service(IncidentRepository::class),
+                service('incident.access.doors'),
                 'incidents',
                 'Incidents',
                 $currency,
@@ -644,6 +661,7 @@ final class UhifadhiIncidentBundle extends AbstractBundle
                 // a boundary to enumerate anybody.
                 service(DepartmentDirectoryInterface::class),
                 service(IncidentRepository::class),
+                service('incident.access.doors'),
                 'incidents',
                 'Incidents',
             ])

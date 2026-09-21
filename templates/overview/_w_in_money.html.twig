@@ -15,6 +15,19 @@
 {% set finesMonth = o.finesAssessedThisMonth %}
 {% set claimsMonth = o.compensationApprovedThisMonth %}
 {% set oldest = o.oldestUnpaid %}
+{% if not by.incidents.seesMoney %}
+    {# WITHHELD, AND THE CELL STAYS. The money on a case is a concern of its
+       own, and this card is the area's cases added up — so a reader who may
+       not read one may not read the total either. The contributor answers the
+       door in PHP, because a contributed cell is rendered with
+       `with_context: false` and has no area to ask it with.
+       → Uhifadhi\Incident\Overview\IncidentOverviewContributor #}
+    <div class="c" data-w="in_money">
+        <span class="tab">Money outstanding<span class="src">· withheld</span></span>
+        <span class="ao-by incidents"><i></i>incidents</span>
+        <div class="use">What this area still owes and is still owed is withheld from you. The figures exist; they are not yours to read.</div>
+    </div>
+{% else %}
 <div class="c" data-w="in_money">
     <span class="tab">Money outstanding<span class="src">· {{ o.currency }} · everything still owed</span></span>
     <span class="ao-by incidents"><i></i>incidents</span>
@@ -52,3 +65,4 @@
     </div>
     <div class="use">The only number on this page that is not about today, and it is here because an unpaid claim is what a community remembers. It is <a href="{{ o.dashboardUrl }}">a link into the module&rsquo;s money board</a>, never edited here.</div>
 </div>
+{% endif %}

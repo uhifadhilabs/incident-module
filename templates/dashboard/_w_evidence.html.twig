@@ -10,6 +10,15 @@
    the shape a read-only listing wants: nothing to remove, so the whole cell is
    the link. #}
 {% import '@UhifadhiStorage/upload/_tile.html.twig' as evidence %}
+{% if not door('case-files.read', area) %}
+    {# EVIDENCE IS THE CASE FILE, and the case file is a concern of its own: a
+       tile here names the case a photograph belongs to and opens it, which is
+       the same fact the record's Evidence card is withheld for. #}
+    <div class="c" data-w="evidence">
+        <span class="tab">Latest evidence<span class="src">· withheld</span></span>
+        <div class="use">What is attached to this area's case files is withheld from you. There is evidence here; it is not yours to read.</div>
+    </div>
+{% else %}
 <div class="c" data-w="evidence">
     <span class="tab">Latest evidence<span class="src">· photographs and documents · newest first</span></span>
     <div class="i-evgrid">
@@ -29,3 +38,4 @@
     </div>
     <div class="use">Evidence belongs to the incident, never to a person's upload — a photo filed with a patrol observation travels with it when the observation becomes an incident, and keeps its original timestamp and position.</div>
 </div>
+{% endif %}

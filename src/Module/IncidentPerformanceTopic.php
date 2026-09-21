@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Module;
 
+use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\ChartKind;
 use Uhifadhi\Contracts\Performance\ChartSeries;
@@ -27,6 +28,8 @@ use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicChart;
 use Uhifadhi\Contracts\Performance\TopicKpi;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
+use Uhifadhi\Incident\Access\IncidentConcerns;
+use Uhifadhi\Incident\Access\IncidentDoors;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Model\IncidentReading;
@@ -124,6 +127,12 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
     public function __construct(
         private DepartmentDirectoryInterface $directory,
         private IncidentRepository $incidents,
+        /**
+         * WHETHER THE COMPENSATION COLUMN MAY BE DRAWN for this reader, over
+         * the scope the page is on. Claims are money, and money is a concern
+         * of its own.
+         */
+        private IncidentDoors $doors,
         /** The slug this module is registered under in the registry's catalogue. */
         private string $slug,
         private string $name = 'Incidents',
@@ -152,9 +161,9 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
      *
      * @return list<MatrixColumn>
      */
-    public static function columns(): array
+    public static function columns(bool $withMoney = true): array
     {
-        return [
+        $columns = [
             new MatrixColumn(
                 self::FILED,
                 'Filed',
@@ -174,13 +183,24 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
                 polarity: ColumnPolarity::Down,
                 caption: 'The middle time from filing to resolution, over the work finished in the period.',
             ),
-            new MatrixColumn(
+        ];
+
+        if ($withMoney) {
+            $columns[] = new MatrixColumn(
                 self::COMPENSATION_CLAIMS,
                 'Compensation claims',
                 polarity: ColumnPolarity::None,
                 caption: 'Claims that arrived in the period. How many people asked is not a score, so this is never tinted.',
-            ),
-        ];
+            );
+        }
+
+        return $columns;
+    }
+
+    /** Whether the money on a case may be read across the page's whole ground. */
+    private function seesMoney(PerformanceScope $scope): bool
+    {
+        return $this->doors->opensAcross(IncidentConcerns::CASE_MONEY, Verb::Read, $scope->areaUuid);
     }
 
     /**
@@ -280,23 +300,44 @@ final readonly class IncidentPerformanceTopic implements PerformanceTopicProvide
         return [$flow, $age];
     }
 
+    /**
+     * THE MATRIX, AND ITS MONEY COLUMN IS NOT ALWAYS THERE.
+     *
+     * `Compensation claims` counts what people asked this department for,
+     * which is a money fact and belongs to `case-money`. Somebody who may not
+     * read the money gets a matrix WITHOUT that column rather than a column of
+     * noughts — a nought is a measurement, and a dash means "never asked",
+     * which would be a lie about a figure that was measured and withheld.
+     *
+     * A COLUMN IS DROPPED RATHER THAN MARKED because a cell has no way to say
+     * "withheld": {@see MatrixCell} offers a value, a dash and "not this
+     * department's to answer", and borrowing any of the three would print a
+     * different sentence from the true one. The column's absence says it
+     * honestly, and the topic's caption on the page says the rest.
+     */
     public function matrix(PerformanceScope $scope, FigurePeriod $period): TopicMatrix
     {
         $periods = self::run($period, self::PERIODS);
+        $seesMoney = $this->seesMoney($scope);
 
         $rows = [];
         foreach ($this->rowsIn($scope) as $entry) {
+            $cells = $this->cellsFor($entry, $scope, $periods);
+            if (!$seesMoney) {
+                unset($cells[self::COMPENSATION_CLAIMS]);
+            }
+
             $rows[] = new MatrixRow(
                 departmentUuid: $entry->uuid,
                 departmentName: $entry->name,
-                cells: $this->cellsFor($entry, $scope, $periods),
+                cells: $cells,
                 band: $entry->band,
                 mark: $entry->mark,
             );
         }
 
         return new TopicMatrix(
-            self::columns(),
+            self::columns($seesMoney),
             $rows,
             \sprintf('Only the departments that read the %s module are rows, and each reads the ground its own scope covers.', $this->name),
         );

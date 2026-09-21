@@ -12,14 +12,22 @@
         <b class="disp">{{ dashboard.filedCount }}</b>
         <span class="sub">{% for kind in dashboard.kinds %}{{ dashboard.kindCount(kind) }} {{ kind.label|lower|split(' ')|first }}{{ not loop.last ? ' · ' }}{% endfor %}</span>
     </div>
+    {# THE ONE FIGURE ON THIS STRIP THAT IS MONEY, and it is withheld from a
+       reader who may not read what a case is worth. The slot keeps its place
+       in the four-to-a-row so the strip does not reflow into three. #}
     <div class="c kpi">
         <span class="tab">Money outstanding</span>
-        {# The two directions are NEVER added together — the design refuses it, so
-           the headline is the pair and the line beneath names each. #}
-        {% set fines = dashboard.money.fine.outstanding %}
-        {% set claims = dashboard.money.compensation.outstanding %}
-        <b class="disp">{{ ((fines + claims) / 1000000)|number_format(1) }}<em>M {{ dashboard.currency }}</em></b>
-        <span class="sub">{{ (fines / 1000000)|number_format(2) }}M fines due · {{ (claims / 1000000)|number_format(1) }}M compensation unpaid</span>
+        {% if not door('case-money.read', area) %}
+            <b class="disp">—</b>
+            <span class="sub">withheld · what this area's cases are worth is not yours to read</span>
+        {% else %}
+            {# The two directions are NEVER added together — the design refuses it, so
+               the headline is the pair and the line beneath names each. #}
+            {% set fines = dashboard.money.fine.outstanding %}
+            {% set claims = dashboard.money.compensation.outstanding %}
+            <b class="disp">{{ ((fines + claims) / 1000000)|number_format(1) }}<em>M {{ dashboard.currency }}</em></b>
+            <span class="sub">{{ (fines / 1000000)|number_format(2) }}M fines due · {{ (claims / 1000000)|number_format(1) }}M compensation unpaid</span>
+        {% endif %}
     </div>
     <div class="c kpi">
         <span class="tab">Time to verify</span>

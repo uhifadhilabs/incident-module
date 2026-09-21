@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Incident\Module;
 
+use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Kpi\DepartmentKpi;
 use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
 use Uhifadhi\Contracts\Kpi\DepartmentRef;
+use Uhifadhi\Incident\Access\IncidentConcerns;
+use Uhifadhi\Incident\Access\IncidentDoors;
 use Uhifadhi\Incident\Entity\Incident;
 use Uhifadhi\Incident\Enum\MoneyDirectionEnum;
 use Uhifadhi\Incident\Repository\IncidentRepository;
@@ -62,6 +65,13 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
 
     public function __construct(
         private readonly IncidentRepository $incidents,
+        /**
+         * WHETHER THE TWO MONEY PLATES MAY BE DRAWN FOR THIS READER, over the
+         * scope the ref names — one area, or every area of an
+         * organization-wide ref. A plate that totalled an area the reader is
+         * refused would smuggle it into a figure.
+         */
+        private readonly IncidentDoors $doors,
         /** The slug this module is registered under in the host's catalogue. */
         private readonly string $slug,
         private readonly string $name = 'Incidents',
@@ -146,6 +156,18 @@ final class IncidentDepartmentKpiProvider implements DepartmentKpiProviderInterf
         // the two directions must stay two plates — the design refuses to add a
         // fine and a claim together anywhere, and a performance page is not an
         // exception.
+        /*
+         * THE MONEY IS A CONCERN OF ITS OWN, so somebody who reads this
+         * department's work and not its money gets the three plates above and
+         * NOT these two. Absent, never a nought: a nought is a measurement,
+         * and this is the absence of permission to take one. The strip's own
+         * dashed slot is not used either — that means "we could not measure",
+         * which would be a lie about a figure that was measured and withheld.
+         */
+        if (!$this->doors->opensAcross(IncidentConcerns::CASE_MONEY, Verb::Read, $department->areaUuid)) {
+            return $kpis;
+        }
+
         foreach ([
             [MoneyDirectionEnum::Fine, 'Fines assessed'],
             [MoneyDirectionEnum::Compensation, 'Compensation approved'],

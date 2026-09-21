@@ -17,6 +17,9 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Overview\ContributesStylesheetInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
+use Uhifadhi\Contracts\Access\Verb;
+use Uhifadhi\Incident\Access\IncidentConcerns;
+use Uhifadhi\Incident\Access\IncidentDoors;
 use Uhifadhi\Incident\Model\IncidentOverviewWidgets;
 use Uhifadhi\Incident\Module\IncidentModuleProvider;
 use Uhifadhi\Incident\Service\IncidentOverviewFigures;
@@ -48,6 +51,7 @@ final readonly class IncidentOverviewContributor implements ContributesStyleshee
 {
     public function __construct(
         private IncidentOverviewFigures $figures,
+        private IncidentDoors $doors,
     ) {
     }
 
@@ -104,6 +108,20 @@ final readonly class IncidentOverviewContributor implements ContributesStyleshee
      */
     public function context(AreaOfInterest $area, \DateTimeImmutable $now): array
     {
-        return ['overview' => $this->figures->for($area, $now)];
+        return [
+            'overview' => $this->figures->for($area, $now),
+            /*
+             * WHETHER THE MONEY CARD MAY BE DRAWN AT ALL. The reading is taken
+             * either way — the figures are the same figures — and the cell is
+             * what is withheld, because the money on a case is a concern of
+             * its own and an organization may hold it back from somebody who
+             * reads everything else about this area.
+             *
+             * ANSWERED HERE RATHER THAN IN THE PARTIAL because a contributed
+             * cell is rendered by the host with `with_context: false` and has
+             * no area to ask the door with.
+             */
+            'seesMoney' => $this->doors->opens(IncidentConcerns::CASE_MONEY, Verb::Read, $area),
+        ];
     }
 }

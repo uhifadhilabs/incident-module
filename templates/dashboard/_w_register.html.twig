@@ -1,5 +1,7 @@
 {# IN·01 — the register. Every incident as a row: id, category, what happened,
-   zone, status, severity, money, when. The only widget that never hides a field.
+   zone, status, severity, money, when. The only widget that never hides a field —
+   except the money column, which is withheld from a reader who may not read
+   what a case is worth; the column goes, never its figures as noughts.
 
    The filter row above it drives the map and the charts too — one query, three
    readings. #}
@@ -8,7 +10,7 @@
     <span class="tab">Incidents<span class="src">· {{ dashboard.filter.from ? dashboard.filter.from|date('F Y')|lower }} · latest {{ min(dashboard.recent|length, 14) }} of {{ dashboard.recentTotal }}</span></span>
     {{ include('@UhifadhiIncident/dashboard/_filters.html.twig') }}
     <table class="tbl">
-        <tr><th>id</th><th>category</th><th>what happened</th><th>zone</th><th>status</th><th>severity</th><th class="num">money</th><th>reported</th><th></th></tr>
+        <tr><th>id</th><th>category</th><th>what happened</th><th>zone</th><th>status</th><th>severity</th>{% if door('case-money.read', area) %}<th class="num">money</th>{% endif %}<th>reported</th><th></th></tr>
         {% for incident in dashboard.recent|slice(0, 14) %}
             <tr>
                 <td><a href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">{{ ui.id(incident.reference) }}</a></td>
@@ -20,7 +22,7 @@
                 <td>{{ ui.zone(incident) }}</td>
                 <td>{{ ui.status(incident.status) }}</td>
                 <td>{{ ui.severity(incident.severity) }}</td>
-                <td class="num">{{ ui.moneyTag(incident) }}</td>
+                {% if door('case-money.read', area) %}<td class="num">{{ ui.moneyTag(incident) }}</td>{% endif %}
                 <td>{{ ui.when(incident.reportedAt, dashboard.now) }}</td>
                 <td class="num"><a class="open-btn" href="{{ path('incident_show', {uuid: area.uuid, reference: incident.reference}) }}">Open →</a></td>
             </tr>
